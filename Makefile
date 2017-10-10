@@ -17,7 +17,7 @@ include ../../plugin.mk
 
 
 # Convenience target for including files in the distributable release
-DIST_NAME = template
+DIST_NAME = Template
 .PHONY: dist
 dist: all
 	mkdir -p dist/$(DIST_NAME)
