@@ -32,7 +32,7 @@ void MyModule::step() {
 
 	// Compute the frequency from the pitch parameter and input
 	float pitch = params[PITCH_PARAM].value;
-	pitch += inputs[PITCH_INPUT].value / 10.0;
+	pitch += inputs[PITCH_INPUT].value;
 	pitch = clampf(pitch, -4.0, 4.0);
 	float freq = 440.0 * powf(2.0, pitch);
 

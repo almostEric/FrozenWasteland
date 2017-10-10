@@ -5,6 +5,7 @@ This plugin is a template and self-contained tutorial for creating your own VCV 
 
 ### Prerequisites for VCV plugin development
 
+0. Some C++ familiarity is required.
 1. Compile Rack from source, following the instructions at https://github.com/VCVRack/Rack.
 2. Clone this repository in the `plugins/` directory.
 
