@@ -23,7 +23,7 @@ struct MyModule : Module {
 	// For more advanced Module features, read Rack's engine.hpp header file
 	// - toJson, fromJson: serialization of internal data
 	// - onSampleRateChange: event triggered by a change of sample rate
-	// - initialize, randomize: implements special behavior when user clicks these from the context menu
+	// - reset, randomize: implements special behavior when user clicks these from the context menu
 };
 
 

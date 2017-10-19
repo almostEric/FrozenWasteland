@@ -42,11 +42,15 @@ Rack Widgets are defined in `include/widgets.hpp` and `include/app.hpp`, and hel
 *Note: Widgets from `include/components.hpp` using Component Library SVG graphics are licensed under CC BY-NC 4.0 and are free to use for noncommercial purposes.
 Contact contact@grayscale.info for information about licensing for commercial use.*
 
-5. Eventually, you will need to change the name of your plugin from Tutorial.
+5. Eventually, you will need to change the name of your plugin from "Tutorial".
 Rename `Tutorial.cpp` and `Tutorial.hpp`.
 Change references of `#include "Tutorial.hpp"` in each of the source files.
 In the `init()` function, change the `name`, `slug` (unique identifier), and `homepage` metadata of the plugin, which will affect the labels given to your plugin in the "Add module" context menu of Rack.
 In the `Makefile`, change the `DIST_NAME` so that running `make dist` builds a correctly named .zip file.
+
+6. Build your plugin with `make`, or `make dist` to produce a distributable .zip file.
+Subscribe to the [Plugin API Updates Thread](https://github.com/VCVRack/Rack/issues/258) to receive notifications when the Rack API changes or a discussion about a change is being held.
+Finally, add your plugin to the [List of plugins](https://github.com/VCVRack/Rack/wiki/List-of-plugins) wiki page.
 
 ## Contributing
 
