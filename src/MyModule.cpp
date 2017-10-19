@@ -18,7 +18,7 @@ struct MyModule : Module {
 	float phase = 0.0;
 
 	MyModule() : Module(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS) {}
-	void step();
+	void step() override;
 
 	// For more advanced Module features, read Rack's engine.hpp header file
 	// - toJson, fromJson: serialization of internal data
@@ -37,7 +37,7 @@ void MyModule::step() {
 	float freq = 440.0 * powf(2.0, pitch);
 
 	// Accumulate the phase
-	phase += freq / gSampleRate;
+	phase += freq / engineGetSampleRate();
 	if (phase >= 1.0)
 		phase -= 1.0;
 
