@@ -9,6 +9,9 @@ void init(rack::Plugin *p) {
 	plugin->slug = "Tutorial";
 	plugin->name = "Tutorial";
 	plugin->homepageUrl = "https://github.com/VCVRack/Tutorial";
+#ifdef VERSION
+	plugin->version = TOSTRING(VERSION);
+#endif
 
 	createModel<MyModuleWidget>(plugin, "MyModule", "My Module");
 
