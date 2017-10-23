@@ -34,9 +34,9 @@ My word of advice: *mind the aliasing*.
 
 3. Design the module's panel with a vector graphics editor (Inkscape, Illustrator, CorelDRAW, etc) and save it in the `res/` directory as an SVG file.
 Make sure the path to the .svg file is correctly specified in the `SVG::Load()` function.
-*The Rack renderer is currently only capable of rendering path and group objects with solid fill and stroke. Text must be converted to paths. Clipping masks, gradients, etc. are not supported.*
+*Note: The Rack renderer is currently only capable of rendering path and group objects with solid fill and stroke. Text must be converted to paths. Clipping masks, gradients, etc. are not supported.*
 
-4. Add widgets to the panel including params (knobs, buttons, switches), input ports, and output ports.
+4. Add widgets to the panel including params (knobs, buttons, switches, etc.), input ports, and output ports.
 Helper functions `createParam()`, `createInput()`, and `createOutput()` are used to construct a particular `Widget` subclass, set its (x, y) position, range of values, and default value.
 Rack Widgets are defined in `include/widgets.hpp` and `include/app.hpp`, and helpers are found in `include/rack.hpp`.
 *Note: Widgets from `include/components.hpp` using Component Library SVG graphics are licensed under CC BY-NC 4.0 and are free to use for noncommercial purposes.
@@ -45,12 +45,12 @@ Contact contact@grayscale.info for information about licensing for commercial us
 5. Eventually, you will need to change the name of your plugin from "Tutorial".
 Rename `Tutorial.cpp` and `Tutorial.hpp`.
 Change references of `#include "Tutorial.hpp"` in each of the source files.
-In the `init()` function, change the `name`, `slug` (unique identifier), and `homepage` metadata of the plugin, which will affect the labels given to your plugin in the "Add module" context menu of Rack.
-In the `Makefile`, change the `DIST_NAME` so that running `make dist` builds a correctly named .zip file.
+In the `init()` function, change the name and slug (unique identifier), which will affect the labels given to your plugin in the "Add module" context menu of Rack.
+In the `Makefile`, change `DIST_NAME` so that running `make dist` builds a correctly named .zip file.
 
 6. Build your plugin with `make`, or `make dist` to produce a distributable .zip file.
 Subscribe to the [Plugin API Updates Thread](https://github.com/VCVRack/Rack/issues/258) to receive notifications when the Rack API changes or a discussion about a change is being held.
-Follow the [plugin versioning guidelines](https://github.com/VCVRack/Rack/issues/266) and `git tag vX.Y.Z` (`git tag v0.4.0` for example) and `git push --tags` finalizing a new release.
+Follow the [plugin versioning guidelines](https://github.com/VCVRack/Rack/issues/266) and `git tag vX.Y.Z` (`git tag v0.4.0` for example) and `git push --tags` when finalizing a new release.
 Finally, add your plugin to the [List of plugins](https://github.com/VCVRack/Rack/wiki/List-of-plugins) wiki page.
 
 ## Contributing
