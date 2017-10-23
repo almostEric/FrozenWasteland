@@ -50,6 +50,7 @@ In the `Makefile`, change the `DIST_NAME` so that running `make dist` builds a c
 
 6. Build your plugin with `make`, or `make dist` to produce a distributable .zip file.
 Subscribe to the [Plugin API Updates Thread](https://github.com/VCVRack/Rack/issues/258) to receive notifications when the Rack API changes or a discussion about a change is being held.
+Follow the [plugin versioning guidelines](https://github.com/VCVRack/Rack/issues/266) and `git tag vX.Y.Z` (`git tag v0.4.0` for example) and `git push --tags` finalizing a new release.
 Finally, add your plugin to the [List of plugins](https://github.com/VCVRack/Rack/wiki/List-of-plugins) wiki page.
 
 ## Contributing
