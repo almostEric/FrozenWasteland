@@ -1,5 +1,5 @@
 
-# FLAGS will be passed to both C and C++ compiler
+# FLAGS will be passed to both the C and C++ compiler
 FLAGS +=
 CFLAGS +=
 CXXFLAGS +=
@@ -20,8 +20,11 @@ include ../../plugin.mk
 DIST_NAME = Template
 .PHONY: dist
 dist: all
+ifndef VERSION
+	$(error VERSION must be defined when making distributables)
+endif
 	mkdir -p dist/$(DIST_NAME)
 	cp LICENSE* dist/$(DIST_NAME)/
-	cp plugin.* dist/$(DIST_NAME)/
+	cp $(TARGET) dist/$(DIST_NAME)/
 	cp -R res dist/$(DIST_NAME)/
 	cd dist && zip -5 -r $(DIST_NAME)-$(VERSION)-$(ARCH).zip $(DIST_NAME)

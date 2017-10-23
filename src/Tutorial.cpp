@@ -6,14 +6,12 @@ Plugin *plugin;
 
 void init(rack::Plugin *p) {
 	plugin = p;
-	plugin->slug = "Tutorial";
-	plugin->name = "Tutorial";
-	plugin->homepageUrl = "https://github.com/VCVRack/Tutorial";
+	p->slug = "Tutorial";
 #ifdef VERSION
-	plugin->version = TOSTRING(VERSION);
+	p->version = TOSTRING(VERSION);
 #endif
 
-	createModel<MyModuleWidget>(plugin, "MyModule", "My Module");
+	p->addModel(createModel<MyModuleWidget>("Tutorial", "Tutorial", "MyModule", "My Module"));
 
 	// Any other plugin initialization may go here.
 	// As an alternative, consider lazy-loading assets and lookup tables within this file or the individual module files to reduce startup times of Rack.
