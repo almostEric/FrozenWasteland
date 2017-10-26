@@ -14,10 +14,15 @@ struct MyModule : Module {
 		SINE_OUTPUT,
 		NUM_OUTPUTS
 	};
+	enum LightIds {
+		BLINK_LIGHT,
+		NUM_LIGHTS
+	};
 
 	float phase = 0.0;
+	float blinkPhase = 0.0;
 
-	MyModule() : Module(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS) {}
+	MyModule() : Module(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS, NUM_LIGHTS) {}
 	void step() override;
 
 	// For more advanced Module features, read Rack's engine.hpp header file
@@ -29,6 +34,7 @@ struct MyModule : Module {
 
 void MyModule::step() {
 	// Implement a simple sine oscillator
+	float deltaTime = 1.0 / engineGetSampleRate();
 
 	// Compute the frequency from the pitch parameter and input
 	float pitch = params[PITCH_PARAM].value;
@@ -37,13 +43,19 @@ void MyModule::step() {
 	float freq = 440.0 * powf(2.0, pitch);
 
 	// Accumulate the phase
-	phase += freq / engineGetSampleRate();
+	phase += freq * deltaTime;
 	if (phase >= 1.0)
 		phase -= 1.0;
 
 	// Compute the sine output
 	float sine = sinf(2 * M_PI * phase);
 	outputs[SINE_OUTPUT].value = 5.0 * sine;
+
+	// Blink light at 1Hz
+	blinkPhase += deltaTime;
+	if (blinkPhase >= 1.0)
+		blinkPhase -= 1.0;
+	lights[BLINK_LIGHT].value = (blinkPhase < 0.5) ? 1.0 : 0.0;
 }
 
 
@@ -69,4 +81,6 @@ MyModuleWidget::MyModuleWidget() {
 	addInput(createInput<PJ301MPort>(Vec(33, 186), module, MyModule::PITCH_INPUT));
 
 	addOutput(createOutput<PJ301MPort>(Vec(33, 275), module, MyModule::SINE_OUTPUT));
+
+	addChild(createLight<MediumLight<RedLight>>(Vec(42, 59), module, MyModule::BLINK_LIGHT));
 }
