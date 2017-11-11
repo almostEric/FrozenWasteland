@@ -82,5 +82,5 @@ MyModuleWidget::MyModuleWidget() {
 
 	addOutput(createOutput<PJ301MPort>(Vec(33, 275), module, MyModule::SINE_OUTPUT));
 
-	addChild(createLight<MediumLight<RedLight>>(Vec(42, 59), module, MyModule::BLINK_LIGHT));
+	addChild(createLight<MediumLight<RedLight>>(Vec(41, 59), module, MyModule::BLINK_LIGHT));
 }
