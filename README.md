@@ -16,7 +16,7 @@ This plugin is a template and self-contained tutorial for creating your own VCV 
 	- `Tutorial.cpp / Tutorial.hpp`: Plugin-wide source and header for plugin initialization and configuration. Rename this to the name of your plugin.
 	- `MyModule.cpp`: A single module's source code. Duplicate this file for every module you wish to add. You may have multiple modules per file or multiple files for a single module, but one module per file is recommended.
 - `res/`: Resource directory for SVG graphics and anything else you need to `fopen()`
-- `LICENSE.txt`: This tutorial is released under public domain (CC0), but you may wish to replace this with your own license.
+- `LICENSE.txt`: This tutorial is released into public domain (CC0), but you may wish to replace this with your own license.
 
 ## Tutorial
 
@@ -42,11 +42,12 @@ Rack Widgets are defined in `include/widgets.hpp` and `include/app.hpp`, and hel
 *Note: Widgets from `include/components.hpp` using Component Library SVG graphics are licensed under CC BY-NC 4.0 and are free to use for noncommercial purposes.
 Contact contact@grayscale.info for information about licensing for commercial use.*
 
-5. Eventually, you will need to change the name of your plugin from "Tutorial".
+5. Eventually, you will need to change the name of your plugin from "Tutorial" to something of your choice.
 Rename `Tutorial.cpp` and `Tutorial.hpp`.
 Change references of `#include "Tutorial.hpp"` in each of the source files.
-In the `init()` function, change the name and slug (unique identifier), which will affect the labels given to your plugin in the "Add module" context menu of Rack.
+In the `init()` function, change the slug (unique identifier), which will affect the labels given to your plugin in the "Add module" context menu of Rack.
 In the `Makefile`, change `DIST_NAME` so that running `make dist` builds a correctly named .zip file.
+Finally, don't forget to edit the `LICENSE.txt` file to choose a license of your choice, unless you want to release your plugin into the public domain (CC0).
 
 6. Build your plugin with `make`, or `make dist` to produce a distributable .zip file.
 Subscribe to the [Plugin API Updates Thread](https://github.com/VCVRack/Rack/issues/258) to receive notifications when the Rack API changes or a discussion about a change is being held.
@@ -56,3 +57,5 @@ Finally, add your plugin to the [List of plugins](https://github.com/VCVRack/Rac
 ## Contributing
 
 I welcome Issues and Pull Requests to this repository if you have suggestions for improvement.
+
+This tutorial is released into the public domain ([CC0](https://creativecommons.org/publicdomain/zero/1.0/)).
