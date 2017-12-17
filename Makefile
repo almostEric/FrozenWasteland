@@ -1,3 +1,4 @@
+VERSION = 0.5.0
 
 # FLAGS will be passed to both the C and C++ compiler
 FLAGS +=
@@ -20,9 +21,6 @@ include ../../plugin.mk
 DIST_NAME = Template
 .PHONY: dist
 dist: all
-ifndef VERSION
-	$(error VERSION must be defined when making distributables)
-endif
 	mkdir -p dist/$(DIST_NAME)
 	cp LICENSE* dist/$(DIST_NAME)/
 	cp $(TARGET) dist/$(DIST_NAME)/
