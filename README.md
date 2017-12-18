@@ -43,10 +43,11 @@ Rack Widgets are defined in `include/widgets.hpp` and `include/app.hpp`, and hel
 Contact contact@grayscale.info for information about licensing for commercial use.*
 
 5. Eventually, you will need to change the name of your plugin from "Tutorial" to something of your choice.
+Decide on a human-readable name, as well as a "slug" (unique identifier) that will never change and only contains letters, numbers, and the characters `_-`.
 Rename `Tutorial.cpp` and `Tutorial.hpp`.
 Change references of `#include "Tutorial.hpp"` in each of the source files.
-In the `init()` function, change the slug (unique identifier), which will affect the labels given to your plugin in the "Add module" context menu of Rack.
-In the `Makefile`, change `DIST_NAME` so that running `make dist` builds a correctly named .zip file.
+In the `init()` function, change the slug and other metadata.
+In the `Makefile`, change the `SLUG` and `VERSION`.
 Finally, don't forget to edit the `LICENSE.txt` file to choose a license of your choice, unless you want to release your plugin into the public domain (CC0).
 
 6. Build your plugin with `make`, or `make dist` to produce a distributable .zip file.
