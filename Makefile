@@ -21,6 +21,7 @@ include ../../plugin.mk
 # Convenience target for packaging files into a ZIP file
 .PHONY: dist
 dist: all
+	rm -rf dist
 	mkdir -p dist/$(SLUG)
 	cp LICENSE* dist/$(SLUG)/
 	cp $(TARGET) dist/$(SLUG)/
