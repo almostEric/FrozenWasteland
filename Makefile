@@ -11,19 +11,10 @@ CXXFLAGS +=
 LDFLAGS +=
 
 # Add .cpp and .c files to the build
-SOURCES = $(wildcard src/*.cpp)
+SOURCES += $(wildcard src/*.cpp)
 
+# Add files to the ZIP package when running `make dist`
+DISTRIBUTABLES += $(wildcard LICENSE*) res
 
-# Must include the VCV plugin Makefile framework
+# Include the VCV plugin Makefile framework
 include ../../plugin.mk
-
-
-# Convenience target for packaging files into a ZIP file
-.PHONY: dist
-dist: all
-	rm -rf dist
-	mkdir -p dist/$(SLUG)
-	cp LICENSE* dist/$(SLUG)/
-	cp $(TARGET) dist/$(SLUG)/
-	cp -R res dist/$(SLUG)/
-	cd dist && zip -5 -r $(SLUG)-$(VERSION)-$(ARCH).zip $(SLUG)
