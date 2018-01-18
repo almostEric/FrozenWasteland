@@ -40,7 +40,8 @@ void MyModule::step() {
 	float pitch = params[PITCH_PARAM].value;
 	pitch += inputs[PITCH_INPUT].value;
 	pitch = clampf(pitch, -4.0, 4.0);
-	float freq = 440.0 * powf(2.0, pitch);
+	// The default pitch is C4
+	float freq = 261.626 * powf(2.0, pitch);
 
 	// Accumulate the phase
 	phase += freq * deltaTime;
