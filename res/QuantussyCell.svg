@@ -27,7 +27,11 @@
      inkscape:pageshadow="2"
      inkscape:zoom="4"
 <<<<<<< HEAD
+<<<<<<< HEAD
      inkscape:cx="-9.309207"
+=======
+     inkscape:cx="52.940793"
+>>>>>>> 3f95cadedf43743e4b62431636fe2e4a25ad8725
 =======
      inkscape:cx="52.940793"
 >>>>>>> 3f95cadedf43743e4b62431636fe2e4a25ad8725
@@ -286,6 +290,7 @@
     </g>
     <g
 <<<<<<< HEAD
+<<<<<<< HEAD
        aria-label="CASTLE IN"
        style="font-style:normal;font-weight:normal;font-size:3.52777767px;line-height:1.25;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.26458332"
        id="text4974">
@@ -384,6 +389,8 @@
          style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:2.82222223px;font-family:Consolas;-inkscape-font-specification:'Consolas Bold';stroke-width:0.26458332"
          id="path268" />
 =======
+=======
+>>>>>>> 3f95cadedf43743e4b62431636fe2e4a25ad8725
        aria-label="Castle In"
        style="font-style:normal;font-weight:normal;font-size:3.52777767px;line-height:1.25;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.26458332"
        id="text4974">
@@ -481,12 +488,16 @@
          d="m 50.01003,121.67986 v -1.76389 h 0.352778 v 0.19017 q 0.07855,-0.0716 0.128158,-0.10886 0.04961,-0.0386 0.136425,-0.0717 0.08819,-0.0344 0.187413,-0.0344 0.113,0 0.18328,0.0827 0.07028,0.0827 0.07028,0.20257 v 1.50344 h -0.352778 v -1.32291 q 0,-0.0923 -0.02618,-0.13367 -0.02618,-0.0427 -0.106109,-0.0427 -0.04548,0 -0.09095,0.0193 -0.0441,0.0179 -0.06615,0.0345 -0.02205,0.0152 -0.06339,0.0496 v 1.39595 z"
          style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:2.82222223px;font-family:Oswald;-inkscape-font-specification:Oswald;stroke-width:0.26458332"
          id="path5753" />
+<<<<<<< HEAD
+>>>>>>> 3f95cadedf43743e4b62431636fe2e4a25ad8725
+=======
 >>>>>>> 3f95cadedf43743e4b62431636fe2e4a25ad8725
     </g>
     <g
        style="font-style:normal;font-weight:normal;font-size:3.52777767px;line-height:1.25;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.26458332"
        id="text5097" />
     <g
+<<<<<<< HEAD
 <<<<<<< HEAD
        aria-label="BASE FREQ"
        style="font-style:normal;font-weight:normal;font-size:3.52777767px;line-height:1.25;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.26458332"
@@ -524,6 +535,8 @@
          style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:2.82222223px;font-family:Consolas;-inkscape-font-specification:'Consolas Bold';stroke-width:0.26458332"
          id="path286" />
 =======
+=======
+>>>>>>> 3f95cadedf43743e4b62431636fe2e4a25ad8725
        aria-label="Base Freq"
        style="font-style:normal;font-weight:normal;font-size:3.52777767px;line-height:1.25;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.26458332"
        id="text5443">
@@ -559,6 +572,9 @@
          d="m 59.289543,78.170262 q 0.139181,0 0.264583,-0.07166 v -1.091407 q -0.0055,-0.0028 -0.02756,-0.01654 -0.02205,-0.01378 -0.03169,-0.01792 -0.0083,-0.0055 -0.02894,-0.01654 -0.02067,-0.01102 -0.03445,-0.01516 -0.0124,-0.0055 -0.03307,-0.01103 -0.01929,-0.0069 -0.03859,-0.0096 -0.01792,-0.0028 -0.03859,-0.0028 -0.0441,0 -0.07855,0.02067 -0.03307,0.01929 -0.05512,0.04685 -0.02205,0.02756 -0.03858,0.07855 -0.01516,0.05099 -0.02205,0.09095 -0.0069,0.03859 -0.01102,0.104731 -0.0041,0.06477 -0.0055,0.100597 0,0.03583 0,0.100597 0,0.0028 0,0.0041 0,0.02343 0,0.07579 0,0.05237 0,0.100597 0,0.04823 0,0.09095 0.0014,0.09233 0.0083,0.162609 0.0083,0.0689 0.02618,0.136426 0.01929,0.06615 0.05512,0.103353 0.03721,0.03583 0.08957,0.03583 z m 0.264583,0.79375 v -0.687641 q -0.07855,0.0813 -0.162609,0.132291 -0.08268,0.05099 -0.190169,0.05099 -0.101975,0 -0.181901,-0.05099 -0.07855,-0.05237 -0.126779,-0.133669 -0.04685,-0.08131 -0.07855,-0.191548 -0.03032,-0.111621 -0.04272,-0.219108 -0.01102,-0.107487 -0.01102,-0.223242 v -0.268717 q 0,-0.11989 0.01102,-0.219109 0.01103,-0.09922 0.03996,-0.195681 0.02894,-0.09646 0.07579,-0.162608 0.04823,-0.06752 0.12678,-0.107487 0.07855,-0.04134 0.181901,-0.04134 0.05926,0 0.110243,0.01654 0.05237,0.01516 0.09922,0.04961 0.04823,0.03445 0.07441,0.06063 0.02756,0.02481 0.07441,0.07441 v -0.176389 h 0.352778 v 2.293056 z"
          style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:2.82222223px;font-family:Oswald;-inkscape-font-specification:Oswald;stroke-width:0.26458332"
          id="path5771" />
+<<<<<<< HEAD
+>>>>>>> 3f95cadedf43743e4b62431636fe2e4a25ad8725
+=======
 >>>>>>> 3f95cadedf43743e4b62431636fe2e4a25ad8725
     </g>
   </g>
