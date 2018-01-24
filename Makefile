@@ -1,5 +1,10 @@
+<<<<<<< HEAD
 SLUG = Template
 VERSION = 0.5.0
+=======
+SLUG = FrozenWasteland
+VERSION = 0.1.0
+>>>>>>> 3f95cadedf43743e4b62431636fe2e4a25ad8725
 
 # FLAGS will be passed to both the C and C++ compiler
 FLAGS +=

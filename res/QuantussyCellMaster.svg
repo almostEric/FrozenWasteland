@@ -26,7 +26,11 @@
      inkscape:pageopacity="0.0"
      inkscape:pageshadow="2"
      inkscape:zoom="4"
+<<<<<<< HEAD
      inkscape:cx="-9.309207"
+=======
+     inkscape:cx="52.940793"
+>>>>>>> 3f95cadedf43743e4b62431636fe2e4a25ad8725
      inkscape:cy="275.79805"
      inkscape:document-units="mm"
      inkscape:current-layer="layer1"
@@ -283,11 +287,16 @@
     <text
        xml:space="preserve"
        style="font-style:normal;font-weight:normal;font-size:3.52777767px;line-height:1.25;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.26458332"
+<<<<<<< HEAD
        x="45.555313"
+=======
+       x="44.775257"
+>>>>>>> 3f95cadedf43743e4b62431636fe2e4a25ad8725
        y="90.084869"
        id="text4974"><tspan
          sodipodi:role="line"
          id="tspan4972"
+<<<<<<< HEAD
          x="45.555313"
          y="90.084869"
          style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:2.82222223px;font-family:Consolas;-inkscape-font-specification:'Consolas Bold';stroke-width:0.26458332">CASTLE IN</tspan></text>
@@ -295,13 +304,28 @@
        xml:space="preserve"
        style="font-style:normal;font-weight:normal;font-size:3.52777767px;line-height:1.25;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.26458332"
        x="45.555313"
+=======
+         x="44.775257"
+         y="90.084869"
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:2.82222223px;font-family:Oswald;-inkscape-font-specification:Oswald;stroke-width:0.26458332">Castle In</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-weight:normal;font-size:3.52777767px;line-height:1.25;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.26458332"
+       x="44.917"
+>>>>>>> 3f95cadedf43743e4b62431636fe2e4a25ad8725
        y="100.49187"
        id="text4978"><tspan
          sodipodi:role="line"
          id="tspan4976"
+<<<<<<< HEAD
          x="45.555313"
          y="100.49187"
          style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:2.82222223px;font-family:Consolas;-inkscape-font-specification:'Consolas Bold';stroke-width:0.26458332">CASTLE OUT</tspan></text>
+=======
+         x="44.917"
+         y="100.49187"
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:2.82222223px;font-family:Oswald;-inkscape-font-specification:Oswald;stroke-width:0.26458332">Castle Out</tspan></text>
+>>>>>>> 3f95cadedf43743e4b62431636fe2e4a25ad8725
     <text
        xml:space="preserve"
        style="font-style:normal;font-weight:normal;font-size:3.52777767px;line-height:1.25;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.26458332"
@@ -312,7 +336,11 @@
          id="tspan4980"
          x="45.554832"
          y="121.67986"
+<<<<<<< HEAD
          style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:2.82222223px;font-family:Consolas;-inkscape-font-specification:'Consolas Bold';stroke-width:0.26458332">CV IN</tspan></text>
+=======
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:2.82222223px;font-family:Oswald;-inkscape-font-specification:Oswald;stroke-width:0.26458332">CV In</tspan></text>
+>>>>>>> 3f95cadedf43743e4b62431636fe2e4a25ad8725
     <text
        xml:space="preserve"
        style="font-style:normal;font-weight:normal;font-size:3.52777767px;line-height:1.25;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.26458332"
@@ -334,6 +362,10 @@
          id="tspan5441"
          x="49.367668"
          y="78.434845"
+<<<<<<< HEAD
          style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:2.82222223px;font-family:Consolas;-inkscape-font-specification:'Consolas Bold';stroke-width:0.26458332">BASE FREQ</tspan></text>
+=======
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:2.82222223px;font-family:Oswald;-inkscape-font-specification:Oswald;stroke-width:0.26458332">Base Freq</tspan></text>
+>>>>>>> 3f95cadedf43743e4b62431636fe2e4a25ad8725
   </g>
 </svg>
