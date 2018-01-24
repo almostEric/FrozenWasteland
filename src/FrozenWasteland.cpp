@@ -16,13 +16,8 @@ void init(rack::Plugin *p) {
 	p->manual = "https://github.com/almostEric/FrozenWasteland/blob/master/README.md";
 
 	// For each module, specify the ModuleWidget subclass, manufacturer slug (for saving in patches), manufacturer human-readable name, module slug, and module name
-<<<<<<< HEAD
 	//p->addModel(createModel<EchoesThroughEternityWidget>("Frozen Wasteland", "EchoesThroughEternity", "Echoes Through Eternity", DELAY_TAG));
 	p->addModel(createModel<LissajousLFOWidget>("Frozen Wasteland", "LissajousLFO", "LissajousLFO", LFO_TAG));
-=======
-	p->addModel(createModel<EchoesThroughEternityWidget>("Frozen Wasteland", "EchoesThroughEternity", "Echoes Through Eternity", DELAY_TAG));
-	//p->addModel(createModel<LissajousLFOWidget>("Frozen Wasteland", "LissajousLFO", "LissajousLFO", LFO_TAG));
->>>>>>> 3f95cadedf43743e4b62431636fe2e4a25ad8725
 	//p->addModel(createModel<QuadEuclideanRhythmWidget>("Frozen Wasteland", "QuadEuclideanRhythm", "Quad Euclidean Rhythm", SEQUENCER_TAG));
 	p->addModel(createModel<QuantussyCellWidget>("Frozen Wasteland", "QuantussyCell", "Quantussy Cell", LOGIC_TAG));
 
