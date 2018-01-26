@@ -152,7 +152,8 @@ struct BeatDisplay : TransparentWidget {
 	}
 
 	void drawBox(NVGcontext *vg, float stepNumber, float trackNumber,bool isBeat,bool isCurrent) {
-
+		if (!stepNumber)
+			return;
 		nvgSave(vg);
 		//Rect b = Rect(Vec(0, 0), box.size);
 		//nvgScissor(vg, b.pos.x, b.pos.y, b.size.x, b.size.y);
