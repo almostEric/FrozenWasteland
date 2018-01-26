@@ -3,6 +3,10 @@
 
 A collection of unusual plugins that will add a certain coolness to your patches.
 
+## Quad Eucluidean Rhythm
+- 4 Euclidiean rhythm based triggers
+- CV control of Steps, Divisions and Offset
+
 ## Quantussy Cell
 
 - This is based on work by Peter Blasser and Richard Brewster.
