@@ -154,8 +154,8 @@ struct BeatDisplay : TransparentWidget {
 	void drawBox(NVGcontext *vg, float stepNumber, float trackNumber,bool isBeat,bool isCurrent) {
 
 		nvgSave(vg);
-		Rect b = Rect(Vec(0, 0), box.size);
-		nvgScissor(vg, b.pos.x, b.pos.y, b.size.x, b.size.y);
+		//Rect b = Rect(Vec(0, 0), box.size);
+		//nvgScissor(vg, b.pos.x, b.pos.y, b.size.x, b.size.y);
 		nvgBeginPath(vg);
 		
 		float boxX = stepNumber * 22.5;
@@ -169,8 +169,6 @@ struct BeatDisplay : TransparentWidget {
 			fillColor = nvgRGBA(0x2f,0xf0,0,0xff);			
 		}
 
-		nvgLineCap(vg, NVG_ROUND);
-		nvgMiterLimit(vg, 2.0);
 		nvgGlobalCompositeOperation(vg, NVG_LIGHTER);
 		nvgStrokeColor(vg, strokeColor);
 		nvgStrokeWidth(vg, 3.0);
@@ -180,7 +178,7 @@ struct BeatDisplay : TransparentWidget {
 			nvgFill(vg);
 		}
 		nvgStroke(vg);
-		nvgResetScissor(vg);
+		//nvgResetScissor(vg);
 		nvgRestore(vg);
 	}
 
@@ -242,10 +240,10 @@ QuadEuclideanRhythmWidget::QuadEuclideanRhythmWidget() {
 	addParam(createParam<Davies1900hBlackKnob>(Vec(250, 265), module, QuadEuclideanRhythm::DIVISIONS_4_PARAM, 1.0, 16.0, 2.0));
 	addParam(createParam<Davies1900hBlackKnob>(Vec(302, 265), module, QuadEuclideanRhythm::OFFSET_4_PARAM, 0.0, 15.0, 0.0));
 
-	addInput(createInput<PJ301MPort>(Vec(34, 223), module, QuadEuclideanRhythm::STEPS_1_INPUT));
+	addInput(createInput<PJ301MPort>(Vec(32, 223), module, QuadEuclideanRhythm::STEPS_1_INPUT));
 	addInput(createInput<PJ301MPort>(Vec(83, 223), module, QuadEuclideanRhythm::DIVISIONS_1_INPUT));
 	addInput(createInput<PJ301MPort>(Vec(134, 223), module, QuadEuclideanRhythm::OFFSET_1_INPUT));
-	addInput(createInput<PJ301MPort>(Vec(34, 302), module, QuadEuclideanRhythm::STEPS_2_INPUT));
+	addInput(createInput<PJ301MPort>(Vec(32, 302), module, QuadEuclideanRhythm::STEPS_2_INPUT));
 	addInput(createInput<PJ301MPort>(Vec(83, 302), module, QuadEuclideanRhythm::DIVISIONS_2_INPUT));
 	addInput(createInput<PJ301MPort>(Vec(134, 302), module, QuadEuclideanRhythm::OFFSET_2_INPUT));
 	addInput(createInput<PJ301MPort>(Vec(205, 223), module, QuadEuclideanRhythm::STEPS_3_INPUT));
@@ -256,7 +254,7 @@ QuadEuclideanRhythmWidget::QuadEuclideanRhythmWidget() {
 	addInput(createInput<PJ301MPort>(Vec(306, 302), module, QuadEuclideanRhythm::OFFSET_4_INPUT));
 
 	addInput(createInput<PJ301MPort>(Vec(12, 329), module, QuadEuclideanRhythm::CLOCK_INPUT));
-	addInput(createInput<PJ301MPort>(Vec(74, 329), module, QuadEuclideanRhythm::RESET_INPUT));
+	addInput(createInput<PJ301MPort>(Vec(75, 329), module, QuadEuclideanRhythm::RESET_INPUT));
 
 	addOutput(createOutput<PJ301MPort>(Vec(215, 329), module, QuadEuclideanRhythm::OUTPUT_1));
 	addOutput(createOutput<PJ301MPort>(Vec(250, 329), module, QuadEuclideanRhythm::OUTPUT_2));
