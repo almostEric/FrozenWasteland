@@ -18,9 +18,9 @@ struct LissajousLFOWidget : ModuleWidget {
 	LissajousLFOWidget();
 };
 
-//struct QuadEuclideanRhythmWidget : ModuleWidget {
-//	QuadEuclideanRhythmWidget();
-//}
+struct QuadEuclideanRhythmWidget : ModuleWidget {
+	QuadEuclideanRhythmWidget();
+};
 
 struct QuantussyCellWidget : ModuleWidget {
 	QuantussyCellWidget();

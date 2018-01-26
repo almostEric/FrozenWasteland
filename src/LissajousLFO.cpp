@@ -132,9 +132,9 @@ void LissajousLFO::step() {
 	outputs[OUTPUT_2].value = (y1 + y2) / 2;
 	outputs[OUTPUT_3].value = (x1 + x2 + y1 + y2) / 4;
 	float out4 = (x1/x2);
-	outputs[OUTPUT_4].value = std::isfinite(out4) ? out4 : 0.f;
+	outputs[OUTPUT_4].value = std::isfinite(out4) ? clampf(out4,-5.0,5.0) : 0.f;
 	float out5 = (y1/y2);
-	outputs[OUTPUT_5].value = std::isfinite(out5) ? out5 : 0.f;
+	outputs[OUTPUT_5].value = std::isfinite(out5) ? clampf(out5,-5.0,5.0) : 0.f;
 
 	//Update scope.
 	int frameCount = (int)ceilf(deltaTime * engineGetSampleRate());

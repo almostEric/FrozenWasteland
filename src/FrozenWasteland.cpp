@@ -18,7 +18,7 @@ void init(rack::Plugin *p) {
 	// For each module, specify the ModuleWidget subclass, manufacturer slug (for saving in patches), manufacturer human-readable name, module slug, and module name
 	//p->addModel(createModel<EchoesThroughEternityWidget>("Frozen Wasteland", "EchoesThroughEternity", "Echoes Through Eternity", DELAY_TAG));
 	p->addModel(createModel<LissajousLFOWidget>("Frozen Wasteland", "LissajousLFO", "LissajousLFO", LFO_TAG));
-	//p->addModel(createModel<QuadEuclideanRhythmWidget>("Frozen Wasteland", "QuadEuclideanRhythm", "Quad Euclidean Rhythm", SEQUENCER_TAG));
+	p->addModel(createModel<QuadEuclideanRhythmWidget>("Frozen Wasteland", "QuadEuclideanRhythm", "Quad Euclidean Rhythm", SEQUENCER_TAG));
 	p->addModel(createModel<QuantussyCellWidget>("Frozen Wasteland", "QuantussyCell", "Quantussy Cell", LOGIC_TAG));
 
 	// Any other plugin initialization may go here.
