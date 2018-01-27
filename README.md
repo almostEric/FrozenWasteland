@@ -27,6 +27,11 @@ A collection of unusual plugins that will add a certain coolness to your patches
 - Output 4: x1/x2
 - Output 5: y1/y2
 
+## Seriously Slow LFO
+- Waiting for the next Ice Age? Tidal Modulator too fast paced? This is the LFO for you.
+- Generate oscillating CVs with range from 1 minute to 100 months
+- NOTE: Pretty sure my math is correct, but 100 month LFOs have not been unit tested
+
 ## Contributing
 
 I welcome Issues and Pull Requests to this repository if you have suggestions for improvement.
