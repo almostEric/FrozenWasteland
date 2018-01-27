@@ -26,3 +26,6 @@ struct QuantussyCellWidget : ModuleWidget {
 	QuantussyCellWidget();
 };
 
+struct SeriouslySlowLFOWidget : ModuleWidget {
+	SeriouslySlowLFOWidget();
+};
