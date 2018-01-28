@@ -18,6 +18,10 @@ struct LissajousLFOWidget : ModuleWidget {
 	LissajousLFOWidget();
 };
 
+struct PhasedLockedLoopWidget : ModuleWidget {
+	PhasedLockedLoopWidget();
+};
+
 struct QuadEuclideanRhythmWidget : ModuleWidget {
 	QuadEuclideanRhythmWidget();
 };
@@ -30,6 +34,7 @@ struct SeriouslySlowLFOWidget : ModuleWidget {
 	SeriouslySlowLFOWidget();
 };
 
+//Can't believe I did this.
 struct CDCSeriouslySlowLFOWidget : ModuleWidget {
 	CDCSeriouslySlowLFOWidget();
 };

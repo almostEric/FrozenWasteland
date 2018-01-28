@@ -7,6 +7,7 @@
    xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
    xmlns:svg="http://www.w3.org/2000/svg"
    xmlns="http://www.w3.org/2000/svg"
+   xmlns:xlink="http://www.w3.org/1999/xlink"
    xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
    xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
    width="150.2265"
@@ -17,7 +18,29 @@
    inkscape:version="0.92.2 (5c3e80d, 2017-08-06)"
    sodipodi:docname="SeriouslySlowLFOMaster.svg">
   <defs
-     id="defs10997" />
+     id="defs10997">
+    <linearGradient
+       inkscape:collect="always"
+       id="linearGradient3391">
+      <stop
+         style="stop-color:#cce6f1;stop-opacity:1;"
+         offset="0"
+         id="stop3387" />
+      <stop
+         style="stop-color:#ffffff;stop-opacity:1;"
+         offset="1"
+         id="stop3389" />
+    </linearGradient>
+    <linearGradient
+       inkscape:collect="always"
+       xlink:href="#linearGradient3391"
+       id="linearGradient3393"
+       x1="35.219627"
+       y1="150.85843"
+       x2="35.219627"
+       y2="50.462322"
+       gradientUnits="userSpaceOnUse" />
+  </defs>
   <sodipodi:namedview
      id="base"
      pagecolor="#ffffff"
@@ -26,7 +49,7 @@
      inkscape:pageopacity="0.0"
      inkscape:pageshadow="2"
      inkscape:zoom="4"
-     inkscape:cx="-133.80921"
+     inkscape:cx="-196.05921"
      inkscape:cy="225.79805"
      inkscape:document-units="mm"
      inkscape:current-layer="layer1"
@@ -49,7 +72,7 @@
         <dc:format>image/svg+xml</dc:format>
         <dc:type
            rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
-        <dc:title></dc:title>
+        <dc:title />
       </cc:Work>
     </rdf:RDF>
   </metadata>
@@ -62,7 +85,7 @@
        inkscape:connector-curvature="0"
        id="path33493"
        d="M 35.219628,50.462323 H 74.821509 V 150.85843 H 35.219628 Z m 0,0"
-       style="fill:#cce6f1;fill-opacity:1;fill-rule:nonzero;stroke:none;stroke-width:0.27602378"
+       style="fill:url(#linearGradient3393);fill-opacity:1;fill-rule:nonzero;stroke:none;stroke-width:0.27602378"
        inkscape:export-filename="/home/vortico/pics/tmp/LFOs.png"
        inkscape:export-xdpi="150.22649"
        inkscape:export-ydpi="150.22649" />
