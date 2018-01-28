@@ -52,7 +52,17 @@ struct QuadEuclideanRhythm : Module {
 	SchmittTrigger clockTrigger,resetTrigger;
 
 
-	QuadEuclideanRhythm() : Module(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS) {}
+	QuadEuclideanRhythm() : Module(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS) {
+		for(unsigned i = 0; i < 4; i++) {
+			beatIndex[i] = 0;
+			stepsCount[i] = 16;
+			for(unsigned j = 0; j < 16; j++) {
+				beatMatrix[i][j] = false;
+			}
+		}
+		for(unsigned i = 0; i < 16; i++)
+			levelArray[i] = 0;
+	}
 	void step() override;
 
 	// For more advanced Module features, read Rack's engine.hpp header file
@@ -152,8 +162,7 @@ struct BeatDisplay : TransparentWidget {
 	}
 
 	void drawBox(NVGcontext *vg, float stepNumber, float trackNumber,bool isBeat,bool isCurrent) {
-		if (!stepNumber)
-			return;
+		
 		nvgSave(vg);
 		//Rect b = Rect(Vec(0, 0), box.size);
 		//nvgScissor(vg, b.pos.x, b.pos.y, b.size.x, b.size.y);
@@ -166,7 +175,7 @@ struct BeatDisplay : TransparentWidget {
 		NVGcolor fillColor = nvgRGBA(0xff,0xc0,0,0xff);
 		if(isCurrent)
 		{
-			strokeColor = nvgRGBA(0x3f, 0xf4, 0x36, 0xff);
+			strokeColor = nvgRGBA(0x2f, 0xf0, 0x0, 0xff);
 			fillColor = nvgRGBA(0x2f,0xf0,0,0xff);			
 		}
 
@@ -228,18 +237,18 @@ QuadEuclideanRhythmWidget::QuadEuclideanRhythmWidget() {
 	}
 
 
-	addParam(createParam<Davies1900hBlackKnob>(Vec(27, 186), module, QuadEuclideanRhythm::STEPS_1_PARAM, 1.0, 16.0, 16.0));
-	addParam(createParam<Davies1900hBlackKnob>(Vec(77, 186), module, QuadEuclideanRhythm::DIVISIONS_1_PARAM, 1.0, 16.0, 2.0));
-	addParam(createParam<Davies1900hBlackKnob>(Vec(128, 186), module, QuadEuclideanRhythm::OFFSET_1_PARAM, 0.0, 15.0, 0.0));
-	addParam(createParam<Davies1900hBlackKnob>(Vec(27, 265), module, QuadEuclideanRhythm::STEPS_2_PARAM, 1.0, 16.0, 16.5));
-	addParam(createParam<Davies1900hBlackKnob>(Vec(77, 265), module, QuadEuclideanRhythm::DIVISIONS_2_PARAM, 1.0, 16.0, 2.0));
-	addParam(createParam<Davies1900hBlackKnob>(Vec(128, 265), module, QuadEuclideanRhythm::OFFSET_2_PARAM, 0.0, 15.0, 0.0));
-	addParam(createParam<Davies1900hBlackKnob>(Vec(200, 186), module, QuadEuclideanRhythm::STEPS_3_PARAM, 1.0, 16.0, 16.0));
-	addParam(createParam<Davies1900hBlackKnob>(Vec(250, 186), module, QuadEuclideanRhythm::DIVISIONS_3_PARAM, 1.0, 16.0, 2.0));
-	addParam(createParam<Davies1900hBlackKnob>(Vec(302, 186), module, QuadEuclideanRhythm::OFFSET_3_PARAM, 0.0, 15.0, 0.0));
-	addParam(createParam<Davies1900hBlackKnob>(Vec(200, 265), module, QuadEuclideanRhythm::STEPS_4_PARAM, 1.0, 16.0, 16.5));
-	addParam(createParam<Davies1900hBlackKnob>(Vec(250, 265), module, QuadEuclideanRhythm::DIVISIONS_4_PARAM, 1.0, 16.0, 2.0));
-	addParam(createParam<Davies1900hBlackKnob>(Vec(302, 265), module, QuadEuclideanRhythm::OFFSET_4_PARAM, 0.0, 15.0, 0.0));
+	addParam(createParam<Davies1900hBlackKnob>(Vec(27, 186), module, QuadEuclideanRhythm::STEPS_1_PARAM, 1.0, 16.2, 16.0));
+	addParam(createParam<Davies1900hBlackKnob>(Vec(77, 186), module, QuadEuclideanRhythm::DIVISIONS_1_PARAM, 1.0, 16.2, 2.0));
+	addParam(createParam<Davies1900hBlackKnob>(Vec(128, 186), module, QuadEuclideanRhythm::OFFSET_1_PARAM, 0.0, 15.2, 0.0));
+	addParam(createParam<Davies1900hBlackKnob>(Vec(27, 265), module, QuadEuclideanRhythm::STEPS_2_PARAM, 1.0, 16.0, 16.0));
+	addParam(createParam<Davies1900hBlackKnob>(Vec(77, 265), module, QuadEuclideanRhythm::DIVISIONS_2_PARAM, 1.0, 16.2, 2.0));
+	addParam(createParam<Davies1900hBlackKnob>(Vec(128, 265), module, QuadEuclideanRhythm::OFFSET_2_PARAM, 0.0, 15.2, 0.0));
+	addParam(createParam<Davies1900hBlackKnob>(Vec(200, 186), module, QuadEuclideanRhythm::STEPS_3_PARAM, 1.0, 16.2, 16.0));
+	addParam(createParam<Davies1900hBlackKnob>(Vec(250, 186), module, QuadEuclideanRhythm::DIVISIONS_3_PARAM, 1.0, 16.2, 2.0));
+	addParam(createParam<Davies1900hBlackKnob>(Vec(302, 186), module, QuadEuclideanRhythm::OFFSET_3_PARAM, 0.0, 15.2, 0.0));
+	addParam(createParam<Davies1900hBlackKnob>(Vec(200, 265), module, QuadEuclideanRhythm::STEPS_4_PARAM, 1.0, 16.2, 16.0));
+	addParam(createParam<Davies1900hBlackKnob>(Vec(250, 265), module, QuadEuclideanRhythm::DIVISIONS_4_PARAM, 1.0, 16.2, 2.0));
+	addParam(createParam<Davies1900hBlackKnob>(Vec(302, 265), module, QuadEuclideanRhythm::OFFSET_4_PARAM, 0.0, 15.2, 0.0));
 
 	addInput(createInput<PJ301MPort>(Vec(32, 223), module, QuadEuclideanRhythm::STEPS_1_INPUT));
 	addInput(createInput<PJ301MPort>(Vec(83, 223), module, QuadEuclideanRhythm::DIVISIONS_1_INPUT));

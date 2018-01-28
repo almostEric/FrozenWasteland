@@ -113,6 +113,22 @@ struct CDCSeriouslySlowLFO : Module {
 	CDCSeriouslySlowLFO() : Module(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS, NUM_LIGHTS) {}
 	void step() override;
 
+	json_t *toJson() override {
+		json_t *rootJ = json_object();
+		json_object_set_new(rootJ, "timeBase", json_integer((int) timeBase));
+		return rootJ;
+	}
+
+	void fromJson(json_t *rootJ) override {
+		json_t *sumJ = json_object_get(rootJ, "timeBase");
+		if (sumJ)
+			timeBase = json_integer_value(sumJ);
+	}
+
+	void reset() override {
+		timeBase = 0;
+	}
+
 	// For more advanced Module features, read Rack's engine.hpp header file
 	// - toJson, fromJson: serialization of internal data
 	// - onSampleRateChange: event triggered by a change of sample rate

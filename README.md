@@ -32,6 +32,13 @@ A collection of unusual plugins that will add a certain coolness to your patches
 - Generate oscillating CVs with range from 1 minute to 100 months
 - NOTE: Pretty sure my math is correct, but 100 month LFOs have not been unit tested
 
+## Phased Locked Loop (PLL)
+- Inspired by Doepfer's A-192 PLL module
+- This is a very weird module and can be kind of "fussy". Recommend reading http://www.doepfer.de/A196.htm
+- Added CV control of the LPF that the 192 did not have
+- Just using an XOR gate for the phase comparator. I'll add a flip-flop based one as well as soon as I figure them out :)
+- Does not make pretty sounds, but can be a lot of fun.
+
 ## Contributing
 
 I welcome Issues and Pull Requests to this repository if you have suggestions for improvement.
