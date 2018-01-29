@@ -1,5 +1,5 @@
 SLUG = FrozenWasteland
-VERSION = 0.5.4
+VERSION = 0.5.5
 
 # FLAGS will be passed to both the C and C++ compiler
 FLAGS +=
@@ -11,7 +11,7 @@ CXXFLAGS +=
 LDFLAGS +=
 
 # Add .cpp and .c files to the build
-SOURCES += $(wildcard src/*.cpp)
+SOURCES += $(wildcard src/*.cpp src/filters/*cpp)
 
 # Add files to the ZIP package when running `make dist`
 # The compiled plugin is automatically added.

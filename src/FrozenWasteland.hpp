@@ -18,6 +18,10 @@ struct LissajousLFOWidget : ModuleWidget {
 	LissajousLFOWidget();
 };
 
+struct MrBlueSkyWidget : ModuleWidget {
+	MrBlueSkyWidget();
+};
+
 struct PhasedLockedLoopWidget : ModuleWidget {
 	PhasedLockedLoopWidget();
 };
