@@ -18,6 +18,13 @@ A collection of unusual plugins that will add a certain coolness to your patches
 - Use any of the remaining wav outputs from any cell to provide semi-random bordering on chaotic CV
 - Check out http://pugix.com/synth/eurorack-quantussy-cells/
 
+## Mr. Blue Sky
+- Yes, I love ELO
+- This is shamelessly based on Sebastien Bouffier (bid°°)'s fantastic zINC vocoder
+- Each modulator band is normalled to its respective carrier input, but the patch points allow you to have different bands modulate different carrier bands
+- You can patch in effects (a delay, perhaps?) between the mod out and carrier in.
+- Coming soon: CV control of band assignments. Thinking along the lines of 4ms Spectral Resonator in Eurorack, where you can shift bands left/right, or just cv it all at once.
+
 ## Lissajou LFO.
 
 - Loosely based on ADDAC Systems now discontinued 502 module https://www.modulargrid.net/e/addac-system-addac502-ultra-lissajous
