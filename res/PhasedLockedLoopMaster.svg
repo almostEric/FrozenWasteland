@@ -49,7 +49,7 @@
      inkscape:pageopacity="0.0"
      inkscape:pageshadow="2"
      inkscape:zoom="4"
-     inkscape:cx="-71.559207"
+     inkscape:cx="-196.05921"
      inkscape:cy="155.79805"
      inkscape:document-units="mm"
      inkscape:current-layer="layer1"
@@ -224,12 +224,12 @@
        xml:space="preserve"
        style="font-style:normal;font-weight:normal;font-size:3.52777767px;line-height:1.25;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.26458332"
        x="45.09198"
-       y="115.44479"
+       y="117.56147"
        id="text4978-7"><tspan
          sodipodi:role="line"
          id="tspan4976-0"
          x="45.09198"
-         y="115.44479"
+         y="117.56147"
          style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:2.82222223px;font-family:Consolas;-inkscape-font-specification:'Consolas Bold';stroke-width:0.26458332">COMPARATOR OUT</tspan></text>
     <text
        xml:space="preserve"
@@ -319,5 +319,38 @@
          x="44.933502"
          y="131.06212"
          style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:2.82222223px;font-family:Consolas;-inkscape-font-specification:'Consolas Bold';stroke-width:0.26458332">LPF CV</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-weight:normal;font-size:3.52777767px;line-height:1.25;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.26458332"
+       x="54.696281"
+       y="107.35403"
+       id="text4978-7-7-0-6"><tspan
+         sodipodi:role="line"
+         id="tspan4976-0-6-56-9"
+         x="54.696281"
+         y="107.35403"
+         style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:2.11666656px;font-family:Consolas;-inkscape-font-specification:'Consolas Bold';stroke-width:0.26458332">XOR</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-weight:normal;font-size:3.52777767px;line-height:1.25;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.26458332"
+       x="54.696022"
+       y="111.7196"
+       id="text4978-7-7-0-68"><tspan
+         sodipodi:role="line"
+         id="tspan4976-0-6-56-6"
+         x="54.696022"
+         y="111.7196"
+         style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:2.11666656px;font-family:Consolas;-inkscape-font-specification:'Consolas Bold';stroke-width:0.26458332">FLIP-FLOP</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-weight:normal;font-size:3.52777767px;line-height:1.25;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.26458332"
+       x="40.579918"
+       y="111.9446"
+       id="text4978-5"><tspan
+         sodipodi:role="line"
+         id="tspan4976-1"
+         x="40.579918"
+         y="111.9446"
+         style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:2.82222223px;font-family:Consolas;-inkscape-font-specification:'Consolas Bold';stroke-width:0.26458332">TYPE</tspan></text>
   </g>
 </svg>

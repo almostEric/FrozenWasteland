@@ -92,23 +92,40 @@ struct VoltageControlledOscillator {
 	}
 };
 
-struct XORPhaseComparator {
-	bool input1 = false;
-	bool input2 = false;
+struct PhaseComparator {
+	bool clock = false;
+	bool data = false;
+	bool nandGate1 = false;
+	bool nandGate2 = false;
+	bool nandGate3 = false;
+	bool nandGate4 = false;
 
-	void setInput1(float baseInput) {
-		input1 = baseInput >= 0;
+
+	void setClock(float clockInput)  {
+		clock = clockInput >= 0;
 	}
 
-	void setInput2(float baseInput) {
-		input2 = baseInput >= 0;
+	void setData(float dataInput)  {
+		data = dataInput >= 0;
 	}
 
+	float XORoutput()  {
+		return (clock ^ data) ? 5.0 : -5.0;
+	}
 
-	float output() {
-		return (input1 ^ input2) ? 5.0 : -5.0;
+	float FlipFlopOutput()  {
+		bool invertedData = !data;
+		nandGate1 = !(data && clock);
+		nandGate2 = !(clock && invertedData);
+		nandGate3 = !(nandGate1 && nandGate4);
+		nandGate4 = !(nandGate3 && nandGate2);
+		
+		return nandGate3 ? 5.0 : -5.0;
 	}
 };
+
+
+
 
 struct LadderFilter {
 	float cutoff = 1000.0;
@@ -159,7 +176,7 @@ struct PhasedLockedLoop : Module {
 	enum ParamIds {
 		VCO_FREQ_PARAM,
 		LPF_FREQ_PARAM,
-		COMPARATOR_TYPE,
+		COMPARATOR_TYPE_PARAM,
 		NUM_PARAMS
 	};
 	enum InputIds {
@@ -177,19 +194,40 @@ struct PhasedLockedLoop : Module {
 	};
 	enum LightIds {
 		PHASE_LOCKED_LIGHT,
+		XOR_COMPARATOR_LIGHT,
+		FLIP_FLOP_COMPARATOR_LIGHT,
 		NUM_LIGHTS
 	};
-
+	enum ComparatorTypes {
+		XOR_COMPARATOR,
+		FLIP_FLOP_COMARATOR
+	};
 
 	VoltageControlledOscillator<16,16> oscillator;
-	XORPhaseComparator comparator;
+	PhaseComparator comparator;
 	LadderFilter filter;
 
+	SchmittTrigger modeTrigger;
 	float filterOutput = 0;
+	int currentComparatorType = XOR_COMPARATOR;
 
 	
 	PhasedLockedLoop() : Module(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS, NUM_LIGHTS) {}
 	void step() override;
+
+	json_t *toJson() override {
+		json_t *rootJ = json_object();
+		json_object_set_new(rootJ, "comparatorType", json_integer((int) currentComparatorType));
+		return rootJ;
+	}
+
+	void fromJson(json_t *rootJ) override {
+		json_t *sumJ = json_object_get(rootJ, "comparatorType");
+		if (sumJ)
+			currentComparatorType = json_integer_value(sumJ);
+
+	}
+
 
 	// For more advanced Module features, read Rack's engine.hpp header file
 	// - toJson, fromJson: serialization of internal data
@@ -199,6 +237,13 @@ struct PhasedLockedLoop : Module {
 
 
 void PhasedLockedLoop::step() {
+	// Modes
+	if (modeTrigger.process(params[COMPARATOR_TYPE_PARAM].value)) {
+		currentComparatorType = (currentComparatorType + 1) % 2; //only 2...for now!!!
+	}
+	lights[XOR_COMPARATOR_LIGHT].value = currentComparatorType == XOR_COMPARATOR ? 1.0 : 0.0;
+	lights[FLIP_FLOP_COMPARATOR_LIGHT].value = currentComparatorType == FLIP_FLOP_COMARATOR ? 1.0 : 0.0;
+
 	float pitchCv;
 	if (inputs[VCO_CV_INPUT].active) {
 		pitchCv =  12.0 * inputs[VCO_CV_INPUT].value;
@@ -216,22 +261,33 @@ void PhasedLockedLoop::step() {
 	outputs[SQUARE_OUTPUT].value = squareOutput;
 
 	//normally use internally genrated square wave, unless the input is being used
-	float phaseComparatorInput1; //
+	float phaseComparatorData; //
 	if(inputs[PHASE_COMPARATOR_INPUT].active) {
-		phaseComparatorInput1 = inputs[PHASE_COMPARATOR_INPUT].value;
+		phaseComparatorData = inputs[PHASE_COMPARATOR_INPUT].value;
 	} else {
-		phaseComparatorInput1 = squareOutput;
+		phaseComparatorData = squareOutput;
 	}
-	comparator.setInput1(phaseComparatorInput1);
+	comparator.setData(phaseComparatorData);
 
 	//This is what we compare either the internal square wave, or alternate input too
 	if(inputs[SIGNAL_INPUT].active) {
-		comparator.setInput2(inputs[SIGNAL_INPUT].value);
+		comparator.setClock(inputs[SIGNAL_INPUT].value);
 	}
 
-	float comparatorOutput = comparator.output();
+	float comparatorOutput;
+	switch (currentComparatorType) {
+		case XOR_COMPARATOR :
+			comparatorOutput = comparator.XORoutput();
+			break;
+		case FLIP_FLOP_COMARATOR :
+			comparatorOutput = comparator.FlipFlopOutput();
+			break;
+		default:
+			comparatorOutput = comparator.XORoutput();
+			break;
+	}
 	outputs[COMPARATOR_OUTPUT].value = comparatorOutput;
-	lights[PHASE_LOCKED_LIGHT].value = ((comparatorOutput >= 0.0  && phaseComparatorInput1 >= 0.0) || (comparatorOutput < 0.0  && phaseComparatorInput1 < 0.0));
+	lights[PHASE_LOCKED_LIGHT].value = ((comparatorOutput >= 0.0  && phaseComparatorData >= 0.0) || (comparatorOutput < 0.0  && phaseComparatorData < 0.0));
 
 	//feed comparator into the filter
 	float filterInput = comparatorOutput / 5.0;
@@ -277,7 +333,7 @@ PhasedLockedLoopWidget::PhasedLockedLoopWidget() {
 
 	addParam(createParam<Davies1900hBlackKnob>(Vec(97, 47), module, PhasedLockedLoop::VCO_FREQ_PARAM, -54.0, 54.0, 0.0));
 	addParam(createParam<Davies1900hBlackKnob>(Vec(97, 288), module, PhasedLockedLoop::LPF_FREQ_PARAM, 0, 1, 0.5));
-	//addParam(createParam<TL1105>(Vec(32, 212), module, PhasedLockedLoop::COMPARATOR_TYPE, 0.0, 1.0, 0.0));
+	addParam(createParam<CKD6>(Vec(19, 196), module, PhasedLockedLoop::COMPARATOR_TYPE_PARAM, 0.0, 1.0, 0.0));
 
 	addInput(createInput<PJ301MPort>(Vec(10, 50), module, PhasedLockedLoop::VCO_CV_INPUT));
 	addInput(createInput<PJ301MPort>(Vec(10, 137), module, PhasedLockedLoop::PHASE_COMPARATOR_INPUT));
@@ -285,10 +341,10 @@ PhasedLockedLoopWidget::PhasedLockedLoopWidget() {
 	addInput(createInput<PJ301MPort>(Vec(10, 289), module, PhasedLockedLoop::LPF_FREQ_INPUT));
 
 	addOutput(createOutput<PJ301MPort>(Vec(10, 78), module, PhasedLockedLoop::SQUARE_OUTPUT));
-	addOutput(createOutput<PJ301MPort>(Vec(10, 230), module, PhasedLockedLoop::COMPARATOR_OUTPUT));
+	addOutput(createOutput<PJ301MPort>(Vec(10, 239), module, PhasedLockedLoop::COMPARATOR_OUTPUT));
 	addOutput(createOutput<PJ301MPort>(Vec(10, 319), module, PhasedLockedLoop::LPF_OUTPUT));
 
-
-
 	addChild(createLight<LargeLight<BlueLight>>(Vec(112, 154), module, PhasedLockedLoop::PHASE_LOCKED_LIGHT));
+	addChild(createLight<SmallLight<BlueLight>>(Vec(62, 210), module, PhasedLockedLoop::XOR_COMPARATOR_LIGHT));
+	addChild(createLight<SmallLight<BlueLight>>(Vec(62, 226), module, PhasedLockedLoop::FLIP_FLOP_COMPARATOR_LIGHT));
 }
