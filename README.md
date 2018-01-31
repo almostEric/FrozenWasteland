@@ -59,7 +59,7 @@ A collection of unusual plugins that will add a certain coolness to your patches
 
 ## Phased Locked Loop (PLL)
 
-![Phased Lock Loop](./doc/sslfo.png)
+![Phased Lock Loop](./doc/pll.png)
 
 - Inspired by Doepfer's A-192 PLL module
 - This is a very weird module and can be kind of "fussy". Recommend reading http://www.doepfer.de/A196.htm
