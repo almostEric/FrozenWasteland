@@ -23,7 +23,7 @@ A collection of unusual plugins that will add a certain coolness to your patches
 - This is shamelessly based on Sebastien Bouffier (bid°°)'s fantastic zINC vocoder
 - Each modulator band is normalled to its respective carrier input, but the patch points allow you to have different bands modulate different carrier bands
 - You can patch in effects (a delay, perhaps?) between the mod out and carrier in.
-- Coming soon: CV control of band assignments. Thinking along the lines of 4ms Spectral Resonator in Eurorack, where you can shift bands left/right, or just cv it all at once.
+- CV Control of over almost everything. I highly recommend playing with the band offset.
 
 ## Lissajou LFO.
 
@@ -43,7 +43,7 @@ A collection of unusual plugins that will add a certain coolness to your patches
 - Inspired by Doepfer's A-192 PLL module
 - This is a very weird module and can be kind of "fussy". Recommend reading http://www.doepfer.de/A196.htm
 - Added CV control of the LPF that the 192 did not have
-- Just using an XOR gate for the phase comparator. I'll add a flip-flop based one as well as soon as I figure them out :)
+- Two comparator modes: XOR and D type Flip Flop
 - Does not make pretty sounds, but can be a lot of fun.
 
 ## Contributing
