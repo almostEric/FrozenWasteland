@@ -61,9 +61,9 @@ A collection of unusual plugins that will add a certain coolness to your patches
 
 ![Phased Lock Loop](./doc/pll.png)
 
-- Inspired by Doepfer's A-192 PLL module
+- Inspired by Doepfer's A-196 PLL module
 - This is a very weird module and can be kind of "fussy". Recommend reading http://www.doepfer.de/A196.htm
-- Added CV control of the LPF that the 192 did not have
+- Added CV control of the LPF that the 196 did not have
 - Generally you want to "listen" to the **SQR OUT**
 - You'll want to feed a Square-ish wave into Signal In
 - Low **LPF FREQ** settings create a warbling effect, high = craziness
