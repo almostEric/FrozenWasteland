@@ -234,12 +234,14 @@ void QuadEuclideanRhythm::step() {
 
 
 
-		stepsCount[trackNumber] = int(stepsCountf);
-		int division = int(divisionf);
-		int offset = int(offsetf);		
-		int pad = int(padf);
-		int accentDivision = int(accentDivisionf);
-		int accentRotation = int(accentRotationf);
+		stepsCount[trackNumber] = std::max(0,int(stepsCountf));
+		int division = std::max(0,int(divisionf));
+		int offset = std::max(0,int(offsetf));		
+		int pad = std::max(0,int(padf));
+		int accentDivision = std::max(0,int(accentDivisionf));
+		int accentRotation = std::max(0,int(accentRotationf));
+
+
 
 		if(stepsCount[trackNumber] > 0) {
 			//Calculate Beats
