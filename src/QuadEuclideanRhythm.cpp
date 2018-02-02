@@ -244,9 +244,9 @@ void QuadEuclideanRhythm::step() {
 		if(stepsCount[trackNumber] > 0) {
 			//Calculate Beats
 			int level = 0;
-			int restsLeft = stepsCount[trackNumber]-division-pad;
+			int restsLeft = std::max(0,stepsCount[trackNumber]-division-pad); // just make sure no negatives
 			do {
-				levelArray[level] = std::min(restsLeft,division);
+				levelArray[level] = std::min(restsLeft,division); 
 				restsLeft = restsLeft - division;
 				level += 1;
 			} while (restsLeft > 0);
@@ -267,7 +267,7 @@ void QuadEuclideanRhythm::step() {
 
 	        //Calculate Accents
 	        level = 0;
-	        restsLeft = division-accentDivision;
+	        restsLeft = std::max(0,division-accentDivision); // just make sure no negatives
 	        do {
 				accentLevelArray[level] = std::min(restsLeft,accentDivision);
 				restsLeft = restsLeft - accentDivision;
