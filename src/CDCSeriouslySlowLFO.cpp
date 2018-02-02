@@ -143,8 +143,8 @@ void CDCSeriouslySlowLFO::step() {
 		oscillator.hardReset();
 	}
 
-	const float year = 31536000; // Year in seconds
-	float numberOfSeconds = 0;
+	const float year = 31556925.97474; // seconds in tropical year for 1900 from http://www.journaloftheoretics.com/articles/3-3/uwe.pdf                       
+	double numberOfSeconds = 0;
 	switch(timeBase) {
 		case 0 :
 			numberOfSeconds = year; // Years
@@ -165,7 +165,7 @@ void CDCSeriouslySlowLFO::step() {
 			numberOfSeconds = year * 13.772 * 1e+9; // Age of Universe
 			break;
 		case 6 :
-			numberOfSeconds = 1e+100; // Heat Death of Universe
+			numberOfSeconds = year * 1e+1000; // Heat Death of Universe from https://en.wikipedia.org/wiki/Graphical_timeline_from_Big_Bang_to_Heat_Death
 			break;
 	}
 
