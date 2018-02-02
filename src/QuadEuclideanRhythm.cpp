@@ -114,7 +114,7 @@ struct QuadEuclideanRhythm : Module {
 				beatMatrix[i][j] = false;
 				accentMatrix[i][j] = false;
 			}
-		}		
+		}
 	}
 	void step() override;
 
@@ -178,10 +178,10 @@ void QuadEuclideanRhythm::step() {
 		//clear out the matrix and levels
 		for(int j=0;j<16;j++)
 		{
-			beatMatrix[trackNumber][j] = false; 
+			beatMatrix[trackNumber][j] = false;
 			accentMatrix[trackNumber][j] = false;
-			levelArray[j] = 0;		
-			accentLevelArray[j] = 0;	
+			levelArray[j] = 0;
+			accentLevelArray[j] = 0;
 			beatLocation[j] = 0;
 		}
 
@@ -194,13 +194,13 @@ void QuadEuclideanRhythm::step() {
 		float divisionf = params[(trackNumber * 6) + 1].value;
 		if(inputs[(trackNumber * 7) + 1].active) {
 			divisionf += inputs[(trackNumber * 7) + 1].value;
-		}		
+		}
 		divisionf = clampf(divisionf,0,stepsCountf);
 
 		float offsetf = params[(trackNumber * 6) + 2].value;
 		if(inputs[(trackNumber * 7) + 2].active) {
 			offsetf += inputs[(trackNumber * 7) + 2].value;
-		}	
+		}
 		offsetf = clampf(offsetf,0,15);
 
 		float padf = params[trackNumber * 6 + 3].value;
@@ -214,7 +214,7 @@ void QuadEuclideanRhythm::step() {
 		float divisionScale = 1;
 		if(stepsCountf > 0) {
 			divisionScale = divisionf / stepsCountf;
-		}		
+		}
 
 		float accentDivisionf = params[(trackNumber * 6) + 4].value * divisionScale;
 		if(inputs[(trackNumber * 7) + 4].active) {
@@ -227,7 +227,7 @@ void QuadEuclideanRhythm::step() {
 			accentRotationf += inputs[(trackNumber * 7) + 5].value * divisionScale;
 		}
 		if(divisionf > 0) {
-			accentRotationf = clampf(accentRotationf,0,divisionf-1);			
+			accentRotationf = clampf(accentRotationf,0,divisionf-1);
 		} else {
 			accentRotationf = 0;
 		}
@@ -236,7 +236,7 @@ void QuadEuclideanRhythm::step() {
 
 		stepsCount[trackNumber] = int(stepsCountf);
 		int division = int(divisionf);
-		int offset = int(offsetf);		
+		int offset = int(offsetf);
 		int pad = int(padf);
 		int accentDivision = int(accentDivisionf);
 		int accentRotation = int(accentRotationf);
@@ -246,10 +246,10 @@ void QuadEuclideanRhythm::step() {
 			int level = 0;
 			int restsLeft = std::max(0,stepsCount[trackNumber]-division-pad); // just make sure no negatives
 			do {
-				levelArray[level] = std::min(restsLeft,division); 
+				levelArray[level] = std::min(restsLeft,division);
 				restsLeft = restsLeft - division;
 				level += 1;
-			} while (restsLeft > 0);
+			} while (level < 16 && restsLeft > 0);
 
 			int tempIndex =pad;
 			int beatIndex = 0;
@@ -263,7 +263,7 @@ void QuadEuclideanRhythm::step() {
 	                    tempIndex++;
 	                }
 	            }
-	        }	
+	        }
 
 	        //Calculate Accents
 	        level = 0;
@@ -272,7 +272,7 @@ void QuadEuclideanRhythm::step() {
 				accentLevelArray[level] = std::min(restsLeft,accentDivision);
 				restsLeft = restsLeft - accentDivision;
 				level += 1;
-			} while (restsLeft > 0);
+			} while (level < 16 && restsLeft > 0);
 
 			tempIndex =0;
 			for (int j = 0; j < accentDivision; j++) {
@@ -283,8 +283,8 @@ void QuadEuclideanRhythm::step() {
 	                    tempIndex++;
 	                }
 	            }
-	        }	
-        }	
+	        }
+        }
 	}
 
 	if(inputs[RESET_INPUT].active) {
@@ -332,18 +332,18 @@ void QuadEuclideanRhythm::step() {
 	for(int trackNumber=0;trackNumber<4;trackNumber++) {
 		//Send out beat
 		if(beatMatrix[trackNumber][beatIndex[trackNumber]] == true && running[trackNumber]) {
-			outputs[trackNumber * 3].value = inputs[CLOCK_INPUT].value;	
+			outputs[trackNumber * 3].value = inputs[CLOCK_INPUT].value;
 		} else {
-			outputs[trackNumber * 3].value = 0.0;	
+			outputs[trackNumber * 3].value = 0.0;
 		}
 		//send out accent
 		if(accentMatrix[trackNumber][beatIndex[trackNumber]] == true && running[trackNumber]) {
-			outputs[trackNumber * 3 + 1].value = inputs[CLOCK_INPUT].value;	
+			outputs[trackNumber * 3 + 1].value = inputs[CLOCK_INPUT].value;
 		} else {
-			outputs[trackNumber * 3 + 1].value = 0.0;	
+			outputs[trackNumber * 3 + 1].value = 0.0;
 		}
 		//Send out End of Cycle
-		outputs[(trackNumber * 3) + 2].value = eocPulse[trackNumber].process(1.0 / engineGetSampleRate()) ? 10.0 : 0;	
+		outputs[(trackNumber * 3) + 2].value = eocPulse[trackNumber].process(1.0 / engineGetSampleRate()) ? 10.0 : 0;
 	}
 }
 
@@ -357,12 +357,12 @@ struct BeatDisplay : TransparentWidget {
 	}
 
 	void drawBox(NVGcontext *vg, float stepNumber, float trackNumber,bool isBeat,bool isAccent,bool isCurrent) {
-		
+
 		//nvgSave(vg);
 		//Rect b = Rect(Vec(0, 0), box.size);
 		//nvgScissor(vg, b.pos.x, b.pos.y, b.size.x, b.size.y);
 		nvgBeginPath(vg);
-		
+
 		float boxX = stepNumber * 22.5;
 		float boxY = trackNumber * 22.5;
 
@@ -378,7 +378,7 @@ struct BeatDisplay : TransparentWidget {
 		if(isCurrent)
 		{
 			strokeColor = nvgRGBA(0x2f, 0xf0, 0, 0xff);
-			fillColor = nvgRGBA(0x2f,0xf0,0,opacity);			
+			fillColor = nvgRGBA(0x2f,0xf0,0,opacity);
 		}
 
 		nvgStrokeColor(vg, strokeColor);
@@ -396,10 +396,10 @@ struct BeatDisplay : TransparentWidget {
 	void draw(NVGcontext *vg) override {
 
 		for(int trackNumber = 0;trackNumber < 4;trackNumber++) {
-			for(int stepNumber = 0;stepNumber < module->stepsCount[trackNumber];stepNumber++) {				
+			for(int stepNumber = 0;stepNumber < module->stepsCount[trackNumber];stepNumber++) {
 				bool isBeat = module->beatMatrix[trackNumber][stepNumber];
 				bool isAccent = module->accentMatrix[trackNumber][stepNumber];
-				bool isCurrent = module->beatIndex[trackNumber] == stepNumber && module->running[trackNumber];				
+				bool isCurrent = module->beatIndex[trackNumber] == stepNumber && module->running[trackNumber];
 				drawBox(vg, float(stepNumber), float(trackNumber),isBeat,isAccent,isCurrent);
 			}
 
@@ -507,10 +507,10 @@ QuadEuclideanRhythmWidget::QuadEuclideanRhythmWidget() {
 	addOutput(createOutput<PJ301MPort>(Vec(256, 235), module, QuadEuclideanRhythm::OUTPUT_4));
 	addOutput(createOutput<PJ301MPort>(Vec(286, 235), module, QuadEuclideanRhythm::ACCENT_OUTPUT_4));
 	addOutput(createOutput<PJ301MPort>(Vec(354, 235), module, QuadEuclideanRhythm::EOC_OUTPUT_4));
-	
+
 	addChild(createLight<SmallLight<BlueLight>>(Vec(310, 276), module, QuadEuclideanRhythm::CHAIN_MODE_NONE_LIGHT));
 	addChild(createLight<SmallLight<GreenLight>>(Vec(310, 291), module, QuadEuclideanRhythm::CHAIN_MODE_BOSS_LIGHT));
 	addChild(createLight<SmallLight<RedLight>>(Vec(310, 306), module, QuadEuclideanRhythm::CHAIN_MODE_EMPLOYEE_LIGHT));
 
-	
+
 }
