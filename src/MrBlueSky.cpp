@@ -273,9 +273,9 @@ MrBlueSkyWidget::MrBlueSkyWidget() {
 	addParam(createParam<RoundSmallBlackKnob>(Vec(198, 177), module, MrBlueSky::CARRIER_Q_PARAM, 1.0, 15.0, 5.0));
 	addParam(createParam<RoundSmallBlackKnob>(Vec(280, 177), module, MrBlueSky::MOD_Q_PARAM, 1.0, 15.0, 5.0));
 	addParam(createParam<RoundSmallBlackKnob>(Vec(392, 177), module, MrBlueSky::BAND_OFFSET_PARAM, -15.5, 15.5, 0.0));
-	addParam(createParam<RoundBlackKnob>(Vec(15, 255), module, MrBlueSky::GMOD_PARAM, 1, 10, 1));
-	addParam(createParam<RoundBlackKnob>(Vec(70, 255), module, MrBlueSky::GCARR_PARAM, 1, 10, 1));
-	addParam(createParam<RoundBlackKnob>(Vec(125, 255), module, MrBlueSky::G_PARAM, 1, 10, 1));
+	addParam(createParam<RoundBlackKnob>(Vec(15, 255), module, MrBlueSky::GMOD_PARAM, 1, 10, 5));
+	addParam(createParam<RoundBlackKnob>(Vec(70, 255), module, MrBlueSky::GCARR_PARAM, 1, 10, 5));
+	addParam(createParam<RoundBlackKnob>(Vec(125, 255), module, MrBlueSky::G_PARAM, 1, 10, 5));
 
 
 	for (int i = 0; i < BANDS; i++) {
