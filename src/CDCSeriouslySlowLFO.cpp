@@ -165,7 +165,7 @@ void CDCSeriouslySlowLFO::step() {
 			numberOfSeconds = year * 13.772 * 1e+9; // Age of Universe
 			break;
 		case 6 :
-			numberOfSeconds = year * 1e+1000; // Heat Death of Universe from https://en.wikipedia.org/wiki/Graphical_timeline_from_Big_Bang_to_Heat_Death
+			numberOfSeconds = year * 1e+100; // Heat Death of Universe from https://en.wikipedia.org/wiki/Graphical_timeline_from_Big_Bang_to_Heat_Death
 			break;
 	}
 
