@@ -91,6 +91,8 @@ struct QuadEuclideanRhythm : Module {
 		CHAIN_MODE_EMPLOYEE
 	};
 
+	int const TRACK_COUNT = 4;
+	int const MAX_STEPS = 16;
 
 	bool beatMatrix[4][16];
 	bool accentMatrix[4][16];
@@ -234,12 +236,12 @@ void QuadEuclideanRhythm::step() {
 
 
 
-		stepsCount[trackNumber] = std::max(0,int(stepsCountf));
-		int division = std::max(0,int(divisionf));
-		int offset = std::max(0,int(offsetf));		
-		int pad = std::max(0,int(padf));
-		int accentDivision = std::max(0,int(accentDivisionf));
-		int accentRotation = std::max(0,int(accentRotationf));
+		stepsCount[trackNumber] = int(stepsCountf);
+		int division = int(divisionf);
+		int offset = int(offsetf);		
+		int pad = int(padf);
+		int accentDivision = int(accentDivisionf);
+		int accentRotation = int(accentRotationf);
 
 
 
@@ -251,7 +253,7 @@ void QuadEuclideanRhythm::step() {
 				levelArray[level] = std::min(restsLeft,division); 
 				restsLeft = restsLeft - division;
 				level += 1;
-			} while (restsLeft > 0);
+			} while (restsLeft > 0 && level < 16);
 
 			int tempIndex =pad;
 			int beatIndex = 0;
@@ -274,7 +276,7 @@ void QuadEuclideanRhythm::step() {
 				accentLevelArray[level] = std::min(restsLeft,accentDivision);
 				restsLeft = restsLeft - accentDivision;
 				level += 1;
-			} while (restsLeft > 0);
+			} while (restsLeft > 0 && level < 16);
 
 			tempIndex =0;
 			for (int j = 0; j < accentDivision; j++) {
