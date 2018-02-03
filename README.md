@@ -13,9 +13,9 @@ A collection of unusual plugins that will add a certain coolness to your patches
 - If Chain Mode is Boss, the QER runs on start up, then stops if the track's Start input is patched, until a Start trigger is received - basically the first QER should be set to this
 - If Chain Mode is Employee, the QER track will be idle until a Start trigger is received.
 - Patch EoC (End of Cycle) outputs to next QER's Start Inputs
-- Last QER's Eoc should be patched back to first QER's start to create a complete loop.
+- Last QER's EoC should be patched back to first QER's Start Input to create a complete loop.
 - May want to consider using an OR module (Qwelk has a nice one) so that mutiple QER's outs and accent outs can gate a single unit
-- Each QER has its own clock, so tempo changes can easily be created
+- Each QER has its own clock input, so tempo changes can easily be created
 - https://www.youtube.com/watch?v=ARMxz11z9FU is an example of how to patch a couple QERs together and drive some drum synths
 
 ## Quantussy Cell
