@@ -8,7 +8,15 @@ A collection of unusual plugins that will add a certain coolness to your patches
 ![Quad Eucluidean Rhythm](./doc/qer.png)
 
 - 4 Euclidiean rhythm based triggers
-- CV control of Steps, Divisions and Offset
+- CV control of Steps, Divisions and Offset, Padding, Accents and Accent Rotation
+- QERs can be chained together to create arbitrarily long sequences. 
+- If Chain Mode is Boss, the QER runs on start up, then stops if the track's Start input is patched, until a Start trigger is received - basically the first QER should be set to this
+- If Chain Mode is Employee, the QER track will be idle until a Start trigger is received.
+- Patch EoC (End of Cycle) outputs to next QER's Start Inputs
+- Last QER's Eoc should be patched back to first QER's start to create a complete loop.
+- May want to consider using an OR module (Qwelk has a nice one) so that mutiple QER's outs and accent outs can gate a single unit
+- Each QER has its own clock, so tempo changes can easily be created
+- https://www.youtube.com/watch?v=ARMxz11z9FU is an example of how to patch a couple QERs together and drive some drum synths
 
 ## Quantussy Cell
 
@@ -31,6 +39,8 @@ A collection of unusual plugins that will add a certain coolness to your patches
 
 - Yes, I love ELO
 - This is shamelessly based on Sebastien Bouffier (bid°°)'s fantastic zINC vocoder
+- Generally you patch something "synthy" to the carrier input
+- The voice sample (or I like to think "harmonically interesting" source) gets patched into the Mod input
 - Each modulator band is normalled to its respective carrier input, but the patch points allow you to have different bands modulate different carrier bands
 - You can patch in effects (a delay, perhaps?) between the mod out and carrier in.
 - CV Control of over almost everything. I highly recommend playing with the band offset.
