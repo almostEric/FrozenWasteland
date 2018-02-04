@@ -18,6 +18,13 @@ A collection of unusual plugins that will add a certain coolness to your patches
 - Each QER has its own clock input, so tempo changes can easily be created
 - https://www.youtube.com/watch?v=ARMxz11z9FU is an example of how to patch a couple QERs together and drive some drum synths
 
+## BPM LFO
+![BPM LFO](./doc/bpmlfo.png)
+
+- Tempo Sync'd LFO.
+- CV Control of Time Division
+- Pairs well with the Quad Euclidean Rhythm
+
 ## Quantussy Cell
 
 ![Quantussy Cell](./doc/qc.png)

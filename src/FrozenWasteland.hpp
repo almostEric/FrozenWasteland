@@ -14,6 +14,10 @@ extern Plugin *plugin;
 //	EchoesThroughEternityWidget();
 //};
 
+struct BPMLFOWidget : ModuleWidget {
+	BPMLFOWidget();
+};
+
 struct LissajousLFOWidget : ModuleWidget {
 	LissajousLFOWidget();
 };
