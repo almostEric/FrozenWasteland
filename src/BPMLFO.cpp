@@ -2,7 +2,7 @@
 #include "FrozenWasteland.hpp"
 #include "dsp/digital.hpp"
 
-#define DIVISIONS 16
+#define DIVISIONS 27
 
 struct LowFrequencyOscillator {
 	float phase = 0.0;
@@ -10,10 +10,7 @@ struct LowFrequencyOscillator {
 	float freq = 1.0;
 	bool offset = false;
 	bool invert = false;
-	SchmittTrigger resetTrigger;
-	LowFrequencyOscillator() {
-		resetTrigger.setThresholds(0.0, 0.01);
-	}
+
 	void setPitch(float pitch) {
 		pitch = fminf(pitch, 8.0);
 		freq = powf(2.0, pitch);
@@ -25,11 +22,7 @@ struct LowFrequencyOscillator {
 		const float pwMin = 0.01;
 		pw = clampf(pw_, pwMin, 1.0 - pwMin);
 	}
-	void setReset(float reset) {
-		if (resetTrigger.process(reset)) {
-			phase = 0.0;
-		}
-	}
+
 	void hardReset()
 	{
 		phase = 0.0;
@@ -103,9 +96,9 @@ struct BPMLFO : Module {
 
 	LowFrequencyOscillator oscillator;
 	SchmittTrigger clockTrigger,resetTrigger;
-	float divisions[DIVISIONS] = {1/64.0,1/32.0,1/16.0,1/8.0,1/4.0,1/3.0,1/2.0,1/1.5,1,2,3,4,8,16,32,64};
-	const char* divisionNames[DIVISIONS] = {"/64","/32","/16","/8","/4","/3","/2","/1.5","x 1","x 2","x 4","x 8","x 16","x 32","x 64"};
-	int division = 9;
+	float divisions[DIVISIONS] = {1/64.0,1/32.0,1/16.0,1/13.0,1/11.0,1/8.0,1/7.0,1/6.0,1/5.0,1/4.0,1/3.0,1/2.0,1/1.5,1,1.5,2,3,4,5,6,7,8,11,13,16,32,64};
+	const char* divisionNames[DIVISIONS] = {"/64","/32","/16","/13","/11","/8","/7","/6","/5","/4","/3","/2","/1.5","x 1","x 1.5","x 2","x 3","x 4","x 5","x 6","x 7","x 8","x 11","x 13","x 16","x 32","x 64"};
+	int division;
 	float time = 0.0;
 	float duration = 0;
 
@@ -131,18 +124,18 @@ void BPMLFO::step() {
 		if(clockTrigger.process(inputs[CLOCK_INPUT].value)) {
 			duration = time;
 			time = 0;
-			oscillator.setReset(inputs[CLOCK_INPUT].value);
+			//oscillator.hardReset());
 		}
-		lights[CLOCK_LIGHT].value = time > (duration/2.0);
+		lights[CLOCK_LIGHT].value = time < (duration/2.0);
 	}
 	
 	
 
 	float divisionf = params[DIVISION_PARAM].value;
 	if(inputs[DIVISION_INPUT].active) {
-		divisionf +=inputs[DIVISION_INPUT].value;
+		divisionf +=(inputs[DIVISION_INPUT].value * (DIVISIONS / 10.0));
 	}
-	divisionf = clampf(divisionf,0.0,15.0);
+	divisionf = clampf(divisionf,0.0,26.0);
 	division = int(divisionf);
 	
 	if(duration != 0) {
@@ -150,7 +143,9 @@ void BPMLFO::step() {
 	}
 	oscillator.step(1.0 / engineGetSampleRate());
 	if(inputs[RESET_INPUT].active) {
-		oscillator.setReset(inputs[RESET_INPUT].value);
+		if(resetTrigger.process(inputs[RESET_INPUT].value)) {
+			oscillator.hardReset();
+		}		
 	} 
 
 
@@ -232,7 +227,7 @@ BPMLFOWidget::BPMLFOWidget() {
 		addChild(display);
 	}
 
-	addParam(createParam<Davies1900hBlackKnob>(Vec(65, 85), module, BPMLFO::DIVISION_PARAM, 0.0, 15.0, 8.0));
+	addParam(createParam<Davies1900hBlackKnob>(Vec(65, 85), module, BPMLFO::DIVISION_PARAM, 0.0, 26.5, 13.0));
 
 	addInput(createInput<PJ301MPort>(Vec(30, 95), module, BPMLFO::DIVISION_INPUT));
 	addInput(createInput<PJ301MPort>(Vec(31, 270), module, BPMLFO::CLOCK_INPUT));
