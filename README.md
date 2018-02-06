@@ -20,7 +20,7 @@ A collection of unusual plugins that will add a certain coolness to your patches
 - https://www.youtube.com/watch?v=ARMxz11z9FU is an example of how to patch a couple QERs together and drive some drum synths
 
 ## BPM LFO
-![BPM LFO](./doc/BPMLFO.png)
+![BPM LFO](./doc/bpmlfo.png)
 
 - Tempo Sync'd LFO.
 - CV Control of Time Division
