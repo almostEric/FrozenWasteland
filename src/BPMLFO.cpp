@@ -105,6 +105,7 @@ struct BPMLFO : Module {
 	float time = 0.0;
 	float duration = 0;
 	bool holding = false;
+	bool secondClockReceived = false;
 
 
 	BPMLFO() : Module(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS, NUM_LIGHTS) {}
@@ -126,8 +127,11 @@ void BPMLFO::step() {
     time += 1.0 / engineGetSampleRate();
 	if(inputs[CLOCK_INPUT].active) {
 		if(clockTrigger.process(inputs[CLOCK_INPUT].value)) {
-			duration = time;
+			if(secondClockReceived) {
+				duration = time;
+			}
 			time = 0;
+			secondClockReceived = !secondClockReceived;			
 		}
 		lights[CLOCK_LIGHT].value = time > (duration/2.0);
 	}
