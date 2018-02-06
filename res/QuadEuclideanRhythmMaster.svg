@@ -50,8 +50,8 @@
      inkscape:pageopacity="0.0"
      inkscape:pageshadow="2"
      inkscape:zoom="4"
-     inkscape:cx="212.19797"
-     inkscape:cy="182.95692"
+     inkscape:cx="149.94797"
+     inkscape:cy="172.95692"
      inkscape:document-units="mm"
      inkscape:current-layer="layer1"
      showgrid="false"
@@ -331,11 +331,11 @@
        xml:space="preserve"
        style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:3.52777767px;line-height:89.99999762%;font-family:Consolas;-inkscape-font-specification:'Consolas Bold';text-align:start;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;text-anchor:start;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.26458332"
        x="104.69907"
-       y="137.66147"
+       y="136.60315"
        id="text295-57"><tspan
          sodipodi:role="line"
          x="104.69907"
-         y="137.66147"
+         y="136.60315"
          style="line-height:89.99999762%;text-align:start;writing-mode:lr-tb;text-anchor:start;stroke-width:0.26458332"
          rotate="0 0 0 0 0 0 0 0 0 0 0 0 0"
          id="tspan1286">CHAIN MODE</tspan></text>
@@ -427,23 +427,23 @@
     <text
        xml:space="preserve"
        style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:3.52777767px;line-height:1.25;font-family:Consolas;-inkscape-font-specification:'Consolas Bold';text-align:center;letter-spacing:0px;word-spacing:0px;text-anchor:middle;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.26458332"
-       x="109.55701"
+       x="106.91119"
        y="147.58337"
        id="text303-4-84"><tspan
          sodipodi:role="line"
          id="tspan301-5-1"
-         x="109.55701"
+         x="106.91119"
          y="147.58337"
          style="stroke-width:0.26458332">CLOCK</tspan></text>
     <text
        xml:space="preserve"
        style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:3.52777767px;line-height:1.25;font-family:Consolas;-inkscape-font-specification:'Consolas Bold';text-align:center;letter-spacing:0px;word-spacing:0px;text-anchor:middle;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.26458332"
-       x="126.26701"
+       x="119.38787"
        y="147.58337"
        id="text307-3"><tspan
          sodipodi:role="line"
          id="tspan305-2"
-         x="126.26701"
+         x="119.38787"
          y="147.58337"
          style="stroke-width:0.26458332">RESET</tspan></text>
     <text
@@ -461,11 +461,11 @@
        xml:space="preserve"
        style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:2.11666656px;line-height:89.99999762%;font-family:Consolas;-inkscape-font-specification:'Consolas Bold';text-align:start;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;text-anchor:start;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.26458332"
        x="120.2126"
-       y="125.49898"
+       y="124.44064"
        id="text295-57-9"><tspan
          sodipodi:role="line"
          x="120.2126"
-         y="125.49898"
+         y="124.44064"
          style="font-size:2.82222223px;line-height:89.99999762%;text-align:start;writing-mode:lr-tb;text-anchor:start;stroke-width:0.26458332"
          rotate="0 0 0 0 0 0 0"
          id="tspan1286-6">NONE</tspan></text>
@@ -473,11 +473,11 @@
        xml:space="preserve"
        style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:2.82222223px;line-height:89.99999762%;font-family:Consolas;-inkscape-font-specification:'Consolas Bold';text-align:start;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;text-anchor:start;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.26458332"
        x="120.16438"
-       y="129.46773"
+       y="128.40941"
        id="text295-57-9-2"><tspan
          sodipodi:role="line"
          x="120.16438"
-         y="129.46773"
+         y="128.40941"
          style="font-size:2.82222223px;line-height:89.99999762%;text-align:start;writing-mode:lr-tb;text-anchor:start;stroke-width:0.26458332"
          rotate="0 0 0 0 0 0 0"
          id="tspan1286-6-7">BOSS</tspan></text>
@@ -485,11 +485,11 @@
        xml:space="preserve"
        style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:2.11666656px;line-height:89.99999762%;font-family:Consolas;-inkscape-font-specification:'Consolas Bold';text-align:start;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;text-anchor:start;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.26458332"
        x="120.08858"
-       y="133.43643"
+       y="132.37811"
        id="text295-57-9-3"><tspan
          sodipodi:role="line"
          x="120.08858"
-         y="133.43643"
+         y="132.37811"
          style="font-size:2.82222223px;line-height:89.99999762%;text-align:start;writing-mode:lr-tb;text-anchor:start;stroke-width:0.26458332"
          rotate="0 0 0 0 0 0 0 0 0 0 0"
          id="tspan1286-6-3">EMPLOYEE</tspan></text>
@@ -591,5 +591,16 @@
          y="88.483231"
          style="font-size:2.46944451px;line-height:0;stroke-width:0.26458332"
          id="tspan53996-3">OUT</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:3.52777767px;line-height:1.25;font-family:Consolas;-inkscape-font-specification:'Consolas Bold';text-align:center;letter-spacing:0px;word-spacing:0px;text-anchor:middle;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.26458332"
+       x="131.01642"
+       y="147.42529"
+       id="text307-3-6"><tspan
+         sodipodi:role="line"
+         id="tspan305-2-8"
+         x="131.01642"
+         y="147.42529"
+         style="stroke-width:0.26458332">MUTE</tspan></text>
   </g>
 </svg>

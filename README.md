@@ -16,6 +16,7 @@ A collection of unusual plugins that will add a certain coolness to your patches
 - Last QER's EoC should be patched back to first QER's Start Input to create a complete loop.
 - May want to consider using an OR module (Qwelk has a nice one) so that mutiple QER's outs and accent outs can gate a single unit
 - Each QER has its own clock input, so tempo changes can easily be created
+- Mute Input keeps rhythm running just no output
 - https://www.youtube.com/watch?v=ARMxz11z9FU is an example of how to patch a couple QERs together and drive some drum synths
 
 ## BPM LFO
@@ -24,6 +25,7 @@ A collection of unusual plugins that will add a certain coolness to your patches
 - Tempo Sync'd LFO.
 - CV Control of Time Division
 - Pairs well with the Quad Euclidean Rhythm
+- Hold Input keeps LFO cycling, but Outputs stay at last value
 
 ## Quantussy Cell
 

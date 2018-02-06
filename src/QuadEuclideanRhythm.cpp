@@ -28,7 +28,7 @@ struct QuadEuclideanRhythm : Module {
 		PAD_4_PARAM,
 		ACCENTS_4_PARAM,
 		ACCENT_ROTATE_4_PARAM,
-		CHAIN_MODE_PARAM,
+		CHAIN_MODE_PARAM,		
 		NUM_PARAMS
 	};
 	enum InputIds {
@@ -62,6 +62,7 @@ struct QuadEuclideanRhythm : Module {
 		START_4_INPUT,
 		CLOCK_INPUT,
 		RESET_INPUT,
+		MUTE_INPUT,
 		NUM_INPUTS
 	};
 	enum OutputIds {
@@ -83,6 +84,7 @@ struct QuadEuclideanRhythm : Module {
 		CHAIN_MODE_NONE_LIGHT,
 		CHAIN_MODE_BOSS_LIGHT,
 		CHAIN_MODE_EMPLOYEE_LIGHT,
+		MUTED_LIGHT,
 		NUM_LIGHTS
 	};
 	enum ChainModes {
@@ -102,8 +104,9 @@ struct QuadEuclideanRhythm : Module {
 	bool running[4];
 	int chainMode;
 	bool initialized = false;
+	bool muted = false;
 
-	SchmittTrigger clockTrigger,resetTrigger,chainModeTrigger,startTrigger[4];
+	SchmittTrigger clockTrigger,resetTrigger,chainModeTrigger,muteTrigger,startTrigger[4];
 	PulseGenerator eocPulse[4];
 
 
@@ -124,13 +127,18 @@ struct QuadEuclideanRhythm : Module {
 	json_t *toJson() override {
 		json_t *rootJ = json_object();
 		json_object_set_new(rootJ, "chainMode", json_integer((int) chainMode));
+		json_object_set_new(rootJ, "muted", json_integer((bool) muted));
 		return rootJ;
 	}
 
 	void fromJson(json_t *rootJ) override {
-		json_t *sumJ = json_object_get(rootJ, "chainMode");
-		if (sumJ)
-			chainMode = json_integer_value(sumJ);
+		json_t *cmJ = json_object_get(rootJ, "chainMode");
+		if (cmJ)
+			chainMode = json_integer_value(cmJ);
+
+		json_t *mutedJ = json_object_get(rootJ, "muted");
+		if (mutedJ)
+			muted = json_integer_value(mutedJ);
 
 	}
 
@@ -174,6 +182,7 @@ void QuadEuclideanRhythm::step() {
 	lights[CHAIN_MODE_BOSS_LIGHT].value = chainMode == CHAIN_MODE_BOSS ? 1.0 : 0.0;
 	lights[CHAIN_MODE_EMPLOYEE_LIGHT].value = chainMode == CHAIN_MODE_EMPLOYEE ? 1.0 : 0.0;
 
+	lights[MUTED_LIGHT].value = muted ? 1.0 : 0.0;
 
 
 	for(int trackNumber=0;trackNumber<4;trackNumber++) {
@@ -301,6 +310,12 @@ void QuadEuclideanRhythm::step() {
 		}
 	}
 
+	if(inputs[MUTE_INPUT].active) {
+		if(muteTrigger.process(inputs[MUTE_INPUT].value)) {
+			muted = !muted;
+		}
+	}
+
 	//See if need to start up
 	for(int trackNumber=0;trackNumber < 4;trackNumber++) {
 		if(chainMode != CHAIN_MODE_NONE && inputs[(trackNumber * 7) + 6].active && !running[trackNumber]) {
@@ -335,13 +350,13 @@ void QuadEuclideanRhythm::step() {
 	// Set output to current state
 	for(int trackNumber=0;trackNumber<4;trackNumber++) {
 		//Send out beat
-		if(beatMatrix[trackNumber][beatIndex[trackNumber]] == true && running[trackNumber]) {
+		if(beatMatrix[trackNumber][beatIndex[trackNumber]] == true && running[trackNumber] && !muted) {
 			outputs[trackNumber * 3].value = inputs[CLOCK_INPUT].value;	
 		} else {
 			outputs[trackNumber * 3].value = 0.0;	
 		}
 		//send out accent
-		if(accentMatrix[trackNumber][beatIndex[trackNumber]] == true && running[trackNumber]) {
+		if(accentMatrix[trackNumber][beatIndex[trackNumber]] == true && running[trackNumber] && !muted) {
 			outputs[trackNumber * 3 + 1].value = inputs[CLOCK_INPUT].value;	
 		} else {
 			outputs[trackNumber * 3 + 1].value = 0.0;	
@@ -463,7 +478,7 @@ QuadEuclideanRhythmWidget::QuadEuclideanRhythmWidget() {
 	addParam(createParam<RoundSmallBlackKnob>(Vec(139, 309), module, QuadEuclideanRhythm::PAD_4_PARAM, 0.0, 15.2, 0.0));
 	addParam(createParam<RoundSmallBlackKnob>(Vec(178, 309), module, QuadEuclideanRhythm::ACCENTS_4_PARAM, 0.0, 15.2, 0.0));
 	addParam(createParam<RoundSmallBlackKnob>(Vec(217, 309), module, QuadEuclideanRhythm::ACCENT_ROTATE_4_PARAM, 0.0, 15.2, 0.0));
-	addParam(createParam<CKD6>(Vec(275, 290), module, QuadEuclideanRhythm::CHAIN_MODE_PARAM, 0.0, 1.0, 0.0));
+	addParam(createParam<CKD6>(Vec(275, 285), module, QuadEuclideanRhythm::CHAIN_MODE_PARAM, 0.0, 1.0, 0.0));
 
 	addInput(createInput<PJ301MPort>(Vec(24, 167), module, QuadEuclideanRhythm::STEPS_1_INPUT));
 	addInput(createInput<PJ301MPort>(Vec(63, 167), module, QuadEuclideanRhythm::DIVISIONS_1_INPUT));
@@ -490,8 +505,9 @@ QuadEuclideanRhythmWidget::QuadEuclideanRhythmWidget() {
 	addInput(createInput<PJ301MPort>(Vec(180, 338), module, QuadEuclideanRhythm::ACCENTS_4_INPUT));
 	addInput(createInput<PJ301MPort>(Vec(219, 338), module, QuadEuclideanRhythm::ACCENT_ROTATE_4_INPUT));
 
-	addInput(createInput<PJ301MPort>(Vec(267, 333), module, QuadEuclideanRhythm::CLOCK_INPUT));
-	addInput(createInput<PJ301MPort>(Vec(330, 333), module, QuadEuclideanRhythm::RESET_INPUT));
+	addInput(createInput<PJ301MPort>(Vec(262, 331), module, QuadEuclideanRhythm::CLOCK_INPUT));
+	addInput(createInput<PJ301MPort>(Vec(302, 331), module, QuadEuclideanRhythm::RESET_INPUT));
+	addInput(createInput<PJ301MPort>(Vec(335, 331), module, QuadEuclideanRhythm::MUTE_INPUT));
 
 	addInput(createInput<PJ301MPort>(Vec(322, 145), module, QuadEuclideanRhythm::START_1_INPUT));
 	addInput(createInput<PJ301MPort>(Vec(322, 175), module, QuadEuclideanRhythm::START_2_INPUT));
@@ -512,9 +528,10 @@ QuadEuclideanRhythmWidget::QuadEuclideanRhythmWidget() {
 	addOutput(createOutput<PJ301MPort>(Vec(286, 235), module, QuadEuclideanRhythm::ACCENT_OUTPUT_4));
 	addOutput(createOutput<PJ301MPort>(Vec(354, 235), module, QuadEuclideanRhythm::EOC_OUTPUT_4));
 	
-	addChild(createLight<SmallLight<BlueLight>>(Vec(310, 276), module, QuadEuclideanRhythm::CHAIN_MODE_NONE_LIGHT));
-	addChild(createLight<SmallLight<GreenLight>>(Vec(310, 291), module, QuadEuclideanRhythm::CHAIN_MODE_BOSS_LIGHT));
-	addChild(createLight<SmallLight<RedLight>>(Vec(310, 306), module, QuadEuclideanRhythm::CHAIN_MODE_EMPLOYEE_LIGHT));
+	addChild(createLight<SmallLight<BlueLight>>(Vec(310, 274), module, QuadEuclideanRhythm::CHAIN_MODE_NONE_LIGHT));
+	addChild(createLight<SmallLight<GreenLight>>(Vec(310, 289), module, QuadEuclideanRhythm::CHAIN_MODE_BOSS_LIGHT));
+	addChild(createLight<SmallLight<RedLight>>(Vec(310, 304), module, QuadEuclideanRhythm::CHAIN_MODE_EMPLOYEE_LIGHT));
 
+	addChild(createLight<LargeLight<RedLight>>(Vec(363, 335), module, QuadEuclideanRhythm::MUTED_LIGHT));
 	
 }

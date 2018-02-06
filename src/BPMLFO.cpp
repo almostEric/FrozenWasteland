@@ -71,13 +71,15 @@ struct LowFrequencyOscillator {
 
 struct BPMLFO : Module {
 	enum ParamIds {
-		DIVISION_PARAM,		
+		DIVISION_PARAM,
+		OFFSET_PARAM,		
 		NUM_PARAMS
 	};
 	enum InputIds {
 		CLOCK_INPUT,
 		DIVISION_INPUT,
 		RESET_INPUT,
+		HOLD_INPUT,
 		NUM_INPUTS
 	};
 	enum OutputIds {
@@ -89,18 +91,20 @@ struct BPMLFO : Module {
 	};
 	enum LightIds {
 		CLOCK_LIGHT,
+		HOLD_LIGHT,
 		NUM_LIGHTS
 	};	
 	
 
 
 	LowFrequencyOscillator oscillator;
-	SchmittTrigger clockTrigger,resetTrigger;
+	SchmittTrigger clockTrigger,resetTrigger,holdTrigger;
 	float divisions[DIVISIONS] = {1/64.0,1/32.0,1/16.0,1/13.0,1/11.0,1/8.0,1/7.0,1/6.0,1/5.0,1/4.0,1/3.0,1/2.0,1/1.5,1,1.5,2,3,4,5,6,7,8,11,13,16,32,64};
 	const char* divisionNames[DIVISIONS] = {"/64","/32","/16","/13","/11","/8","/7","/6","/5","/4","/3","/2","/1.5","x 1","x 1.5","x 2","x 3","x 4","x 5","x 6","x 7","x 8","x 11","x 13","x 16","x 32","x 64"};
 	int division;
 	float time = 0.0;
 	float duration = 0;
+	bool holding = false;
 
 
 	BPMLFO() : Module(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS, NUM_LIGHTS) {}
@@ -124,9 +128,8 @@ void BPMLFO::step() {
 		if(clockTrigger.process(inputs[CLOCK_INPUT].value)) {
 			duration = time;
 			time = 0;
-			//oscillator.hardReset());
 		}
-		lights[CLOCK_LIGHT].value = time < (duration/2.0);
+		lights[CLOCK_LIGHT].value = time > (duration/2.0);
 	}
 	
 	
@@ -141,12 +144,27 @@ void BPMLFO::step() {
 	if(duration != 0) {
 		oscillator.setFrequency(1.0 / (duration / divisions[division]));
 	}
-	oscillator.step(1.0 / engineGetSampleRate());
+	else {
+		oscillator.setFrequency(0);
+	}
+
 	if(inputs[RESET_INPUT].active) {
 		if(resetTrigger.process(inputs[RESET_INPUT].value)) {
 			oscillator.hardReset();
 		}		
 	} 
+
+	if(inputs[HOLD_INPUT].active) {
+		if(holdTrigger.process(inputs[HOLD_INPUT].value)) {
+			holding = !holding;
+			lights[HOLD_LIGHT].value = holding;
+		}		
+	} 
+
+	if(!holding) {
+		oscillator.offset = (params[OFFSET_PARAM].value > 0.0);
+		oscillator.step(1.0 / engineGetSampleRate());
+	}
 
 
 	outputs[SIN_OUTPUT].value = 5.0 * oscillator.sin();
@@ -228,10 +246,12 @@ BPMLFOWidget::BPMLFOWidget() {
 	}
 
 	addParam(createParam<Davies1900hBlackKnob>(Vec(65, 85), module, BPMLFO::DIVISION_PARAM, 0.0, 26.5, 13.0));
+	addParam(createParam<CKSS>(Vec(122, 210), module, BPMLFO::OFFSET_PARAM, 0.0, 1.0, 1.0));
 
 	addInput(createInput<PJ301MPort>(Vec(30, 95), module, BPMLFO::DIVISION_INPUT));
 	addInput(createInput<PJ301MPort>(Vec(31, 270), module, BPMLFO::CLOCK_INPUT));
-	addInput(createInput<PJ301MPort>(Vec(91, 270), module, BPMLFO::RESET_INPUT));
+	addInput(createInput<PJ301MPort>(Vec(62, 270), module, BPMLFO::RESET_INPUT));
+	addInput(createInput<PJ301MPort>(Vec(94, 270), module, BPMLFO::HOLD_INPUT));
 
 	addOutput(createOutput<PJ301MPort>(Vec(11, 320), module, BPMLFO::SIN_OUTPUT));
 	addOutput(createOutput<PJ301MPort>(Vec(45, 320), module, BPMLFO::TRI_OUTPUT));
@@ -239,4 +259,5 @@ BPMLFOWidget::BPMLFOWidget() {
 	addOutput(createOutput<PJ301MPort>(Vec(114, 320), module, BPMLFO::SQR_OUTPUT));
 
 	addChild(createLight<LargeLight<BlueLight>>(Vec(12, 274), module, BPMLFO::CLOCK_LIGHT));
+	addChild(createLight<LargeLight<RedLight>>(Vec(122, 274), module, BPMLFO::HOLD_LIGHT));
 }

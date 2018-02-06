@@ -49,8 +49,8 @@
      inkscape:pageopacity="0.0"
      inkscape:pageshadow="2"
      inkscape:zoom="4"
-     inkscape:cx="-81.296997"
-     inkscape:cy="225.79805"
+     inkscape:cx="-18.546997"
+     inkscape:cy="193.79805"
      inkscape:document-units="mm"
      inkscape:current-layer="layer1"
      showgrid="false"
@@ -249,23 +249,23 @@
     <text
        xml:space="preserve"
        style="font-style:normal;font-weight:normal;font-size:3.52777767px;line-height:1.25;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.26458332"
-       x="58.982918"
+       x="51.04541"
        y="120.39147"
        id="text4978"><tspan
          sodipodi:role="line"
          id="tspan4976"
-         x="58.982918"
+         x="51.04541"
          y="120.39147"
          style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:2.82222223px;font-family:Consolas;-inkscape-font-specification:'Consolas Bold';stroke-width:0.26458332">RESET</tspan></text>
     <text
        xml:space="preserve"
        style="font-style:normal;font-weight:normal;font-size:3.52777767px;line-height:1.25;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.26458332"
-       x="43.041294"
+       x="39.002064"
        y="120.4231"
        id="text4982"><tspan
          sodipodi:role="line"
          id="tspan4980"
-         x="43.041294"
+         x="39.002064"
          y="120.4231"
          style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:2.82222223px;font-family:Consolas;-inkscape-font-specification:'Consolas Bold';stroke-width:0.26458332">CLOCK</tspan></text>
     <text
@@ -282,12 +282,12 @@
     <text
        xml:space="preserve"
        style="font-style:normal;font-weight:normal;font-size:3.52777767px;line-height:1.25;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.26458332"
-       x="49.036942"
+       x="44.803604"
        y="85.115555"
        id="text5443"><tspan
          sodipodi:role="line"
          id="tspan5441"
-         x="49.036942"
+         x="44.803604"
          y="85.115555"
          style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:2.82222223px;font-family:Consolas;-inkscape-font-specification:'Consolas Bold';stroke-width:0.26458332">DIVISION</tspan></text>
     <text
@@ -321,5 +321,49 @@
        cx="55.056206"
        cy="99.138489"
        r="10.31875" />
-  </g>
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-weight:normal;font-size:3.52777767px;line-height:1.25;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.26458332"
+       x="63.572491"
+       y="120.39146"
+       id="text4978-4"><tspan
+         sodipodi:role="line"
+         id="tspan4976-4"
+         x="63.572491"
+         y="120.39146"
+         style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:2.82222223px;font-family:Consolas;-inkscape-font-specification:'Consolas Bold';stroke-width:0.26458332">HOLD</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-weight:normal;font-size:3.52777767px;line-height:1.25;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.26458332"
+       x="68.085907"
+       y="113.53208"
+       id="text5443-0"><tspan
+         sodipodi:role="line"
+         id="tspan5441-5"
+         x="68.085907"
+         y="113.53208"
+         style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:2.11666656px;font-family:Consolas;-inkscape-font-specification:'Consolas Bold';stroke-width:0.26458332">BI</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-weight:normal;font-size:3.52777767px;line-height:1.25;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.26458332"
+       x="67.600143"
+       y="105.23796"
+       id="text5443-0-4"><tspan
+         sodipodi:role="line"
+         id="tspan5441-5-0"
+         x="67.600143"
+         y="105.23796"
+         style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:2.11666656px;font-family:Consolas;-inkscape-font-specification:'Consolas Bold';stroke-width:0.26458332">UNI</tspan></text>
+    <flowRoot
+       xml:space="preserve"
+       id="flowRoot1527"
+       style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:13.33333302px;line-height:1.25;font-family:Consolas;-inkscape-font-specification:'Consolas Bold';text-align:center;letter-spacing:0px;word-spacing:0px;text-anchor:middle;fill:#000000;fill-opacity:1;stroke:none"
+       transform="matrix(0.26458333,0,0,0.26458333,34.617145,50.389004)"><flowRegion
+         id="flowRegion1529"><rect
+           id="rect1531"
+           width="106.25"
+           height="39.75"
+           x="-39"
+           y="44" /></flowRegion><flowPara
+         id="flowPara1533" /></flowRoot>  </g>
 </svg>
