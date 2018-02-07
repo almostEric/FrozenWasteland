@@ -1,5 +1,5 @@
 SLUG = FrozenWasteland
-VERSION = 0.5.9
+VERSION = 0.5.10
 
 # FLAGS will be passed to both the C and C++ compiler
 FLAGS +=
