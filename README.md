@@ -3,9 +3,9 @@
 
 A collection of unusual plugins that will add a certain coolness to your patches.
 
-## Quad Eucluidean Rhythm
+## Quad Euclidean Rhythm
 
-![Quad Eucluidean Rhythm](./doc/qer.png)
+![Quad Euclidean Rhythm](./doc/qer.png)
 
 - 4 Euclidiean rhythm based triggers
 - CV control of Steps, Divisions and Offset, Padding, Accents and Accent Rotation
@@ -18,13 +18,28 @@ A collection of unusual plugins that will add a certain coolness to your patches
 - Each QER has its own clock input, so tempo changes can easily be created
 - Mute Input keeps rhythm running just no output
 - https://www.youtube.com/watch?v=ARMxz11z9FU is an example of how to patch a couple QERs together and drive some drum synths
+# Euclidean Rhythms
+- Euclidean are based upon attempting to equally distribute the divisions among the steps available
+- Basic example, with a step count of 16, and 2 divisions, the divisions will be on the 1 and the 9.
+- A division of 4 would give you a basic 4 on the floor rhythm
+- The Offset control lets you move the starting point of the rhythm to something other than the 1
+
+## Quad Golumb Ruler Rhythm
+
+![Quad Golumb Ruler Rhythm](./doc/qgrr.png)
+
+- 4 Golumb Ruler rhythm based triggers
+- Features identical to the Quad Euclidean Rhythm and both units can be chained together
+# Golomb Ruler Rhythms
+- Unlike Euclidean Rhythms which seek to evenly distribute the divisions, Golomb Rulers try to ensure unequal distribution
+- Basic example, with a step count of 16, and 4 divisions, the divisions will be on the 1,4,9 and 13.
 
 ## BPM LFO
 ![BPM LFO](./doc/bpmlfo.png)
 
 - Tempo Sync'd LFO.
 - CV Control of Time Division
-- Pairs well with the Quad Euclidean Rhythm
+- Pairs well with the Quad Euclidean Rhythm and Quad Golomb Ruler Rhythm
 - Hold Input keeps LFO cycling, but Outputs stay at last value
 
 ## Quantussy Cell

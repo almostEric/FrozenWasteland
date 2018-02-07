@@ -34,6 +34,10 @@ struct QuadEuclideanRhythmWidget : ModuleWidget {
 	QuadEuclideanRhythmWidget();
 };
 
+struct QuadGolombRulerRhythmWidget : ModuleWidget {
+	QuadGolombRulerRhythmWidget();
+};
+
 struct QuantussyCellWidget : ModuleWidget {
 	QuantussyCellWidget();
 };

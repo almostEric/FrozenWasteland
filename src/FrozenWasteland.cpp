@@ -22,6 +22,7 @@ void init(rack::Plugin *p) {
 	p->addModel(createModel<MrBlueSkyWidget>("Frozen Wasteland", "MrBlueSky", "Mr. Blue Sky", EFFECT_TAG));
 	p->addModel(createModel<PhasedLockedLoopWidget>("Frozen Wasteland", "PhasedLockedLoop", "Phased Locked Loop", OSCILLATOR_TAG));
 	p->addModel(createModel<QuadEuclideanRhythmWidget>("Frozen Wasteland", "QuadEuclideanRhythm", "Quad Euclidean Rhythm", SEQUENCER_TAG));
+	p->addModel(createModel<QuadGolombRulerRhythmWidget>("Frozen Wasteland", "QuadGolombRulerRhythm", "Quad Golomb Ruler Rhythm", SEQUENCER_TAG));
 	p->addModel(createModel<QuantussyCellWidget>("Frozen Wasteland", "QuantussyCell", "Quantussy Cell", LOGIC_TAG));
 	p->addModel(createModel<SeriouslySlowLFOWidget>("Frozen Wasteland", "SeriouslySlowLFO", "Seriously Slow LFO", LFO_TAG));
 	p->addModel(createModel<CDCSeriouslySlowLFOWidget>("Frozen Wasteland", "CDCSeriouslySlowLFO", "Seriously Slow LFO - CDC Signature", LFO_TAG));
