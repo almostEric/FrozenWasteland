@@ -29,6 +29,7 @@ A collection of unusual plugins that will add a certain coolness to your patches
 ![Quad Golumb Ruler Rhythm](./doc/qgrr.png)
 
 - 4 Golumb Ruler rhythm based triggers
+- For when QER is "too danceable" :)
 - Features identical to the Quad Euclidean Rhythm and both units can be chained together
 ### Golomb Ruler Rhythms
 - Unlike Euclidean Rhythms which seek to evenly distribute the divisions, Golomb Rulers try to ensure unequal distribution
