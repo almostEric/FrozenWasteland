@@ -8,7 +8,7 @@ using namespace std;
 #define BANDS 4
 #define FREQUENCIES 3
 
-struct DamonLilliard : Module {
+struct DamianLillard : Module {
 	enum ParamIds {
 		FREQ_1_CUTOFF_PARAM,
 		FREQ_2_CUTOFF_PARAM,
@@ -45,7 +45,7 @@ struct DamonLilliard : Module {
 
 	int bandOffset = 0;
 
-	DamonLilliard() : Module(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS, NUM_LIGHTS) {
+	DamianLillard() : Module(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS, NUM_LIGHTS) {
 		iFilter[0] = new Biquad(bq_type_lowshelf, 0 / engineGetSampleRate(), 5, 6);
 		iFilter[1] = new Biquad(bq_type_lowshelf, 0 / engineGetSampleRate(), 5, 6);
 
@@ -66,7 +66,7 @@ struct DamonLilliard : Module {
 	void step() override;
 };
 
-void DamonLilliard::step() {
+void DamianLillard::step() {
 	
 	float signalIn = inputs[SIGNAL_IN].value/5;
 	float out = 0.0;
@@ -116,12 +116,12 @@ void DamonLilliard::step() {
 }
 
 
-struct DamonLilliardBandDisplay : TransparentWidget {
-	DamonLilliard *module;
+struct DamianLillardBandDisplay : TransparentWidget {
+	DamianLillard *module;
 	int frame = 0;
 	std::shared_ptr<Font> font;
 
-	DamonLilliardBandDisplay() {
+	DamianLillardBandDisplay() {
 		font = Font::load(assetPlugin(plugin, "res/fonts/01 Digit.ttf"));
 	}
 
@@ -143,49 +143,49 @@ struct DamonLilliardBandDisplay : TransparentWidget {
 	}
 };
 
-DamonLilliardWidget::DamonLilliardWidget() {
-	DamonLilliard *module = new DamonLilliard();
+DamianLillardWidget::DamianLillardWidget() {
+	DamianLillard *module = new DamianLillard();
 	setModule(module);
 	box.size = Vec(15*11, 380);
 
 	{
 		SVGPanel *panel = new SVGPanel();
 		panel->box.size = box.size;
-		panel->setBackground(SVG::load(assetPlugin(plugin, "res/DamonLilliard.svg")));
+		panel->setBackground(SVG::load(assetPlugin(plugin, "res/DamianLillard.svg")));
 		addChild(panel);
 	}
 	
 	{
-		DamonLilliardBandDisplay *offsetDisplay = new DamonLilliardBandDisplay();
+		DamianLillardBandDisplay *offsetDisplay = new DamianLillardBandDisplay();
 		offsetDisplay->module = module;
 		offsetDisplay->box.pos = Vec(15, 10);
 		offsetDisplay->box.size = Vec(box.size.x, 140);
 		addChild(offsetDisplay);
 	}
 
-	addParam(createParam<RoundBlackKnob>(Vec(14, 84), module, DamonLilliard::FREQ_1_CUTOFF_PARAM, 0, 1.0, .25));
-	addParam(createParam<RoundBlackKnob>(Vec(64, 84), module, DamonLilliard::FREQ_2_CUTOFF_PARAM, 0, 1.0, .5));
-	addParam(createParam<RoundBlackKnob>(Vec(115, 84), module, DamonLilliard::FREQ_3_CUTOFF_PARAM, 0, 1.0, .75));
+	addParam(createParam<RoundBlackKnob>(Vec(14, 84), module, DamianLillard::FREQ_1_CUTOFF_PARAM, 0, 1.0, .25));
+	addParam(createParam<RoundBlackKnob>(Vec(64, 84), module, DamianLillard::FREQ_2_CUTOFF_PARAM, 0, 1.0, .5));
+	addParam(createParam<RoundBlackKnob>(Vec(115, 84), module, DamianLillard::FREQ_3_CUTOFF_PARAM, 0, 1.0, .75));
 
 
-	addInput(createInput<PJ301MPort>(Vec(20, 125), module, DamonLilliard::FREQ_1_CUTOFF_INPUT));
-	addInput(createInput<PJ301MPort>(Vec(71, 125), module, DamonLilliard::FREQ_2_CUTOFF_INPUT));
-	addInput(createInput<PJ301MPort>(Vec(123, 125), module, DamonLilliard::FREQ_3_CUTOFF_INPUT));
+	addInput(createInput<PJ301MPort>(Vec(20, 125), module, DamianLillard::FREQ_1_CUTOFF_INPUT));
+	addInput(createInput<PJ301MPort>(Vec(71, 125), module, DamianLillard::FREQ_2_CUTOFF_INPUT));
+	addInput(createInput<PJ301MPort>(Vec(123, 125), module, DamianLillard::FREQ_3_CUTOFF_INPUT));
 
-	addInput(createInput<PJ301MPort>(Vec(10, 170), module, DamonLilliard::SIGNAL_IN));
+	addInput(createInput<PJ301MPort>(Vec(10, 170), module, DamianLillard::SIGNAL_IN));
 
 
-	addInput(createInput<PJ301MPort>(Vec(10, 265), module, DamonLilliard::BAND_1_RETURN_INPUT));
-	addInput(createInput<PJ301MPort>(Vec(50, 265), module, DamonLilliard::BAND_2_RETURN_INPUT));
-	addInput(createInput<PJ301MPort>(Vec(90, 265), module, DamonLilliard::BAND_3_RETURN_INPUT));
-	addInput(createInput<PJ301MPort>(Vec(130, 265), module, DamonLilliard::BAND_4_RETURN_INPUT));
+	addInput(createInput<PJ301MPort>(Vec(10, 265), module, DamianLillard::BAND_1_RETURN_INPUT));
+	addInput(createInput<PJ301MPort>(Vec(50, 265), module, DamianLillard::BAND_2_RETURN_INPUT));
+	addInput(createInput<PJ301MPort>(Vec(90, 265), module, DamianLillard::BAND_3_RETURN_INPUT));
+	addInput(createInput<PJ301MPort>(Vec(130, 265), module, DamianLillard::BAND_4_RETURN_INPUT));
 
-	addOutput(createOutput<PJ301MPort>(Vec(10, 225), module, DamonLilliard::BAND_1_OUTPUT));
-	addOutput(createOutput<PJ301MPort>(Vec(50, 225), module, DamonLilliard::BAND_2_OUTPUT));
-	addOutput(createOutput<PJ301MPort>(Vec(90, 225), module, DamonLilliard::BAND_3_OUTPUT));
-	addOutput(createOutput<PJ301MPort>(Vec(130, 225), module, DamonLilliard::BAND_4_OUTPUT));
+	addOutput(createOutput<PJ301MPort>(Vec(10, 225), module, DamianLillard::BAND_1_OUTPUT));
+	addOutput(createOutput<PJ301MPort>(Vec(50, 225), module, DamianLillard::BAND_2_OUTPUT));
+	addOutput(createOutput<PJ301MPort>(Vec(90, 225), module, DamianLillard::BAND_3_OUTPUT));
+	addOutput(createOutput<PJ301MPort>(Vec(130, 225), module, DamianLillard::BAND_4_OUTPUT));
 
-	addOutput(createOutput<PJ301MPort>(Vec(10, 305), module, DamonLilliard::MIX_OUTPUT));
+	addOutput(createOutput<PJ301MPort>(Vec(10, 305), module, DamianLillard::MIX_OUTPUT));
 
 	addChild(createScrew<ScrewSilver>(Vec(15, 0)));
 	addChild(createScrew<ScrewSilver>(Vec(box.size.x-30, 0)));
