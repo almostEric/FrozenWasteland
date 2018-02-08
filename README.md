@@ -43,6 +43,16 @@ A collection of unusual plugins that will add a certain coolness to your patches
 - Pairs well with the Quad Euclidean Rhythm and Quad Golomb Ruler Rhythm
 - Hold Input keeps LFO cycling, but Outputs stay at last value
 
+## Damon Lilliard
+![Damon Lilliard](./doc/damonlilliard.png)
+- Voltage Controlled Quad Crossover
+- Use Sends/Returns to apply FX to different frequency domains of input signal
+- Basic example, distort only the mid lows and/or mid highs so your distortion doesn't remove bottom end
+- or, apply different delays to create interesting resonances and other FX
+- Video of a snare drum being fed into four delay lines: https://www.youtube.com/watch?v=EB7A_hzMpNI
+- Use your imagination!
+
+
 ## Quantussy Cell
 
 ![Quantussy Cell](./doc/qc.png)

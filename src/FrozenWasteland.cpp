@@ -18,6 +18,7 @@ void init(rack::Plugin *p) {
 	// For each module, specify the ModuleWidget subclass, manufacturer slug (for saving in patches), manufacturer human-readable name, module slug, and module name
 	//p->addModel(createModel<EchoesThroughEternityWidget>("Frozen Wasteland", "EchoesThroughEternity", "Echoes Through Eternity", DELAY_TAG));
 	p->addModel(createModel<BPMLFOWidget>("Frozen Wasteland", "BPMLFO", "BPM LFO", LFO_TAG));
+	p->addModel(createModel<DamonLilliardWidget>("Frozen Wasteland", "DamonLilliard", "Damon Lilliard", FILTER_TAG));
 	p->addModel(createModel<LissajousLFOWidget>("Frozen Wasteland", "LissajousLFO", "Lissajous LFO", LFO_TAG));
 	p->addModel(createModel<MrBlueSkyWidget>("Frozen Wasteland", "MrBlueSky", "Mr. Blue Sky", EFFECT_TAG));
 	p->addModel(createModel<PhasedLockedLoopWidget>("Frozen Wasteland", "PhasedLockedLoop", "Phased Locked Loop", OSCILLATOR_TAG));

@@ -18,6 +18,10 @@ struct BPMLFOWidget : ModuleWidget {
 	BPMLFOWidget();
 };
 
+struct DamonLilliardWidget : ModuleWidget {
+	DamonLilliardWidget();
+};
+
 struct LissajousLFOWidget : ModuleWidget {
 	LissajousLFOWidget();
 };
