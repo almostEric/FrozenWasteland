@@ -46,8 +46,8 @@ struct DamianLillard : Module {
 	int bandOffset = 0;
 
 	DamianLillard() : Module(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS, NUM_LIGHTS) {
-		iFilter[0] = new Biquad(bq_type_lowshelf, 0 / engineGetSampleRate(), 5, 6);
-		iFilter[1] = new Biquad(bq_type_lowshelf, 0 / engineGetSampleRate(), 5, 6);
+		iFilter[0] = new Biquad(bq_type_highshelf, 0 / engineGetSampleRate(), 5, 6);
+		iFilter[1] = new Biquad(bq_type_highshelf, 0 / engineGetSampleRate(), 5, 6);
 
 		iFilter[2] = new Biquad(bq_type_highpass, 0 / engineGetSampleRate(), 5, 6);
 		iFilter[3] = new Biquad(bq_type_highpass, 0 / engineGetSampleRate(), 5, 6);
@@ -59,8 +59,8 @@ struct DamianLillard : Module {
 		iFilter[8] = new Biquad(bq_type_lowpass, 0 / engineGetSampleRate(), 5, 6);
 		iFilter[9] = new Biquad(bq_type_lowpass, 0 / engineGetSampleRate(), 5, 6);
 
-		iFilter[10] = new Biquad(bq_type_highshelf, 0 / engineGetSampleRate(), 5, 6);
-		iFilter[11] = new Biquad(bq_type_highshelf, 0 / engineGetSampleRate(), 5, 6);
+		iFilter[10] = new Biquad(bq_type_lowshelf, 0 / engineGetSampleRate(), 5, 6);
+		iFilter[11] = new Biquad(bq_type_lowshelf, 0 / engineGetSampleRate(), 5, 6);
 	}
 
 	void step() override;
