@@ -75,7 +75,7 @@ void DamianLillard::step() {
 	const float maxCutoff = 8400.0;
 	
 	for (int i=0; i<FREQUENCIES;i++) {
-		float cutoffExp = params[FREQ_1_CUTOFF_PARAM+i].value + inputs[FREQ_1_CUTOFF_INPUT+i].value / 5.0;
+		float cutoffExp = params[FREQ_1_CUTOFF_PARAM+i].value + inputs[FREQ_1_CUTOFF_INPUT+i].value / 10.0; //I'm reducing range of CV to make it more useful
 		cutoffExp = clampf(cutoffExp, 0.0, 1.0);
 		freq[i] = minCutoff * powf(maxCutoff / minCutoff, cutoffExp);
 
