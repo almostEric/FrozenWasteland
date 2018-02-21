@@ -224,9 +224,11 @@ struct BPMLFOProgressDisplay : TransparentWidget {
 	}
 };
 
-BPMLFOWidget::BPMLFOWidget() {
-	BPMLFO *module = new BPMLFO();
-	setModule(module);
+struct BPMLFOWidget : ModuleWidget {
+	BPMLFOWidget(BPMLFO *module);
+};
+
+BPMLFOWidget::BPMLFOWidget(BPMLFO *module) : ModuleWidget(module) {
 	box.size = Vec(15*10, RACK_GRID_HEIGHT);
 	
 	{
@@ -236,10 +238,10 @@ BPMLFOWidget::BPMLFOWidget() {
 		addChild(panel);
 	}
 
-	addChild(createScrew<ScrewSilver>(Vec(RACK_GRID_WIDTH, 0)));
-	addChild(createScrew<ScrewSilver>(Vec(box.size.x - 2 * RACK_GRID_WIDTH, 0)));
-	addChild(createScrew<ScrewSilver>(Vec(RACK_GRID_WIDTH, RACK_GRID_HEIGHT - RACK_GRID_WIDTH)));
-	addChild(createScrew<ScrewSilver>(Vec(box.size.x - 2 * RACK_GRID_WIDTH, RACK_GRID_HEIGHT - RACK_GRID_WIDTH)));
+	addChild(Widget::create<ScrewSilver>(Vec(RACK_GRID_WIDTH, 0)));
+	addChild(Widget::create<ScrewSilver>(Vec(box.size.x - 2 * RACK_GRID_WIDTH, 0)));
+	addChild(Widget::create<ScrewSilver>(Vec(RACK_GRID_WIDTH, RACK_GRID_HEIGHT - RACK_GRID_WIDTH)));
+	addChild(Widget::create<ScrewSilver>(Vec(box.size.x - 2 * RACK_GRID_WIDTH, RACK_GRID_HEIGHT - RACK_GRID_WIDTH)));
 
 	{
 		BPMLFOProgressDisplay *display = new BPMLFOProgressDisplay();
@@ -249,19 +251,21 @@ BPMLFOWidget::BPMLFOWidget() {
 		addChild(display);
 	}
 
-	addParam(createParam<Davies1900hBlackKnob>(Vec(65, 85), module, BPMLFO::DIVISION_PARAM, 0.0, 26.5, 13.0));
-	addParam(createParam<CKSS>(Vec(122, 210), module, BPMLFO::OFFSET_PARAM, 0.0, 1.0, 1.0));
+	addParam(ParamWidget::create<Davies1900hBlackKnob>(Vec(65, 85), module, BPMLFO::DIVISION_PARAM, 0.0, 26.5, 13.0));
+	addParam(ParamWidget::create<CKSS>(Vec(122, 210), module, BPMLFO::OFFSET_PARAM, 0.0, 1.0, 1.0));
 
-	addInput(createInput<PJ301MPort>(Vec(30, 95), module, BPMLFO::DIVISION_INPUT));
-	addInput(createInput<PJ301MPort>(Vec(31, 270), module, BPMLFO::CLOCK_INPUT));
-	addInput(createInput<PJ301MPort>(Vec(62, 270), module, BPMLFO::RESET_INPUT));
-	addInput(createInput<PJ301MPort>(Vec(94, 270), module, BPMLFO::HOLD_INPUT));
+	addInput(Port::create<PJ301MPort>(Vec(30, 95), Port::INPUT, module, BPMLFO::DIVISION_INPUT));
+	addInput(Port::create<PJ301MPort>(Vec(31, 270), Port::INPUT, module, BPMLFO::CLOCK_INPUT));
+	addInput(Port::create<PJ301MPort>(Vec(62, 270), Port::INPUT, module, BPMLFO::RESET_INPUT));
+	addInput(Port::create<PJ301MPort>(Vec(94, 270), Port::INPUT, module, BPMLFO::HOLD_INPUT));
 
-	addOutput(createOutput<PJ301MPort>(Vec(11, 320), module, BPMLFO::SIN_OUTPUT));
-	addOutput(createOutput<PJ301MPort>(Vec(45, 320), module, BPMLFO::TRI_OUTPUT));
-	addOutput(createOutput<PJ301MPort>(Vec(80, 320), module, BPMLFO::SAW_OUTPUT));
-	addOutput(createOutput<PJ301MPort>(Vec(114, 320), module, BPMLFO::SQR_OUTPUT));
+	addOutput(Port::create<PJ301MPort>(Vec(11, 320), Port::OUTPUT, module, BPMLFO::SIN_OUTPUT));
+	addOutput(Port::create<PJ301MPort>(Vec(45, 320), Port::OUTPUT, module, BPMLFO::TRI_OUTPUT));
+	addOutput(Port::create<PJ301MPort>(Vec(80, 320), Port::OUTPUT, module, BPMLFO::SAW_OUTPUT));
+	addOutput(Port::create<PJ301MPort>(Vec(114, 320), Port::OUTPUT, module, BPMLFO::SQR_OUTPUT));
 
-	addChild(createLight<LargeLight<BlueLight>>(Vec(12, 274), module, BPMLFO::CLOCK_LIGHT));
-	addChild(createLight<LargeLight<RedLight>>(Vec(122, 274), module, BPMLFO::HOLD_LIGHT));
+	addChild(ModuleLightWidget::create<LargeLight<BlueLight>>(Vec(12, 274), module, BPMLFO::CLOCK_LIGHT));
+	addChild(ModuleLightWidget::create<LargeLight<RedLight>>(Vec(122, 274), module, BPMLFO::HOLD_LIGHT));
 }
+
+Model *modelBPMLFO = Model::create<BPMLFO, BPMLFOWidget>("Frozen Wasteland", "BPMLFO", "BPM LFO", LFO_TAG);

@@ -1,5 +1,5 @@
 SLUG = FrozenWasteland
-VERSION = 0.5.12
+VERSION = 0.6.0dev
 
 # FLAGS will be passed to both the C and C++ compiler
 FLAGS +=
@@ -18,4 +18,5 @@ SOURCES += $(wildcard src/*.cpp src/filters/*.cpp)
 DISTRIBUTABLES += $(wildcard LICENSE*) res
 
 # Include the VCV plugin Makefile framework
-include ../../plugin.mk
+RACK_DIR ?= ../..
+include $(RACK_DIR)/plugin.mk

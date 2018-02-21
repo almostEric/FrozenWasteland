@@ -313,9 +313,11 @@ void PhasedLockedLoop::step() {
 
 }
 
-PhasedLockedLoopWidget::PhasedLockedLoopWidget() {
-	PhasedLockedLoop *module = new PhasedLockedLoop();
-	setModule(module);
+struct PhasedLockedLoopWidget : ModuleWidget {
+	PhasedLockedLoopWidget(PhasedLockedLoop *module);
+};
+
+PhasedLockedLoopWidget::PhasedLockedLoopWidget(PhasedLockedLoop *module) : ModuleWidget(module) {
 	box.size = Vec(15*10, RACK_GRID_HEIGHT);
 	
 
@@ -326,25 +328,27 @@ PhasedLockedLoopWidget::PhasedLockedLoopWidget() {
 		addChild(panel);
 	}
 
-	addChild(createScrew<ScrewSilver>(Vec(RACK_GRID_WIDTH, 0)));
-	addChild(createScrew<ScrewSilver>(Vec(box.size.x - 2 * RACK_GRID_WIDTH, 0)));
-	addChild(createScrew<ScrewSilver>(Vec(RACK_GRID_WIDTH, RACK_GRID_HEIGHT - RACK_GRID_WIDTH)));
-	addChild(createScrew<ScrewSilver>(Vec(box.size.x - 2 * RACK_GRID_WIDTH, RACK_GRID_HEIGHT - RACK_GRID_WIDTH)));
+	addChild(Widget::create<ScrewSilver>(Vec(RACK_GRID_WIDTH, 0)));
+	addChild(Widget::create<ScrewSilver>(Vec(box.size.x - 2 * RACK_GRID_WIDTH, 0)));
+	addChild(Widget::create<ScrewSilver>(Vec(RACK_GRID_WIDTH, RACK_GRID_HEIGHT - RACK_GRID_WIDTH)));
+	addChild(Widget::create<ScrewSilver>(Vec(box.size.x - 2 * RACK_GRID_WIDTH, RACK_GRID_HEIGHT - RACK_GRID_WIDTH)));
 
-	addParam(createParam<Davies1900hBlackKnob>(Vec(97, 47), module, PhasedLockedLoop::VCO_FREQ_PARAM, -54.0, 54.0, 0.0));
-	addParam(createParam<Davies1900hBlackKnob>(Vec(97, 288), module, PhasedLockedLoop::LPF_FREQ_PARAM, 0, 1, 0.5));
-	addParam(createParam<CKD6>(Vec(19, 196), module, PhasedLockedLoop::COMPARATOR_TYPE_PARAM, 0.0, 1.0, 0.0));
+	addParam(ParamWidget::create<Davies1900hBlackKnob>(Vec(97, 47), module, PhasedLockedLoop::VCO_FREQ_PARAM, -54.0, 54.0, 0.0));
+	addParam(ParamWidget::create<Davies1900hBlackKnob>(Vec(97, 288), module, PhasedLockedLoop::LPF_FREQ_PARAM, 0, 1, 0.5));
+	addParam(ParamWidget::create<CKD6>(Vec(19, 196), module, PhasedLockedLoop::COMPARATOR_TYPE_PARAM, 0.0, 1.0, 0.0));
 
-	addInput(createInput<PJ301MPort>(Vec(10, 50), module, PhasedLockedLoop::VCO_CV_INPUT));
-	addInput(createInput<PJ301MPort>(Vec(10, 137), module, PhasedLockedLoop::PHASE_COMPARATOR_INPUT));
-	addInput(createInput<PJ301MPort>(Vec(10, 166), module, PhasedLockedLoop::SIGNAL_INPUT));
-	addInput(createInput<PJ301MPort>(Vec(10, 289), module, PhasedLockedLoop::LPF_FREQ_INPUT));
+	addInput(Port::create<PJ301MPort>(Vec(10, 50), Port::INPUT, module, PhasedLockedLoop::VCO_CV_INPUT));
+	addInput(Port::create<PJ301MPort>(Vec(10, 137), Port::INPUT, module, PhasedLockedLoop::PHASE_COMPARATOR_INPUT));
+	addInput(Port::create<PJ301MPort>(Vec(10, 166), Port::INPUT, module, PhasedLockedLoop::SIGNAL_INPUT));
+	addInput(Port::create<PJ301MPort>(Vec(10, 289), Port::INPUT, module, PhasedLockedLoop::LPF_FREQ_INPUT));
 
-	addOutput(createOutput<PJ301MPort>(Vec(10, 78), module, PhasedLockedLoop::SQUARE_OUTPUT));
-	addOutput(createOutput<PJ301MPort>(Vec(10, 239), module, PhasedLockedLoop::COMPARATOR_OUTPUT));
-	addOutput(createOutput<PJ301MPort>(Vec(10, 319), module, PhasedLockedLoop::LPF_OUTPUT));
+	addOutput(Port::create<PJ301MPort>(Vec(10, 78), Port::OUTPUT, module, PhasedLockedLoop::SQUARE_OUTPUT));
+	addOutput(Port::create<PJ301MPort>(Vec(10, 239), Port::OUTPUT, module, PhasedLockedLoop::COMPARATOR_OUTPUT));
+	addOutput(Port::create<PJ301MPort>(Vec(10, 319), Port::OUTPUT, module, PhasedLockedLoop::LPF_OUTPUT));
 
-	addChild(createLight<LargeLight<BlueLight>>(Vec(112, 154), module, PhasedLockedLoop::PHASE_LOCKED_LIGHT));
-	addChild(createLight<SmallLight<BlueLight>>(Vec(62, 210), module, PhasedLockedLoop::XOR_COMPARATOR_LIGHT));
-	addChild(createLight<SmallLight<BlueLight>>(Vec(62, 226), module, PhasedLockedLoop::FLIP_FLOP_COMPARATOR_LIGHT));
+	addChild(ModuleLightWidget::create<LargeLight<BlueLight>>(Vec(112, 154), module, PhasedLockedLoop::PHASE_LOCKED_LIGHT));
+	addChild(ModuleLightWidget::create<SmallLight<BlueLight>>(Vec(62, 210), module, PhasedLockedLoop::XOR_COMPARATOR_LIGHT));
+	addChild(ModuleLightWidget::create<SmallLight<BlueLight>>(Vec(62, 226), module, PhasedLockedLoop::FLIP_FLOP_COMPARATOR_LIGHT));
 }
+
+Model *modelPhasedLockedLoop = Model::create<PhasedLockedLoop, PhasedLockedLoopWidget>("Frozen Wasteland", "PhasedLockedLoop", "Phased Locked Loop", OSCILLATOR_TAG);

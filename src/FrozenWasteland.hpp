@@ -6,51 +6,14 @@ using namespace rack;
 
 extern Plugin *plugin;
 
-////////////////////
-// module widgets
-////////////////////
-
-//struct EchoesThroughEternityWidget : ModuleWidget {
-//	EchoesThroughEternityWidget();
-//};
-
-struct BPMLFOWidget : ModuleWidget {
-	BPMLFOWidget();
-};
-
-struct DamianLillardWidget : ModuleWidget {
-	DamianLillardWidget();
-};
-
-struct LissajousLFOWidget : ModuleWidget {
-	LissajousLFOWidget();
-};
-
-struct MrBlueSkyWidget : ModuleWidget {
-	MrBlueSkyWidget();
-};
-
-struct PhasedLockedLoopWidget : ModuleWidget {
-	PhasedLockedLoopWidget();
-};
-
-struct QuadEuclideanRhythmWidget : ModuleWidget {
-	QuadEuclideanRhythmWidget();
-};
-
-struct QuadGolombRulerRhythmWidget : ModuleWidget {
-	QuadGolombRulerRhythmWidget();
-};
-
-struct QuantussyCellWidget : ModuleWidget {
-	QuantussyCellWidget();
-};
-
-struct SeriouslySlowLFOWidget : ModuleWidget {
-	SeriouslySlowLFOWidget();
-};
-
-//Can't believe I did this.
-struct CDCSeriouslySlowLFOWidget : ModuleWidget {
-	CDCSeriouslySlowLFOWidget();
-};
+extern Model *modelEchoesThroughEternity;
+extern Model *modelBPMLFO;
+extern Model *modelDamianLillard;
+extern Model *modelLissajousLFO;
+extern Model *modelMrBlueSky;
+extern Model *modelPhasedLockedLoop;
+extern Model *modelQuadEuclideanRhythm;
+extern Model *modelQuadGolombRulerRhythm;
+extern Model *modelQuantussyCell;
+extern Model *modelSeriouslySlowLFO;
+extern Model *modelCDCSeriouslySlowLFO;

@@ -8,9 +8,7 @@ struct LowFrequencyOscillator {
 	bool offset = false;
 	bool invert = false;
 	SchmittTrigger resetTrigger;
-	LowFrequencyOscillator() {
-		resetTrigger.setThresholds(0.0, 0.01);
-	}
+	LowFrequencyOscillator() {}
 	void setPitch(float pitch) {
 		pitch = fminf(pitch, 8.0);
 		freq = powf(2.0, pitch);
@@ -76,7 +74,7 @@ struct LowFrequencyOscillator {
 struct CDCSeriouslySlowLFO : Module {
 	enum ParamIds {
 		TIME_BASE_PARAM,
-		DURATION_PARAM,		
+		DURATION_PARAM,
 		NUM_PARAMS
 	};
 	enum InputIds {
@@ -100,8 +98,8 @@ struct CDCSeriouslySlowLFO : Module {
 		UNIVERSE_LIGHT,
 		HEAT_DEATH_LIGHT,
 		NUM_LIGHTS
-	};	
-	
+	};
+
 
 
 	LowFrequencyOscillator oscillator;
@@ -143,7 +141,7 @@ void CDCSeriouslySlowLFO::step() {
 		oscillator.hardReset();
 	}
 
-	const float year = 31556925.97474; // seconds in tropical year for 1900 from http://www.journaloftheoretics.com/articles/3-3/uwe.pdf                       
+	const float year = 31556925.97474; // seconds in tropical year for 1900 from http://www.journaloftheoretics.com/articles/3-3/uwe.pdf
 	double numberOfSeconds = 0;
 	switch(timeBase) {
 		case 0 :
@@ -174,19 +172,19 @@ void CDCSeriouslySlowLFO::step() {
 		duration +=inputs[FM_INPUT].value;
 	}
 	duration = clampf(duration,1.0,100.0);
-	
+
 	oscillator.setFrequency(1.0 / (duration * numberOfSeconds));
 	oscillator.step(1.0 / engineGetSampleRate());
 	if(inputs[RESET_INPUT].active) {
 		oscillator.setReset(inputs[RESET_INPUT].value);
-	} 
+	}
 
 
 	outputs[SIN_OUTPUT].value = 5.0 * oscillator.sin();
 	outputs[TRI_OUTPUT].value = 5.0 * oscillator.tri();
 	outputs[SAW_OUTPUT].value = 5.0 * oscillator.saw();
 	outputs[SQR_OUTPUT].value =  5.0 * oscillator.sqr();
-	
+
 	for(int lightIndex = 0;lightIndex < 7;lightIndex++)
 	{
 		lights[lightIndex].value = lightIndex != timeBase ? 0.0 : 1.0;
@@ -198,13 +196,13 @@ struct LFOProgressDisplay : TransparentWidget {
 	int frame = 0;
 	std::shared_ptr<Font> font;
 
-	
+
 
 	LFOProgressDisplay() {
 		font = Font::load(assetPlugin(plugin, "res/fonts/01 Digit.ttf"));
 	}
 
-	void drawProgress(NVGcontext *vg, float phase) 
+	void drawProgress(NVGcontext *vg, float phase)
 	{
 		//float startArc = (-M_PI) / 2.0; we know this rotates 90 degrees to top
 		//float endArc = (phase * M_PI) - startArc;
@@ -235,17 +233,19 @@ struct LFOProgressDisplay : TransparentWidget {
 	}
 
 	void draw(NVGcontext *vg) override {
-	
+
 		drawProgress(vg,module->oscillator.progress());
 		drawDuration(vg, Vec(0, box.size.y - 150), module->duration);
 	}
 };
 
-CDCSeriouslySlowLFOWidget::CDCSeriouslySlowLFOWidget() {
-	CDCSeriouslySlowLFO *module = new CDCSeriouslySlowLFO();
-	setModule(module);
+struct CDCSeriouslySlowLFOWidget : ModuleWidget {
+	CDCSeriouslySlowLFOWidget(CDCSeriouslySlowLFO *module);
+};
+
+CDCSeriouslySlowLFOWidget::CDCSeriouslySlowLFOWidget(CDCSeriouslySlowLFO *module) : ModuleWidget(module) {
 	box.size = Vec(15*10, RACK_GRID_HEIGHT);
-	
+
 	{
 		SVGPanel *panel = new SVGPanel();
 		panel->box.size = box.size;
@@ -253,10 +253,10 @@ CDCSeriouslySlowLFOWidget::CDCSeriouslySlowLFOWidget() {
 		addChild(panel);
 	}
 
-	addChild(createScrew<ScrewSilver>(Vec(RACK_GRID_WIDTH, 0)));
-	addChild(createScrew<ScrewSilver>(Vec(box.size.x - 2 * RACK_GRID_WIDTH, 0)));
-	addChild(createScrew<ScrewSilver>(Vec(RACK_GRID_WIDTH, RACK_GRID_HEIGHT - RACK_GRID_WIDTH)));
-	addChild(createScrew<ScrewSilver>(Vec(box.size.x - 2 * RACK_GRID_WIDTH, RACK_GRID_HEIGHT - RACK_GRID_WIDTH)));
+	addChild(Widget::create<ScrewSilver>(Vec(RACK_GRID_WIDTH, 0)));
+	addChild(Widget::create<ScrewSilver>(Vec(box.size.x - 2 * RACK_GRID_WIDTH, 0)));
+	addChild(Widget::create<ScrewSilver>(Vec(RACK_GRID_WIDTH, RACK_GRID_HEIGHT - RACK_GRID_WIDTH)));
+	addChild(Widget::create<ScrewSilver>(Vec(box.size.x - 2 * RACK_GRID_WIDTH, RACK_GRID_HEIGHT - RACK_GRID_WIDTH)));
 
 	{
 		LFOProgressDisplay *display = new LFOProgressDisplay();
@@ -266,22 +266,24 @@ CDCSeriouslySlowLFOWidget::CDCSeriouslySlowLFOWidget() {
 		addChild(display);
 	}
 
-	addParam(createParam<CKD6>(Vec(10, 110), module, CDCSeriouslySlowLFO::TIME_BASE_PARAM, 0.0, 1.0, 0.0));
-	addParam(createParam<Davies1900hBlackKnob>(Vec(65, 85), module, CDCSeriouslySlowLFO::DURATION_PARAM, 1.0, 100.0, 1.0));
+	addParam(ParamWidget::create<CKD6>(Vec(10, 110), module, CDCSeriouslySlowLFO::TIME_BASE_PARAM, 0.0, 1.0, 0.0));
+	addParam(ParamWidget::create<Davies1900hBlackKnob>(Vec(65, 85), module, CDCSeriouslySlowLFO::DURATION_PARAM, 1.0, 100.0, 1.0));
 
-	addInput(createInput<PJ301MPort>(Vec(11, 273), module, CDCSeriouslySlowLFO::FM_INPUT));
-	addInput(createInput<PJ301MPort>(Vec(91, 273), module, CDCSeriouslySlowLFO::RESET_INPUT));
+	addInput(Port::create<PJ301MPort>(Vec(11, 273), Port::INPUT, module, CDCSeriouslySlowLFO::FM_INPUT));
+	addInput(Port::create<PJ301MPort>(Vec(91, 273), Port::INPUT, module, CDCSeriouslySlowLFO::RESET_INPUT));
 
-	addOutput(createOutput<PJ301MPort>(Vec(11, 320), module, CDCSeriouslySlowLFO::SIN_OUTPUT));
-	addOutput(createOutput<PJ301MPort>(Vec(45, 320), module, CDCSeriouslySlowLFO::TRI_OUTPUT));
-	addOutput(createOutput<PJ301MPort>(Vec(80, 320), module, CDCSeriouslySlowLFO::SAW_OUTPUT));
-	addOutput(createOutput<PJ301MPort>(Vec(114, 320), module, CDCSeriouslySlowLFO::SQR_OUTPUT));
+	addOutput(Port::create<PJ301MPort>(Vec(11, 320), Port::OUTPUT, module, CDCSeriouslySlowLFO::SIN_OUTPUT));
+	addOutput(Port::create<PJ301MPort>(Vec(45, 320), Port::OUTPUT, module, CDCSeriouslySlowLFO::TRI_OUTPUT));
+	addOutput(Port::create<PJ301MPort>(Vec(80, 320), Port::OUTPUT, module, CDCSeriouslySlowLFO::SAW_OUTPUT));
+	addOutput(Port::create<PJ301MPort>(Vec(114, 320), Port::OUTPUT, module, CDCSeriouslySlowLFO::SQR_OUTPUT));
 
-	addChild(createLight<MediumLight<BlueLight>>(Vec(10, 158), module, CDCSeriouslySlowLFO::YEARS_LIGHT));
-	addChild(createLight<MediumLight<BlueLight>>(Vec(10, 173), module, CDCSeriouslySlowLFO::CENTURIES_LIGHT));
-	addChild(createLight<MediumLight<BlueLight>>(Vec(10, 188), module, CDCSeriouslySlowLFO::MILLENIUM_LIGHT));
-	addChild(createLight<MediumLight<BlueLight>>(Vec(10, 203), module, CDCSeriouslySlowLFO::AGE_LIGHT));
-	addChild(createLight<MediumLight<BlueLight>>(Vec(10, 218), module, CDCSeriouslySlowLFO::ERA_LIGHT));
-	addChild(createLight<MediumLight<BlueLight>>(Vec(10, 233), module, CDCSeriouslySlowLFO::UNIVERSE_LIGHT));
-	addChild(createLight<MediumLight<BlueLight>>(Vec(10, 248), module, CDCSeriouslySlowLFO::HEAT_DEATH_LIGHT));
+	addChild(ModuleLightWidget::create<MediumLight<BlueLight>>(Vec(10, 158), module, CDCSeriouslySlowLFO::YEARS_LIGHT));
+	addChild(ModuleLightWidget::create<MediumLight<BlueLight>>(Vec(10, 173), module, CDCSeriouslySlowLFO::CENTURIES_LIGHT));
+	addChild(ModuleLightWidget::create<MediumLight<BlueLight>>(Vec(10, 188), module, CDCSeriouslySlowLFO::MILLENIUM_LIGHT));
+	addChild(ModuleLightWidget::create<MediumLight<BlueLight>>(Vec(10, 203), module, CDCSeriouslySlowLFO::AGE_LIGHT));
+	addChild(ModuleLightWidget::create<MediumLight<BlueLight>>(Vec(10, 218), module, CDCSeriouslySlowLFO::ERA_LIGHT));
+	addChild(ModuleLightWidget::create<MediumLight<BlueLight>>(Vec(10, 233), module, CDCSeriouslySlowLFO::UNIVERSE_LIGHT));
+	addChild(ModuleLightWidget::create<MediumLight<BlueLight>>(Vec(10, 248), module, CDCSeriouslySlowLFO::HEAT_DEATH_LIGHT));
 }
+
+Model *modelCDCSeriouslySlowLFO = Model::create<CDCSeriouslySlowLFO, CDCSeriouslySlowLFOWidget>("Frozen Wasteland", "CDCSeriouslySlowLFO", "Seriously Slow LFO - CDC Signature", LFO_TAG);
