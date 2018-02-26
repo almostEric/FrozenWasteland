@@ -16,13 +16,13 @@ struct MrBlueSky : Module {
 		MOD_Q_PARAM,
 		BAND_OFFSET_PARAM,
 		GMOD_PARAM,
-		GCARR_PARAM, 	
+		GCARR_PARAM,
 		G_PARAM,
 		SHAPE_PARAM,
 		NUM_PARAMS
 	};
 	enum InputIds {
-		CARRIER_IN,		
+		CARRIER_IN,
 		IN_MOD = CARRIER_IN + BANDS,
 		IN_CARR,
 		ATTACK_INPUT,
@@ -59,8 +59,6 @@ struct MrBlueSky : Module {
 			iFilter[i] = new Biquad(bq_type_bandpass, freq[i%BANDS] / engineGetSampleRate(), 5, 6);
 			cFilter[i] = new Biquad(bq_type_bandpass, freq[i%BANDS] / engineGetSampleRate(), 5, 6);
 		};
-		shiftLeftTrigger.setThresholds(0.0, 0.01);
-		shiftRightTrigger.setThresholds(0.0, 0.01);
 	}
 
 	void step() override;
@@ -86,7 +84,7 @@ void MrBlueSky::step() {
 	}
 
 	/* Disabling For now :(
-	if(inputs[SHIFT_BAND_OFFSET_LEFT_INPUT].active) { 
+	if(inputs[SHIFT_BAND_OFFSET_LEFT_INPUT].active) {
 		if (shiftLeftTrigger.process(inputs[SHIFT_BAND_OFFSET_LEFT_INPUT].value)) {
 			bandOffset = (bandOffset - 1);
 			if(bandOffset <= -BANDS) {
@@ -181,7 +179,7 @@ void MrBlueSky::step() {
 		} else {
 			coeff = mem[(i+bandOffset) % BANDS];
 		}
-		
+
 		float bandOut = cFilter[i+BANDS]->process(cFilter[i]->process(inC*params[GCARR_PARAM].value)) * coeff * params[BG_PARAM+i].value;
 		out += bandOut;
 	}
@@ -234,14 +232,16 @@ struct BandOffsetDisplay : TransparentWidget {
 	}
 
 	void draw(NVGcontext *vg) override {
-	
+
 		drawDuration(vg, Vec(0, box.size.y - 150), module->bandOffset);
 	}
 };
 
-MrBlueSkyWidget::MrBlueSkyWidget() {
-	MrBlueSky *module = new MrBlueSky();
-	setModule(module);
+struct MrBlueSkyWidget : ModuleWidget {
+	MrBlueSkyWidget(MrBlueSky *module);
+};
+
+MrBlueSkyWidget::MrBlueSkyWidget(MrBlueSky *module) : ModuleWidget(module) {
 	box.size = Vec(15*52, 380);
 
 	{
@@ -266,38 +266,40 @@ MrBlueSkyWidget::MrBlueSkyWidget() {
 	}
 
 	for (int i = 0; i < BANDS; i++) {
-		addParam( createParam<RoundBlackKnob>(Vec(50 + 43*i, 120), module, MrBlueSky::BG_PARAM + i, 0, 2, 1));
+		addParam( ParamWidget::create<RoundBlackKnob>(Vec(50 + 43*i, 120), module, MrBlueSky::BG_PARAM + i, 0, 2, 1));
 	}
-	addParam(createParam<RoundSmallBlackKnob>(Vec(34, 177), module, MrBlueSky::ATTACK_PARAM, 0.0, 0.25, 0.0));
-	addParam(createParam<RoundSmallBlackKnob>(Vec(116, 177), module, MrBlueSky::DECAY_PARAM, 0.0, 0.25, 0.0));
-	addParam(createParam<RoundSmallBlackKnob>(Vec(198, 177), module, MrBlueSky::CARRIER_Q_PARAM, 1.0, 15.0, 5.0));
-	addParam(createParam<RoundSmallBlackKnob>(Vec(280, 177), module, MrBlueSky::MOD_Q_PARAM, 1.0, 15.0, 5.0));
-	addParam(createParam<RoundSmallBlackKnob>(Vec(392, 177), module, MrBlueSky::BAND_OFFSET_PARAM, -15.5, 15.5, 0.0));
-	addParam(createParam<RoundBlackKnob>(Vec(15, 255), module, MrBlueSky::GMOD_PARAM, 1, 10, 5));
-	addParam(createParam<RoundBlackKnob>(Vec(70, 255), module, MrBlueSky::GCARR_PARAM, 1, 10, 5));
-	addParam(createParam<RoundBlackKnob>(Vec(125, 255), module, MrBlueSky::G_PARAM, 1, 10, 5));
+	addParam(ParamWidget::create<RoundSmallBlackKnob>(Vec(34, 177), module, MrBlueSky::ATTACK_PARAM, 0.0, 0.25, 0.0));
+	addParam(ParamWidget::create<RoundSmallBlackKnob>(Vec(116, 177), module, MrBlueSky::DECAY_PARAM, 0.0, 0.25, 0.0));
+	addParam(ParamWidget::create<RoundSmallBlackKnob>(Vec(198, 177), module, MrBlueSky::CARRIER_Q_PARAM, 1.0, 15.0, 5.0));
+	addParam(ParamWidget::create<RoundSmallBlackKnob>(Vec(280, 177), module, MrBlueSky::MOD_Q_PARAM, 1.0, 15.0, 5.0));
+	addParam(ParamWidget::create<RoundSmallBlackKnob>(Vec(392, 177), module, MrBlueSky::BAND_OFFSET_PARAM, -15.5, 15.5, 0.0));
+	addParam(ParamWidget::create<RoundBlackKnob>(Vec(15, 255), module, MrBlueSky::GMOD_PARAM, 1, 10, 5));
+	addParam(ParamWidget::create<RoundBlackKnob>(Vec(70, 255), module, MrBlueSky::GCARR_PARAM, 1, 10, 5));
+	addParam(ParamWidget::create<RoundBlackKnob>(Vec(125, 255), module, MrBlueSky::G_PARAM, 1, 10, 5));
 
 
 	for (int i = 0; i < BANDS; i++) {
-		addInput(createInput<PJ301MPort>(Vec(56 + 43*i, 85), module, MrBlueSky::CARRIER_IN + i));
+		addInput(Port::create<PJ301MPort>(Vec(56 + 43*i, 85), Port::INPUT, module, MrBlueSky::CARRIER_IN + i));
 	}
-	addInput(createInput<PJ301MPort>(Vec(10, 330), module, MrBlueSky::IN_MOD));
-	addInput(createInput<PJ301MPort>(Vec(48, 330), module, MrBlueSky::IN_CARR));
-	addInput(createInput<PJ301MPort>(Vec(35, 207), module, MrBlueSky::ATTACK_INPUT));
-	addInput(createInput<PJ301MPort>(Vec(117, 207), module, MrBlueSky::DECAY_INPUT));
-	addInput(createInput<PJ301MPort>(Vec(200, 207), module, MrBlueSky::CARRIER_Q_INPUT));
-	addInput(createInput<PJ301MPort>(Vec(282, 207), module, MrBlueSky::MOD_Q_INPUT));
-	//addInput(createInput<PJ301MPort>(Vec(362, 182), module, MrBlueSky::SHIFT_BAND_OFFSET_LEFT_INPUT));
-	//addInput(createInput<PJ301MPort>(Vec(425, 182), module, MrBlueSky::SHIFT_BAND_OFFSET_RIGHT_INPUT));
-	addInput(createInput<PJ301MPort>(Vec(394, 207), module, MrBlueSky::SHIFT_BAND_OFFSET_INPUT));
+	addInput(Port::create<PJ301MPort>(Vec(10, 330), Port::INPUT, module, MrBlueSky::IN_MOD));
+	addInput(Port::create<PJ301MPort>(Vec(48, 330), Port::INPUT, module, MrBlueSky::IN_CARR));
+	addInput(Port::create<PJ301MPort>(Vec(35, 207), Port::INPUT, module, MrBlueSky::ATTACK_INPUT));
+	addInput(Port::create<PJ301MPort>(Vec(117, 207), Port::INPUT, module, MrBlueSky::DECAY_INPUT));
+	addInput(Port::create<PJ301MPort>(Vec(200, 207), Port::INPUT, module, MrBlueSky::CARRIER_Q_INPUT));
+	addInput(Port::create<PJ301MPort>(Vec(282, 207), Port::INPUT, module, MrBlueSky::MOD_Q_INPUT));
+	//addInput(Port::create<PJ301MPort>(Vec(362, 182), Port::INPUT, module, MrBlueSky::SHIFT_BAND_OFFSET_LEFT_INPUT));
+	//addInput(Port::create<PJ301MPort>(Vec(425, 182), Port::INPUT, module, MrBlueSky::SHIFT_BAND_OFFSET_RIGHT_INPUT));
+	addInput(Port::create<PJ301MPort>(Vec(394, 207), Port::INPUT, module, MrBlueSky::SHIFT_BAND_OFFSET_INPUT));
 
 	for (int i = 0; i < BANDS; i++) {
-		addOutput(createOutput<PJ301MPort>(Vec(56 + 43*i, 45), module, MrBlueSky::MOD_OUT + i));
+		addOutput(Port::create<PJ301MPort>(Vec(56 + 43*i, 45), Port::OUTPUT, module, MrBlueSky::MOD_OUT + i));
 	}
-	addOutput(createOutput<PJ301MPort>(Vec(85, 330), module, MrBlueSky::OUT));
+	addOutput(Port::create<PJ301MPort>(Vec(85, 330), Port::OUTPUT, module, MrBlueSky::OUT));
 
-	addChild(createScrew<ScrewSilver>(Vec(15, 0)));
-	addChild(createScrew<ScrewSilver>(Vec(box.size.x-30, 0)));
-	addChild(createScrew<ScrewSilver>(Vec(15, 365)));
-	addChild(createScrew<ScrewSilver>(Vec(box.size.x-30, 365)));
+	addChild(Widget::create<ScrewSilver>(Vec(15, 0)));
+	addChild(Widget::create<ScrewSilver>(Vec(box.size.x-30, 0)));
+	addChild(Widget::create<ScrewSilver>(Vec(15, 365)));
+	addChild(Widget::create<ScrewSilver>(Vec(box.size.x-30, 365)));
 }
+
+Model *modelMrBlueSky = Model::create<MrBlueSky, MrBlueSkyWidget>("Frozen Wasteland", "MrBlueSky", "Mr. Blue Sky", EFFECT_TAG);

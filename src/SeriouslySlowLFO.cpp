@@ -8,9 +8,7 @@ struct LowFrequencyOscillator {
 	bool offset = false;
 	bool invert = false;
 	SchmittTrigger resetTrigger;
-	LowFrequencyOscillator() {
-		resetTrigger.setThresholds(0.0, 0.01);
-	}
+	LowFrequencyOscillator() {}
 	void setPitch(float pitch) {
 		pitch = fminf(pitch, 8.0);
 		freq = powf(2.0, pitch);
@@ -76,7 +74,7 @@ struct LowFrequencyOscillator {
 struct SeriouslySlowLFO : Module {
 	enum ParamIds {
 		TIME_BASE_PARAM,
-		DURATION_PARAM,		
+		DURATION_PARAM,
 		NUM_PARAMS
 	};
 	enum InputIds {
@@ -98,8 +96,8 @@ struct SeriouslySlowLFO : Module {
 		WEEKS_LIGHT,
 		MONTHS_LIGHT,
 		NUM_LIGHTS
-	};	
-	
+	};
+
 
 
 	LowFrequencyOscillator oscillator;
@@ -165,19 +163,19 @@ void SeriouslySlowLFO::step() {
 		duration +=inputs[FM_INPUT].value;
 	}
 	duration = clampf(duration,1.0,100.0);
-	
+
 	oscillator.setFrequency(1.0 / (duration * numberOfSeconds));
 	oscillator.step(1.0 / engineGetSampleRate());
 	if(inputs[RESET_INPUT].active) {
 		oscillator.setReset(inputs[RESET_INPUT].value);
-	} 
+	}
 
 
 	outputs[SIN_OUTPUT].value = 5.0 * oscillator.sin();
 	outputs[TRI_OUTPUT].value = 5.0 * oscillator.tri();
 	outputs[SAW_OUTPUT].value = 5.0 * oscillator.saw();
 	outputs[SQR_OUTPUT].value =  5.0 * oscillator.sqr();
-	
+
 	for(int lightIndex = 0;lightIndex<5;lightIndex++)
 	{
 		lights[lightIndex].value = lightIndex != timeBase ? 0.0 : 1.0;
@@ -189,13 +187,13 @@ struct LFOProgressDisplay : TransparentWidget {
 	int frame = 0;
 	std::shared_ptr<Font> font;
 
-	
+
 
 	LFOProgressDisplay() {
 		font = Font::load(assetPlugin(plugin, "res/fonts/01 Digit.ttf"));
 	}
 
-	void drawProgress(NVGcontext *vg, float phase) 
+	void drawProgress(NVGcontext *vg, float phase)
 	{
 		//float startArc = (-M_PI) / 2.0; we know this rotates 90 degrees to top
 		//float endArc = (phase * M_PI) - startArc;
@@ -226,17 +224,19 @@ struct LFOProgressDisplay : TransparentWidget {
 	}
 
 	void draw(NVGcontext *vg) override {
-	
+
 		drawProgress(vg,module->oscillator.progress());
 		drawDuration(vg, Vec(0, box.size.y - 150), module->duration);
 	}
 };
 
-SeriouslySlowLFOWidget::SeriouslySlowLFOWidget() {
-	SeriouslySlowLFO *module = new SeriouslySlowLFO();
-	setModule(module);
+struct SeriouslySlowLFOWidget : ModuleWidget {
+	SeriouslySlowLFOWidget(SeriouslySlowLFO *module);
+};
+
+SeriouslySlowLFOWidget::SeriouslySlowLFOWidget(SeriouslySlowLFO *module) : ModuleWidget(module) {
 	box.size = Vec(15*10, RACK_GRID_HEIGHT);
-	
+
 	{
 		SVGPanel *panel = new SVGPanel();
 		panel->box.size = box.size;
@@ -244,10 +244,10 @@ SeriouslySlowLFOWidget::SeriouslySlowLFOWidget() {
 		addChild(panel);
 	}
 
-	addChild(createScrew<ScrewSilver>(Vec(RACK_GRID_WIDTH, 0)));
-	addChild(createScrew<ScrewSilver>(Vec(box.size.x - 2 * RACK_GRID_WIDTH, 0)));
-	addChild(createScrew<ScrewSilver>(Vec(RACK_GRID_WIDTH, RACK_GRID_HEIGHT - RACK_GRID_WIDTH)));
-	addChild(createScrew<ScrewSilver>(Vec(box.size.x - 2 * RACK_GRID_WIDTH, RACK_GRID_HEIGHT - RACK_GRID_WIDTH)));
+	addChild(Widget::create<ScrewSilver>(Vec(RACK_GRID_WIDTH, 0)));
+	addChild(Widget::create<ScrewSilver>(Vec(box.size.x - 2 * RACK_GRID_WIDTH, 0)));
+	addChild(Widget::create<ScrewSilver>(Vec(RACK_GRID_WIDTH, RACK_GRID_HEIGHT - RACK_GRID_WIDTH)));
+	addChild(Widget::create<ScrewSilver>(Vec(box.size.x - 2 * RACK_GRID_WIDTH, RACK_GRID_HEIGHT - RACK_GRID_WIDTH)));
 
 	{
 		LFOProgressDisplay *display = new LFOProgressDisplay();
@@ -257,20 +257,22 @@ SeriouslySlowLFOWidget::SeriouslySlowLFOWidget() {
 		addChild(display);
 	}
 
-	addParam(createParam<CKD6>(Vec(10, 110), module, SeriouslySlowLFO::TIME_BASE_PARAM, 0.0, 1.0, 0.0));
-	addParam(createParam<Davies1900hBlackKnob>(Vec(65, 85), module, SeriouslySlowLFO::DURATION_PARAM, 1.0, 100.0, 1.0));
+	addParam(ParamWidget::create<CKD6>(Vec(10, 110), module, SeriouslySlowLFO::TIME_BASE_PARAM, 0.0, 1.0, 0.0));
+	addParam(ParamWidget::create<Davies1900hBlackKnob>(Vec(65, 85), module, SeriouslySlowLFO::DURATION_PARAM, 1.0, 100.0, 1.0));
 
-	addInput(createInput<PJ301MPort>(Vec(11, 270), module, SeriouslySlowLFO::FM_INPUT));
-	addInput(createInput<PJ301MPort>(Vec(91, 270), module, SeriouslySlowLFO::RESET_INPUT));
+	addInput(Port::create<PJ301MPort>(Vec(11, 270), Port::INPUT, module, SeriouslySlowLFO::FM_INPUT));
+	addInput(Port::create<PJ301MPort>(Vec(91, 270), Port::INPUT, module, SeriouslySlowLFO::RESET_INPUT));
 
-	addOutput(createOutput<PJ301MPort>(Vec(11, 320), module, SeriouslySlowLFO::SIN_OUTPUT));
-	addOutput(createOutput<PJ301MPort>(Vec(45, 320), module, SeriouslySlowLFO::TRI_OUTPUT));
-	addOutput(createOutput<PJ301MPort>(Vec(80, 320), module, SeriouslySlowLFO::SAW_OUTPUT));
-	addOutput(createOutput<PJ301MPort>(Vec(114, 320), module, SeriouslySlowLFO::SQR_OUTPUT));
+	addOutput(Port::create<PJ301MPort>(Vec(11, 320), Port::OUTPUT, module, SeriouslySlowLFO::SIN_OUTPUT));
+	addOutput(Port::create<PJ301MPort>(Vec(45, 320), Port::OUTPUT, module, SeriouslySlowLFO::TRI_OUTPUT));
+	addOutput(Port::create<PJ301MPort>(Vec(80, 320), Port::OUTPUT, module, SeriouslySlowLFO::SAW_OUTPUT));
+	addOutput(Port::create<PJ301MPort>(Vec(114, 320), Port::OUTPUT, module, SeriouslySlowLFO::SQR_OUTPUT));
 
-	addChild(createLight<MediumLight<BlueLight>>(Vec(10, 158), module, SeriouslySlowLFO::MINUTES_LIGHT));
-	addChild(createLight<MediumLight<BlueLight>>(Vec(10, 173), module, SeriouslySlowLFO::HOURS_LIGHT));
-	addChild(createLight<MediumLight<BlueLight>>(Vec(10, 188), module, SeriouslySlowLFO::DAYS_LIGHT));
-	addChild(createLight<MediumLight<BlueLight>>(Vec(10, 203), module, SeriouslySlowLFO::WEEKS_LIGHT));
-	addChild(createLight<MediumLight<BlueLight>>(Vec(10, 218), module, SeriouslySlowLFO::MONTHS_LIGHT));
+	addChild(ModuleLightWidget::create<MediumLight<BlueLight>>(Vec(10, 158), module, SeriouslySlowLFO::MINUTES_LIGHT));
+	addChild(ModuleLightWidget::create<MediumLight<BlueLight>>(Vec(10, 173), module, SeriouslySlowLFO::HOURS_LIGHT));
+	addChild(ModuleLightWidget::create<MediumLight<BlueLight>>(Vec(10, 188), module, SeriouslySlowLFO::DAYS_LIGHT));
+	addChild(ModuleLightWidget::create<MediumLight<BlueLight>>(Vec(10, 203), module, SeriouslySlowLFO::WEEKS_LIGHT));
+	addChild(ModuleLightWidget::create<MediumLight<BlueLight>>(Vec(10, 218), module, SeriouslySlowLFO::MONTHS_LIGHT));
 }
+
+Model *modelSeriouslySlowLFO = Model::create<SeriouslySlowLFO, SeriouslySlowLFOWidget>("Frozen Wasteland", "SeriouslySlowLFO", "Seriously Slow LFO", LFO_TAG);

@@ -143,9 +143,11 @@ struct DamianLillardBandDisplay : TransparentWidget {
 	}
 };
 
-DamianLillardWidget::DamianLillardWidget() {
-	DamianLillard *module = new DamianLillard();
-	setModule(module);
+struct DamianLillardWidget : ModuleWidget {
+	DamianLillardWidget(DamianLillard *module);
+};
+
+DamianLillardWidget::DamianLillardWidget(DamianLillard *module) : ModuleWidget(module) {
 	box.size = Vec(15*11, 380);
 
 	{
@@ -163,32 +165,34 @@ DamianLillardWidget::DamianLillardWidget() {
 		addChild(offsetDisplay);
 	}
 
-	addParam(createParam<RoundBlackKnob>(Vec(14, 84), module, DamianLillard::FREQ_1_CUTOFF_PARAM, 0, 1.0, .25));
-	addParam(createParam<RoundBlackKnob>(Vec(64, 84), module, DamianLillard::FREQ_2_CUTOFF_PARAM, 0, 1.0, .5));
-	addParam(createParam<RoundBlackKnob>(Vec(115, 84), module, DamianLillard::FREQ_3_CUTOFF_PARAM, 0, 1.0, .75));
+	addParam(ParamWidget::create<RoundBlackKnob>(Vec(14, 84), module, DamianLillard::FREQ_1_CUTOFF_PARAM, 0, 1.0, .25));
+	addParam(ParamWidget::create<RoundBlackKnob>(Vec(64, 84), module, DamianLillard::FREQ_2_CUTOFF_PARAM, 0, 1.0, .5));
+	addParam(ParamWidget::create<RoundBlackKnob>(Vec(115, 84), module, DamianLillard::FREQ_3_CUTOFF_PARAM, 0, 1.0, .75));
 
 
-	addInput(createInput<PJ301MPort>(Vec(20, 125), module, DamianLillard::FREQ_1_CUTOFF_INPUT));
-	addInput(createInput<PJ301MPort>(Vec(71, 125), module, DamianLillard::FREQ_2_CUTOFF_INPUT));
-	addInput(createInput<PJ301MPort>(Vec(123, 125), module, DamianLillard::FREQ_3_CUTOFF_INPUT));
+	addInput(Port::create<PJ301MPort>(Vec(20, 125), Port::INPUT, module, DamianLillard::FREQ_1_CUTOFF_INPUT));
+	addInput(Port::create<PJ301MPort>(Vec(71, 125), Port::INPUT, module, DamianLillard::FREQ_2_CUTOFF_INPUT));
+	addInput(Port::create<PJ301MPort>(Vec(123, 125), Port::INPUT, module, DamianLillard::FREQ_3_CUTOFF_INPUT));
 
-	addInput(createInput<PJ301MPort>(Vec(10, 170), module, DamianLillard::SIGNAL_IN));
+	addInput(Port::create<PJ301MPort>(Vec(10, 170), Port::INPUT, module, DamianLillard::SIGNAL_IN));
 
 
-	addInput(createInput<PJ301MPort>(Vec(10, 265), module, DamianLillard::BAND_1_RETURN_INPUT));
-	addInput(createInput<PJ301MPort>(Vec(50, 265), module, DamianLillard::BAND_2_RETURN_INPUT));
-	addInput(createInput<PJ301MPort>(Vec(90, 265), module, DamianLillard::BAND_3_RETURN_INPUT));
-	addInput(createInput<PJ301MPort>(Vec(130, 265), module, DamianLillard::BAND_4_RETURN_INPUT));
+	addInput(Port::create<PJ301MPort>(Vec(10, 265), Port::INPUT, module, DamianLillard::BAND_1_RETURN_INPUT));
+	addInput(Port::create<PJ301MPort>(Vec(50, 265), Port::INPUT, module, DamianLillard::BAND_2_RETURN_INPUT));
+	addInput(Port::create<PJ301MPort>(Vec(90, 265), Port::INPUT, module, DamianLillard::BAND_3_RETURN_INPUT));
+	addInput(Port::create<PJ301MPort>(Vec(130, 265), Port::INPUT, module, DamianLillard::BAND_4_RETURN_INPUT));
 
-	addOutput(createOutput<PJ301MPort>(Vec(10, 225), module, DamianLillard::BAND_1_OUTPUT));
-	addOutput(createOutput<PJ301MPort>(Vec(50, 225), module, DamianLillard::BAND_2_OUTPUT));
-	addOutput(createOutput<PJ301MPort>(Vec(90, 225), module, DamianLillard::BAND_3_OUTPUT));
-	addOutput(createOutput<PJ301MPort>(Vec(130, 225), module, DamianLillard::BAND_4_OUTPUT));
+	addOutput(Port::create<PJ301MPort>(Vec(10, 225), Port::OUTPUT, module, DamianLillard::BAND_1_OUTPUT));
+	addOutput(Port::create<PJ301MPort>(Vec(50, 225), Port::OUTPUT, module, DamianLillard::BAND_2_OUTPUT));
+	addOutput(Port::create<PJ301MPort>(Vec(90, 225), Port::OUTPUT, module, DamianLillard::BAND_3_OUTPUT));
+	addOutput(Port::create<PJ301MPort>(Vec(130, 225), Port::OUTPUT, module, DamianLillard::BAND_4_OUTPUT));
 
-	addOutput(createOutput<PJ301MPort>(Vec(10, 305), module, DamianLillard::MIX_OUTPUT));
+	addOutput(Port::create<PJ301MPort>(Vec(10, 305), Port::OUTPUT, module, DamianLillard::MIX_OUTPUT));
 
-	addChild(createScrew<ScrewSilver>(Vec(15, 0)));
-	addChild(createScrew<ScrewSilver>(Vec(box.size.x-30, 0)));
-	addChild(createScrew<ScrewSilver>(Vec(15, 365)));
-	addChild(createScrew<ScrewSilver>(Vec(box.size.x-30, 365)));
+	addChild(Widget::create<ScrewSilver>(Vec(15, 0)));
+	addChild(Widget::create<ScrewSilver>(Vec(box.size.x-30, 0)));
+	addChild(Widget::create<ScrewSilver>(Vec(15, 365)));
+	addChild(Widget::create<ScrewSilver>(Vec(box.size.x-30, 365)));
 }
+
+Model *modelDamianLillard = Model::create<DamianLillard, DamianLillardWidget>("Frozen Wasteland", "DamianLillard", "Damian Lillard", FILTER_TAG);

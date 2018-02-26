@@ -446,9 +446,11 @@ struct QBRBeatDisplay : TransparentWidget {
 };
 
 
-QuadGolombRulerRhythmWidget::QuadGolombRulerRhythmWidget() {
-	QuadGolombRulerRhythm *module = new QuadGolombRulerRhythm();
-	setModule(module);
+struct QuadGolombRulerRhythmWidget : ModuleWidget {
+	QuadGolombRulerRhythmWidget(QuadGolombRulerRhythm *module);
+};
+
+QuadGolombRulerRhythmWidget::QuadGolombRulerRhythmWidget(QuadGolombRulerRhythm *module) : ModuleWidget(module) {
 	box.size = Vec(15*26, RACK_GRID_HEIGHT);
 
 	{
@@ -458,10 +460,10 @@ QuadGolombRulerRhythmWidget::QuadGolombRulerRhythmWidget() {
 		addChild(panel);
 	}
 
-	addChild(createScrew<ScrewSilver>(Vec(RACK_GRID_WIDTH, 0)));
-	addChild(createScrew<ScrewSilver>(Vec(box.size.x - 2 * RACK_GRID_WIDTH, 0)));
-	addChild(createScrew<ScrewSilver>(Vec(RACK_GRID_WIDTH, RACK_GRID_HEIGHT - RACK_GRID_WIDTH)));
-	addChild(createScrew<ScrewSilver>(Vec(box.size.x - 2 * RACK_GRID_WIDTH, RACK_GRID_HEIGHT - RACK_GRID_WIDTH)));
+	addChild(Widget::create<ScrewSilver>(Vec(RACK_GRID_WIDTH, 0)));
+	addChild(Widget::create<ScrewSilver>(Vec(box.size.x - 2 * RACK_GRID_WIDTH, 0)));
+	addChild(Widget::create<ScrewSilver>(Vec(RACK_GRID_WIDTH, RACK_GRID_HEIGHT - RACK_GRID_WIDTH)));
+	addChild(Widget::create<ScrewSilver>(Vec(box.size.x - 2 * RACK_GRID_WIDTH, RACK_GRID_HEIGHT - RACK_GRID_WIDTH)));
 
 
 	{
@@ -473,84 +475,86 @@ QuadGolombRulerRhythmWidget::QuadGolombRulerRhythmWidget() {
 	}
 
 
-	addParam(createParam<RoundSmallBlackKnob>(Vec(22, 138), module, QuadGolombRulerRhythm::STEPS_1_PARAM, 0.0, 16.2, 16.0));
-	addParam(createParam<RoundSmallBlackKnob>(Vec(61, 138), module, QuadGolombRulerRhythm::DIVISIONS_1_PARAM, 0.0, 10.2, 2.0));
-	addParam(createParam<RoundSmallBlackKnob>(Vec(100, 138), module, QuadGolombRulerRhythm::OFFSET_1_PARAM, 0.0, 15.2, 0.0));
-	addParam(createParam<RoundSmallBlackKnob>(Vec(139, 138), module, QuadGolombRulerRhythm::PAD_1_PARAM, 0.0, 15.2, 0.0));
-	addParam(createParam<RoundSmallBlackKnob>(Vec(178, 138), module, QuadGolombRulerRhythm::ACCENTS_1_PARAM, 0.0, 15.2, 0.0));
-	addParam(createParam<RoundSmallBlackKnob>(Vec(217, 138), module, QuadGolombRulerRhythm::ACCENT_ROTATE_1_PARAM, 0.0, 15.2, 0.0));
-	addParam(createParam<RoundSmallBlackKnob>(Vec(22, 195), module, QuadGolombRulerRhythm::STEPS_2_PARAM, 0.0, 16.0, 16.0));
-	addParam(createParam<RoundSmallBlackKnob>(Vec(61, 195), module, QuadGolombRulerRhythm::DIVISIONS_2_PARAM, 0.0, 10.2, 2.0));
-	addParam(createParam<RoundSmallBlackKnob>(Vec(100, 195), module, QuadGolombRulerRhythm::OFFSET_2_PARAM, 0.0, 15.2, 0.0));
-	addParam(createParam<RoundSmallBlackKnob>(Vec(139, 195), module, QuadGolombRulerRhythm::PAD_2_PARAM, 0.0, 15.2, 0.0));
-	addParam(createParam<RoundSmallBlackKnob>(Vec(178, 195), module, QuadGolombRulerRhythm::ACCENTS_2_PARAM, 0.0, 15.2, 0.0));
-	addParam(createParam<RoundSmallBlackKnob>(Vec(217, 195), module, QuadGolombRulerRhythm::ACCENT_ROTATE_2_PARAM, 0.0, 15.2, 0.0));
-	addParam(createParam<RoundSmallBlackKnob>(Vec(22, 252), module, QuadGolombRulerRhythm::STEPS_3_PARAM, 0.0, 16.2, 16.0));
-	addParam(createParam<RoundSmallBlackKnob>(Vec(61, 252), module, QuadGolombRulerRhythm::DIVISIONS_3_PARAM, 0.0, 10.2, 2.0));
-	addParam(createParam<RoundSmallBlackKnob>(Vec(100, 252), module, QuadGolombRulerRhythm::OFFSET_3_PARAM, 0.0, 15.2, 0.0));
-	addParam(createParam<RoundSmallBlackKnob>(Vec(139, 252), module, QuadGolombRulerRhythm::PAD_3_PARAM, 0.0, 15.2, 0.0));
-	addParam(createParam<RoundSmallBlackKnob>(Vec(178, 252), module, QuadGolombRulerRhythm::ACCENTS_3_PARAM, 0.0, 15.2, 0.0));
-	addParam(createParam<RoundSmallBlackKnob>(Vec(217, 252), module, QuadGolombRulerRhythm::ACCENT_ROTATE_3_PARAM, 0.0, 15.2, 0.0));
-	addParam(createParam<RoundSmallBlackKnob>(Vec(22, 309), module, QuadGolombRulerRhythm::STEPS_4_PARAM, 0.0, 16.2, 16.0));
-	addParam(createParam<RoundSmallBlackKnob>(Vec(61, 309), module, QuadGolombRulerRhythm::DIVISIONS_4_PARAM, 0.0, 10.2, 2.0));
-	addParam(createParam<RoundSmallBlackKnob>(Vec(100, 309), module, QuadGolombRulerRhythm::OFFSET_4_PARAM, 0.0, 15.2, 0.0));
-	addParam(createParam<RoundSmallBlackKnob>(Vec(139, 309), module, QuadGolombRulerRhythm::PAD_4_PARAM, 0.0, 15.2, 0.0));
-	addParam(createParam<RoundSmallBlackKnob>(Vec(178, 309), module, QuadGolombRulerRhythm::ACCENTS_4_PARAM, 0.0, 15.2, 0.0));
-	addParam(createParam<RoundSmallBlackKnob>(Vec(217, 309), module, QuadGolombRulerRhythm::ACCENT_ROTATE_4_PARAM, 0.0, 15.2, 0.0));
-	addParam(createParam<CKD6>(Vec(275, 285), module, QuadGolombRulerRhythm::CHAIN_MODE_PARAM, 0.0, 1.0, 0.0));
+	addParam(ParamWidget::create<RoundSmallBlackKnob>(Vec(22, 138), module, QuadGolombRulerRhythm::STEPS_1_PARAM, 0.0, 16.2, 16.0));
+	addParam(ParamWidget::create<RoundSmallBlackKnob>(Vec(61, 138), module, QuadGolombRulerRhythm::DIVISIONS_1_PARAM, 0.0, 10.2, 2.0));
+	addParam(ParamWidget::create<RoundSmallBlackKnob>(Vec(100, 138), module, QuadGolombRulerRhythm::OFFSET_1_PARAM, 0.0, 15.2, 0.0));
+	addParam(ParamWidget::create<RoundSmallBlackKnob>(Vec(139, 138), module, QuadGolombRulerRhythm::PAD_1_PARAM, 0.0, 15.2, 0.0));
+	addParam(ParamWidget::create<RoundSmallBlackKnob>(Vec(178, 138), module, QuadGolombRulerRhythm::ACCENTS_1_PARAM, 0.0, 15.2, 0.0));
+	addParam(ParamWidget::create<RoundSmallBlackKnob>(Vec(217, 138), module, QuadGolombRulerRhythm::ACCENT_ROTATE_1_PARAM, 0.0, 15.2, 0.0));
+	addParam(ParamWidget::create<RoundSmallBlackKnob>(Vec(22, 195), module, QuadGolombRulerRhythm::STEPS_2_PARAM, 0.0, 16.0, 16.0));
+	addParam(ParamWidget::create<RoundSmallBlackKnob>(Vec(61, 195), module, QuadGolombRulerRhythm::DIVISIONS_2_PARAM, 0.0, 10.2, 2.0));
+	addParam(ParamWidget::create<RoundSmallBlackKnob>(Vec(100, 195), module, QuadGolombRulerRhythm::OFFSET_2_PARAM, 0.0, 15.2, 0.0));
+	addParam(ParamWidget::create<RoundSmallBlackKnob>(Vec(139, 195), module, QuadGolombRulerRhythm::PAD_2_PARAM, 0.0, 15.2, 0.0));
+	addParam(ParamWidget::create<RoundSmallBlackKnob>(Vec(178, 195), module, QuadGolombRulerRhythm::ACCENTS_2_PARAM, 0.0, 15.2, 0.0));
+	addParam(ParamWidget::create<RoundSmallBlackKnob>(Vec(217, 195), module, QuadGolombRulerRhythm::ACCENT_ROTATE_2_PARAM, 0.0, 15.2, 0.0));
+	addParam(ParamWidget::create<RoundSmallBlackKnob>(Vec(22, 252), module, QuadGolombRulerRhythm::STEPS_3_PARAM, 0.0, 16.2, 16.0));
+	addParam(ParamWidget::create<RoundSmallBlackKnob>(Vec(61, 252), module, QuadGolombRulerRhythm::DIVISIONS_3_PARAM, 0.0, 10.2, 2.0));
+	addParam(ParamWidget::create<RoundSmallBlackKnob>(Vec(100, 252), module, QuadGolombRulerRhythm::OFFSET_3_PARAM, 0.0, 15.2, 0.0));
+	addParam(ParamWidget::create<RoundSmallBlackKnob>(Vec(139, 252), module, QuadGolombRulerRhythm::PAD_3_PARAM, 0.0, 15.2, 0.0));
+	addParam(ParamWidget::create<RoundSmallBlackKnob>(Vec(178, 252), module, QuadGolombRulerRhythm::ACCENTS_3_PARAM, 0.0, 15.2, 0.0));
+	addParam(ParamWidget::create<RoundSmallBlackKnob>(Vec(217, 252), module, QuadGolombRulerRhythm::ACCENT_ROTATE_3_PARAM, 0.0, 15.2, 0.0));
+	addParam(ParamWidget::create<RoundSmallBlackKnob>(Vec(22, 309), module, QuadGolombRulerRhythm::STEPS_4_PARAM, 0.0, 16.2, 16.0));
+	addParam(ParamWidget::create<RoundSmallBlackKnob>(Vec(61, 309), module, QuadGolombRulerRhythm::DIVISIONS_4_PARAM, 0.0, 10.2, 2.0));
+	addParam(ParamWidget::create<RoundSmallBlackKnob>(Vec(100, 309), module, QuadGolombRulerRhythm::OFFSET_4_PARAM, 0.0, 15.2, 0.0));
+	addParam(ParamWidget::create<RoundSmallBlackKnob>(Vec(139, 309), module, QuadGolombRulerRhythm::PAD_4_PARAM, 0.0, 15.2, 0.0));
+	addParam(ParamWidget::create<RoundSmallBlackKnob>(Vec(178, 309), module, QuadGolombRulerRhythm::ACCENTS_4_PARAM, 0.0, 15.2, 0.0));
+	addParam(ParamWidget::create<RoundSmallBlackKnob>(Vec(217, 309), module, QuadGolombRulerRhythm::ACCENT_ROTATE_4_PARAM, 0.0, 15.2, 0.0));
+	addParam(ParamWidget::create<CKD6>(Vec(275, 285), module, QuadGolombRulerRhythm::CHAIN_MODE_PARAM, 0.0, 1.0, 0.0));
 
-	addInput(createInput<PJ301MPort>(Vec(24, 167), module, QuadGolombRulerRhythm::STEPS_1_INPUT));
-	addInput(createInput<PJ301MPort>(Vec(63, 167), module, QuadGolombRulerRhythm::DIVISIONS_1_INPUT));
-	addInput(createInput<PJ301MPort>(Vec(102, 167), module, QuadGolombRulerRhythm::OFFSET_1_INPUT));
-	addInput(createInput<PJ301MPort>(Vec(141, 167), module, QuadGolombRulerRhythm::PAD_1_INPUT));
-	addInput(createInput<PJ301MPort>(Vec(180, 167), module, QuadGolombRulerRhythm::ACCENTS_1_INPUT));
-	addInput(createInput<PJ301MPort>(Vec(219, 167), module, QuadGolombRulerRhythm::ACCENT_ROTATE_1_INPUT));
-	addInput(createInput<PJ301MPort>(Vec(24, 224), module, QuadGolombRulerRhythm::STEPS_2_INPUT));
-	addInput(createInput<PJ301MPort>(Vec(63, 224), module, QuadGolombRulerRhythm::DIVISIONS_2_INPUT));
-	addInput(createInput<PJ301MPort>(Vec(102, 224), module, QuadGolombRulerRhythm::OFFSET_2_INPUT));
-	addInput(createInput<PJ301MPort>(Vec(141, 224), module, QuadGolombRulerRhythm::PAD_2_INPUT));
-	addInput(createInput<PJ301MPort>(Vec(180, 224), module, QuadGolombRulerRhythm::ACCENTS_2_INPUT));
-	addInput(createInput<PJ301MPort>(Vec(219, 224), module, QuadGolombRulerRhythm::ACCENT_ROTATE_2_INPUT));
-	addInput(createInput<PJ301MPort>(Vec(24, 281), module, QuadGolombRulerRhythm::STEPS_3_INPUT));
-	addInput(createInput<PJ301MPort>(Vec(63, 281), module, QuadGolombRulerRhythm::DIVISIONS_3_INPUT));
-	addInput(createInput<PJ301MPort>(Vec(102, 281), module, QuadGolombRulerRhythm::OFFSET_3_INPUT));
-	addInput(createInput<PJ301MPort>(Vec(141, 281), module, QuadGolombRulerRhythm::PAD_3_INPUT));
-	addInput(createInput<PJ301MPort>(Vec(180, 281), module, QuadGolombRulerRhythm::ACCENTS_3_INPUT));
-	addInput(createInput<PJ301MPort>(Vec(219, 281), module, QuadGolombRulerRhythm::ACCENT_ROTATE_3_INPUT));
-	addInput(createInput<PJ301MPort>(Vec(24, 338), module, QuadGolombRulerRhythm::STEPS_4_INPUT));
-	addInput(createInput<PJ301MPort>(Vec(63, 338), module, QuadGolombRulerRhythm::DIVISIONS_4_INPUT));
-	addInput(createInput<PJ301MPort>(Vec(102, 338), module, QuadGolombRulerRhythm::OFFSET_4_INPUT));
-	addInput(createInput<PJ301MPort>(Vec(141, 338), module, QuadGolombRulerRhythm::PAD_4_INPUT));
-	addInput(createInput<PJ301MPort>(Vec(180, 338), module, QuadGolombRulerRhythm::ACCENTS_4_INPUT));
-	addInput(createInput<PJ301MPort>(Vec(219, 338), module, QuadGolombRulerRhythm::ACCENT_ROTATE_4_INPUT));
+	addInput(Port::create<PJ301MPort>(Vec(24, 167), Port::INPUT, module, QuadGolombRulerRhythm::STEPS_1_INPUT));
+	addInput(Port::create<PJ301MPort>(Vec(63, 167), Port::INPUT, module, QuadGolombRulerRhythm::DIVISIONS_1_INPUT));
+	addInput(Port::create<PJ301MPort>(Vec(102, 167), Port::INPUT, module, QuadGolombRulerRhythm::OFFSET_1_INPUT));
+	addInput(Port::create<PJ301MPort>(Vec(141, 167), Port::INPUT, module, QuadGolombRulerRhythm::PAD_1_INPUT));
+	addInput(Port::create<PJ301MPort>(Vec(180, 167), Port::INPUT, module, QuadGolombRulerRhythm::ACCENTS_1_INPUT));
+	addInput(Port::create<PJ301MPort>(Vec(219, 167), Port::INPUT, module, QuadGolombRulerRhythm::ACCENT_ROTATE_1_INPUT));
+	addInput(Port::create<PJ301MPort>(Vec(24, 224), Port::INPUT, module, QuadGolombRulerRhythm::STEPS_2_INPUT));
+	addInput(Port::create<PJ301MPort>(Vec(63, 224), Port::INPUT, module, QuadGolombRulerRhythm::DIVISIONS_2_INPUT));
+	addInput(Port::create<PJ301MPort>(Vec(102, 224), Port::INPUT, module, QuadGolombRulerRhythm::OFFSET_2_INPUT));
+	addInput(Port::create<PJ301MPort>(Vec(141, 224), Port::INPUT, module, QuadGolombRulerRhythm::PAD_2_INPUT));
+	addInput(Port::create<PJ301MPort>(Vec(180, 224), Port::INPUT, module, QuadGolombRulerRhythm::ACCENTS_2_INPUT));
+	addInput(Port::create<PJ301MPort>(Vec(219, 224), Port::INPUT, module, QuadGolombRulerRhythm::ACCENT_ROTATE_2_INPUT));
+	addInput(Port::create<PJ301MPort>(Vec(24, 281), Port::INPUT, module, QuadGolombRulerRhythm::STEPS_3_INPUT));
+	addInput(Port::create<PJ301MPort>(Vec(63, 281), Port::INPUT, module, QuadGolombRulerRhythm::DIVISIONS_3_INPUT));
+	addInput(Port::create<PJ301MPort>(Vec(102, 281), Port::INPUT, module, QuadGolombRulerRhythm::OFFSET_3_INPUT));
+	addInput(Port::create<PJ301MPort>(Vec(141, 281), Port::INPUT, module, QuadGolombRulerRhythm::PAD_3_INPUT));
+	addInput(Port::create<PJ301MPort>(Vec(180, 281), Port::INPUT, module, QuadGolombRulerRhythm::ACCENTS_3_INPUT));
+	addInput(Port::create<PJ301MPort>(Vec(219, 281), Port::INPUT, module, QuadGolombRulerRhythm::ACCENT_ROTATE_3_INPUT));
+	addInput(Port::create<PJ301MPort>(Vec(24, 338), Port::INPUT, module, QuadGolombRulerRhythm::STEPS_4_INPUT));
+	addInput(Port::create<PJ301MPort>(Vec(63, 338), Port::INPUT, module, QuadGolombRulerRhythm::DIVISIONS_4_INPUT));
+	addInput(Port::create<PJ301MPort>(Vec(102, 338), Port::INPUT, module, QuadGolombRulerRhythm::OFFSET_4_INPUT));
+	addInput(Port::create<PJ301MPort>(Vec(141, 338), Port::INPUT, module, QuadGolombRulerRhythm::PAD_4_INPUT));
+	addInput(Port::create<PJ301MPort>(Vec(180, 338), Port::INPUT, module, QuadGolombRulerRhythm::ACCENTS_4_INPUT));
+	addInput(Port::create<PJ301MPort>(Vec(219, 338), Port::INPUT, module, QuadGolombRulerRhythm::ACCENT_ROTATE_4_INPUT));
 
-	addInput(createInput<PJ301MPort>(Vec(262, 331), module, QuadGolombRulerRhythm::CLOCK_INPUT));
-	addInput(createInput<PJ301MPort>(Vec(302, 331), module, QuadGolombRulerRhythm::RESET_INPUT));
-	addInput(createInput<PJ301MPort>(Vec(335, 331), module, QuadGolombRulerRhythm::MUTE_INPUT));
+	addInput(Port::create<PJ301MPort>(Vec(262, 331), Port::INPUT, module, QuadGolombRulerRhythm::CLOCK_INPUT));
+	addInput(Port::create<PJ301MPort>(Vec(302, 331), Port::INPUT, module, QuadGolombRulerRhythm::RESET_INPUT));
+	addInput(Port::create<PJ301MPort>(Vec(335, 331), Port::INPUT, module, QuadGolombRulerRhythm::MUTE_INPUT));
 
-	addInput(createInput<PJ301MPort>(Vec(322, 145), module, QuadGolombRulerRhythm::START_1_INPUT));
-	addInput(createInput<PJ301MPort>(Vec(322, 175), module, QuadGolombRulerRhythm::START_2_INPUT));
-	addInput(createInput<PJ301MPort>(Vec(322, 205), module, QuadGolombRulerRhythm::START_3_INPUT));
-	addInput(createInput<PJ301MPort>(Vec(322, 235), module, QuadGolombRulerRhythm::START_4_INPUT));
+	addInput(Port::create<PJ301MPort>(Vec(322, 145), Port::INPUT, module, QuadGolombRulerRhythm::START_1_INPUT));
+	addInput(Port::create<PJ301MPort>(Vec(322, 175), Port::INPUT, module, QuadGolombRulerRhythm::START_2_INPUT));
+	addInput(Port::create<PJ301MPort>(Vec(322, 205), Port::INPUT, module, QuadGolombRulerRhythm::START_3_INPUT));
+	addInput(Port::create<PJ301MPort>(Vec(322, 235), Port::INPUT, module, QuadGolombRulerRhythm::START_4_INPUT));
 
 
-	addOutput(createOutput<PJ301MPort>(Vec(255, 145), module, QuadGolombRulerRhythm::OUTPUT_1));
-	addOutput(createOutput<PJ301MPort>(Vec(286, 145), module, QuadGolombRulerRhythm::ACCENT_OUTPUT_1));
-	addOutput(createOutput<PJ301MPort>(Vec(354, 145), module, QuadGolombRulerRhythm::EOC_OUTPUT_1));
-	addOutput(createOutput<PJ301MPort>(Vec(256, 175), module, QuadGolombRulerRhythm::OUTPUT_2));
-	addOutput(createOutput<PJ301MPort>(Vec(286, 175), module, QuadGolombRulerRhythm::ACCENT_OUTPUT_2));
-	addOutput(createOutput<PJ301MPort>(Vec(354, 175), module, QuadGolombRulerRhythm::EOC_OUTPUT_2));
-	addOutput(createOutput<PJ301MPort>(Vec(256, 205), module, QuadGolombRulerRhythm::OUTPUT_3));
-	addOutput(createOutput<PJ301MPort>(Vec(286, 205), module, QuadGolombRulerRhythm::ACCENT_OUTPUT_3));
-	addOutput(createOutput<PJ301MPort>(Vec(354, 205), module, QuadGolombRulerRhythm::EOC_OUTPUT_3));
-	addOutput(createOutput<PJ301MPort>(Vec(256, 235), module, QuadGolombRulerRhythm::OUTPUT_4));
-	addOutput(createOutput<PJ301MPort>(Vec(286, 235), module, QuadGolombRulerRhythm::ACCENT_OUTPUT_4));
-	addOutput(createOutput<PJ301MPort>(Vec(354, 235), module, QuadGolombRulerRhythm::EOC_OUTPUT_4));
+	addOutput(Port::create<PJ301MPort>(Vec(255, 145), Port::OUTPUT, module, QuadGolombRulerRhythm::OUTPUT_1));
+	addOutput(Port::create<PJ301MPort>(Vec(286, 145), Port::OUTPUT, module, QuadGolombRulerRhythm::ACCENT_OUTPUT_1));
+	addOutput(Port::create<PJ301MPort>(Vec(354, 145), Port::OUTPUT, module, QuadGolombRulerRhythm::EOC_OUTPUT_1));
+	addOutput(Port::create<PJ301MPort>(Vec(256, 175), Port::OUTPUT, module, QuadGolombRulerRhythm::OUTPUT_2));
+	addOutput(Port::create<PJ301MPort>(Vec(286, 175), Port::OUTPUT, module, QuadGolombRulerRhythm::ACCENT_OUTPUT_2));
+	addOutput(Port::create<PJ301MPort>(Vec(354, 175), Port::OUTPUT, module, QuadGolombRulerRhythm::EOC_OUTPUT_2));
+	addOutput(Port::create<PJ301MPort>(Vec(256, 205), Port::OUTPUT, module, QuadGolombRulerRhythm::OUTPUT_3));
+	addOutput(Port::create<PJ301MPort>(Vec(286, 205), Port::OUTPUT, module, QuadGolombRulerRhythm::ACCENT_OUTPUT_3));
+	addOutput(Port::create<PJ301MPort>(Vec(354, 205), Port::OUTPUT, module, QuadGolombRulerRhythm::EOC_OUTPUT_3));
+	addOutput(Port::create<PJ301MPort>(Vec(256, 235), Port::OUTPUT, module, QuadGolombRulerRhythm::OUTPUT_4));
+	addOutput(Port::create<PJ301MPort>(Vec(286, 235), Port::OUTPUT, module, QuadGolombRulerRhythm::ACCENT_OUTPUT_4));
+	addOutput(Port::create<PJ301MPort>(Vec(354, 235), Port::OUTPUT, module, QuadGolombRulerRhythm::EOC_OUTPUT_4));
 	
-	addChild(createLight<SmallLight<BlueLight>>(Vec(310, 274), module, QuadGolombRulerRhythm::CHAIN_MODE_NONE_LIGHT));
-	addChild(createLight<SmallLight<GreenLight>>(Vec(310, 289), module, QuadGolombRulerRhythm::CHAIN_MODE_BOSS_LIGHT));
-	addChild(createLight<SmallLight<RedLight>>(Vec(310, 304), module, QuadGolombRulerRhythm::CHAIN_MODE_EMPLOYEE_LIGHT));
+	addChild(ModuleLightWidget::create<SmallLight<BlueLight>>(Vec(310, 274), module, QuadGolombRulerRhythm::CHAIN_MODE_NONE_LIGHT));
+	addChild(ModuleLightWidget::create<SmallLight<GreenLight>>(Vec(310, 289), module, QuadGolombRulerRhythm::CHAIN_MODE_BOSS_LIGHT));
+	addChild(ModuleLightWidget::create<SmallLight<RedLight>>(Vec(310, 304), module, QuadGolombRulerRhythm::CHAIN_MODE_EMPLOYEE_LIGHT));
 
-	addChild(createLight<LargeLight<RedLight>>(Vec(363, 335), module, QuadGolombRulerRhythm::MUTED_LIGHT));
+	addChild(ModuleLightWidget::create<LargeLight<RedLight>>(Vec(363, 335), module, QuadGolombRulerRhythm::MUTED_LIGHT));
 	
 }
+
+Model *modelQuadGolombRulerRhythm = Model::create<QuadGolombRulerRhythm, QuadGolombRulerRhythmWidget>("Frozen Wasteland", "QuadGolombRulerRhythm", "Quad Golomb Ruler Rhythm", SEQUENCER_TAG);
