@@ -76,7 +76,7 @@ void DamianLillard::step() {
 	
 	for (int i=0; i<FREQUENCIES;i++) {
 		float cutoffExp = params[FREQ_1_CUTOFF_PARAM+i].value + inputs[FREQ_1_CUTOFF_INPUT+i].value / 10.0; //I'm reducing range of CV to make it more useful
-		cutoffExp = clampf(cutoffExp, 0.0, 1.0);
+		cutoffExp = clamp(cutoffExp, 0.0, 1.0);
 		freq[i] = minCutoff * powf(maxCutoff / minCutoff, cutoffExp);
 
 		//Prevent band overlap

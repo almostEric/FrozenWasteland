@@ -108,8 +108,8 @@ struct LowFrequencyOscillator {
 
 void LissajousLFO::step() {
 
-	float amplitude1 = clampf(params[AMPLITUDE1_PARAM].value + (inputs[AMPLITUDE1_INPUT].value / 2.0),0.0,5.0);
-	float amplitude2 = clampf(params[AMPLITUDE2_PARAM].value + (inputs[AMPLITUDE2_INPUT].value / 2.0),0.0,5.0);
+	float amplitude1 = clamp(params[AMPLITUDE1_PARAM].value + (inputs[AMPLITUDE1_INPUT].value / 2.0f),0.0f,5.0f);
+	float amplitude2 = clamp(params[AMPLITUDE2_PARAM].value + (inputs[AMPLITUDE2_INPUT].value / 2.0f),0.0f,5.0f);
 
 	// Implement 4 simple sine oscillators
 	oscillatorX1.setPitch(params[FREQX1_PARAM].value + inputs[FREQX1_INPUT].value);
@@ -131,9 +131,9 @@ void LissajousLFO::step() {
 	outputs[OUTPUT_2].value = (y1 + y2) / 2;
 	outputs[OUTPUT_3].value = (x1 + x2 + y1 + y2) / 4;
 	float out4 = (x1/x2);
-	outputs[OUTPUT_4].value = std::isfinite(out4) ? clampf(out4,-5.0,5.0) : 0.f;
+	outputs[OUTPUT_4].value = std::isfinite(out4) ? clamp(out4,-5.0,5.0) : 0.f;
 	float out5 = (y1/y2);
-	outputs[OUTPUT_5].value = std::isfinite(out5) ? clampf(out5,-5.0,5.0) : 0.f;
+	outputs[OUTPUT_5].value = std::isfinite(out5) ? clamp(out5,-5.0,5.0) : 0.f;
 
 	//Update scope.
 	int frameCount = (int)ceilf(deltaTime * engineGetSampleRate());

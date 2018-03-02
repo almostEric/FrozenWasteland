@@ -62,13 +62,13 @@ struct VoltageControlledOscillator {
 	}
 	void setPulseWidth(float pulseWidth) {
 		const float pwMin = 0.01;
-		pw = clampf(pulseWidth, pwMin, 1.0 - pwMin);
+		pw = clamp(pulseWidth, pwMin, 1.0 - pwMin);
 	}
 
 	void process(float deltaTime) {
 
 		// Advance phase
-		float deltaPhase = clampf(freq * deltaTime, 1e-6, 0.5);
+		float deltaPhase = clamp(freq * deltaTime, 1e-6, 0.5);
 
 		
 		sqrFilter.setCutoff(40.0 * deltaTime);
@@ -79,7 +79,7 @@ struct VoltageControlledOscillator {
 
 			// Advance phase
 			phase += deltaPhase / OVERSAMPLE;
-			phase = eucmodf(phase, 1.0);
+			phase = eucmod(phase, 1.0f);
 		}
 	}
 
@@ -298,7 +298,7 @@ void PhasedLockedLoop::step() {
 	if (inputs[LPF_FREQ_INPUT].active) {
 		cutoffExp += (inputs[LPF_FREQ_INPUT].value / 5);
 	}
-	cutoffExp = clampf(cutoffExp, 0.0, 1.0);
+	cutoffExp = clamp(cutoffExp, 0.0f, 1.0f);
 	const float minCutoff = 15.0;
 	const float maxCutoff = 8400.0;
 	filter.cutoff = minCutoff * powf(maxCutoff / minCutoff, cutoffExp);

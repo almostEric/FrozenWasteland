@@ -200,25 +200,25 @@ void QuadEuclideanRhythm::step() {
 		if(inputs[trackNumber * 7].active) {
 			stepsCountf += inputs[trackNumber * 7].value;
 		}
-		stepsCountf = clampf(stepsCountf,0,16);
+		stepsCountf = clamp(stepsCountf,0.0,16.0);	
 
 		float divisionf = params[(trackNumber * 6) + 1].value;
 		if(inputs[(trackNumber * 7) + 1].active) {
 			divisionf += inputs[(trackNumber * 7) + 1].value;
 		}		
-		divisionf = clampf(divisionf,0,stepsCountf);
+		divisionf = clamp(divisionf,0.0,stepsCountf);
 
 		float offsetf = params[(trackNumber * 6) + 2].value;
 		if(inputs[(trackNumber * 7) + 2].active) {
 			offsetf += inputs[(trackNumber * 7) + 2].value;
 		}	
-		offsetf = clampf(offsetf,0,15);
+		offsetf = clamp(offsetf,0.0,15.0);
 
 		float padf = params[trackNumber * 6 + 3].value;
 		if(inputs[trackNumber * 7 + 3].active) {
 			padf += inputs[trackNumber * 7 + 3].value;
 		}
-		padf = clampf(padf,0,stepsCountf - divisionf);
+		padf = clamp(padf,0.0,stepsCountf - divisionf);
 
 
 		//Use this to reduce range of accent params/inputs so the range of motion of knob/modulation is more useful.
@@ -231,14 +231,14 @@ void QuadEuclideanRhythm::step() {
 		if(inputs[(trackNumber * 7) + 4].active) {
 			accentDivisionf += inputs[(trackNumber * 7) + 4].value * divisionScale;
 		}
-		accentDivisionf = clampf(accentDivisionf,0,divisionf);
+		accentDivisionf = clamp(accentDivisionf,0.0,divisionf);
 
 		float accentRotationf = params[(trackNumber * 6) + 5].value * divisionScale;
 		if(inputs[(trackNumber * 7) + 5].active) {
 			accentRotationf += inputs[(trackNumber * 7) + 5].value * divisionScale;
 		}
 		if(divisionf > 0) {
-			accentRotationf = clampf(accentRotationf,0,divisionf-1);			
+			accentRotationf = clamp(accentRotationf,0.0,divisionf-1);			
 		} else {
 			accentRotationf = 0;
 		}

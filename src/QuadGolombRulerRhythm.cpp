@@ -3,6 +3,8 @@
 #include "dsp/digital.hpp"
 #define NUM_RULERS 10
 #define MAX_DIVISIONS 6
+#define TRACK_COUNT 4
+#define MAX_STEPS 18
 
 struct QuadGolombRulerRhythm : Module {
 	enum ParamIds {
@@ -95,13 +97,11 @@ struct QuadGolombRulerRhythm : Module {
 		CHAIN_MODE_EMPLOYEE
 	};
 
-	int const TRACK_COUNT = 4;
-	int const MAX_STEPS = 16;
 
-	bool beatMatrix[4][16];
-	bool accentMatrix[4][16];
-	int beatIndex[4];
-	int stepsCount[4];
+	bool beatMatrix[TRACK_COUNT][MAX_STEPS];
+	bool accentMatrix[TRACK_COUNT][MAX_STEPS];
+	int beatIndex[TRACK_COUNT];
+	int stepsCount[TRACK_COUNT];
 
 	const int rulerOrders[NUM_RULERS] = {1,2,3,4,5,5,6,6,6,6};
 	const int rulerLengths[NUM_RULERS] = {0,1,3,6,11,11,17,17,17,17};
@@ -116,21 +116,21 @@ struct QuadGolombRulerRhythm : Module {
 												   {0,1,8,11,13,17},
 												   {0,1,8,12,14,17}};
 
-	bool running[4];
+	bool running[TRACK_COUNT];
 	int chainMode = 0;
 	bool initialized = false;
 	bool muted = false;
 
 	SchmittTrigger clockTrigger,resetTrigger,chainModeTrigger,muteTrigger,startTrigger[4];
-	PulseGenerator eocPulse[4];
+	PulseGenerator eocPulse[TRACK_COUNT];
 
 
 	QuadGolombRulerRhythm() : Module(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS,NUM_LIGHTS) {
-		for(unsigned i = 0; i < 4; i++) {
+		for(unsigned i = 0; i < TRACK_COUNT; i++) {
 			beatIndex[i] = 0;
-			stepsCount[i] = 16;
+			stepsCount[i] = MAX_STEPS;
 			running[i] = true;
-			for(unsigned j = 0; j < 16; j++) {
+			for(unsigned j = 0; j < MAX_STEPS; j++) {
 				beatMatrix[i][j] = false;
 				accentMatrix[i][j] = false;
 			}
@@ -158,7 +158,7 @@ struct QuadGolombRulerRhythm : Module {
 	}
 
 	void setRunningState() {
-	for(int trackNumber=0;trackNumber<4;trackNumber++)
+	for(int trackNumber=0;trackNumber<TRACK_COUNT;trackNumber++)
 	{
 		if(chainMode == CHAIN_MODE_EMPLOYEE && inputs[(trackNumber * 7) + 6].active) { //START Input needs to be active
 			running[trackNumber] = false;
@@ -178,8 +178,8 @@ struct QuadGolombRulerRhythm : Module {
 
 void QuadGolombRulerRhythm::step() {
 
-	int accentLevelArray[16];
-	int beatLocation[16];
+	int accentLevelArray[MAX_STEPS];
+	int beatLocation[MAX_STEPS];
 
 	//Set startup state
 	if(!initialized) {
@@ -201,7 +201,7 @@ void QuadGolombRulerRhythm::step() {
 
 	for(int trackNumber=0;trackNumber<4;trackNumber++) {
 		//clear out the matrix and levels
-		for(int j=0;j<16;j++)
+		for(int j=0;j<MAX_STEPS;j++)
 		{
 			beatMatrix[trackNumber][j] = false; 
 			accentMatrix[trackNumber][j] = false;
@@ -213,25 +213,25 @@ void QuadGolombRulerRhythm::step() {
 		if(inputs[trackNumber * 7].active) {
 			stepsCountf += inputs[trackNumber * 7].value;
 		}
-		stepsCountf = clampf(stepsCountf,0,16);
+		stepsCountf = clamp(stepsCountf,0.0f,18.0f);
 
 		float divisionf = params[(trackNumber * 6) + 1].value;
 		if(inputs[(trackNumber * 7) + 1].active) {
 			divisionf += inputs[(trackNumber * 7) + 1].value;
 		}		
-		divisionf = clampf(divisionf,0,NUM_RULERS-1);
+		divisionf = clamp(divisionf,0.0f,(float)(NUM_RULERS-1));
 
 		float offsetf = params[(trackNumber * 6) + 2].value;
 		if(inputs[(trackNumber * 7) + 2].active) {
 			offsetf += inputs[(trackNumber * 7) + 2].value;
 		}	
-		offsetf = clampf(offsetf,0,15);
+		offsetf = clamp(offsetf,0.0f,17.0f);
 
 		float padf = params[trackNumber * 6 + 3].value;
 		if(inputs[trackNumber * 7 + 3].active) {
 			padf += inputs[trackNumber * 7 + 3].value;
 		}
-		padf = clampf(padf,0,stepsCountf - divisionf);
+		padf = clamp(padf,0.0f,stepsCountf - divisionf);
 
 
 		//Use this to reduce range of accent params/inputs so the range of motion of knob/modulation is more useful.
@@ -244,14 +244,14 @@ void QuadGolombRulerRhythm::step() {
 		if(inputs[(trackNumber * 7) + 4].active) {
 			accentDivisionf += inputs[(trackNumber * 7) + 4].value * divisionScale;
 		}
-		accentDivisionf = clampf(accentDivisionf,0,divisionf);
+		accentDivisionf = clamp(accentDivisionf,0.0,divisionf);
 
 		float accentRotationf = params[(trackNumber * 6) + 5].value * divisionScale;
 		if(inputs[(trackNumber * 7) + 5].active) {
 			accentRotationf += inputs[(trackNumber * 7) + 5].value * divisionScale;
 		}
 		if(divisionf > 0) {
-			accentRotationf = clampf(accentRotationf,0,divisionf-1);			
+			accentRotationf = clamp(accentRotationf,0.0,divisionf-1);			
 		} else {
 			accentRotationf = 0;
 		}
@@ -304,13 +304,13 @@ void QuadGolombRulerRhythm::step() {
 				accentLevelArray[level] = std::min(restsLeft,accentDivision);
 				restsLeft = restsLeft - accentDivision;
 				level += 1;
-			} while (restsLeft > 0 && level < 16);
+			} while (restsLeft > 0 && level < MAX_STEPS);
 
 			int tempIndex =0;
 			for (int j = 0; j < accentDivision; j++) {
 	            accentMatrix[trackNumber][beatLocation[(tempIndex + accentRotation) % rulerOrders[rulerToUse]]] = true;
 	            tempIndex++;
-	            for (int k = 0; k < 16; k++) {
+	            for (int k = 0; k < MAX_STEPS; k++) {
 	                if (accentLevelArray[k] > j) {
 	                    tempIndex++;
 	                }
@@ -321,7 +321,7 @@ void QuadGolombRulerRhythm::step() {
 
 	if(inputs[RESET_INPUT].active) {
 		if(resetTrigger.process(inputs[RESET_INPUT].value)) {
-			for(int trackNumber=0;trackNumber<4;trackNumber++)
+			for(int trackNumber=0;trackNumber<TRACK_COUNT;trackNumber++)
 			{
 				beatIndex[trackNumber] = 0;
 			}
@@ -336,7 +336,7 @@ void QuadGolombRulerRhythm::step() {
 	}
 
 	//See if need to start up
-	for(int trackNumber=0;trackNumber < 4;trackNumber++) {
+	for(int trackNumber=0;trackNumber < TRACK_COUNT;trackNumber++) {
 		if(chainMode != CHAIN_MODE_NONE && inputs[(trackNumber * 7) + 6].active && !running[trackNumber]) {
 			if(startTrigger[trackNumber].process(inputs[(trackNumber * 7) + 6].value)) {
 				running[trackNumber] = true;
@@ -347,7 +347,7 @@ void QuadGolombRulerRhythm::step() {
 	//Advance beat on trigger
 	if(inputs[CLOCK_INPUT].active) {
 		if(clockTrigger.process(inputs[CLOCK_INPUT].value)) {
-			for(int trackNumber=0;trackNumber < 4;trackNumber++)
+			for(int trackNumber=0;trackNumber < TRACK_COUNT;trackNumber++)
 			{
 				if(running[trackNumber]) {
 					beatIndex[trackNumber]++;
@@ -367,7 +367,7 @@ void QuadGolombRulerRhythm::step() {
 
 
 	// Set output to current state
-	for(int trackNumber=0;trackNumber<4;trackNumber++) {
+	for(int trackNumber=0;trackNumber<TRACK_COUNT;trackNumber++) {
 		//Send out beat
 		if(beatMatrix[trackNumber][beatIndex[trackNumber]] == true && running[trackNumber] && !muted) {
 			outputs[trackNumber * 3].value = inputs[CLOCK_INPUT].value;	
@@ -451,7 +451,7 @@ struct QuadGolombRulerRhythmWidget : ModuleWidget {
 };
 
 QuadGolombRulerRhythmWidget::QuadGolombRulerRhythmWidget(QuadGolombRulerRhythm *module) : ModuleWidget(module) {
-	box.size = Vec(15*26, RACK_GRID_HEIGHT);
+	box.size = Vec(15*29, RACK_GRID_HEIGHT);
 
 	{
 		SVGPanel *panel = new SVGPanel();
@@ -475,30 +475,30 @@ QuadGolombRulerRhythmWidget::QuadGolombRulerRhythmWidget(QuadGolombRulerRhythm *
 	}
 
 
-	addParam(ParamWidget::create<RoundSmallBlackKnob>(Vec(22, 138), module, QuadGolombRulerRhythm::STEPS_1_PARAM, 0.0, 16.2, 16.0));
+	addParam(ParamWidget::create<RoundSmallBlackKnob>(Vec(22, 138), module, QuadGolombRulerRhythm::STEPS_1_PARAM, 0.0, 18.2, 18.0));
 	addParam(ParamWidget::create<RoundSmallBlackKnob>(Vec(61, 138), module, QuadGolombRulerRhythm::DIVISIONS_1_PARAM, 0.0, 10.2, 2.0));
-	addParam(ParamWidget::create<RoundSmallBlackKnob>(Vec(100, 138), module, QuadGolombRulerRhythm::OFFSET_1_PARAM, 0.0, 15.2, 0.0));
-	addParam(ParamWidget::create<RoundSmallBlackKnob>(Vec(139, 138), module, QuadGolombRulerRhythm::PAD_1_PARAM, 0.0, 15.2, 0.0));
-	addParam(ParamWidget::create<RoundSmallBlackKnob>(Vec(178, 138), module, QuadGolombRulerRhythm::ACCENTS_1_PARAM, 0.0, 15.2, 0.0));
-	addParam(ParamWidget::create<RoundSmallBlackKnob>(Vec(217, 138), module, QuadGolombRulerRhythm::ACCENT_ROTATE_1_PARAM, 0.0, 15.2, 0.0));
-	addParam(ParamWidget::create<RoundSmallBlackKnob>(Vec(22, 195), module, QuadGolombRulerRhythm::STEPS_2_PARAM, 0.0, 16.0, 16.0));
+	addParam(ParamWidget::create<RoundSmallBlackKnob>(Vec(100, 138), module, QuadGolombRulerRhythm::OFFSET_1_PARAM, 0.0, 17.2, 0.0));
+	addParam(ParamWidget::create<RoundSmallBlackKnob>(Vec(139, 138), module, QuadGolombRulerRhythm::PAD_1_PARAM, 0.0, 17.2, 0.0));
+	addParam(ParamWidget::create<RoundSmallBlackKnob>(Vec(178, 138), module, QuadGolombRulerRhythm::ACCENTS_1_PARAM, 0.0, 17.2, 0.0));
+	addParam(ParamWidget::create<RoundSmallBlackKnob>(Vec(217, 138), module, QuadGolombRulerRhythm::ACCENT_ROTATE_1_PARAM, 0.0, 17.2, 0.0));
+	addParam(ParamWidget::create<RoundSmallBlackKnob>(Vec(22, 195), module, QuadGolombRulerRhythm::STEPS_2_PARAM, 0.0, 18.0, 18.0));
 	addParam(ParamWidget::create<RoundSmallBlackKnob>(Vec(61, 195), module, QuadGolombRulerRhythm::DIVISIONS_2_PARAM, 0.0, 10.2, 2.0));
-	addParam(ParamWidget::create<RoundSmallBlackKnob>(Vec(100, 195), module, QuadGolombRulerRhythm::OFFSET_2_PARAM, 0.0, 15.2, 0.0));
-	addParam(ParamWidget::create<RoundSmallBlackKnob>(Vec(139, 195), module, QuadGolombRulerRhythm::PAD_2_PARAM, 0.0, 15.2, 0.0));
-	addParam(ParamWidget::create<RoundSmallBlackKnob>(Vec(178, 195), module, QuadGolombRulerRhythm::ACCENTS_2_PARAM, 0.0, 15.2, 0.0));
-	addParam(ParamWidget::create<RoundSmallBlackKnob>(Vec(217, 195), module, QuadGolombRulerRhythm::ACCENT_ROTATE_2_PARAM, 0.0, 15.2, 0.0));
-	addParam(ParamWidget::create<RoundSmallBlackKnob>(Vec(22, 252), module, QuadGolombRulerRhythm::STEPS_3_PARAM, 0.0, 16.2, 16.0));
+	addParam(ParamWidget::create<RoundSmallBlackKnob>(Vec(100, 195), module, QuadGolombRulerRhythm::OFFSET_2_PARAM, 0.0, 17.2, 0.0));
+	addParam(ParamWidget::create<RoundSmallBlackKnob>(Vec(139, 195), module, QuadGolombRulerRhythm::PAD_2_PARAM, 0.0, 17.2, 0.0));
+	addParam(ParamWidget::create<RoundSmallBlackKnob>(Vec(178, 195), module, QuadGolombRulerRhythm::ACCENTS_2_PARAM, 0.0, 17.2, 0.0));
+	addParam(ParamWidget::create<RoundSmallBlackKnob>(Vec(217, 195), module, QuadGolombRulerRhythm::ACCENT_ROTATE_2_PARAM, 0.0, 17.2, 0.0));
+	addParam(ParamWidget::create<RoundSmallBlackKnob>(Vec(22, 252), module, QuadGolombRulerRhythm::STEPS_3_PARAM, 0.0, 18.2, 18.0));
 	addParam(ParamWidget::create<RoundSmallBlackKnob>(Vec(61, 252), module, QuadGolombRulerRhythm::DIVISIONS_3_PARAM, 0.0, 10.2, 2.0));
-	addParam(ParamWidget::create<RoundSmallBlackKnob>(Vec(100, 252), module, QuadGolombRulerRhythm::OFFSET_3_PARAM, 0.0, 15.2, 0.0));
-	addParam(ParamWidget::create<RoundSmallBlackKnob>(Vec(139, 252), module, QuadGolombRulerRhythm::PAD_3_PARAM, 0.0, 15.2, 0.0));
-	addParam(ParamWidget::create<RoundSmallBlackKnob>(Vec(178, 252), module, QuadGolombRulerRhythm::ACCENTS_3_PARAM, 0.0, 15.2, 0.0));
-	addParam(ParamWidget::create<RoundSmallBlackKnob>(Vec(217, 252), module, QuadGolombRulerRhythm::ACCENT_ROTATE_3_PARAM, 0.0, 15.2, 0.0));
-	addParam(ParamWidget::create<RoundSmallBlackKnob>(Vec(22, 309), module, QuadGolombRulerRhythm::STEPS_4_PARAM, 0.0, 16.2, 16.0));
+	addParam(ParamWidget::create<RoundSmallBlackKnob>(Vec(100, 252), module, QuadGolombRulerRhythm::OFFSET_3_PARAM, 0.0, 17.2, 0.0));
+	addParam(ParamWidget::create<RoundSmallBlackKnob>(Vec(139, 252), module, QuadGolombRulerRhythm::PAD_3_PARAM, 0.0, 17.2, 0.0));
+	addParam(ParamWidget::create<RoundSmallBlackKnob>(Vec(178, 252), module, QuadGolombRulerRhythm::ACCENTS_3_PARAM, 0.0, 17.2, 0.0));
+	addParam(ParamWidget::create<RoundSmallBlackKnob>(Vec(217, 252), module, QuadGolombRulerRhythm::ACCENT_ROTATE_3_PARAM, 0.0, 17.2, 0.0));
+	addParam(ParamWidget::create<RoundSmallBlackKnob>(Vec(22, 309), module, QuadGolombRulerRhythm::STEPS_4_PARAM, 0.0, 18.2, 18.0));
 	addParam(ParamWidget::create<RoundSmallBlackKnob>(Vec(61, 309), module, QuadGolombRulerRhythm::DIVISIONS_4_PARAM, 0.0, 10.2, 2.0));
-	addParam(ParamWidget::create<RoundSmallBlackKnob>(Vec(100, 309), module, QuadGolombRulerRhythm::OFFSET_4_PARAM, 0.0, 15.2, 0.0));
-	addParam(ParamWidget::create<RoundSmallBlackKnob>(Vec(139, 309), module, QuadGolombRulerRhythm::PAD_4_PARAM, 0.0, 15.2, 0.0));
-	addParam(ParamWidget::create<RoundSmallBlackKnob>(Vec(178, 309), module, QuadGolombRulerRhythm::ACCENTS_4_PARAM, 0.0, 15.2, 0.0));
-	addParam(ParamWidget::create<RoundSmallBlackKnob>(Vec(217, 309), module, QuadGolombRulerRhythm::ACCENT_ROTATE_4_PARAM, 0.0, 15.2, 0.0));
+	addParam(ParamWidget::create<RoundSmallBlackKnob>(Vec(100, 309), module, QuadGolombRulerRhythm::OFFSET_4_PARAM, 0.0, 17.2, 0.0));
+	addParam(ParamWidget::create<RoundSmallBlackKnob>(Vec(139, 309), module, QuadGolombRulerRhythm::PAD_4_PARAM, 0.0, 17.2, 0.0));
+	addParam(ParamWidget::create<RoundSmallBlackKnob>(Vec(178, 309), module, QuadGolombRulerRhythm::ACCENTS_4_PARAM, 0.0, 17.2, 0.0));
+	addParam(ParamWidget::create<RoundSmallBlackKnob>(Vec(217, 309), module, QuadGolombRulerRhythm::ACCENT_ROTATE_4_PARAM, 0.0, 17.2, 0.0));
 	addParam(ParamWidget::create<CKD6>(Vec(275, 285), module, QuadGolombRulerRhythm::CHAIN_MODE_PARAM, 0.0, 1.0, 0.0));
 
 	addInput(Port::create<PJ301MPort>(Vec(24, 167), Port::INPUT, module, QuadGolombRulerRhythm::STEPS_1_INPUT));

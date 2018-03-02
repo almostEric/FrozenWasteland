@@ -113,10 +113,10 @@ void MrBlueSky::step() {
 	float attack = params[ATTACK_PARAM].value;
 	float decay = params[DECAY_PARAM].value;
 	if(inputs[ATTACK_INPUT].active) {
-		attack += clampf(inputs[ATTACK_INPUT].value / 20.0,-0.25,.25);
+		attack += clamp(inputs[ATTACK_INPUT].value / 20.0,-0.25f,.25f);
 	}
 	if(inputs[DECAY_INPUT].active) {
-		decay += clampf(inputs[DECAY_INPUT].value / 20.0,-0.25,.25);
+		decay += clamp(inputs[DECAY_INPUT].value / 20.0,-0.25f,.25f);
 	}
 	float slewAttack = slewMax * powf(slewMin / slewMax, attack);
 	float slewDecay = slewMax * powf(slewMin / slewMax, decay);
@@ -128,7 +128,7 @@ void MrBlueSky::step() {
 		currentQ += inputs[MOD_Q_INPUT].value;
 	}
 
-	currentQ = clampf(currentQ,1.0,15.0);
+	currentQ = clamp(currentQ,1.0,15.0);
 	if (abs(currentQ - lastModQ) >= qEpsilon ) {
 		for(int i=0; i<2*BANDS; i++) {
 			iFilter[i]->setQ(currentQ);
@@ -142,7 +142,7 @@ void MrBlueSky::step() {
 		currentQ += inputs[CARRIER_Q_INPUT].value;
 	}
 
-	currentQ = clampf(currentQ,1.0,15.0);
+	currentQ = clamp(currentQ,1.0,15.0);
 	if (abs(currentQ - lastCarrierQ) >= qEpsilon ) {
 		for(int i=0; i<2*BANDS; i++) {
 			cFilter[i]->setQ(currentQ);
@@ -205,7 +205,7 @@ struct MrBlueSkyBandDisplay : TransparentWidget {
 		for (int i=0; i<BANDS; i++) {
 			char fVal[10];
 			snprintf(fVal, sizeof(fVal), "%1i", (int)module->freq[i]);
-			nvgFillColor(vg,nvgRGBA(rescalef(clampf(module->peaks[i],0,1),0,1,0,255), 0, 0, 255));
+			nvgFillColor(vg,nvgRGBA(rescale(clamp(module->peaks[i],0.0f,1.0f),0,1,0,255), 0, 0, 255));
 			nvgText(vg, 56 + 43*i, 30, fVal, NULL);
 		}
 	}

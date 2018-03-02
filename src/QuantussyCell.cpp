@@ -15,7 +15,7 @@ struct LowFrequencyOscillator {
 	}
 	void setPulseWidth(float pw_) {
 		const float pwMin = 0.01;
-		pw = clampf(pw_, pwMin, 1.0 - pwMin);
+		pw = clamp(pw_, pwMin, 1.0 - pwMin);
 	}
 	void setReset(float reset) {
 		if (resetTrigger.process(reset)) {

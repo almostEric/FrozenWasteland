@@ -18,7 +18,7 @@ struct LowFrequencyOscillator {
 	}
 	void setPulseWidth(float pw_) {
 		const float pwMin = 0.01;
-		pw = clampf(pw_, pwMin, 1.0 - pwMin);
+		pw = clamp(pw_, pwMin, 1.0 - pwMin);
 	}
 	void setReset(float reset) {
 		if (resetTrigger.process(reset)) {
@@ -171,7 +171,7 @@ void CDCSeriouslySlowLFO::step() {
 	if(inputs[FM_INPUT].active) {
 		duration +=inputs[FM_INPUT].value;
 	}
-	duration = clampf(duration,1.0,100.0);
+	duration = clamp(duration,1.0,100.0);
 
 	oscillator.setFrequency(1.0 / (duration * numberOfSeconds));
 	oscillator.step(1.0 / engineGetSampleRate());

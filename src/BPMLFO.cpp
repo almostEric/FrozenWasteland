@@ -20,7 +20,7 @@ struct LowFrequencyOscillator {
 	}
 	void setPulseWidth(float pw_) {
 		const float pwMin = 0.01;
-		pw = clampf(pw_, pwMin, 1.0 - pwMin);
+		pw = clamp(pw_, pwMin, 1.0 - pwMin);
 	}
 
 	void hardReset()
@@ -72,7 +72,9 @@ struct LowFrequencyOscillator {
 struct BPMLFO : Module {
 	enum ParamIds {
 		DIVISION_PARAM,
-		OFFSET_PARAM,		
+		OFFSET_PARAM,	
+		HOLD_CLOCK_BEHAVIOR_PARAM,
+		HOLD_MODE_PARAM,
 		NUM_PARAMS
 	};
 	enum InputIds {
@@ -106,6 +108,12 @@ struct BPMLFO : Module {
 	float duration = 0;
 	bool holding = false;
 	bool secondClockReceived = false;
+
+	float sinOutputValue = 0.0;
+	float triOutputValue = 0.0;
+	float sawOutputValue = 0.0;
+	float sqrOutputValue = 0.0;
+
 
 
 	BPMLFO() : Module(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS, NUM_LIGHTS) {}
@@ -142,9 +150,11 @@ void BPMLFO::step() {
 	if(inputs[DIVISION_INPUT].active) {
 		divisionf +=(inputs[DIVISION_INPUT].value * (DIVISIONS / 10.0));
 	}
-	divisionf = clampf(divisionf,0.0,26.0);
+	divisionf = clamp(divisionf,0.0,26.0);
 	division = int(divisionf);
 	
+	oscillator.offset = (params[OFFSET_PARAM].value > 0.0);
+
 	if(duration != 0) {
 		oscillator.setFrequency(1.0 / (duration / divisions[division]));
 	}
@@ -159,22 +169,32 @@ void BPMLFO::step() {
 	} 
 
 	if(inputs[HOLD_INPUT].active) {
-		if(holdTrigger.process(inputs[HOLD_INPUT].value)) {
-			holding = !holding;
-			lights[HOLD_LIGHT].value = holding;
-		}		
+		if(params[HOLD_MODE_PARAM].value == 1.0) { //Latched is default		
+			if(holdTrigger.process(inputs[HOLD_INPUT].value)) {
+				holding = !holding;
+			}		
+		} else {
+			holding = inputs[HOLD_INPUT].value >= 1; 			
+		}
+		lights[HOLD_LIGHT].value = holding;
 	} 
 
+    if(!holding || (holding && params[HOLD_CLOCK_BEHAVIOR_PARAM].value == 0.0)) {
+    	oscillator.step(1.0 / engineGetSampleRate());
+    }
+
 	if(!holding) {
-		oscillator.offset = (params[OFFSET_PARAM].value > 0.0);
-		oscillator.step(1.0 / engineGetSampleRate());
+		sinOutputValue = 5.0 * oscillator.sin();
+		triOutputValue = 5.0 * oscillator.tri();
+		sawOutputValue = 5.0 * oscillator.saw();
+		sqrOutputValue = 5.0 * oscillator.sqr();
 	}
 
 
-	outputs[SIN_OUTPUT].value = 5.0 * oscillator.sin();
-	outputs[TRI_OUTPUT].value = 5.0 * oscillator.tri();
-	outputs[SAW_OUTPUT].value = 5.0 * oscillator.saw();
-	outputs[SQR_OUTPUT].value =  5.0 * oscillator.sqr();
+	outputs[SIN_OUTPUT].value = sinOutputValue;
+	outputs[TRI_OUTPUT].value = triOutputValue;
+	outputs[SAW_OUTPUT].value = sawOutputValue;
+	outputs[SQR_OUTPUT].value =  sqrOutputValue;
 		
 }
 
@@ -252,7 +272,9 @@ BPMLFOWidget::BPMLFOWidget(BPMLFO *module) : ModuleWidget(module) {
 	}
 
 	addParam(ParamWidget::create<Davies1900hBlackKnob>(Vec(65, 85), module, BPMLFO::DIVISION_PARAM, 0.0, 26.5, 13.0));
-	addParam(ParamWidget::create<CKSS>(Vec(122, 210), module, BPMLFO::OFFSET_PARAM, 0.0, 1.0, 1.0));
+	addParam(ParamWidget::create<CKSS>(Vec(12, 210), module, BPMLFO::OFFSET_PARAM, 0.0, 1.0, 1.0));
+	addParam(ParamWidget::create<CKSS>(Vec(125, 140), module, BPMLFO::HOLD_CLOCK_BEHAVIOR_PARAM, 0.0, 1.0, 1.0));
+	addParam(ParamWidget::create<CKSS>(Vec(125, 210), module, BPMLFO::HOLD_MODE_PARAM, 0.0, 1.0, 1.0));
 
 	addInput(Port::create<PJ301MPort>(Vec(30, 95), Port::INPUT, module, BPMLFO::DIVISION_INPUT));
 	addInput(Port::create<PJ301MPort>(Vec(31, 270), Port::INPUT, module, BPMLFO::CLOCK_INPUT));
