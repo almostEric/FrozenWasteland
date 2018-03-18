@@ -75,8 +75,8 @@ void DamianLillard::step() {
 	const float maxCutoff = 8400.0;
 	
 	for (int i=0; i<FREQUENCIES;i++) {
-		float cutoffExp = params[FREQ_1_CUTOFF_PARAM+i].value + inputs[FREQ_1_CUTOFF_INPUT+i].value / 10.0; //I'm reducing range of CV to make it more useful
-		cutoffExp = clamp(cutoffExp, 0.0, 1.0);
+		float cutoffExp = params[FREQ_1_CUTOFF_PARAM+i].value + inputs[FREQ_1_CUTOFF_INPUT+i].value / 10.0f; //I'm reducing range of CV to make it more useful
+		cutoffExp = clamp(cutoffExp, 0.0f, 1.0f);
 		freq[i] = minCutoff * powf(maxCutoff / minCutoff, cutoffExp);
 
 		//Prevent band overlap
@@ -165,34 +165,34 @@ DamianLillardWidget::DamianLillardWidget(DamianLillard *module) : ModuleWidget(m
 		addChild(offsetDisplay);
 	}
 
-	addParam(ParamWidget::create<RoundBlackKnob>(Vec(14, 84), module, DamianLillard::FREQ_1_CUTOFF_PARAM, 0, 1.0, .25));
-	addParam(ParamWidget::create<RoundBlackKnob>(Vec(64, 84), module, DamianLillard::FREQ_2_CUTOFF_PARAM, 0, 1.0, .5));
-	addParam(ParamWidget::create<RoundBlackKnob>(Vec(115, 84), module, DamianLillard::FREQ_3_CUTOFF_PARAM, 0, 1.0, .75));
+	addParam(ParamWidget::create<RoundBlackKnob>(Vec(15, 84), module, DamianLillard::FREQ_1_CUTOFF_PARAM, 0, 1.0, .25));
+	addParam(ParamWidget::create<RoundBlackKnob>(Vec(66, 84), module, DamianLillard::FREQ_2_CUTOFF_PARAM, 0, 1.0, .5));
+	addParam(ParamWidget::create<RoundBlackKnob>(Vec(117, 84), module, DamianLillard::FREQ_3_CUTOFF_PARAM, 0, 1.0, .75));
 
 
-	addInput(Port::create<PJ301MPort>(Vec(20, 125), Port::INPUT, module, DamianLillard::FREQ_1_CUTOFF_INPUT));
-	addInput(Port::create<PJ301MPort>(Vec(71, 125), Port::INPUT, module, DamianLillard::FREQ_2_CUTOFF_INPUT));
-	addInput(Port::create<PJ301MPort>(Vec(123, 125), Port::INPUT, module, DamianLillard::FREQ_3_CUTOFF_INPUT));
+	addInput(Port::create<PJ301MPort>(Vec(18, 117), Port::INPUT, module, DamianLillard::FREQ_1_CUTOFF_INPUT));
+	addInput(Port::create<PJ301MPort>(Vec(69, 117), Port::INPUT, module, DamianLillard::FREQ_2_CUTOFF_INPUT));
+	addInput(Port::create<PJ301MPort>(Vec(120, 117), Port::INPUT, module, DamianLillard::FREQ_3_CUTOFF_INPUT));
 
-	addInput(Port::create<PJ301MPort>(Vec(10, 170), Port::INPUT, module, DamianLillard::SIGNAL_IN));
+	addInput(Port::create<PJ301MPort>(Vec(10, 172), Port::INPUT, module, DamianLillard::SIGNAL_IN));
 
 
-	addInput(Port::create<PJ301MPort>(Vec(10, 265), Port::INPUT, module, DamianLillard::BAND_1_RETURN_INPUT));
-	addInput(Port::create<PJ301MPort>(Vec(50, 265), Port::INPUT, module, DamianLillard::BAND_2_RETURN_INPUT));
-	addInput(Port::create<PJ301MPort>(Vec(90, 265), Port::INPUT, module, DamianLillard::BAND_3_RETURN_INPUT));
-	addInput(Port::create<PJ301MPort>(Vec(130, 265), Port::INPUT, module, DamianLillard::BAND_4_RETURN_INPUT));
+	addInput(Port::create<PJ301MPort>(Vec(10, 255), Port::INPUT, module, DamianLillard::BAND_1_RETURN_INPUT));
+	addInput(Port::create<PJ301MPort>(Vec(50, 255), Port::INPUT, module, DamianLillard::BAND_2_RETURN_INPUT));
+	addInput(Port::create<PJ301MPort>(Vec(90, 255), Port::INPUT, module, DamianLillard::BAND_3_RETURN_INPUT));
+	addInput(Port::create<PJ301MPort>(Vec(130, 255), Port::INPUT, module, DamianLillard::BAND_4_RETURN_INPUT));
 
-	addOutput(Port::create<PJ301MPort>(Vec(10, 225), Port::OUTPUT, module, DamianLillard::BAND_1_OUTPUT));
-	addOutput(Port::create<PJ301MPort>(Vec(50, 225), Port::OUTPUT, module, DamianLillard::BAND_2_OUTPUT));
-	addOutput(Port::create<PJ301MPort>(Vec(90, 225), Port::OUTPUT, module, DamianLillard::BAND_3_OUTPUT));
-	addOutput(Port::create<PJ301MPort>(Vec(130, 225), Port::OUTPUT, module, DamianLillard::BAND_4_OUTPUT));
+	addOutput(Port::create<PJ301MPort>(Vec(10, 215), Port::OUTPUT, module, DamianLillard::BAND_1_OUTPUT));
+	addOutput(Port::create<PJ301MPort>(Vec(50, 215), Port::OUTPUT, module, DamianLillard::BAND_2_OUTPUT));
+	addOutput(Port::create<PJ301MPort>(Vec(90, 215), Port::OUTPUT, module, DamianLillard::BAND_3_OUTPUT));
+	addOutput(Port::create<PJ301MPort>(Vec(130, 215), Port::OUTPUT, module, DamianLillard::BAND_4_OUTPUT));
 
-	addOutput(Port::create<PJ301MPort>(Vec(10, 305), Port::OUTPUT, module, DamianLillard::MIX_OUTPUT));
+	addOutput(Port::create<PJ301MPort>(Vec(10, 317), Port::OUTPUT, module, DamianLillard::MIX_OUTPUT));
 
-	addChild(Widget::create<ScrewSilver>(Vec(15, 0)));
-	addChild(Widget::create<ScrewSilver>(Vec(box.size.x-30, 0)));
-	addChild(Widget::create<ScrewSilver>(Vec(15, 365)));
-	addChild(Widget::create<ScrewSilver>(Vec(box.size.x-30, 365)));
+	addChild(Widget::create<ScrewSilver>(Vec(RACK_GRID_WIDTH-12, 0)));
+	addChild(Widget::create<ScrewSilver>(Vec(box.size.x - 2 * RACK_GRID_WIDTH + 12, 0)));
+	addChild(Widget::create<ScrewSilver>(Vec(RACK_GRID_WIDTH-12, RACK_GRID_HEIGHT - RACK_GRID_WIDTH)));
+	addChild(Widget::create<ScrewSilver>(Vec(box.size.x - 2 * RACK_GRID_WIDTH + 12, RACK_GRID_HEIGHT - RACK_GRID_WIDTH)));
 }
 
 Model *modelDamianLillard = Model::create<DamianLillard, DamianLillardWidget>("Frozen Wasteland", "DamianLillard", "Damian Lillard", FILTER_TAG);

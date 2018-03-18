@@ -62,13 +62,13 @@ struct VoltageControlledOscillator {
 	}
 	void setPulseWidth(float pulseWidth) {
 		const float pwMin = 0.01;
-		pw = clamp(pulseWidth, pwMin, 1.0 - pwMin);
+		pw = clamp(pulseWidth, pwMin, 1.0f - pwMin);
 	}
 
 	void process(float deltaTime) {
 
 		// Advance phase
-		float deltaPhase = clamp(freq * deltaTime, 1e-6, 0.5);
+		float deltaPhase = clamp(freq * deltaTime, 1e-6f, 0.5f);
 
 		
 		sqrFilter.setCutoff(40.0 * deltaTime);
@@ -175,12 +175,15 @@ struct LadderFilter {
 struct PhasedLockedLoop : Module {
 	enum ParamIds {
 		VCO_FREQ_PARAM,
-		LPF_FREQ_PARAM,
+		VCO_PW_PARAM,
+		VCO_PWCV_PARAM,
+		LPF_FREQ_PARAM,		
 		COMPARATOR_TYPE_PARAM,
 		NUM_PARAMS
 	};
 	enum InputIds {
 		VCO_CV_INPUT,
+		VCO_PW_INPUT,
 		PHASE_COMPARATOR_INPUT,
 		SIGNAL_INPUT,
 		LPF_FREQ_INPUT,
@@ -250,9 +253,14 @@ void PhasedLockedLoop::step() {
 	} else {
 		pitchCv = 12.0 * filterOutput;
 	}
+	float pulseWidth = params[VCO_PW_PARAM].value;
+	if(inputs[VCO_PW_INPUT].active) {
+		pulseWidth += inputs[VCO_PW_INPUT].value * (params[VCO_PWCV_PARAM].value / 10.0);
+	}
 	//pitchCv = 0.0;// Test
 
 	oscillator.setPitch(params[VCO_FREQ_PARAM].value, pitchCv);
+	oscillator.setPulseWidth(pulseWidth);
 
 	oscillator.process(1.0 / engineGetSampleRate());
 
@@ -328,27 +336,30 @@ PhasedLockedLoopWidget::PhasedLockedLoopWidget(PhasedLockedLoop *module) : Modul
 		addChild(panel);
 	}
 
-	addChild(Widget::create<ScrewSilver>(Vec(RACK_GRID_WIDTH, 0)));
-	addChild(Widget::create<ScrewSilver>(Vec(box.size.x - 2 * RACK_GRID_WIDTH, 0)));
-	addChild(Widget::create<ScrewSilver>(Vec(RACK_GRID_WIDTH, RACK_GRID_HEIGHT - RACK_GRID_WIDTH)));
-	addChild(Widget::create<ScrewSilver>(Vec(box.size.x - 2 * RACK_GRID_WIDTH, RACK_GRID_HEIGHT - RACK_GRID_WIDTH)));
+	addChild(Widget::create<ScrewSilver>(Vec(RACK_GRID_WIDTH-12, 0)));
+	addChild(Widget::create<ScrewSilver>(Vec(box.size.x - 2 * RACK_GRID_WIDTH + 12, 0)));
+	addChild(Widget::create<ScrewSilver>(Vec(RACK_GRID_WIDTH-12, RACK_GRID_HEIGHT - RACK_GRID_WIDTH)));
+	addChild(Widget::create<ScrewSilver>(Vec(box.size.x - 2 * RACK_GRID_WIDTH + 12, RACK_GRID_HEIGHT - RACK_GRID_WIDTH)));
 
-	addParam(ParamWidget::create<Davies1900hBlackKnob>(Vec(97, 47), module, PhasedLockedLoop::VCO_FREQ_PARAM, -54.0, 54.0, 0.0));
-	addParam(ParamWidget::create<Davies1900hBlackKnob>(Vec(97, 288), module, PhasedLockedLoop::LPF_FREQ_PARAM, 0, 1, 0.5));
-	addParam(ParamWidget::create<CKD6>(Vec(19, 196), module, PhasedLockedLoop::COMPARATOR_TYPE_PARAM, 0.0, 1.0, 0.0));
+	addParam(ParamWidget::create<RoundSmallBlackKnob>(Vec(100, 44), module, PhasedLockedLoop::VCO_FREQ_PARAM, -54.0, 54.0, 0.0));
+	addParam(ParamWidget::create<RoundSmallBlackKnob>(Vec(85, 78), module, PhasedLockedLoop::VCO_PW_PARAM, 0, 1, 0.5));
+	addParam(ParamWidget::create<RoundSmallBlackKnob>(Vec(118, 78), module, PhasedLockedLoop::VCO_PWCV_PARAM, 0, 1, 0));
+	addParam(ParamWidget::create<RoundBlackKnob>(Vec(97, 305), module, PhasedLockedLoop::LPF_FREQ_PARAM, 0, 1, 0.5));
+	addParam(ParamWidget::create<CKD6>(Vec(18, 202), module, PhasedLockedLoop::COMPARATOR_TYPE_PARAM, 0.0, 1.0, 0.0));
 
-	addInput(Port::create<PJ301MPort>(Vec(10, 50), Port::INPUT, module, PhasedLockedLoop::VCO_CV_INPUT));
-	addInput(Port::create<PJ301MPort>(Vec(10, 137), Port::INPUT, module, PhasedLockedLoop::PHASE_COMPARATOR_INPUT));
-	addInput(Port::create<PJ301MPort>(Vec(10, 166), Port::INPUT, module, PhasedLockedLoop::SIGNAL_INPUT));
-	addInput(Port::create<PJ301MPort>(Vec(10, 289), Port::INPUT, module, PhasedLockedLoop::LPF_FREQ_INPUT));
+	addInput(Port::create<PJ301MPort>(Vec(8, 30), Port::INPUT, module, PhasedLockedLoop::VCO_CV_INPUT));
+	addInput(Port::create<PJ301MPort>(Vec(8, 62), Port::INPUT, module, PhasedLockedLoop::VCO_PW_INPUT));
+	addInput(Port::create<PJ301MPort>(Vec(8, 135), Port::INPUT, module, PhasedLockedLoop::PHASE_COMPARATOR_INPUT));
+	addInput(Port::create<PJ301MPort>(Vec(8, 165), Port::INPUT, module, PhasedLockedLoop::SIGNAL_INPUT));
+	addInput(Port::create<PJ301MPort>(Vec(8, 289), Port::INPUT, module, PhasedLockedLoop::LPF_FREQ_INPUT));
 
-	addOutput(Port::create<PJ301MPort>(Vec(10, 78), Port::OUTPUT, module, PhasedLockedLoop::SQUARE_OUTPUT));
-	addOutput(Port::create<PJ301MPort>(Vec(10, 239), Port::OUTPUT, module, PhasedLockedLoop::COMPARATOR_OUTPUT));
-	addOutput(Port::create<PJ301MPort>(Vec(10, 319), Port::OUTPUT, module, PhasedLockedLoop::LPF_OUTPUT));
+	addOutput(Port::create<PJ301MPort>(Vec(8, 94), Port::OUTPUT, module, PhasedLockedLoop::SQUARE_OUTPUT));
+	addOutput(Port::create<PJ301MPort>(Vec(8, 239), Port::OUTPUT, module, PhasedLockedLoop::COMPARATOR_OUTPUT));
+	addOutput(Port::create<PJ301MPort>(Vec(8, 319), Port::OUTPUT, module, PhasedLockedLoop::LPF_OUTPUT));
 
-	addChild(ModuleLightWidget::create<LargeLight<BlueLight>>(Vec(112, 154), module, PhasedLockedLoop::PHASE_LOCKED_LIGHT));
-	addChild(ModuleLightWidget::create<SmallLight<BlueLight>>(Vec(62, 210), module, PhasedLockedLoop::XOR_COMPARATOR_LIGHT));
-	addChild(ModuleLightWidget::create<SmallLight<BlueLight>>(Vec(62, 226), module, PhasedLockedLoop::FLIP_FLOP_COMPARATOR_LIGHT));
+	addChild(ModuleLightWidget::create<LargeLight<BlueLight>>(Vec(112, 155), module, PhasedLockedLoop::PHASE_LOCKED_LIGHT));
+	addChild(ModuleLightWidget::create<SmallLight<BlueLight>>(Vec(62, 201), module, PhasedLockedLoop::XOR_COMPARATOR_LIGHT));
+	addChild(ModuleLightWidget::create<SmallLight<BlueLight>>(Vec(62, 217), module, PhasedLockedLoop::FLIP_FLOP_COMPARATOR_LIGHT));
 }
 
 Model *modelPhasedLockedLoop = Model::create<PhasedLockedLoop, PhasedLockedLoopWidget>("Frozen Wasteland", "PhasedLockedLoop", "Phased Locked Loop", OSCILLATOR_TAG);

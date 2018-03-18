@@ -200,25 +200,25 @@ void QuadEuclideanRhythm::step() {
 		if(inputs[trackNumber * 7].active) {
 			stepsCountf += inputs[trackNumber * 7].value;
 		}
-		stepsCountf = clamp(stepsCountf,0.0,16.0);	
+		stepsCountf = clamp(stepsCountf,0.0f,16.0f);	
 
 		float divisionf = params[(trackNumber * 6) + 1].value;
 		if(inputs[(trackNumber * 7) + 1].active) {
 			divisionf += inputs[(trackNumber * 7) + 1].value;
 		}		
-		divisionf = clamp(divisionf,0.0,stepsCountf);
+		divisionf = clamp(divisionf,0.0f,stepsCountf);
 
 		float offsetf = params[(trackNumber * 6) + 2].value;
 		if(inputs[(trackNumber * 7) + 2].active) {
 			offsetf += inputs[(trackNumber * 7) + 2].value;
 		}	
-		offsetf = clamp(offsetf,0.0,15.0);
+		offsetf = clamp(offsetf,0.0f,15.0f);
 
 		float padf = params[trackNumber * 6 + 3].value;
 		if(inputs[trackNumber * 7 + 3].active) {
 			padf += inputs[trackNumber * 7 + 3].value;
 		}
-		padf = clamp(padf,0.0,stepsCountf - divisionf);
+		padf = clamp(padf,0.0f,stepsCountf - divisionf);
 
 
 		//Use this to reduce range of accent params/inputs so the range of motion of knob/modulation is more useful.
@@ -231,14 +231,14 @@ void QuadEuclideanRhythm::step() {
 		if(inputs[(trackNumber * 7) + 4].active) {
 			accentDivisionf += inputs[(trackNumber * 7) + 4].value * divisionScale;
 		}
-		accentDivisionf = clamp(accentDivisionf,0.0,divisionf);
+		accentDivisionf = clamp(accentDivisionf,0.0f,divisionf);
 
 		float accentRotationf = params[(trackNumber * 6) + 5].value * divisionScale;
 		if(inputs[(trackNumber * 7) + 5].active) {
 			accentRotationf += inputs[(trackNumber * 7) + 5].value * divisionScale;
 		}
 		if(divisionf > 0) {
-			accentRotationf = clamp(accentRotationf,0.0,divisionf-1);			
+			accentRotationf = clamp(accentRotationf,0.0f,divisionf-1);			
 		} else {
 			accentRotationf = 0;
 		}
@@ -441,10 +441,10 @@ QuadEuclideanRhythmWidget::QuadEuclideanRhythmWidget(QuadEuclideanRhythm *module
 		addChild(panel);
 	}
 
-	addChild(Widget::create<ScrewSilver>(Vec(RACK_GRID_WIDTH, 0)));
-	addChild(Widget::create<ScrewSilver>(Vec(box.size.x - 2 * RACK_GRID_WIDTH, 0)));
-	addChild(Widget::create<ScrewSilver>(Vec(RACK_GRID_WIDTH, RACK_GRID_HEIGHT - RACK_GRID_WIDTH)));
-	addChild(Widget::create<ScrewSilver>(Vec(box.size.x - 2 * RACK_GRID_WIDTH, RACK_GRID_HEIGHT - RACK_GRID_WIDTH)));
+	addChild(Widget::create<ScrewSilver>(Vec(RACK_GRID_WIDTH - 12, 0)));
+	addChild(Widget::create<ScrewSilver>(Vec(box.size.x - 2 * RACK_GRID_WIDTH + 12, 0)));
+	addChild(Widget::create<ScrewSilver>(Vec(RACK_GRID_WIDTH - 12, RACK_GRID_HEIGHT - RACK_GRID_WIDTH)));
+	addChild(Widget::create<ScrewSilver>(Vec(box.size.x - 2 * RACK_GRID_WIDTH + 12, RACK_GRID_HEIGHT - RACK_GRID_WIDTH)));
 
 
 	{
@@ -482,34 +482,34 @@ QuadEuclideanRhythmWidget::QuadEuclideanRhythmWidget(QuadEuclideanRhythm *module
 	addParam(ParamWidget::create<RoundSmallBlackKnob>(Vec(217, 309), module, QuadEuclideanRhythm::ACCENT_ROTATE_4_PARAM, 0.0, 15.2, 0.0));
 	addParam(ParamWidget::create<CKD6>(Vec(275, 285), module, QuadEuclideanRhythm::CHAIN_MODE_PARAM, 0.0, 1.0, 0.0));
 
-	addInput(Port::create<PJ301MPort>(Vec(24, 167), Port::INPUT, module, QuadEuclideanRhythm::STEPS_1_INPUT));
-	addInput(Port::create<PJ301MPort>(Vec(63, 167), Port::INPUT, module, QuadEuclideanRhythm::DIVISIONS_1_INPUT));
-	addInput(Port::create<PJ301MPort>(Vec(102, 167), Port::INPUT, module, QuadEuclideanRhythm::OFFSET_1_INPUT));
-	addInput(Port::create<PJ301MPort>(Vec(141, 167), Port::INPUT, module, QuadEuclideanRhythm::PAD_1_INPUT));
-	addInput(Port::create<PJ301MPort>(Vec(180, 167), Port::INPUT, module, QuadEuclideanRhythm::ACCENTS_1_INPUT));
-	addInput(Port::create<PJ301MPort>(Vec(219, 167), Port::INPUT, module, QuadEuclideanRhythm::ACCENT_ROTATE_1_INPUT));
-	addInput(Port::create<PJ301MPort>(Vec(24, 224), Port::INPUT, module, QuadEuclideanRhythm::STEPS_2_INPUT));
-	addInput(Port::create<PJ301MPort>(Vec(63, 224), Port::INPUT, module, QuadEuclideanRhythm::DIVISIONS_2_INPUT));
-	addInput(Port::create<PJ301MPort>(Vec(102, 224), Port::INPUT, module, QuadEuclideanRhythm::OFFSET_2_INPUT));
-	addInput(Port::create<PJ301MPort>(Vec(141, 224), Port::INPUT, module, QuadEuclideanRhythm::PAD_2_INPUT));
-	addInput(Port::create<PJ301MPort>(Vec(180, 224), Port::INPUT, module, QuadEuclideanRhythm::ACCENTS_2_INPUT));
-	addInput(Port::create<PJ301MPort>(Vec(219, 224), Port::INPUT, module, QuadEuclideanRhythm::ACCENT_ROTATE_2_INPUT));
-	addInput(Port::create<PJ301MPort>(Vec(24, 281), Port::INPUT, module, QuadEuclideanRhythm::STEPS_3_INPUT));
-	addInput(Port::create<PJ301MPort>(Vec(63, 281), Port::INPUT, module, QuadEuclideanRhythm::DIVISIONS_3_INPUT));
-	addInput(Port::create<PJ301MPort>(Vec(102, 281), Port::INPUT, module, QuadEuclideanRhythm::OFFSET_3_INPUT));
-	addInput(Port::create<PJ301MPort>(Vec(141, 281), Port::INPUT, module, QuadEuclideanRhythm::PAD_3_INPUT));
-	addInput(Port::create<PJ301MPort>(Vec(180, 281), Port::INPUT, module, QuadEuclideanRhythm::ACCENTS_3_INPUT));
-	addInput(Port::create<PJ301MPort>(Vec(219, 281), Port::INPUT, module, QuadEuclideanRhythm::ACCENT_ROTATE_3_INPUT));
-	addInput(Port::create<PJ301MPort>(Vec(24, 338), Port::INPUT, module, QuadEuclideanRhythm::STEPS_4_INPUT));
-	addInput(Port::create<PJ301MPort>(Vec(63, 338), Port::INPUT, module, QuadEuclideanRhythm::DIVISIONS_4_INPUT));
-	addInput(Port::create<PJ301MPort>(Vec(102, 338), Port::INPUT, module, QuadEuclideanRhythm::OFFSET_4_INPUT));
-	addInput(Port::create<PJ301MPort>(Vec(141, 338), Port::INPUT, module, QuadEuclideanRhythm::PAD_4_INPUT));
-	addInput(Port::create<PJ301MPort>(Vec(180, 338), Port::INPUT, module, QuadEuclideanRhythm::ACCENTS_4_INPUT));
-	addInput(Port::create<PJ301MPort>(Vec(219, 338), Port::INPUT, module, QuadEuclideanRhythm::ACCENT_ROTATE_4_INPUT));
+	addInput(Port::create<PJ301MPort>(Vec(23, 163), Port::INPUT, module, QuadEuclideanRhythm::STEPS_1_INPUT));
+	addInput(Port::create<PJ301MPort>(Vec(62, 163), Port::INPUT, module, QuadEuclideanRhythm::DIVISIONS_1_INPUT));
+	addInput(Port::create<PJ301MPort>(Vec(101, 163), Port::INPUT, module, QuadEuclideanRhythm::OFFSET_1_INPUT));
+	addInput(Port::create<PJ301MPort>(Vec(140, 163), Port::INPUT, module, QuadEuclideanRhythm::PAD_1_INPUT));
+	addInput(Port::create<PJ301MPort>(Vec(179, 163), Port::INPUT, module, QuadEuclideanRhythm::ACCENTS_1_INPUT));
+	addInput(Port::create<PJ301MPort>(Vec(218, 163), Port::INPUT, module, QuadEuclideanRhythm::ACCENT_ROTATE_1_INPUT));
+	addInput(Port::create<PJ301MPort>(Vec(23, 220), Port::INPUT, module, QuadEuclideanRhythm::STEPS_2_INPUT));
+	addInput(Port::create<PJ301MPort>(Vec(62, 220), Port::INPUT, module, QuadEuclideanRhythm::DIVISIONS_2_INPUT));
+	addInput(Port::create<PJ301MPort>(Vec(101, 220), Port::INPUT, module, QuadEuclideanRhythm::OFFSET_2_INPUT));
+	addInput(Port::create<PJ301MPort>(Vec(140, 220), Port::INPUT, module, QuadEuclideanRhythm::PAD_2_INPUT));
+	addInput(Port::create<PJ301MPort>(Vec(179, 220), Port::INPUT, module, QuadEuclideanRhythm::ACCENTS_2_INPUT));
+	addInput(Port::create<PJ301MPort>(Vec(218, 220), Port::INPUT, module, QuadEuclideanRhythm::ACCENT_ROTATE_2_INPUT));
+	addInput(Port::create<PJ301MPort>(Vec(23, 277), Port::INPUT, module, QuadEuclideanRhythm::STEPS_3_INPUT));
+	addInput(Port::create<PJ301MPort>(Vec(62, 277), Port::INPUT, module, QuadEuclideanRhythm::DIVISIONS_3_INPUT));
+	addInput(Port::create<PJ301MPort>(Vec(101, 277), Port::INPUT, module, QuadEuclideanRhythm::OFFSET_3_INPUT));
+	addInput(Port::create<PJ301MPort>(Vec(140, 277), Port::INPUT, module, QuadEuclideanRhythm::PAD_3_INPUT));
+	addInput(Port::create<PJ301MPort>(Vec(179, 277), Port::INPUT, module, QuadEuclideanRhythm::ACCENTS_3_INPUT));
+	addInput(Port::create<PJ301MPort>(Vec(218, 277), Port::INPUT, module, QuadEuclideanRhythm::ACCENT_ROTATE_3_INPUT));
+	addInput(Port::create<PJ301MPort>(Vec(23, 334), Port::INPUT, module, QuadEuclideanRhythm::STEPS_4_INPUT));
+	addInput(Port::create<PJ301MPort>(Vec(62, 334), Port::INPUT, module, QuadEuclideanRhythm::DIVISIONS_4_INPUT));
+	addInput(Port::create<PJ301MPort>(Vec(101, 334), Port::INPUT, module, QuadEuclideanRhythm::OFFSET_4_INPUT));
+	addInput(Port::create<PJ301MPort>(Vec(140, 334), Port::INPUT, module, QuadEuclideanRhythm::PAD_4_INPUT));
+	addInput(Port::create<PJ301MPort>(Vec(179, 334), Port::INPUT, module, QuadEuclideanRhythm::ACCENTS_4_INPUT));
+	addInput(Port::create<PJ301MPort>(Vec(218, 334), Port::INPUT, module, QuadEuclideanRhythm::ACCENT_ROTATE_4_INPUT));
 
-	addInput(Port::create<PJ301MPort>(Vec(262, 331), Port::INPUT, module, QuadEuclideanRhythm::CLOCK_INPUT));
-	addInput(Port::create<PJ301MPort>(Vec(302, 331), Port::INPUT, module, QuadEuclideanRhythm::RESET_INPUT));
-	addInput(Port::create<PJ301MPort>(Vec(335, 331), Port::INPUT, module, QuadEuclideanRhythm::MUTE_INPUT));
+	addInput(Port::create<PJ301MPort>(Vec(262, 343), Port::INPUT, module, QuadEuclideanRhythm::CLOCK_INPUT));
+	addInput(Port::create<PJ301MPort>(Vec(302, 343), Port::INPUT, module, QuadEuclideanRhythm::RESET_INPUT));
+	addInput(Port::create<PJ301MPort>(Vec(335, 343), Port::INPUT, module, QuadEuclideanRhythm::MUTE_INPUT));
 
 	addInput(Port::create<PJ301MPort>(Vec(322, 145), Port::INPUT, module, QuadEuclideanRhythm::START_1_INPUT));
 	addInput(Port::create<PJ301MPort>(Vec(322, 175), Port::INPUT, module, QuadEuclideanRhythm::START_2_INPUT));
@@ -530,11 +530,11 @@ QuadEuclideanRhythmWidget::QuadEuclideanRhythmWidget(QuadEuclideanRhythm *module
 	addOutput(Port::create<PJ301MPort>(Vec(286, 235), Port::OUTPUT, module, QuadEuclideanRhythm::ACCENT_OUTPUT_4));
 	addOutput(Port::create<PJ301MPort>(Vec(354, 235), Port::OUTPUT, module, QuadEuclideanRhythm::EOC_OUTPUT_4));
 	
-	addChild(ModuleLightWidget::create<SmallLight<BlueLight>>(Vec(310, 274), module, QuadEuclideanRhythm::CHAIN_MODE_NONE_LIGHT));
-	addChild(ModuleLightWidget::create<SmallLight<GreenLight>>(Vec(310, 289), module, QuadEuclideanRhythm::CHAIN_MODE_BOSS_LIGHT));
-	addChild(ModuleLightWidget::create<SmallLight<RedLight>>(Vec(310, 304), module, QuadEuclideanRhythm::CHAIN_MODE_EMPLOYEE_LIGHT));
+	addChild(ModuleLightWidget::create<SmallLight<BlueLight>>(Vec(310, 285), module, QuadEuclideanRhythm::CHAIN_MODE_NONE_LIGHT));
+	addChild(ModuleLightWidget::create<SmallLight<GreenLight>>(Vec(310, 300), module, QuadEuclideanRhythm::CHAIN_MODE_BOSS_LIGHT));
+	addChild(ModuleLightWidget::create<SmallLight<RedLight>>(Vec(310, 315), module, QuadEuclideanRhythm::CHAIN_MODE_EMPLOYEE_LIGHT));
 
-	addChild(ModuleLightWidget::create<LargeLight<RedLight>>(Vec(363, 335), module, QuadEuclideanRhythm::MUTED_LIGHT));
+	addChild(ModuleLightWidget::create<LargeLight<RedLight>>(Vec(363, 347), module, QuadEuclideanRhythm::MUTED_LIGHT));
 	
 }
 

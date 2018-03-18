@@ -18,7 +18,7 @@ struct LowFrequencyOscillator {
 	}
 	void setPulseWidth(float pw_) {
 		const float pwMin = 0.01;
-		pw = clamp(pw_, pwMin, 1.0 - pwMin);
+		pw = clamp(pw_, pwMin, 1.0f - pwMin);
 	}
 	void setReset(float reset) {
 		if (resetTrigger.process(reset)) {
@@ -171,7 +171,7 @@ void CDCSeriouslySlowLFO::step() {
 	if(inputs[FM_INPUT].active) {
 		duration +=inputs[FM_INPUT].value;
 	}
-	duration = clamp(duration,1.0,100.0);
+	duration = clamp(duration,1.0f,100.0f);
 
 	oscillator.setFrequency(1.0 / (duration * numberOfSeconds));
 	oscillator.step(1.0 / engineGetSampleRate());
@@ -253,10 +253,10 @@ CDCSeriouslySlowLFOWidget::CDCSeriouslySlowLFOWidget(CDCSeriouslySlowLFO *module
 		addChild(panel);
 	}
 
-	addChild(Widget::create<ScrewSilver>(Vec(RACK_GRID_WIDTH, 0)));
-	addChild(Widget::create<ScrewSilver>(Vec(box.size.x - 2 * RACK_GRID_WIDTH, 0)));
-	addChild(Widget::create<ScrewSilver>(Vec(RACK_GRID_WIDTH, RACK_GRID_HEIGHT - RACK_GRID_WIDTH)));
-	addChild(Widget::create<ScrewSilver>(Vec(box.size.x - 2 * RACK_GRID_WIDTH, RACK_GRID_HEIGHT - RACK_GRID_WIDTH)));
+	addChild(Widget::create<ScrewSilver>(Vec(RACK_GRID_WIDTH - 12, 0)));
+	addChild(Widget::create<ScrewSilver>(Vec(box.size.x - 2 * RACK_GRID_WIDTH + 12, 0)));
+	addChild(Widget::create<ScrewSilver>(Vec(RACK_GRID_WIDTH - 12, RACK_GRID_HEIGHT - RACK_GRID_WIDTH)));
+	addChild(Widget::create<ScrewSilver>(Vec(box.size.x - 2 * RACK_GRID_WIDTH  + 12, RACK_GRID_HEIGHT - RACK_GRID_WIDTH)));
 
 	{
 		LFOProgressDisplay *display = new LFOProgressDisplay();

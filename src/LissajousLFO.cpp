@@ -131,9 +131,9 @@ void LissajousLFO::step() {
 	outputs[OUTPUT_2].value = (y1 + y2) / 2;
 	outputs[OUTPUT_3].value = (x1 + x2 + y1 + y2) / 4;
 	float out4 = (x1/x2);
-	outputs[OUTPUT_4].value = std::isfinite(out4) ? clamp(out4,-5.0,5.0) : 0.f;
+	outputs[OUTPUT_4].value = std::isfinite(out4) ? clamp(out4,-5.0f,5.0f) : 0.f;
 	float out5 = (y1/y2);
-	outputs[OUTPUT_5].value = std::isfinite(out5) ? clamp(out5,-5.0,5.0) : 0.f;
+	outputs[OUTPUT_5].value = std::isfinite(out5) ? clamp(out5,-5.0f,5.0f) : 0.f;
 
 	//Update scope.
 	int frameCount = (int)ceilf(deltaTime * engineGetSampleRate());
@@ -334,10 +334,10 @@ LissajousLFOWidget::LissajousLFOWidget(LissajousLFO *module) : ModuleWidget(modu
 		addChild(panel);
 	}
 
-	addChild(Widget::create<ScrewSilver>(Vec(RACK_GRID_WIDTH, 0)));
-	addChild(Widget::create<ScrewSilver>(Vec(box.size.x - 2 * RACK_GRID_WIDTH, 0)));
-	addChild(Widget::create<ScrewSilver>(Vec(RACK_GRID_WIDTH, RACK_GRID_HEIGHT - RACK_GRID_WIDTH)));
-	addChild(Widget::create<ScrewSilver>(Vec(box.size.x - 2 * RACK_GRID_WIDTH, RACK_GRID_HEIGHT - RACK_GRID_WIDTH)));
+	addChild(Widget::create<ScrewSilver>(Vec(RACK_GRID_WIDTH - 12, 0)));
+	addChild(Widget::create<ScrewSilver>(Vec(box.size.x - 2 * RACK_GRID_WIDTH + 12, 0)));
+	addChild(Widget::create<ScrewSilver>(Vec(RACK_GRID_WIDTH-12, RACK_GRID_HEIGHT - RACK_GRID_WIDTH)));
+	addChild(Widget::create<ScrewSilver>(Vec(box.size.x - 2 * RACK_GRID_WIDTH + 12, RACK_GRID_HEIGHT - RACK_GRID_WIDTH)));
 
 	{
 		ScopeDisplay *display = new ScopeDisplay();
@@ -347,25 +347,25 @@ LissajousLFOWidget::LissajousLFOWidget(LissajousLFO *module) : ModuleWidget(modu
 		addChild(display);
 	}
 
-	addParam(ParamWidget::create<Davies1900hBlackKnob>(Vec(37, 186), module, LissajousLFO::AMPLITUDE1_PARAM, 0.0, 5.0, 2.5));
-	addParam(ParamWidget::create<Davies1900hBlackKnob>(Vec(87, 186), module, LissajousLFO::FREQX1_PARAM, -8.0, 3.0, 0.0));
-	addParam(ParamWidget::create<Davies1900hBlackKnob>(Vec(137, 186), module, LissajousLFO::FREQY1_PARAM, -8.0, 3.0, 2.0));
-	addParam(ParamWidget::create<Davies1900hBlackKnob>(Vec(37, 265), module, LissajousLFO::AMPLITUDE2_PARAM, 0.0, 5.0, 2.5));
-	addParam(ParamWidget::create<Davies1900hBlackKnob>(Vec(87, 265), module, LissajousLFO::FREQX2_PARAM, -8.0, 3.0, 0.0));
-	addParam(ParamWidget::create<Davies1900hBlackKnob>(Vec(137, 265), module, LissajousLFO::FREQY2_PARAM, -8.0, 3.0, 1.0));
+	addParam(ParamWidget::create<RoundBlackKnob>(Vec(37, 186), module, LissajousLFO::AMPLITUDE1_PARAM, 0.0, 5.0, 2.5));
+	addParam(ParamWidget::create<RoundBlackKnob>(Vec(87, 186), module, LissajousLFO::FREQX1_PARAM, -8.0, 3.0, 0.0));
+	addParam(ParamWidget::create<RoundBlackKnob>(Vec(137, 186), module, LissajousLFO::FREQY1_PARAM, -8.0, 3.0, 2.0));
+	addParam(ParamWidget::create<RoundBlackKnob>(Vec(37, 265), module, LissajousLFO::AMPLITUDE2_PARAM, 0.0, 5.0, 2.5));
+	addParam(ParamWidget::create<RoundBlackKnob>(Vec(87, 265), module, LissajousLFO::FREQX2_PARAM, -8.0, 3.0, 0.0));
+	addParam(ParamWidget::create<RoundBlackKnob>(Vec(137, 265), module, LissajousLFO::FREQY2_PARAM, -8.0, 3.0, 1.0));
 
-	addInput(Port::create<PJ301MPort>(Vec(44, 223), Port::INPUT, module, LissajousLFO::AMPLITUDE1_INPUT));
-	addInput(Port::create<PJ301MPort>(Vec(93, 223), Port::INPUT, module, LissajousLFO::FREQX1_INPUT));
-	addInput(Port::create<PJ301MPort>(Vec(142, 223), Port::INPUT, module, LissajousLFO::FREQY1_INPUT));
-	addInput(Port::create<PJ301MPort>(Vec(44, 302), Port::INPUT, module, LissajousLFO::AMPLITUDE2_INPUT));
-	addInput(Port::create<PJ301MPort>(Vec(93, 302), Port::INPUT, module, LissajousLFO::FREQX2_INPUT));
-	addInput(Port::create<PJ301MPort>(Vec(142, 302), Port::INPUT, module, LissajousLFO::FREQY2_INPUT));
+	addInput(Port::create<PJ301MPort>(Vec(41, 219), Port::INPUT, module, LissajousLFO::AMPLITUDE1_INPUT));
+	addInput(Port::create<PJ301MPort>(Vec(91, 219), Port::INPUT, module, LissajousLFO::FREQX1_INPUT));
+	addInput(Port::create<PJ301MPort>(Vec(141, 219), Port::INPUT, module, LissajousLFO::FREQY1_INPUT));
+	addInput(Port::create<PJ301MPort>(Vec(41, 298), Port::INPUT, module, LissajousLFO::AMPLITUDE2_INPUT));
+	addInput(Port::create<PJ301MPort>(Vec(91, 298), Port::INPUT, module, LissajousLFO::FREQX2_INPUT));
+	addInput(Port::create<PJ301MPort>(Vec(141, 298), Port::INPUT, module, LissajousLFO::FREQY2_INPUT));
 
-	addOutput(Port::create<PJ301MPort>(Vec(22, 331), Port::OUTPUT, module, LissajousLFO::OUTPUT_1));
-	addOutput(Port::create<PJ301MPort>(Vec(53, 331), Port::OUTPUT, module, LissajousLFO::OUTPUT_2));
-	addOutput(Port::create<PJ301MPort>(Vec(86, 331), Port::OUTPUT, module, LissajousLFO::OUTPUT_3));
-	addOutput(Port::create<PJ301MPort>(Vec(126, 331), Port::OUTPUT, module, LissajousLFO::OUTPUT_4));
-	addOutput(Port::create<PJ301MPort>(Vec(158, 331), Port::OUTPUT, module, LissajousLFO::OUTPUT_5));
+	addOutput(Port::create<PJ301MPort>(Vec(22, 338), Port::OUTPUT, module, LissajousLFO::OUTPUT_1));
+	addOutput(Port::create<PJ301MPort>(Vec(53, 338), Port::OUTPUT, module, LissajousLFO::OUTPUT_2));
+	addOutput(Port::create<PJ301MPort>(Vec(86, 338), Port::OUTPUT, module, LissajousLFO::OUTPUT_3));
+	addOutput(Port::create<PJ301MPort>(Vec(126, 338), Port::OUTPUT, module, LissajousLFO::OUTPUT_4));
+	addOutput(Port::create<PJ301MPort>(Vec(158, 338), Port::OUTPUT, module, LissajousLFO::OUTPUT_5));
 
 	//addChild(ModuleLightWidget::create<MediumLight<BlueLight>>(Vec(21, 59), module, LissajousLFO::BLINK_LIGHT_1));
 	//addChild(ModuleLightWidget::create<MediumLight<BlueLight>>(Vec(41, 59), module, LissajousLFO::BLINK_LIGHT_2));
