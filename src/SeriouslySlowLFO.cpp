@@ -1,8 +1,37 @@
 #include "FrozenWasteland.hpp"
 #include "dsp/digital.hpp"
 
+
+
+struct SeriouslySlowLFO : Module {
+	enum ParamIds {
+		TIME_BASE_PARAM,
+		DURATION_PARAM,
+		NUM_PARAMS
+	};
+	enum InputIds {
+		FM_INPUT,
+		RESET_INPUT,
+		NUM_INPUTS
+	};
+	enum OutputIds {
+		SIN_OUTPUT,
+		TRI_OUTPUT,
+		SAW_OUTPUT,
+		SQR_OUTPUT,
+		NUM_OUTPUTS
+	};
+	enum LightIds {
+		MINUTES_LIGHT,
+		HOURS_LIGHT,
+		DAYS_LIGHT,
+		WEEKS_LIGHT,
+		MONTHS_LIGHT,
+		NUM_LIGHTS
+	};
+
 struct LowFrequencyOscillator {
-	float phase = 0.0;
+	double phase = 0.0;
 	float pw = 0.5;
 	float freq = 1.0;
 	bool offset = false;
@@ -31,7 +60,8 @@ struct LowFrequencyOscillator {
 	}
 
 	void step(float dt) {
-		float deltaPhase = fminf(freq * dt, 0.5);
+		//float deltaPhase = fminf(freq * dt, 0.5);
+		double deltaPhase = freq * dt;
 		phase += deltaPhase;
 		if (phase >= 1.0)
 			phase -= 1.0;
@@ -69,34 +99,6 @@ struct LowFrequencyOscillator {
 	}
 };
 
-
-
-struct SeriouslySlowLFO : Module {
-	enum ParamIds {
-		TIME_BASE_PARAM,
-		DURATION_PARAM,
-		NUM_PARAMS
-	};
-	enum InputIds {
-		FM_INPUT,
-		RESET_INPUT,
-		NUM_INPUTS
-	};
-	enum OutputIds {
-		SIN_OUTPUT,
-		TRI_OUTPUT,
-		SAW_OUTPUT,
-		SQR_OUTPUT,
-		NUM_OUTPUTS
-	};
-	enum LightIds {
-		MINUTES_LIGHT,
-		HOURS_LIGHT,
-		DAYS_LIGHT,
-		WEEKS_LIGHT,
-		MONTHS_LIGHT,
-		NUM_LIGHTS
-	};
 
 
 

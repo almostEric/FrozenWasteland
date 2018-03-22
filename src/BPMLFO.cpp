@@ -4,6 +4,35 @@
 
 #define DIVISIONS 27
 
+
+struct BPMLFO : Module {
+	enum ParamIds {
+		DIVISION_PARAM,
+		OFFSET_PARAM,	
+		HOLD_CLOCK_BEHAVIOR_PARAM,
+		HOLD_MODE_PARAM,
+		NUM_PARAMS
+	};
+	enum InputIds {
+		CLOCK_INPUT,
+		DIVISION_INPUT,
+		RESET_INPUT,
+		HOLD_INPUT,
+		NUM_INPUTS
+	};
+	enum OutputIds {
+		SIN_OUTPUT,
+		TRI_OUTPUT,
+		SAW_OUTPUT,
+		SQR_OUTPUT,
+		NUM_OUTPUTS
+	};
+	enum LightIds {
+		CLOCK_LIGHT,
+		HOLD_LIGHT,
+		NUM_LIGHTS
+	};	
+
 struct LowFrequencyOscillator {
 	float phase = 0.0;
 	float pw = 0.5;
@@ -66,37 +95,6 @@ struct LowFrequencyOscillator {
 		return phase;
 	}
 };
-
-
-
-struct BPMLFO : Module {
-	enum ParamIds {
-		DIVISION_PARAM,
-		OFFSET_PARAM,	
-		HOLD_CLOCK_BEHAVIOR_PARAM,
-		HOLD_MODE_PARAM,
-		NUM_PARAMS
-	};
-	enum InputIds {
-		CLOCK_INPUT,
-		DIVISION_INPUT,
-		RESET_INPUT,
-		HOLD_INPUT,
-		NUM_INPUTS
-	};
-	enum OutputIds {
-		SIN_OUTPUT,
-		TRI_OUTPUT,
-		SAW_OUTPUT,
-		SQR_OUTPUT,
-		NUM_OUTPUTS
-	};
-	enum LightIds {
-		CLOCK_LIGHT,
-		HOLD_LIGHT,
-		NUM_LIGHTS
-	};	
-	
 
 
 	LowFrequencyOscillator oscillator;
