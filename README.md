@@ -43,7 +43,7 @@ A collection of unusual plugins that will add a certain coolness to your patches
 - CV Control of Time Division
 - Pairs well with the Quad Euclidean Rhythm and Quad Golomb Ruler Rhythm
 - When Holding is active, the Outputs stay at last value
-- Hold input can either be a gate (which switches each time) or momentary (active while signal is possible)
+- Hold input can either be a gate (which switches each time) or momentary (active while signal is positve)
 - If set to Free, LFO still runs while being held (even if outputs don't change), Pause causes LFO to pause.
 
 ## Damian Lillard
