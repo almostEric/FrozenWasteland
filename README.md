@@ -31,6 +31,7 @@ A collection of unusual plugins that will add a certain coolness to your patches
 - 4 Golumb Ruler rhythm based triggers
 - For when QER is "too danceable" :)
 - Features identical to the Quad Euclidean Rhythm and both units can be chained together
+- 18 step sequencer since Golomb Ruler Rhythms like prime numbers having more than 17 steps allows for more patterns
 ### Golomb Ruler Rhythms
 - Unlike Euclidean Rhythms which seek to evenly distribute the divisions, Golomb Rulers try to ensure unequal distribution
 - Basic example, with a step count of 16, and 4 divisions, the divisions will be on the 1,4,9 and 13.
@@ -41,7 +42,9 @@ A collection of unusual plugins that will add a certain coolness to your patches
 - Tempo Sync'd LFO.
 - CV Control of Time Division
 - Pairs well with the Quad Euclidean Rhythm and Quad Golomb Ruler Rhythm
-- Hold Input keeps LFO cycling, but Outputs stay at last value
+- When Holding is active, the Outputs stay at last value
+- Hold input can either be a gate (which switches each time) or momentary (active while signal is possible)
+- If set to Free, LFO still runs while being held (even if outputs don't change), Pause causes LFO to pause.
 
 ## Damian Lillard
 ![Damian Lillard](./doc/damianlillard.png)
@@ -79,6 +82,7 @@ A collection of unusual plugins that will add a certain coolness to your patches
 - Each modulator band is normalled to its respective carrier input, but the patch points allow you to have different bands modulate different carrier bands
 - You can patch in effects (a delay, perhaps?) between the mod out and carrier in.
 - CV Control of over almost everything. I highly recommend playing with the band offset.
+- You can either CV the value of the band offset, or send triggers to the + and - Inputs to increment/decrement the offset
 
 ## Lissajou LFO.
 
@@ -109,6 +113,7 @@ A collection of unusual plugins that will add a certain coolness to your patches
 - Inspired by Doepfer's A-196 PLL module
 - This is a very weird module and can be kind of "fussy". Recommend reading http://www.doepfer.de/A196.htm
 - Added CV control of the LPF that the 196 did not have
+- Added Pulse Width and Pulse Width Modulation of the internal VCO
 - Generally you want to "listen" to the **SQR OUT**
 - You'll want to feed a Square-ish wave into Signal In
 - Low **LPF FREQ** settings create a warbling effect, high = craziness
