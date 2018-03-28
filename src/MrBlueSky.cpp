@@ -19,6 +19,11 @@ struct MrBlueSky : Module {
 		GCARR_PARAM,
 		G_PARAM,
 		SHAPE_PARAM,
+		ATTACK_CV_ATTENUVERTER_PARAM,
+		DECAY_CV_ATTENUVERTER_PARAM,
+		CARRIER_Q_CV_ATTENUVERTER_PARAM,
+		MODIFER_Q_CV_ATTENUVERTER_PARAM,
+		SHIFT_BAND_OFFSET_CV_ATTENUVERTER_PARAM,
 		NUM_PARAMS
 	};
 	enum InputIds {
@@ -75,7 +80,7 @@ void MrBlueSky::step() {
 	// Band Offset Processing
 	bandOffset = params[BAND_OFFSET_PARAM].value;
 	if(inputs[SHIFT_BAND_OFFSET_INPUT].active) {
-		bandOffset += inputs[SHIFT_BAND_OFFSET_INPUT].value;
+		bandOffset += inputs[SHIFT_BAND_OFFSET_INPUT].value * params[SHIFT_BAND_OFFSET_CV_ATTENUVERTER_PARAM].value;
 	}
 	if(bandOffset != lastBandOffset) {
 		shiftIndex = 0;
@@ -120,10 +125,10 @@ void MrBlueSky::step() {
 	float attack = params[ATTACK_PARAM].value;
 	float decay = params[DECAY_PARAM].value;
 	if(inputs[ATTACK_INPUT].active) {
-		attack += clamp(inputs[ATTACK_INPUT].value / 20.0f,-0.25f,.25f);
+		attack += clamp(inputs[ATTACK_INPUT].value * params[ATTACK_CV_ATTENUVERTER_PARAM].value / 20.0f,-0.25f,.25f);
 	}
 	if(inputs[DECAY_INPUT].active) {
-		decay += clamp(inputs[DECAY_INPUT].value / 20.0f,-0.25f,.25f);
+		decay += clamp(inputs[DECAY_INPUT].value * params[DECAY_CV_ATTENUVERTER_PARAM].value / 20.0f,-0.25f,.25f);
 	}
 	float slewAttack = slewMax * powf(slewMin / slewMax, attack);
 	float slewDecay = slewMax * powf(slewMin / slewMax, decay);
@@ -132,7 +137,7 @@ void MrBlueSky::step() {
 	//Check Mod Q
 	float currentQ = params[MOD_Q_PARAM].value;
 	if(inputs[MOD_Q_PARAM].active) {
-		currentQ += inputs[MOD_Q_INPUT].value;
+		currentQ += inputs[MOD_Q_INPUT].value * params[MODIFER_Q_CV_ATTENUVERTER_PARAM].value;
 	}
 
 	currentQ = clamp(currentQ,1.0f,15.0f);
@@ -146,7 +151,7 @@ void MrBlueSky::step() {
 	//Check Carrier Q
 	currentQ = params[CARRIER_Q_PARAM].value;
 	if(inputs[CARRIER_Q_INPUT].active) {
-		currentQ += inputs[CARRIER_Q_INPUT].value;
+		currentQ += inputs[CARRIER_Q_INPUT].value * params[CARRIER_Q_CV_ATTENUVERTER_PARAM].value;
 	}
 
 	currentQ = clamp(currentQ,1.0f,15.0f);
@@ -283,6 +288,13 @@ MrBlueSkyWidget::MrBlueSkyWidget(MrBlueSky *module) : ModuleWidget(module) {
 	addParam(ParamWidget::create<RoundBlackKnob>(Vec(40, 284), module, MrBlueSky::GMOD_PARAM, 1, 10, 5));
 	addParam(ParamWidget::create<RoundBlackKnob>(Vec(120, 284), module, MrBlueSky::GCARR_PARAM, 1, 10, 5));
 	addParam(ParamWidget::create<RoundBlackKnob>(Vec(207, 284), module, MrBlueSky::G_PARAM, 1, 10, 5));
+
+	addParam(ParamWidget::create<RoundSmallBlackKnob>(Vec(37, 238), module, MrBlueSky::ATTACK_CV_ATTENUVERTER_PARAM, -1.0, 1.0, 0));
+	addParam(ParamWidget::create<RoundSmallBlackKnob>(Vec(119, 238), module, MrBlueSky::DECAY_CV_ATTENUVERTER_PARAM, -1.0, 1.0, 0));
+	addParam(ParamWidget::create<RoundSmallBlackKnob>(Vec(202, 238), module, MrBlueSky::CARRIER_Q_CV_ATTENUVERTER_PARAM, -1.0, 1.0, 0));
+	addParam(ParamWidget::create<RoundSmallBlackKnob>(Vec(284, 238), module, MrBlueSky::MODIFER_Q_CV_ATTENUVERTER_PARAM, -1.0, 1.0, 0));
+	addParam(ParamWidget::create<RoundSmallBlackKnob>(Vec(395, 238), module, MrBlueSky::SHIFT_BAND_OFFSET_CV_ATTENUVERTER_PARAM, -1.0, 1.0, 0));
+
 
 	for (int i = 0; i < BANDS; i++) {
 		addInput(Port::create<PJ301MPort>(Vec(56 + 33*i, 85), Port::INPUT, module, MrBlueSky::CARRIER_IN + i));

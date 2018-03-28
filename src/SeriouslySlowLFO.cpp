@@ -7,6 +7,7 @@ struct SeriouslySlowLFO : Module {
 	enum ParamIds {
 		TIME_BASE_PARAM,
 		DURATION_PARAM,
+		FM_CV_ATTENUATOR_PARAM,
 		NUM_PARAMS
 	};
 	enum InputIds {
@@ -162,7 +163,7 @@ void SeriouslySlowLFO::step() {
 
 	duration = params[DURATION_PARAM].value;
 	if(inputs[FM_INPUT].active) {
-		duration +=inputs[FM_INPUT].value;
+		duration +=inputs[FM_INPUT].value * params[FM_CV_ATTENUATOR_PARAM].value;
 	}
 	duration = clamp(duration,1.0f,100.0f);
 
@@ -261,6 +262,8 @@ SeriouslySlowLFOWidget::SeriouslySlowLFOWidget(SeriouslySlowLFO *module) : Modul
 
 	addParam(ParamWidget::create<CKD6>(Vec(10, 240), module, SeriouslySlowLFO::TIME_BASE_PARAM, 0.0, 1.0, 0.0));
 	addParam(ParamWidget::create<RoundBlackKnob>(Vec(75, 90), module, SeriouslySlowLFO::DURATION_PARAM, 1.0, 100.0, 1.0));
+	addParam(ParamWidget::create<RoundSmallBlackKnob>(Vec(41, 121), module, SeriouslySlowLFO::FM_CV_ATTENUATOR_PARAM, -1.0, 1.0, 0.0));
+
 
 	addInput(Port::create<PJ301MPort>(Vec(40, 93), Port::INPUT, module, SeriouslySlowLFO::FM_INPUT));
 	addInput(Port::create<PJ301MPort>(Vec(63, 272), Port::INPUT, module, SeriouslySlowLFO::RESET_INPUT));

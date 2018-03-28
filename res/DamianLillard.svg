@@ -50,7 +50,7 @@
      inkscape:pageopacity="0.0"
      inkscape:pageshadow="2"
      inkscape:zoom="4"
-     inkscape:cx="25.76988"
+     inkscape:cx="-36.48012"
      inkscape:cy="193.79805"
      inkscape:document-units="mm"
      inkscape:current-layer="layer1"
@@ -125,7 +125,7 @@
        aria-label="IN"
        style="font-style:normal;font-weight:normal;font-size:3.52777767px;line-height:1.25;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.26458332"
        id="text4982"
-       transform="translate(0,-9.5250005)">
+       transform="translate(0,29.184624)">
       <path
          d="m 39.407206,103.02402 v -0.27699 h 1.13826 v 0.27699 h -0.396875 v 1.24436 h 0.396875 v 0.27975 h -1.13826 v -0.27975 h 0.396875 v -1.24436 z"
          style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:2.82222223px;font-family:Consolas;-inkscape-font-specification:'Consolas Bold';stroke-width:0.26458332"
@@ -277,7 +277,7 @@
        aria-label="MIX OUT"
        style="font-style:normal;font-weight:normal;font-size:3.52777767px;line-height:1.25;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.26458332"
        id="text4978-4-7"
-       transform="translate(0,-6.879167)">
+       transform="translate(18.520734,-6.879167)">
       <path
          d="m 39.414784,140.51947 -0.03307,-1.01837 -0.0124,-0.40652 -0.08682,0.27561 -0.199816,0.61322 H 38.87046 l -0.180523,-0.61322 -0.07579,-0.27561 -0.0096,0.39825 -0.03032,1.02664 h -0.28801 l 0.08819,-1.8011 h 0.383095 l 0.158474,0.51126 0.07579,0.28801 0.07579,-0.27148 0.166742,-0.52779 h 0.389985 l 0.08957,1.8011 z"
          style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:2.82222223px;font-family:Consolas;-inkscape-font-specification:'Consolas Bold';stroke-width:0.26458332"

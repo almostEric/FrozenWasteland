@@ -11,6 +11,7 @@ struct BPMLFO : Module {
 		OFFSET_PARAM,	
 		HOLD_CLOCK_BEHAVIOR_PARAM,
 		HOLD_MODE_PARAM,
+		DIVISION_CV_ATTENUVERTER_PARAM,
 		NUM_PARAMS
 	};
 	enum InputIds {
@@ -146,7 +147,7 @@ void BPMLFO::step() {
 
 	float divisionf = params[DIVISION_PARAM].value;
 	if(inputs[DIVISION_INPUT].active) {
-		divisionf +=(inputs[DIVISION_INPUT].value * (DIVISIONS / 10.0));
+		divisionf +=(inputs[DIVISION_INPUT].value * params[DIVISION_CV_ATTENUVERTER_PARAM].value * (DIVISIONS / 10.0));
 	}
 	divisionf = clamp(divisionf,0.0f,26.0f);
 	division = int(divisionf);
@@ -217,8 +218,8 @@ struct BPMLFOProgressDisplay : TransparentWidget {
 		nvgFillColor(vg, nvgRGBA(0xff, 0xff, 0x20, 0xff));
 		{
 			nvgBeginPath(vg);
-			nvgArc(vg,75.8,162,35,startArc,endArc,NVG_CW);
-			nvgLineTo(vg,75.8,162);
+			nvgArc(vg,75.8,170,35,startArc,endArc,NVG_CW);
+			nvgLineTo(vg,75.8,170);
 			nvgClosePath(vg);
 		}
 		nvgFill(vg);
@@ -270,22 +271,23 @@ BPMLFOWidget::BPMLFOWidget(BPMLFO *module) : ModuleWidget(module) {
 	}
 
 	addParam(ParamWidget::create<RoundBlackKnob>(Vec(75, 78), module, BPMLFO::DIVISION_PARAM, 0.0, 26.5, 13.0));
-	addParam(ParamWidget::create<CKSS>(Vec(12, 219), module, BPMLFO::OFFSET_PARAM, 0.0, 1.0, 1.0));
-	addParam(ParamWidget::create<CKSS>(Vec(70, 219), module, BPMLFO::HOLD_CLOCK_BEHAVIOR_PARAM, 0.0, 1.0, 1.0));
-	addParam(ParamWidget::create<CKSS>(Vec(125, 219), module, BPMLFO::HOLD_MODE_PARAM, 0.0, 1.0, 1.0));
+	addParam(ParamWidget::create<RoundSmallBlackKnob>(Vec(40, 109), module, BPMLFO::DIVISION_CV_ATTENUVERTER_PARAM, -1.0, 1.0, 0.0));
+	addParam(ParamWidget::create<CKSS>(Vec(12, 224), module, BPMLFO::OFFSET_PARAM, 0.0, 1.0, 1.0));
+	addParam(ParamWidget::create<CKSS>(Vec(70, 224), module, BPMLFO::HOLD_CLOCK_BEHAVIOR_PARAM, 0.0, 1.0, 1.0));
+	addParam(ParamWidget::create<CKSS>(Vec(125, 224), module, BPMLFO::HOLD_MODE_PARAM, 0.0, 1.0, 1.0));
 
 	addInput(Port::create<PJ301MPort>(Vec(40, 81), Port::INPUT, module, BPMLFO::DIVISION_INPUT));
-	addInput(Port::create<PJ301MPort>(Vec(31, 272), Port::INPUT, module, BPMLFO::CLOCK_INPUT));
-	addInput(Port::create<PJ301MPort>(Vec(62, 272), Port::INPUT, module, BPMLFO::RESET_INPUT));
-	addInput(Port::create<PJ301MPort>(Vec(94, 272), Port::INPUT, module, BPMLFO::HOLD_INPUT));
+	addInput(Port::create<PJ301MPort>(Vec(31, 275), Port::INPUT, module, BPMLFO::CLOCK_INPUT));
+	addInput(Port::create<PJ301MPort>(Vec(62, 275), Port::INPUT, module, BPMLFO::RESET_INPUT));
+	addInput(Port::create<PJ301MPort>(Vec(94, 275), Port::INPUT, module, BPMLFO::HOLD_INPUT));
 
-	addOutput(Port::create<PJ301MPort>(Vec(11, 320), Port::OUTPUT, module, BPMLFO::SIN_OUTPUT));
-	addOutput(Port::create<PJ301MPort>(Vec(45, 320), Port::OUTPUT, module, BPMLFO::TRI_OUTPUT));
-	addOutput(Port::create<PJ301MPort>(Vec(80, 320), Port::OUTPUT, module, BPMLFO::SAW_OUTPUT));
-	addOutput(Port::create<PJ301MPort>(Vec(114, 320), Port::OUTPUT, module, BPMLFO::SQR_OUTPUT));
+	addOutput(Port::create<PJ301MPort>(Vec(11, 323), Port::OUTPUT, module, BPMLFO::SIN_OUTPUT));
+	addOutput(Port::create<PJ301MPort>(Vec(45, 323), Port::OUTPUT, module, BPMLFO::TRI_OUTPUT));
+	addOutput(Port::create<PJ301MPort>(Vec(80, 323), Port::OUTPUT, module, BPMLFO::SAW_OUTPUT));
+	addOutput(Port::create<PJ301MPort>(Vec(114, 323), Port::OUTPUT, module, BPMLFO::SQR_OUTPUT));
 
-	addChild(ModuleLightWidget::create<LargeLight<BlueLight>>(Vec(12, 276), module, BPMLFO::CLOCK_LIGHT));
-	addChild(ModuleLightWidget::create<LargeLight<RedLight>>(Vec(122, 276), module, BPMLFO::HOLD_LIGHT));
+	addChild(ModuleLightWidget::create<LargeLight<BlueLight>>(Vec(12, 279), module, BPMLFO::CLOCK_LIGHT));
+	addChild(ModuleLightWidget::create<LargeLight<RedLight>>(Vec(122, 279), module, BPMLFO::HOLD_LIGHT));
 }
 
 Model *modelBPMLFO = Model::create<BPMLFO, BPMLFOWidget>("Frozen Wasteland", "BPMLFO", "BPM LFO", LFO_TAG);
