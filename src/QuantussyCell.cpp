@@ -148,7 +148,7 @@ struct QuantussyCellWidget : ModuleWidget {
 };
 
 QuantussyCellWidget::QuantussyCellWidget(QuantussyCell *module) : ModuleWidget(module) {
-	box.size = Vec(15*10, RACK_GRID_HEIGHT);
+	box.size = Vec(15*6, RACK_GRID_HEIGHT);
 
 
 	{
@@ -158,26 +158,26 @@ QuantussyCellWidget::QuantussyCellWidget(QuantussyCell *module) : ModuleWidget(m
 		addChild(panel);
 	}
 
-	addChild(Widget::create<ScrewSilver>(Vec(RACK_GRID_WIDTH - 12, 0)));
+	addChild(Widget::create<ScrewSilver>(Vec(RACK_GRID_WIDTH - 12, 0)));	
 	addChild(Widget::create<ScrewSilver>(Vec(box.size.x - 2 * RACK_GRID_WIDTH + 12, 0)));
 	addChild(Widget::create<ScrewSilver>(Vec(RACK_GRID_WIDTH - 12, RACK_GRID_HEIGHT - RACK_GRID_WIDTH)));
 	addChild(Widget::create<ScrewSilver>(Vec(box.size.x - 2 * RACK_GRID_WIDTH + 12, RACK_GRID_HEIGHT - RACK_GRID_WIDTH)));
 
-	addParam(ParamWidget::create<RoundBlackKnob>(Vec(60, 52), module, QuantussyCell::FREQ_PARAM, -3.0, 3.0, 0.0));
+	addParam(ParamWidget::create<RoundBlackKnob>(Vec(30, 65), module, QuantussyCell::FREQ_PARAM, -3.0, 3.0, 0.0));
 
-	addInput(Port::create<PJ301MPort>(Vec(65, 136), Port::INPUT, module, QuantussyCell::CASTLE_INPUT));
-	addInput(Port::create<PJ301MPort>(Vec(65, 255), Port::INPUT, module, QuantussyCell::CV_INPUT));
+	addInput(Port::create<PJ301MPort>(Vec(35, 113), Port::INPUT, module, QuantussyCell::CASTLE_INPUT));
+	addInput(Port::create<PJ301MPort>(Vec(35, 205), Port::INPUT, module, QuantussyCell::CV_INPUT));
 
-	addOutput(Port::create<PJ301MPort>(Vec(65, 176), Port::OUTPUT, module, QuantussyCell::CASTLE_OUTPUT));
+	addOutput(Port::create<PJ301MPort>(Vec(35, 160), Port::OUTPUT, module, QuantussyCell::CASTLE_OUTPUT));
 
-	addOutput(Port::create<PJ301MPort>(Vec(11, 320), Port::OUTPUT, module, QuantussyCell::SIN_OUTPUT));
-	addOutput(Port::create<PJ301MPort>(Vec(45, 320), Port::OUTPUT, module, QuantussyCell::TRI_OUTPUT));
-	addOutput(Port::create<PJ301MPort>(Vec(80, 320), Port::OUTPUT, module, QuantussyCell::SAW_OUTPUT));
-	addOutput(Port::create<PJ301MPort>(Vec(114, 320), Port::OUTPUT, module, QuantussyCell::SQR_OUTPUT));
+	addOutput(Port::create<PJ301MPort>(Vec(15, 255), Port::OUTPUT, module, QuantussyCell::SIN_OUTPUT));
+	addOutput(Port::create<PJ301MPort>(Vec(50, 255), Port::OUTPUT, module, QuantussyCell::TRI_OUTPUT));
+	addOutput(Port::create<PJ301MPort>(Vec(15, 301), Port::OUTPUT, module, QuantussyCell::SAW_OUTPUT));
+	addOutput(Port::create<PJ301MPort>(Vec(50, 301), Port::OUTPUT, module, QuantussyCell::SQR_OUTPUT));
 
 
 
-	addChild(ModuleLightWidget::create<LargeLight<BlueLight>>(Vec(95, 57), module, QuantussyCell::BLINK_LIGHT));
+	addChild(ModuleLightWidget::create<LargeLight<BlueLight>>(Vec(68, 70), module, QuantussyCell::BLINK_LIGHT));
 }
 
 Model *modelQuantussyCell = Model::create<QuantussyCell, QuantussyCellWidget>("Frozen Wasteland", "QuantussyCell", "Quantussy Cell", LOGIC_TAG);
