@@ -18,4 +18,4 @@ extern Model *modelQuadEuclideanRhythm;
 extern Model *modelQuadGolombRulerRhythm;
 extern Model *modelQuantussyCell;
 extern Model *modelSeriouslySlowLFO;
-//extern Model *modelCDCSeriouslySlowLFO;
+extern Model *modelCDCSeriouslySlowLFO;
