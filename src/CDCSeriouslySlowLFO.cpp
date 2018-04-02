@@ -191,14 +191,14 @@ void CDCSeriouslySlowLFO::step() {
 	}
 }
 
-struct LFOProgressDisplay : TransparentWidget {
+struct CDCSSLFOProgressDisplay : TransparentWidget {
 	CDCSeriouslySlowLFO *module;
 	int frame = 0;
 	std::shared_ptr<Font> font;
 
 
 
-	LFOProgressDisplay() {
+	CDCSSLFOProgressDisplay() {
 		font = Font::load(assetPlugin(plugin, "res/fonts/01 Digit.ttf"));
 	}
 
@@ -259,7 +259,7 @@ CDCSeriouslySlowLFOWidget::CDCSeriouslySlowLFOWidget(CDCSeriouslySlowLFO *module
 	addChild(Widget::create<ScrewSilver>(Vec(box.size.x - 2 * RACK_GRID_WIDTH  + 12, RACK_GRID_HEIGHT - RACK_GRID_WIDTH)));
 
 	{
-		LFOProgressDisplay *display = new LFOProgressDisplay();
+		CDCSSLFOProgressDisplay *display = new CDCSSLFOProgressDisplay();
 		display->module = module;
 		display->box.pos = Vec(0, 0);
 		display->box.size = Vec(box.size.x, 220);

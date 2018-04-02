@@ -7,7 +7,7 @@ struct SeriouslySlowLFO : Module {
 	enum ParamIds {
 		TIME_BASE_PARAM,
 		DURATION_PARAM,
-		FM_CV_ATTENUATOR_PARAM,
+		FM_CV_ATTENUVERTER_PARAM,
 		NUM_PARAMS
 	};
 	enum InputIds {
@@ -163,7 +163,7 @@ void SeriouslySlowLFO::step() {
 
 	duration = params[DURATION_PARAM].value;
 	if(inputs[FM_INPUT].active) {
-		duration +=inputs[FM_INPUT].value * params[FM_CV_ATTENUATOR_PARAM].value;
+		duration +=inputs[FM_INPUT].value * params[FM_CV_ATTENUVERTER_PARAM].value;
 	}
 	duration = clamp(duration,1.0f,100.0f);
 
@@ -185,14 +185,14 @@ void SeriouslySlowLFO::step() {
 	}
 }
 
-struct LFOProgressDisplay : TransparentWidget {
+struct SSLFOProgressDisplay : TransparentWidget {
 	SeriouslySlowLFO *module;
 	int frame = 0;
 	std::shared_ptr<Font> font;
 
 
 
-	LFOProgressDisplay() {
+	SSLFOProgressDisplay() {
 		font = Font::load(assetPlugin(plugin, "res/fonts/01 Digit.ttf"));
 	}
 
@@ -253,7 +253,7 @@ SeriouslySlowLFOWidget::SeriouslySlowLFOWidget(SeriouslySlowLFO *module) : Modul
 	addChild(Widget::create<ScrewSilver>(Vec(box.size.x - 2 * RACK_GRID_WIDTH + 12, RACK_GRID_HEIGHT - RACK_GRID_WIDTH)));
 
 	{
-		LFOProgressDisplay *display = new LFOProgressDisplay();
+		SSLFOProgressDisplay *display = new SSLFOProgressDisplay();
 		display->module = module;
 		display->box.pos = Vec(0, 0);
 		display->box.size = Vec(box.size.x, 220);
@@ -262,7 +262,7 @@ SeriouslySlowLFOWidget::SeriouslySlowLFOWidget(SeriouslySlowLFO *module) : Modul
 
 	addParam(ParamWidget::create<CKD6>(Vec(10, 240), module, SeriouslySlowLFO::TIME_BASE_PARAM, 0.0, 1.0, 0.0));
 	addParam(ParamWidget::create<RoundBlackKnob>(Vec(75, 90), module, SeriouslySlowLFO::DURATION_PARAM, 1.0, 100.0, 1.0));
-	addParam(ParamWidget::create<RoundSmallBlackKnob>(Vec(41, 121), module, SeriouslySlowLFO::FM_CV_ATTENUATOR_PARAM, -1.0, 1.0, 0.0));
+	addParam(ParamWidget::create<RoundSmallBlackKnob>(Vec(41, 121), module, SeriouslySlowLFO::FM_CV_ATTENUVERTER_PARAM, -1.0, 1.0, 0.0));
 
 
 	addInput(Port::create<PJ301MPort>(Vec(40, 93), Port::INPUT, module, SeriouslySlowLFO::FM_INPUT));

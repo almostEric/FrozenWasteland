@@ -366,12 +366,12 @@ void QuadEuclideanRhythm::step() {
 	}
 }
 
-struct BeatDisplay : TransparentWidget {
+struct QERBeatDisplay : TransparentWidget {
 	QuadEuclideanRhythm *module;
 	int frame = 0;
 	std::shared_ptr<Font> font;
 
-	BeatDisplay() {
+	QERBeatDisplay() {
 		font = Font::load(assetPlugin(plugin, "res/fonts/Sudo.ttf"));
 	}
 
@@ -448,7 +448,7 @@ QuadEuclideanRhythmWidget::QuadEuclideanRhythmWidget(QuadEuclideanRhythm *module
 
 
 	{
-		BeatDisplay *display = new BeatDisplay();
+		QERBeatDisplay *display = new QERBeatDisplay();
 		display->module = module;
 		display->box.pos = Vec(16, 34);
 		display->box.size = Vec(box.size.x-30, 135);
