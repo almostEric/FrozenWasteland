@@ -12,6 +12,7 @@ struct BPMLFO2 : Module {
 		SKEW_PARAM,
 		SKEW_CV_ATTENUVERTER_PARAM,
 		OFFSET_PARAM,	
+		WAVESHAPE_PARAM,
 		HOLD_CLOCK_BEHAVIOR_PARAM,
 		HOLD_MODE_PARAM,
 		NUM_PARAMS
@@ -33,10 +34,15 @@ struct BPMLFO2 : Module {
 		HOLD_LIGHT,
 		NUM_LIGHTS
 	};	
+	enum Waveshapes {
+		SKEWSAW_WAV,
+		SQUARE_WAV
+	};
 
 struct LowFrequencyOscillator {
 	float phase = 0.0;
 	float freq = 1.0;
+	float pw = 0.5;
 	float skew = 0.5; // Triangle
 	bool offset = false;
 
@@ -48,7 +54,10 @@ struct LowFrequencyOscillator {
 	void setFrequency(float frequency) {
 		freq = frequency;
 	}
-	
+	void setPulseWidth(float pw_) {
+		const float pwMin = 0.01;
+		pw = clamp(pw_, pwMin, 1.0f - pwMin);
+	}
 
 	void hardReset()
 	{
@@ -82,6 +91,11 @@ struct LowFrequencyOscillator {
 			return skewsaw(phase) - 1; //Going to keep same phase for now
 			//return skewsaw(phase - .5) - 1;
 	}
+
+	float sqr() {
+		float sqr = (phase < pw) ? 1.0 : -1.0;
+		return offset ? sqr + 1.0 : sqr;
+	}
 	
 	float progress() {
 		return phase;
@@ -96,6 +110,7 @@ struct LowFrequencyOscillator {
 	int division;
 	float time = 0.0;
 	float duration = 0;
+	float waveshape = 0;
 	float skew = 0.5;
 	bool holding = false;
 	bool secondClockReceived = false;
@@ -141,6 +156,8 @@ void BPMLFO2::step() {
 	divisionf = clamp(divisionf,0.0f,26.0f);
 	division = int(divisionf);
 
+	waveshape = params[WAVESHAPE_PARAM].value;
+
 	skew = params[SKEW_PARAM].value;
 	if(inputs[SKEW_INPUT].active) {
 		skew +=inputs[SKEW_INPUT].value / 10 * params[SKEW_CV_ATTENUVERTER_PARAM].value;
@@ -149,6 +166,7 @@ void BPMLFO2::step() {
 	
 	oscillator.offset = (params[OFFSET_PARAM].value > 0.0);
 	oscillator.skew = skew;
+	oscillator.setPulseWidth(skew);
 
 	if(duration != 0) {
 		oscillator.setFrequency(1.0 / (duration / divisions[division]));
@@ -179,7 +197,10 @@ void BPMLFO2::step() {
     }
 
 	if(!holding) {
-		lfoOutputValue = 5.0 * oscillator.skewsaw();
+		if(waveshape == SKEWSAW_WAV)
+			lfoOutputValue = 5.0 * oscillator.skewsaw();
+		else
+			lfoOutputValue = 5.0 * oscillator.sqr();
 	}
 
 
@@ -197,7 +218,7 @@ struct BPMLFO2ProgressDisplay : TransparentWidget {
 		font = Font::load(assetPlugin(plugin, "res/fonts/01 Digit.ttf"));
 	}
 
-	void drawProgress(NVGcontext *vg, float skew, float phase) 
+	void drawProgress(NVGcontext *vg, int waveshape, float skew, float phase) 
 	{
 		float inverseSkew = 1 - skew;
 		float y;
@@ -210,6 +231,7 @@ struct BPMLFO2ProgressDisplay : TransparentWidget {
 
 		// Draw indicator
 		nvgFillColor(vg, nvgRGBA(0xff, 0xff, 0x20, 0xff));
+		if(waveshape == BPMLFO2::SKEWSAW_WAV)
 		{
 			nvgBeginPath(vg);
 			nvgMoveTo(vg,68,213);
@@ -218,23 +240,52 @@ struct BPMLFO2ProgressDisplay : TransparentWidget {
 			}
 			nvgLineTo(vg,68 + (phase * 68),213-y);
 			nvgLineTo(vg,68 + (phase * 68),213);
-			//nvgLineTo(vg,136,207);
 			nvgClosePath(vg);
+			nvgFill(vg);
+		} else 
+		{
+			float endpoint = min(phase,skew);
+			nvgBeginPath(vg);
+			nvgMoveTo(vg,68,177);
+			nvgRect(vg,68,177,endpoint*68,36.0);
+			//nvgLineTo(vg,68 + (endpoint * 68),213);
+			//nvgLineTo(vg,68 + (endpoint * 68),177);
+			//nvgLineTo(vg,68,177);
+			nvgClosePath(vg);
+			nvgFill(vg);
+			if(phase > skew) {
+				nvgBeginPath(vg);
+				nvgMoveTo(vg,68 + (skew * 68),141);
+				nvgRect(vg,68 + (skew * 68),141,(phase-skew)*68,36.0);
+				//nvgLineTo(vg,68 + (phase * 68),177);
+				//nvgLineTo(vg,68 + (phase * 68),141);
+				//nvgMoveTo(vg,68 + (skew * 68),141);
+				nvgClosePath(vg);
+				nvgFill(vg);
+			}
+
 		}
-		nvgFill(vg);
 	}
 
-	void drawWaveShape(NVGcontext *vg, float skew) 
+	void drawWaveShape(NVGcontext *vg, int waveshape, float skew) 
 	{
 		// Draw wave shape
-		nvgStrokeColor(vg, nvgRGBA(0xff, 0xff, 0x20, 0xff));				
+		nvgStrokeColor(vg, nvgRGBA(0xff, 0xff, 0x20, 0xff));	
 		nvgStrokeWidth(vg, 2.0);
-		{
+		if(waveshape == BPMLFO2::SKEWSAW_WAV) {						
 			nvgBeginPath(vg);
 			nvgMoveTo(vg,68,213);
 			nvgLineTo(vg,68 + (skew * 68),141);
 			nvgLineTo(vg,136,213);
-			nvgClosePath(vg);
+			nvgClosePath(vg);			
+		} else 
+		{
+			nvgBeginPath(vg);
+			nvgMoveTo(vg,68,213);
+			nvgLineTo(vg,68 + (skew * 68),213);
+			nvgLineTo(vg,68 + (skew * 68),141);
+			nvgLineTo(vg,136,141);
+			//nvgClosePath(vg);			
 		}
 		nvgStroke(vg);		
 	}
@@ -252,8 +303,8 @@ struct BPMLFO2ProgressDisplay : TransparentWidget {
 
 	void draw(NVGcontext *vg) override {
 		
-		drawWaveShape(vg,module->skew);
-		drawProgress(vg,module->skew, module->oscillator.progress());
+		drawWaveShape(vg,module->waveshape, module->skew);
+		drawProgress(vg,module->waveshape, module->skew, module->oscillator.progress());
 		drawDivision(vg, Vec(0, box.size.y - 153), module->division);
 	}
 };
@@ -288,9 +339,10 @@ BPMLFO2Widget::BPMLFO2Widget(BPMLFO2 *module) : ModuleWidget(module) {
 	addParam(ParamWidget::create<RoundBlackKnob>(Vec(75, 78), module, BPMLFO2::DIVISION_PARAM, 0.0, 26.5, 13.0));
 	addParam(ParamWidget::create<RoundSmallBlackKnob>(Vec(40, 109), module, BPMLFO2::DIVISION_CV_ATTENUVERTER_PARAM, -1.0, 1.0, 0.0));
 	addParam(ParamWidget::create<RoundBlackKnob>(Vec(14, 140), module, BPMLFO2::SKEW_PARAM, 0.0, 1.0, 0.5));
-	addParam(ParamWidget::create<RoundSmallBlackKnob>(Vec(17, 201), module, BPMLFO2::SKEW_CV_ATTENUVERTER_PARAM, -1.0, 1.0, 0.0));
+	addParam(ParamWidget::create<RoundSmallBlackKnob>(Vec(17, 200), module, BPMLFO2::SKEW_CV_ATTENUVERTER_PARAM, -1.0, 1.0, 0.0));
 	addParam(ParamWidget::create<CKSS>(Vec(12, 240), module, BPMLFO2::OFFSET_PARAM, 0.0, 1.0, 1.0));
-	addParam(ParamWidget::create<CKSS>(Vec(70, 240), module, BPMLFO2::HOLD_CLOCK_BEHAVIOR_PARAM, 0.0, 1.0, 1.0));
+	addParam(ParamWidget::create<CKSS>(Vec(42, 240), module, BPMLFO2::WAVESHAPE_PARAM, 0.0, 1.0, 0.0));
+	addParam(ParamWidget::create<CKSS>(Vec(82, 240), module, BPMLFO2::HOLD_CLOCK_BEHAVIOR_PARAM, 0.0, 1.0, 1.0));
 	addParam(ParamWidget::create<CKSS>(Vec(125, 240), module, BPMLFO2::HOLD_MODE_PARAM, 0.0, 1.0, 1.0));
 
 	addInput(Port::create<PJ301MPort>(Vec(40, 81), Port::INPUT, module, BPMLFO2::DIVISION_INPUT));
@@ -299,7 +351,7 @@ BPMLFO2Widget::BPMLFO2Widget(BPMLFO2 *module) : ModuleWidget(module) {
 	addInput(Port::create<PJ301MPort>(Vec(62, 290), Port::INPUT, module, BPMLFO2::RESET_INPUT));
 	addInput(Port::create<PJ301MPort>(Vec(94, 290), Port::INPUT, module, BPMLFO2::HOLD_INPUT));
 
-	addOutput(Port::create<PJ301MPort>(Vec(65, 334), Port::OUTPUT, module, BPMLFO2::LFO_OUTPUT));
+	addOutput(Port::create<PJ301MPort>(Vec(63, 336), Port::OUTPUT, module, BPMLFO2::LFO_OUTPUT));
 
 	addChild(ModuleLightWidget::create<LargeLight<BlueLight>>(Vec(12, 294), module, BPMLFO2::CLOCK_LIGHT));
 	addChild(ModuleLightWidget::create<LargeLight<RedLight>>(Vec(122, 294), module, BPMLFO2::HOLD_LIGHT));
