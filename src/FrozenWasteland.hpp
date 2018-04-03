@@ -6,8 +6,9 @@ using namespace rack;
 
 extern Plugin *plugin;
 
-extern Model *modelEchoesThroughEternity;
+//extern Model *modelEchoesThroughEternity;
 extern Model *modelBPMLFO;
+extern Model *modelBPMLFO2;
 extern Model *modelDamianLillard;
 //extern Model *modelSpectralDelay;
 //extern Model *modelBleedingEdge;

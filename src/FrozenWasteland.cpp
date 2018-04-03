@@ -18,6 +18,7 @@ void init(rack::Plugin *p) {
 	// For each module, specify the ModuleWidget subclass, manufacturer slug (for saving in patches), manufacturer human-readable name, module slug, and module name
 	//p->addModel(modelEchoesThroughEternity);
 	p->addModel(modelBPMLFO);
+	p->addModel(modelBPMLFO2);
 	p->addModel(modelDamianLillard);
 	//p->addModel(modelSpectralDelay);
 	//p->addModel(modelBleedingEdge);
