@@ -13,6 +13,13 @@ A collection of unusual plugins that will add a certain coolness to your patches
 - Hold input can either be a gate (which switches each time) or momentary (active while signal is positve)
 - If set to Free, LFO still runs while being held (even if outputs don't change), Pause causes LFO to pause.
 
+## BPM LFO 2
+![BPM LFO](./doc/bpmlfo2.png)
+
+- Variation of original BPM LFO.
+- CV Control of Time Division and Wave Shape
+- Can either be variable sawtooth/triangle or variable duty cycle square wave
+
 ## Damian Lillard
 ![Damian Lillard](./doc/damianlillard.png)
 - Voltage Controlled Quad Crossover
@@ -80,6 +87,8 @@ A collection of unusual plugins that will add a certain coolness to your patches
 - Each QER has its own clock input, so tempo changes can easily be created
 - Mute Input keeps rhythm running just no output
 - https://www.youtube.com/watch?v=ARMxz11z9FU is an example of how to patch a couple QERs together and drive some drum synths
+- Normally each track advances one step every clock beat and are independent. If Time Sync is enabled, the track with the most steps becomes the master and the other tracks will fit their patterns to the timing of the master. This allows for complex polyrhythms (ie. 15 on 13 on 11 on 4, etc.)
+- https://www.youtube.com/watch?v=eCErJMKAlVY is an example of the QER with Time Sync enabled
 ### Euclidean Rhythms
 - Euclidean are based upon attempting to equally distribute the divisions among the steps available
 - Basic example, with a step count of 16, and 2 divisions, the divisions will be on the 1 and the 9.
