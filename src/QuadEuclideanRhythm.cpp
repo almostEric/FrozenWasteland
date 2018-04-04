@@ -1,6 +1,10 @@
 #include <string.h>
 #include "FrozenWasteland.hpp"
 #include "dsp/digital.hpp"
+#define NUM_RULERS 10
+#define MAX_DIVISIONS 6
+#define TRACK_COUNT 4
+#define MAX_STEPS 18
 
 struct QuadEuclideanRhythm : Module {
 	enum ParamIds {
@@ -28,7 +32,8 @@ struct QuadEuclideanRhythm : Module {
 		PAD_4_PARAM,
 		ACCENTS_4_PARAM,
 		ACCENT_ROTATE_4_PARAM,
-		CHAIN_MODE_PARAM,		
+		CHAIN_MODE_PARAM,	
+		CONSTANT_TIME_MODE_PARAM,	
 		NUM_PARAMS
 	};
 	enum InputIds {
@@ -85,6 +90,7 @@ struct QuadEuclideanRhythm : Module {
 		CHAIN_MODE_BOSS_LIGHT,
 		CHAIN_MODE_EMPLOYEE_LIGHT,
 		MUTED_LIGHT,
+		CONSTANT_TIME_LIGHT,
 		NUM_LIGHTS
 	};
 	enum ChainModes {
@@ -93,29 +99,37 @@ struct QuadEuclideanRhythm : Module {
 		CHAIN_MODE_EMPLOYEE
 	};
 
-	int const TRACK_COUNT = 4;
-	int const MAX_STEPS = 16;
+	bool beatMatrix[TRACK_COUNT][MAX_STEPS];
+	bool accentMatrix[TRACK_COUNT][MAX_STEPS];
+	int beatIndex[TRACK_COUNT];
+	int stepsCount[TRACK_COUNT];
+	float stepDuration[TRACK_COUNT];
+	float lastStepTime[TRACK_COUNT];
+	float maxStepCount;
 
-	bool beatMatrix[4][16];
-	bool accentMatrix[4][16];
-	int beatIndex[4];
-	int stepsCount[4];
-
-	bool running[4];
+	bool running[TRACK_COUNT];
 	int chainMode;
 	bool initialized = false;
 	bool muted = false;
+	bool constantTime = false;
 
-	SchmittTrigger clockTrigger,resetTrigger,chainModeTrigger,muteTrigger,startTrigger[4];
-	PulseGenerator eocPulse[4];
+	float time = 0.0;
+	float duration = 0.0;
+	bool secondClockReceived = false;
+
+	SchmittTrigger clockTrigger,resetTrigger,chainModeTrigger,constantTimeTrigger,muteTrigger,startTrigger[TRACK_COUNT];
+	PulseGenerator beatPulse[TRACK_COUNT],accentPulse[TRACK_COUNT],eocPulse[TRACK_COUNT];
+
 
 
 	QuadEuclideanRhythm() : Module(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS,NUM_LIGHTS) {
-		for(unsigned i = 0; i < 4; i++) {
+		for(unsigned i = 0; i < TRACK_COUNT; i++) {
 			beatIndex[i] = 0;
-			stepsCount[i] = 16;
+			stepsCount[i] = MAX_STEPS;
+			lastStepTime[i] = 0.0;
+			stepDuration[i] = 0.0;
 			running[i] = true;
-			for(unsigned j = 0; j < 16; j++) {
+			for(unsigned j = 0; j < MAX_STEPS; j++) {
 				beatMatrix[i][j] = false;
 				accentMatrix[i][j] = false;
 			}
@@ -126,12 +140,17 @@ struct QuadEuclideanRhythm : Module {
 
 	json_t *toJson() override {
 		json_t *rootJ = json_object();
+		json_object_set_new(rootJ, "constantTime", json_integer((bool) constantTime));
 		json_object_set_new(rootJ, "chainMode", json_integer((int) chainMode));
 		json_object_set_new(rootJ, "muted", json_integer((bool) muted));
 		return rootJ;
 	}
 
 	void fromJson(json_t *rootJ) override {
+		json_t *ctJ = json_object_get(rootJ, "constantTime");
+		if (ctJ)
+			constantTime = json_integer_value(ctJ);
+
 		json_t *cmJ = json_object_get(rootJ, "chainMode");
 		if (cmJ)
 			chainMode = json_integer_value(cmJ);
@@ -139,25 +158,42 @@ struct QuadEuclideanRhythm : Module {
 		json_t *mutedJ = json_object_get(rootJ, "muted");
 		if (mutedJ)
 			muted = json_integer_value(mutedJ);
-
 	}
 
 	void setRunningState() {
-	for(int trackNumber=0;trackNumber<4;trackNumber++)
-	{
-		if(chainMode == CHAIN_MODE_EMPLOYEE && inputs[(trackNumber * 7) + 6].active) { //START Input needs to be active
-			running[trackNumber] = false;
-		}
-		else {
-			running[trackNumber] = true;
+		for(int trackNumber=0;trackNumber<4;trackNumber++)
+		{
+			if(chainMode == CHAIN_MODE_EMPLOYEE && inputs[(trackNumber * 7) + 6].active) { //START Input needs to be active
+				running[trackNumber] = false;
+			}
+			else {
+				running[trackNumber] = true;
+			}
 		}
 	}
-}
 
+	void advanceBeat(int trackNumber) {
+		beatIndex[trackNumber]++;
+		lastStepTime[trackNumber] = 0.0;					
+		beatPulse[trackNumber].trigger(1e-3);
+		accentPulse[trackNumber].trigger(1e-3);
+					
+		//End of Cycle
+		if(beatIndex[trackNumber] >= stepsCount[trackNumber]) {
+			beatIndex[trackNumber] = 0;
+			eocPulse[trackNumber].trigger(1e-3);
+			//If in a chain mode, stop running until start trigger received
+			if(chainMode != CHAIN_MODE_NONE && inputs[(trackNumber * 7) + 6].active) { //START Input needs to be active
+				running[trackNumber] = false;
+			}
+		}
+	}
 	// For more advanced Module features, read Rack's engine.hpp header file
 	// - onSampleRateChange: event triggered by a change of sample rate
 	// - onReset, onRandomize, onCreate, onDelete: implements special behavior when user clicks these from the context menu
 };
+
+
 
 
 
@@ -174,6 +210,15 @@ void QuadEuclideanRhythm::step() {
 	}
 
 	// Modes
+	if (constantTimeTrigger.process(params[CONSTANT_TIME_MODE_PARAM].value)) {
+		constantTime = !constantTime;
+		for(int trackNumber=0;trackNumber<4;trackNumber++) {
+			beatIndex[trackNumber] = 0;
+		}
+		setRunningState();
+	}
+	lights[CONSTANT_TIME_LIGHT].value = constantTime;
+
 	if (chainModeTrigger.process(params[CHAIN_MODE_PARAM].value)) {
 		chainMode = (chainMode + 1) % 3;
 		setRunningState();
@@ -184,6 +229,7 @@ void QuadEuclideanRhythm::step() {
 
 	lights[MUTED_LIGHT].value = muted ? 1.0 : 0.0;
 
+	maxStepCount = 0;
 
 	for(int trackNumber=0;trackNumber<4;trackNumber++) {
 		//clear out the matrix and levels
@@ -243,15 +289,17 @@ void QuadEuclideanRhythm::step() {
 			accentRotationf = 0;
 		}
 
+		if(stepsCountf > maxStepCount)
+			maxStepCount = stepsCountf;
 
 
 		stepsCount[trackNumber] = int(stepsCountf);
+
 		int division = int(divisionf);
 		int offset = int(offsetf);		
 		int pad = int(padf);
 		int accentDivision = int(accentDivisionf);
 		int accentRotation = int(accentRotationf);
-
 
 
 		if(stepsCount[trackNumber] > 0) {
@@ -325,39 +373,56 @@ void QuadEuclideanRhythm::step() {
 		}
 	}
 
-	//Advance beat on trigger
+	//Advance beat on trigger if not in constant time mode
+	float timeAdvance =1.0 / engineGetSampleRate();
+    time += timeAdvance;
 	if(inputs[CLOCK_INPUT].active) {
 		if(clockTrigger.process(inputs[CLOCK_INPUT].value)) {
-			for(int trackNumber=0;trackNumber < 4;trackNumber++)
+			if(secondClockReceived) {
+				duration = time;
+			}
+			time = 0;
+			secondClockReceived = true;			
+
+			for(int trackNumber=0;trackNumber < TRACK_COUNT;trackNumber++)
 			{
 				if(running[trackNumber]) {
-					beatIndex[trackNumber]++;
-					//End of Cycle
-					if(beatIndex[trackNumber] >= stepsCount[trackNumber]) {
-						beatIndex[trackNumber] = 0;
-						eocPulse[trackNumber].trigger(1e-3);
-						//If in a chain mode, stop running until start trigger received
-						if(chainMode != CHAIN_MODE_NONE && inputs[(trackNumber * 7) + 6].active) { //START Input needs to be active
-							running[trackNumber] = false;
-						}
-					}
+					if(!constantTime) {
+						advanceBeat(trackNumber);
+					}					
 				}
+			}
+		}
+
+		//For constant time, don't rely on clock trigger to advance beat, use time
+		for(int trackNumber=0;trackNumber < TRACK_COUNT;trackNumber++) {
+			if(stepsCount[trackNumber] > 0)
+				stepDuration[trackNumber] = duration * maxStepCount / (float)stepsCount[trackNumber];
+
+			if(running[trackNumber]) {
+				lastStepTime[trackNumber] +=timeAdvance;
+				if(constantTime && stepDuration[trackNumber] > 0.0 && lastStepTime[trackNumber] >= stepDuration[trackNumber]) {
+					advanceBeat(trackNumber);
+				}					
 			}
 		}
 	}
 
 
 	// Set output to current state
-	for(int trackNumber=0;trackNumber<4;trackNumber++) {
+	for(int trackNumber=0;trackNumber<TRACK_COUNT;trackNumber++) {
+		//outputValue = (lastStepTime[trackNumber] < stepDuration[trackNumber] / 2) ? 10.0 : 0.0;
+		float beatValue = beatPulse[trackNumber].process(1.0 / engineGetSampleRate()) ? 10.0 : 0.0;
+		float accentValue =accentPulse[trackNumber].process(1.0 / engineGetSampleRate()) ? 10.0 : 0.0;
 		//Send out beat
 		if(beatMatrix[trackNumber][beatIndex[trackNumber]] == true && running[trackNumber] && !muted) {
-			outputs[trackNumber * 3].value = inputs[CLOCK_INPUT].value;	
+			outputs[trackNumber * 3].value = beatValue;
 		} else {
 			outputs[trackNumber * 3].value = 0.0;	
 		}
 		//send out accent
 		if(accentMatrix[trackNumber][beatIndex[trackNumber]] == true && running[trackNumber] && !muted) {
-			outputs[trackNumber * 3 + 1].value = inputs[CLOCK_INPUT].value;	
+			outputs[trackNumber * 3 + 1].value = accentValue;	
 		} else {
 			outputs[trackNumber * 3 + 1].value = 0.0;	
 		}
@@ -480,7 +545,8 @@ QuadEuclideanRhythmWidget::QuadEuclideanRhythmWidget(QuadEuclideanRhythm *module
 	addParam(ParamWidget::create<RoundSmallBlackKnob>(Vec(139, 309), module, QuadEuclideanRhythm::PAD_4_PARAM, 0.0, 15.2, 0.0));
 	addParam(ParamWidget::create<RoundSmallBlackKnob>(Vec(178, 309), module, QuadEuclideanRhythm::ACCENTS_4_PARAM, 0.0, 15.2, 0.0));
 	addParam(ParamWidget::create<RoundSmallBlackKnob>(Vec(217, 309), module, QuadEuclideanRhythm::ACCENT_ROTATE_4_PARAM, 0.0, 15.2, 0.0));
-	addParam(ParamWidget::create<CKD6>(Vec(275, 285), module, QuadEuclideanRhythm::CHAIN_MODE_PARAM, 0.0, 1.0, 0.0));
+	addParam(ParamWidget::create<CKD6>(Vec(250, 285), module, QuadEuclideanRhythm::CHAIN_MODE_PARAM, 0.0, 1.0, 0.0));
+	addParam(ParamWidget::create<CKD6>(Vec(335, 285), module, QuadEuclideanRhythm::CONSTANT_TIME_MODE_PARAM, 0.0, 1.0, 0.0));
 
 	addInput(Port::create<PJ301MPort>(Vec(23, 163), Port::INPUT, module, QuadEuclideanRhythm::STEPS_1_INPUT));
 	addInput(Port::create<PJ301MPort>(Vec(62, 163), Port::INPUT, module, QuadEuclideanRhythm::DIVISIONS_1_INPUT));
@@ -530,11 +596,12 @@ QuadEuclideanRhythmWidget::QuadEuclideanRhythmWidget(QuadEuclideanRhythm *module
 	addOutput(Port::create<PJ301MPort>(Vec(286, 235), Port::OUTPUT, module, QuadEuclideanRhythm::ACCENT_OUTPUT_4));
 	addOutput(Port::create<PJ301MPort>(Vec(354, 235), Port::OUTPUT, module, QuadEuclideanRhythm::EOC_OUTPUT_4));
 	
-	addChild(ModuleLightWidget::create<SmallLight<BlueLight>>(Vec(310, 285), module, QuadEuclideanRhythm::CHAIN_MODE_NONE_LIGHT));
-	addChild(ModuleLightWidget::create<SmallLight<GreenLight>>(Vec(310, 300), module, QuadEuclideanRhythm::CHAIN_MODE_BOSS_LIGHT));
-	addChild(ModuleLightWidget::create<SmallLight<RedLight>>(Vec(310, 315), module, QuadEuclideanRhythm::CHAIN_MODE_EMPLOYEE_LIGHT));
+	addChild(ModuleLightWidget::create<SmallLight<BlueLight>>(Vec(282, 285), module, QuadEuclideanRhythm::CHAIN_MODE_NONE_LIGHT));
+	addChild(ModuleLightWidget::create<SmallLight<GreenLight>>(Vec(282, 300), module, QuadEuclideanRhythm::CHAIN_MODE_BOSS_LIGHT));
+	addChild(ModuleLightWidget::create<SmallLight<RedLight>>(Vec(282, 315), module, QuadEuclideanRhythm::CHAIN_MODE_EMPLOYEE_LIGHT));
 
 	addChild(ModuleLightWidget::create<LargeLight<RedLight>>(Vec(363, 347), module, QuadEuclideanRhythm::MUTED_LIGHT));
+	addChild(ModuleLightWidget::create<SmallLight<BlueLight>>(Vec(370, 295), module, QuadEuclideanRhythm::CONSTANT_TIME_LIGHT));
 	
 }
 

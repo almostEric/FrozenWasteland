@@ -142,7 +142,7 @@ void BPMLFO2::step() {
 				duration = time;
 			}
 			time = 0;
-			secondClockReceived = !secondClockReceived;			
+			secondClockReceived = true;			
 		}
 		lights[CLOCK_LIGHT].value = time > (duration/2.0);
 	}
