@@ -175,8 +175,6 @@ struct QuadEuclideanRhythm : Module {
 	void advanceBeat(int trackNumber) {
 		beatIndex[trackNumber]++;
 		lastStepTime[trackNumber] = 0.0;					
-		beatPulse[trackNumber].trigger(1e-3);
-		accentPulse[trackNumber].trigger(1e-3);
 					
 		//End of Cycle
 		if(beatIndex[trackNumber] >= stepsCount[trackNumber]) {
@@ -394,6 +392,7 @@ void QuadEuclideanRhythm::step() {
 			}
 		}
 
+		bool resyncAll = false;
 		//For constant time, don't rely on clock trigger to advance beat, use time
 		for(int trackNumber=0;trackNumber < TRACK_COUNT;trackNumber++) {
 			if(stepsCount[trackNumber] > 0)
@@ -403,7 +402,16 @@ void QuadEuclideanRhythm::step() {
 				lastStepTime[trackNumber] +=timeAdvance;
 				if(constantTime && stepDuration[trackNumber] > 0.0 && lastStepTime[trackNumber] >= stepDuration[trackNumber]) {
 					advanceBeat(trackNumber);
+					if(stepsCount[trackNumber] >= (int)maxStepCount && beatIndex[trackNumber] == 0) {
+						resyncAll = true;
+					}
 				}					
+			}
+		}
+		if(resyncAll) {
+			for(int trackNumber=0;trackNumber < TRACK_COUNT;trackNumber++) {
+				lastStepTime[trackNumber] = 0;
+				beatIndex[trackNumber] = 0;
 			}
 		}
 	}
@@ -411,18 +419,16 @@ void QuadEuclideanRhythm::step() {
 
 	// Set output to current state
 	for(int trackNumber=0;trackNumber<TRACK_COUNT;trackNumber++) {
-		//outputValue = (lastStepTime[trackNumber] < stepDuration[trackNumber] / 2) ? 10.0 : 0.0;
-		float beatValue = beatPulse[trackNumber].process(1.0 / engineGetSampleRate()) ? 10.0 : 0.0;
-		float accentValue =accentPulse[trackNumber].process(1.0 / engineGetSampleRate()) ? 10.0 : 0.0;
+		float outputValue = (lastStepTime[trackNumber] < stepDuration[trackNumber] / 2) ? 10.0 : 0.0;
 		//Send out beat
 		if(beatMatrix[trackNumber][beatIndex[trackNumber]] == true && running[trackNumber] && !muted) {
-			outputs[trackNumber * 3].value = beatValue;
+			outputs[trackNumber * 3].value = outputValue;
 		} else {
 			outputs[trackNumber * 3].value = 0.0;	
 		}
 		//send out accent
 		if(accentMatrix[trackNumber][beatIndex[trackNumber]] == true && running[trackNumber] && !muted) {
-			outputs[trackNumber * 3 + 1].value = accentValue;	
+			outputs[trackNumber * 3 + 1].value = outputValue;	
 		} else {
 			outputs[trackNumber * 3 + 1].value = 0.0;	
 		}
@@ -473,8 +479,6 @@ struct QERBeatDisplay : TransparentWidget {
 			nvgFill(vg);
 		}
 		nvgStroke(vg);
-		//nvgResetScissor(vg);
-		//nvgRestore(vg);
 	}
 
 	void draw(NVGcontext *vg) override {
