@@ -29,6 +29,7 @@ void init(rack::Plugin *p) {
 	p->addModel(modelQuadEuclideanRhythm);
 	p->addModel(modelQuadGolombRulerRhythm);
 	p->addModel(modelQuantussyCell);
+	p->addModel(modelRouletteLFO);
 	p->addModel(modelSeriouslySlowLFO);
 	p->addModel(modelCDCSeriouslySlowLFO);
 

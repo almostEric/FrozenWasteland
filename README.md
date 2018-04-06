@@ -145,6 +145,16 @@ A collection of unusual plugins that will add a certain coolness to your patches
 - Use any of the remaining wav outputs from any cell to provide semi-random bordering on chaotic CV
 - Check out http://pugix.com/synth/eurorack-quantussy-cells/
 
+## Roulette LFO
+
+![Roulette LFO](./doc/rlfo.png)
+
+- Based on the concept of a couple different types of Roulettes: https://en.wikipedia.org/wiki/Roulette_(curve)
+- A circle rolling either inside a bigger circle (Hypotrochoid) or circle rolling outside a bigger circle (Epitrochoid)
+- The ratio of the Big R to small r can create interesting patterns
+- d is the distance of the 'pen' from the center of small circle.
+- if d = r the shapes become a special form of the shapes - either a Hypocycloid or Epicycloid
+
 ## Seriously Slow LFO
 
 ![Seriously Slow LFO](./doc/sslfo.png)

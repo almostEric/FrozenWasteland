@@ -19,5 +19,6 @@ extern Model *modelPhasedLockedLoop;
 extern Model *modelQuadEuclideanRhythm;
 extern Model *modelQuadGolombRulerRhythm;
 extern Model *modelQuantussyCell;
+extern Model *modelRouletteLFO;
 extern Model *modelSeriouslySlowLFO;
 extern Model *modelCDCSeriouslySlowLFO;
