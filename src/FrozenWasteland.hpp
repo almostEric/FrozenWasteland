@@ -14,6 +14,7 @@ extern Model *modelDamianLillard;
 //extern Model *modelBleedingEdge;
 extern Model *modelLissajousLFO;
 extern Model *modelMrBlueSky;
+extern Model *modelTheOneRingModulator;
 extern Model *modelPhasedLockedLoop;
 extern Model *modelQuadEuclideanRhythm;
 extern Model *modelQuadGolombRulerRhythm;

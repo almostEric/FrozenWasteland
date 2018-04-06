@@ -56,6 +56,26 @@ A collection of unusual plugins that will add a certain coolness to your patches
 - CV Control of over almost everything. I highly recommend playing with the band offset.
 - You can either CV the value of the band offset, or send triggers to the + and - Inputs to increment/decrement the offset
 
+## The One Ring (modulator)
+
+![The One Ring Modulator](./doc/oneringmod.png)
+
+- Ring modulation essentially multiplies the two frequencies together, creating non-harmonic sidebands
+- Doing RM digitally is easy - just multiply the two signals. But it was tougher to do with an analog circuit.  The traditional design used 4 diodes.
+- This module is based on this paper: http://recherche.ircam.fr/pub/dafx11/Papers/66_e.pdf which describes how to model an analog ring modulator with all its quirks
+- Let's you simulate different types of diode response as used in analog ring modulators
+- Bias is the input voltage level where the diode responds - below that the diode outputs 0V
+- Linear is the input voltage level where the diode outputs a linear response. Between the Bias and Linar levels, the diode acts 'weird' or let's say 'harmonically interesting'
+- Slope is the strength of the diode output
+- The graph display is useful for seeing the diodes' voltage responses
+- CV control over everything
+### Ring Modulation
+- Ring Modulation has always appealed to the math nerd in me, because while the process is pretty straightfoward, the results are really cool.
+- example. If you feed into a RM a 200hz sine wave and a 500hz sine wave, the output is the sum and difference of those two frequencies, so 300hz and 700hz.
+- Where it gets crazy is when harmonics are involved since the output is the sum and difference of "all" the frequencies. example, let's say you had the 200 and 500hz sine waves, but they both each had a 2nd harmonic as well, so a 400hz and 1000hz. The output would be: 500+200=700,1000+200=1200,500+400=900,1000+400=1400,500-200=300,500-400=100,1000-300=700(again),1000-400=600. So a whole slew of new frequencies got created.
+- Most waveforms have *way* more harmonics than this, so the results are really crazy.
+- The Dalek Voices in the original Dr. Who were done using ring modulators. Eliminate!!!
+
 ## Phased Locked Loop (PLL)
 
 ![Phased Lock Loop](./doc/pll.png)
