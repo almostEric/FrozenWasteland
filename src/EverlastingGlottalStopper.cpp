@@ -49,11 +49,26 @@ float Rosenburg(float timeOpening, float timeOpen, float phase) {
 	return out;
 }
 
+inline float quadraticBipolar(float x) {
+	float x2 = x*x;
+	return (x >= 0.f) ? x2 : -x2;
+}
 
 void EverlastingGlottalStopper::step() {
 	
-	float pitch = params[FREQUENCY_PARAM].value + inputs[FM_INPUT].value * params[FM_CV_ATTENUVERTER_PARAM].value;	
-	float freq = powf(2.0, pitch);
+
+	float pitch = params[FREQUENCY_PARAM].value;	
+	float pitchCv = 12.0f * inputs[PITCH_INPUT].value;
+	if (inputs[FM_INPUT].active) {
+		pitchCv += quadraticBipolar(params[FM_CV_ATTENUVERTER_PARAM].value) * 12.0f * inputs[FM_INPUT].value;
+	}
+
+	pitch += pitchCv;
+		// Note C4
+	float freq = 261.626f * powf(2.0f, pitch / 12.0f);
+
+	//float pitch = params[FREQUENCY_PARAM].value + inputs[FM_INPUT].value * params[FM_CV_ATTENUVERTER_PARAM].value;	
+	//float freq = powf(2.0, pitch);
 
 	float timeOpening = clamp(params[TIME_OPEN_PARAM].value + inputs[TIME_OPEN_INPUT].value * params[TIME_OPEN_CV_ATTENUVERTER_PARAM].value,0.01f,1.0f);
 	float timeClosed = clamp(params[TIME_CLOSED_PARAM].value + inputs[TIME_CLOSED_INPUT].value * params[TIME_CLOSED_CV_ATTENUVERTER_PARAM].value,0.0f,1.0f);
@@ -92,10 +107,10 @@ EverlastingGlottalStopperWidget::EverlastingGlottalStopperWidget(EverlastingGlot
 	
 	
 
-	addParam(ParamWidget::create<RoundHugeBlackKnob>(Vec(42, 60), module, EverlastingGlottalStopper::FREQUENCY_PARAM, 5.0f, 11.0f, 7.0f));
+	addParam(ParamWidget::create<RoundHugeBlackKnob>(Vec(42, 60), module, EverlastingGlottalStopper::FREQUENCY_PARAM, -54.0f, 54.0f, 0.0f));
 	addParam(ParamWidget::create<RoundBlackKnob>(Vec(18, 215), module, EverlastingGlottalStopper::TIME_OPEN_PARAM, 0.01f, 1.0f, 0.5f));
 	addParam(ParamWidget::create<RoundBlackKnob>(Vec(91, 215), module, EverlastingGlottalStopper::TIME_CLOSED_PARAM, 0.0f, 0.9f, 0.0f));
-	addParam(ParamWidget::create<RoundSmallBlackKnob>(Vec(91, 164), module, EverlastingGlottalStopper::FM_CV_ATTENUVERTER_PARAM, -1.0, 1.0, 0));
+	addParam(ParamWidget::create<RoundSmallBlackKnob>(Vec(91, 164), module, EverlastingGlottalStopper::FM_CV_ATTENUVERTER_PARAM, 0.0, 1.0, 0));
 	addParam(ParamWidget::create<RoundSmallBlackKnob>(Vec(20, 275), module, EverlastingGlottalStopper::TIME_OPEN_CV_ATTENUVERTER_PARAM, -1.0, 1.0, 0));
 	addParam(ParamWidget::create<RoundSmallBlackKnob>(Vec(90, 275), module, EverlastingGlottalStopper::TIME_CLOSED_CV_ATTENUVERTER_PARAM, -1.0, 1.0, 0));
 
