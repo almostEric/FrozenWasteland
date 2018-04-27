@@ -34,6 +34,7 @@ A collection of unusual plugins that will add a certain coolness to your patches
 - Based on the Rosenburg model of human's larynx
 - Pairs well with the Vox Inhumana
 - Can be a bit fussy to create harmonically "rich" waves, but playing with the "Closed" setting can find some sweet spots
+- Use the Noise parameter to add a "breathy" quality to wave
 
 ## Lissajou LFO.
 

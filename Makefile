@@ -15,17 +15,17 @@ CXXFLAGS +=
 LDFLAGS +=
 
 # Add .cpp and .c files to the build
-SOURCES += eurorack/stmlib/utils/random.cc
-SOURCES += eurorack/stmlib/dsp/atan.cc
-SOURCES += eurorack/stmlib/dsp/units.cc
-SOURCES += eurorack/clouds/dsp/correlator.cc
-SOURCES += eurorack/clouds/dsp/granular_processor.cc
-SOURCES += eurorack/clouds/dsp/mu_law.cc
-SOURCES += eurorack/clouds/dsp/pvoc/frame_transformation.cc
-SOURCES += eurorack/clouds/dsp/pvoc/phase_vocoder.cc
-SOURCES += eurorack/clouds/dsp/pvoc/stft.cc
-SOURCES += eurorack/clouds/resources.cc
-SOURCES += $(wildcard src/*.cpp src/filters/*.cpp src/dsp/*.cc src/stmlib/*.cc)
+#SOURCES += eurorack/stmlib/utils/random.cc
+#SOURCES += eurorack/stmlib/dsp/atan.cc
+#SOURCES += eurorack/stmlib/dsp/units.cc
+#SOURCES += eurorack/clouds/dsp/correlator.cc
+#SOURCES += eurorack/clouds/dsp/granular_processor.cc
+#SOURCES += eurorack/clouds/dsp/mu_law.cc
+#SOURCES += eurorack/clouds/dsp/pvoc/frame_transformation.cc
+#SOURCES += eurorack/clouds/dsp/pvoc/phase_vocoder.cc
+#SOURCES += eurorack/clouds/dsp/pvoc/stft.cc
+#SOURCES += eurorack/clouds/resources.cc
+SOURCES += $(wildcard src/*.cpp src/filters/*.cpp src/dsp/*.cpp src/stmlib/*.cc)
 
 # Add files to the ZIP package when running `make dist`
 # The compiled plugin is automatically added.
