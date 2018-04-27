@@ -29,6 +29,12 @@ A collection of unusual plugins that will add a certain coolness to your patches
 - Video of a snare drum being fed into four delay lines: https://www.youtube.com/watch?v=EB7A_hzMpNI
 - Use your imagination!
 
+## Everlasting Glottal Stopper
+![Everlasting Glottal Stopper](./doc/egs.png)
+- Based on the Rosenburg model of human's larynx
+- Pairs well with the Vox Inhumana
+- Can be a bit fussy to create harmonically "rich" waves, but playing with the "Closed" setting can find some sweet spots
+
 ## Lissajou LFO.
 
 ![Lissajou LFO](./doc/llfo.png)
@@ -162,6 +168,17 @@ A collection of unusual plugins that will add a certain coolness to your patches
 - Waiting for the next Ice Age? Tidal Modulator too fast paced? This is the LFO for you.
 - Generate oscillating CVs with range from 1 minute to 100 months
 - NOTE: Pretty sure my math is correct, but 100 month LFOs have not been unit tested
+
+## Vox Inhumana
+
+![Vox Inhumana](./doc/voxinhumana.png)
+
+- Generates vowel-ish sounds when given harmonically rich sources
+- Pairs well with the Everlasting Glottal Stopper, but sawtooth and pulse waves work well
+- Vowel/Voice formants are based on https://www.classes.cs.uchicago.edu/archive/1999/spring/CS295/Computing_Resources/Csound/CsManual3.48b1.HTML/Appendices/table3.html
+- The CV of a formant allows a +/- 50% change of base vowel frequency
+- The CV of amplitude allows the base level of the vowel/voice to be modified by about 2x.
+- Changing the Fc of formants 1 & 2 can make the vowel sound more long or short
 
 ## Contributing
 

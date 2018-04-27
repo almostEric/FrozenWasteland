@@ -22,6 +22,7 @@ void init(rack::Plugin *p) {
 	p->addModel(modelDamianLillard);
 	//p->addModel(modelSpectralDelay);
 	//p->addModel(modelBleedingEdge);
+	p->addModel(modelEverlastingGlottalStopper);
 	p->addModel(modelLissajousLFO);
 	p->addModel(modelMrBlueSky);
 	p->addModel(modelTheOneRingModulator);
@@ -31,6 +32,7 @@ void init(rack::Plugin *p) {
 	p->addModel(modelQuantussyCell);
 	p->addModel(modelRouletteLFO);
 	p->addModel(modelSeriouslySlowLFO);
+	p->addModel(modelVoxInhumana);
 	p->addModel(modelCDCSeriouslySlowLFO);
 
 	// Any other plugin initialization may go here.

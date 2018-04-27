@@ -1,8 +1,12 @@
 SLUG = FrozenWasteland
-VERSION = 0.6.4
+VERSION = 0.6.5
 
 # FLAGS will be passed to both the C and C++ compiler
-FLAGS +=
+FLAGS += \
+	-DTEST \
+	-I./eurorack \
+	-Wno-unused-local-typedefs
+
 CFLAGS +=
 CXXFLAGS +=
 
@@ -11,7 +15,17 @@ CXXFLAGS +=
 LDFLAGS +=
 
 # Add .cpp and .c files to the build
-SOURCES += $(wildcard src/*.cpp src/filters/*.cpp src/pffft/*.c)
+SOURCES += eurorack/stmlib/utils/random.cc
+SOURCES += eurorack/stmlib/dsp/atan.cc
+SOURCES += eurorack/stmlib/dsp/units.cc
+SOURCES += eurorack/clouds/dsp/correlator.cc
+SOURCES += eurorack/clouds/dsp/granular_processor.cc
+SOURCES += eurorack/clouds/dsp/mu_law.cc
+SOURCES += eurorack/clouds/dsp/pvoc/frame_transformation.cc
+SOURCES += eurorack/clouds/dsp/pvoc/phase_vocoder.cc
+SOURCES += eurorack/clouds/dsp/pvoc/stft.cc
+SOURCES += eurorack/clouds/resources.cc
+SOURCES += $(wildcard src/*.cpp src/filters/*.cpp src/dsp/*.cc src/stmlib/*.cc)
 
 # Add files to the ZIP package when running `make dist`
 # The compiled plugin is automatically added.
