@@ -1,7 +1,7 @@
 
 #include "noise.hpp"
 
-using namespace bogaudio::dsp;
+using namespace frozenwasteland::dsp;
 
 
 Seeds::Seeds() {

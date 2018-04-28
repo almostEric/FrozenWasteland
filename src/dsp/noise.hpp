@@ -4,7 +4,7 @@
 
 #include "base.hpp"
 
-namespace bogaudio {
+namespace frozenwasteland {
 namespace dsp {
 
 class Seeds {
@@ -75,4 +75,4 @@ struct GaussianNoiseGenerator : NoiseGenerator {
 };
 
 } // namespace dsp
-} // namespace bogaudio
+} // namespace frozenwasteland
