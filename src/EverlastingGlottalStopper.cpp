@@ -1,6 +1,6 @@
 #include "FrozenWasteland.hpp"
 #include "dsp/digital.hpp"
-#include "dsp/noise.hpp"
+#include "dsp-noise/noise.hpp"
 #include "filters/biquad.h"
 
 using namespace frozenwasteland::dsp;

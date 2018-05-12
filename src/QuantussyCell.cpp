@@ -172,8 +172,8 @@ QuantussyCellWidget::QuantussyCellWidget(QuantussyCell *module) : ModuleWidget(m
 
 	addOutput(Port::create<PJ301MPort>(Vec(15, 255), Port::OUTPUT, module, QuantussyCell::SIN_OUTPUT));
 	addOutput(Port::create<PJ301MPort>(Vec(50, 255), Port::OUTPUT, module, QuantussyCell::TRI_OUTPUT));
-	addOutput(Port::create<PJ301MPort>(Vec(15, 301), Port::OUTPUT, module, QuantussyCell::SAW_OUTPUT));
-	addOutput(Port::create<PJ301MPort>(Vec(50, 301), Port::OUTPUT, module, QuantussyCell::SQR_OUTPUT));
+	addOutput(Port::create<PJ301MPort>(Vec(15, 301), Port::OUTPUT, module, QuantussyCell::SQR_OUTPUT));
+	addOutput(Port::create<PJ301MPort>(Vec(50, 301), Port::OUTPUT, module, QuantussyCell::SAW_OUTPUT));
 
 
 

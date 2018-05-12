@@ -1,14 +1,17 @@
 #include "FrozenWasteland.hpp"
 #include "dsp/decimator.hpp"
 #include "dsp/digital.hpp"
-#include "filters/biquad.h"
+#include "StateVariableFilter.h"
 
 using namespace std;
 
 #define BANDS 4
 #define FREQUENCIES 3
+#define numFilters 6
 
 struct DamianLillard : Module {
+	typedef float T;
+
 	enum ParamIds {
 		FREQ_1_CUTOFF_PARAM,
 		FREQ_2_CUTOFF_PARAM,
@@ -41,29 +44,28 @@ struct DamianLillard : Module {
 		LEARN_LIGHT,
 		NUM_LIGHTS
 	};
-	Biquad* iFilter[3*BANDS];
 	float freq[FREQUENCIES] = {0};
 	float lastFreq[FREQUENCIES] = {0};
 	float output[BANDS] = {0};
 
+    StateVariableFilterState<T> filterStates[numFilters];
+    StateVariableFilterParams<T> filterParams[numFilters];
+
+
 	int bandOffset = 0;
 
 	DamianLillard() : Module(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS, NUM_LIGHTS) {
-		iFilter[0] = new Biquad(bq_type_highshelf, 0 / engineGetSampleRate(), 5, 6);
-		iFilter[1] = new Biquad(bq_type_highshelf, 0 / engineGetSampleRate(), 5, 6);
+		filterParams[0].setMode(StateVariableFilterParams<T>::Mode::LowPass);
+		filterParams[1].setMode(StateVariableFilterParams<T>::Mode::HiPass);
+		filterParams[2].setMode(StateVariableFilterParams<T>::Mode::LowPass);
+		filterParams[3].setMode(StateVariableFilterParams<T>::Mode::HiPass);
+		filterParams[4].setMode(StateVariableFilterParams<T>::Mode::LowPass);
+		filterParams[5].setMode(StateVariableFilterParams<T>::Mode::HiPass);
 
-		iFilter[2] = new Biquad(bq_type_highpass, 0 / engineGetSampleRate(), 5, 6);
-		iFilter[3] = new Biquad(bq_type_highpass, 0 / engineGetSampleRate(), 5, 6);
-		iFilter[4] = new Biquad(bq_type_lowpass, 0 / engineGetSampleRate(), 5, 6);
-		iFilter[5] = new Biquad(bq_type_lowpass, 0 / engineGetSampleRate(), 5, 6);
-
-		iFilter[6] = new Biquad(bq_type_highpass, 0 / engineGetSampleRate(), 5, 6);
-		iFilter[7] = new Biquad(bq_type_highpass, 0 / engineGetSampleRate(), 5, 6);
-		iFilter[8] = new Biquad(bq_type_lowpass, 0 / engineGetSampleRate(), 5, 6);
-		iFilter[9] = new Biquad(bq_type_lowpass, 0 / engineGetSampleRate(), 5, 6);
-
-		iFilter[10] = new Biquad(bq_type_lowshelf, 0 / engineGetSampleRate(), 5, 6);
-		iFilter[11] = new Biquad(bq_type_lowshelf, 0 / engineGetSampleRate(), 5, 6);
+		for (int i = 0; i < numFilters; ++i) {
+	        filterParams[i].setQ(5); 	
+	        filterParams[i].setFreq(T(.1));
+	    }
 	}
 
 	void step() override;
@@ -92,17 +94,16 @@ void DamianLillard::step() {
 
 		if(freq[i] != lastFreq[i]) {
 			float Fc = freq[i] / engineGetSampleRate();
-			for(int j=0;j<BANDS;j++) {
-				iFilter[(i*BANDS)+j]->setFc(Fc);
-			}
+			filterParams[i*2].setFreq(T(Fc));
+			filterParams[i*2 + 1].setFreq(T(Fc));
 			lastFreq[i] = freq[i];
 		}
 	}
 
-	output[0] = iFilter[0]->process(iFilter[1]->process(signalIn)) * 5;
-	output[1] = iFilter[2]->process(iFilter[3]->process(iFilter[4]->process(iFilter[5]->process(signalIn)))) * 5;	
-	output[2] = iFilter[6]->process(iFilter[7]->process(iFilter[8]->process(iFilter[9]->process(signalIn)))) * 5;	
-	output[3] = iFilter[10]->process(iFilter[11]->process(signalIn)) * 5;	
+	output[0] = StateVariableFilter<T>::run(signalIn, filterStates[0], filterParams[0]) * 5;
+	output[1] = StateVariableFilter<T>::run(StateVariableFilter<T>::run(signalIn, filterStates[1], filterParams[1]), filterStates[2], filterParams[2]) * 5;
+	output[2] = StateVariableFilter<T>::run(StateVariableFilter<T>::run(signalIn, filterStates[3], filterParams[3]), filterStates[4], filterParams[4]) * 5;
+	output[3] = StateVariableFilter<T>::run(signalIn, filterStates[5], filterParams[5]) * 5;
 
 	for(int i=0; i<BANDS; i++) {		
 		outputs[BAND_1_OUTPUT+i].value = output[i];

@@ -1,10 +1,11 @@
 SLUG = FrozenWasteland
-VERSION = 0.6.5
+VERSION = 0.6.6
 
 # FLAGS will be passed to both the C and C++ compiler
 FLAGS += \
 	-DTEST \
 	-I./eurorack \
+	-I./src/dsp-filter/utils -I./src/dsp-filter/filters -I./src/dsp-filter/third-party/falco \
 	-Wno-unused-local-typedefs
 
 CFLAGS +=
@@ -25,7 +26,7 @@ LDFLAGS +=
 #SOURCES += eurorack/clouds/dsp/pvoc/phase_vocoder.cc
 #SOURCES += eurorack/clouds/dsp/pvoc/stft.cc
 #SOURCES += eurorack/clouds/resources.cc
-SOURCES += $(wildcard src/*.cpp src/filters/*.cpp src/dsp/*.cpp src/stmlib/*.cc)
+SOURCES += $(wildcard src/*.cpp src/filters/*.cpp src/dsp-noise/*.cpp src/dsp-filter/*.cpp src/stmlib/*.cc)
 
 # Add files to the ZIP package when running `make dist`
 # The compiled plugin is automatically added.

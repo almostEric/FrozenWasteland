@@ -177,6 +177,7 @@ A collection of unusual plugins that will add a certain coolness to your patches
 - Generates vowel-ish sounds when given harmonically rich sources
 - Pairs well with the Everlasting Glottal Stopper, but sawtooth and pulse waves work well
 - Vowel/Voice formants are based on https://www.classes.cs.uchicago.edu/archive/1999/spring/CS295/Computing_Resources/Csound/CsManual3.48b1.HTML/Appendices/table3.html
+- Fc allows changing the frequency of all formants at once, over a large range
 - The CV of a formant allows a +/- 50% change of base vowel frequency
 - The CV of amplitude allows the base level of the vowel/voice to be modified by about 2x.
 - Changing the Fc of formants 1 & 2 can make the vowel sound more long or short
