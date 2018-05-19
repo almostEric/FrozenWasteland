@@ -17,6 +17,7 @@ extern Model *modelLissajousLFO;
 extern Model *modelMrBlueSky;
 extern Model *modelTheOneRingModulator;
 extern Model *modelPhasedLockedLoop;
+extern Model *modelPortlandWeather;
 extern Model *modelQuadEuclideanRhythm;
 extern Model *modelQuadGolombRulerRhythm;
 extern Model *modelQuantussyCell;

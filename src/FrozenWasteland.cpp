@@ -27,6 +27,7 @@ void init(rack::Plugin *p) {
 	p->addModel(modelMrBlueSky);
 	p->addModel(modelTheOneRingModulator);
 	p->addModel(modelPhasedLockedLoop);
+	p->addModel(modelPortlandWeather);
 	p->addModel(modelQuadEuclideanRhythm);
 	p->addModel(modelQuadGolombRulerRhythm);
 	p->addModel(modelQuantussyCell);
