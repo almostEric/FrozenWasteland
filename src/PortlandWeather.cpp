@@ -4,9 +4,10 @@
 #include "dsp/filter.hpp"
 #include "ringbuffer.hpp"
 #include "StateVariableFilter.h"
-#include "clouds/dsp/fx/pitch_shifter.h"
+//#include "clouds/dsp/fx/pitch_shifter.h"
+#include <iostream>
 
-#define HISTORY_SIZE (1<<21)
+#define HISTORY_SIZE (1<<22)
 #define MAX_GRAIN_SIZE (1<<10)
 #define NUM_TAPS 16
 #define MAX_GRAINS 4
@@ -52,6 +53,8 @@ struct PortlandWeather : Module {
 		FEEDBACK_TAP_L_INPUT,
 		FEEDBACK_TAP_R_INPUT,
 		FEEDBACK_TONE_INPUT,
+		FEEDBACK_L_RETURN,
+		FEEDBACK_R_RETURN,
 		MIX_INPUT,
 		TAP_MIX_CV_INPUT,
 		TAP_PAN_CV_INPUT = TAP_MIX_CV_INPUT + NUM_TAPS,
@@ -66,6 +69,8 @@ struct PortlandWeather : Module {
 	enum OutputIds {
 		OUT_L_OUTPUT,
 		OUT_R_OUTPUT,
+		FEEDBACK_L_OUTPUT,
+		FEEDBACK_R_OUTPUT,
 		NUM_OUTPUTS
 	};
 	enum LightIds {
@@ -106,7 +111,7 @@ struct PortlandWeather : Module {
 	const float minCutoff = 15.0;
 	const float maxCutoff = 8400.0;
 
-	int tapGroovePattern = 9;
+	int tapGroovePattern = 0;
 	float grooveAmount = 1.0f;
 
 	bool pingPong = false;
@@ -118,14 +123,15 @@ struct PortlandWeather : Module {
 	float tapPitchShift[NUM_TAPS+1];
 	float tapDetune[NUM_TAPS+1];
 	int tapFilterType[NUM_TAPS+1];
-	int feedbackTap = NUM_TAPS-1;
+	int feedbackTap[CHANNELS] = {NUM_TAPS-1,NUM_TAPS-1};
 
 	StateVariableFilterState<T> filterStates[NUM_TAPS][CHANNELS];
     StateVariableFilterParams<T> filterParams[NUM_TAPS];
 	RCFilter lowpassFilter[CHANNELS];
 	RCFilter highpassFilter[CHANNELS];
 
-
+	const char* filterNames[5] = {"O","L","H","B","N"};
+	
 	//clouds::PitchShifter pitch_shifter_;
 	SchmittTrigger clockTrigger,pingPongTrigger,mutingTrigger[NUM_TAPS],stackingTrigger[NUM_TAPS];
 	float divisions[DIVISIONS] = {1/256.0,1/192.0,1/128.0,1/96.0,1/64.0,1/48.0,1/32.0,1/24.0,1/16.0,1/13.0,1/12.0,1/11.0,1/8.0,1/7.0,1/6.0,1/5.0,1/4.0,1/3.0,1/2.0,1/1.5,1};
@@ -133,6 +139,7 @@ struct PortlandWeather : Module {
 	int division;
 	float time = 0.0;
 	float duration = 0;
+	float baseDelay;
 	bool secondClockReceived = false;
 
 
@@ -156,34 +163,56 @@ struct PortlandWeather : Module {
 	    }
 	}
 
-/*
+	const char* tapNames[NUM_TAPS+2] {"1","2","3","4","5","6","7","8","9","10","11","12","13","14","15","16","ALL","EXT"};
+
+
 	json_t *toJson() override {
 		json_t *rootJ = json_object();
+		json_object_set_new(rootJ, "pingPong", json_integer((int) pingPong));
+		
 		for(int i=0;i<NUM_TAPS;i++) {
-			//json_object_set_new(rootJ, "muted"+(char)(i+65), json_integer((bool) tapMuted[i]));
-			//json_object_set_new(rootJ, "stacked"+(char)(i+65), json_integer((bool) tapStacked[i]));
-			char* keyName = strcat("muted",(char)(i+65));
-			//keyName+=(char)(i+64);
-			printf("json key = %s\n", keyName );
+			//This is so stupid!!! why did he not use strings?
+			char buf[100];
+			strcpy(buf, "muted");
+			strcat(buf, tapNames[i]);
+			json_object_set_new(rootJ, buf, json_integer((int) tapMuted[i]));
+
+			strcpy(buf, "stacked");
+			strcat(buf, tapNames[i]);
+			json_object_set_new(rootJ, buf, json_integer((int) tapStacked[i]));
 		}
 		return rootJ;
 	}
 
 	void fromJson(json_t *rootJ) override {
+
+		json_t *sumJ = json_object_get(rootJ, "pingPong");
+			if (sumJ) {
+				pingPong = json_integer_value(sumJ);			
+			}
+		
+		char buf[100];			
 		for(int i=0;i<NUM_TAPS;i++) {
-			json_t *sumJ = json_object_get(rootJ, "muted"+(char)(i+65));
+			strcpy(buf, "muted");
+			strcat(buf, tapNames[i]);
+
+			json_t *sumJ = json_object_get(rootJ, buf);
 			if (sumJ) {
 				tapMuted[i] = json_integer_value(sumJ);			
 			}
 		}
 		for(int i=0;i<NUM_TAPS;i++) {
-			json_t *sumJ = json_object_get(rootJ, "stacked"+(char)(i+65));
+			strcpy(buf, "stacked");
+			strcat(buf, tapNames[i]);
+
+			json_t *sumJ = json_object_get(rootJ, buf);
 			if (sumJ) {
 				tapStacked[i] = json_integer_value(sumJ);
 			}
 		}
+		
 	}
-*/
+
 
 	void step() override;
 };
@@ -213,11 +242,19 @@ void PortlandWeather::step() {
 		}
 		//lights[CLOCK_LIGHT].value = time > (duration/2.0);
 	}
+	
+	if(inputs[CLOCK_INPUT].active) {
+		baseDelay = duration / divisions[division];
+	} else {
+		//float delay = clamp(params[TIME_PARAM].value + inputs[TIME_INPUT].value, 0.001f, 10.0f);
+		baseDelay = clamp(params[TIME_PARAM].value, 0.001f, 10.0f);			
+	}
 
 	if (pingPongTrigger.process(params[PING_PONG_PARAM].value)) {
 		pingPong = !pingPong;
 	}
 	lights[PING_PONG_LIGHT].value = pingPong;
+
 
 	for(int channel = 0;channel < CHANNELS;channel++) {
 		// Get input to delay block
@@ -227,9 +264,14 @@ void PortlandWeather::step() {
 		} else {
 			in = inputs[IN_R_INPUT].active ? in = inputs[IN_R_INPUT].value : in = inputs[IN_L_INPUT].value;			
 		}
-		feedbackTap = (int)clamp(params[FEEDBACK_TAP_L_PARAM+channel].value + (inputs[FEEDBACK_TAP_L_INPUT+channel].value / 10.0f),0.0f,15.0);
-		float feedback = clamp(params[FEEDBACK_PARAM].value + inputs[FEEDBACK_INPUT].value / 10.0f, 0.0f, 1.0f);
-		float dry = in + lastFeedback[channel] * feedback;
+		feedbackTap[channel] = (int)clamp(params[FEEDBACK_TAP_L_PARAM+channel].value + (inputs[FEEDBACK_TAP_L_INPUT+channel].value / 10.0f),0.0f,17.0);
+		float feedbackAmount = clamp(params[FEEDBACK_PARAM].value + (inputs[FEEDBACK_INPUT].value / 10.0f), 0.0f, 1.0f);
+		float feedbackInput = lastFeedback[channel];
+		if(inputs[FEEDBACK_L_RETURN+channel].active) {
+			feedbackInput = inputs[FEEDBACK_L_RETURN+channel].value;
+		}
+
+		float dry = in + feedbackInput * feedbackAmount;
 
 		// Push dry sample into history buffer
 		if (!historyBuffer[channel].full(NUM_TAPS-1)) {
@@ -260,14 +302,7 @@ void PortlandWeather::step() {
 				delayTap++;			
 			}
 			// Compute delay time in seconds
-			float delay;
-			if(inputs[CLOCK_INPUT].active) {
-				delay = duration / divisions[division];
-			} else {
-				//float delay = clamp(params[TIME_PARAM].value + inputs[TIME_INPUT].value, 0.001f, 10.0f);
-				delay = clamp(params[TIME_PARAM].value, 0.001f, 10.0f);			
-			}
-			delay = delay * lerp(tapGroovePatterns[0][delayTap],tapGroovePatterns[tapGroovePattern][delayTap],grooveAmount); //Balance between straight time and groove
+			float delay = baseDelay * lerp(tapGroovePatterns[0][delayTap],tapGroovePatterns[tapGroovePattern][delayTap],grooveAmount); //Balance between straight time and groove
 			float delayMod = 0.0f;
 			if(inputs[TIME_CV_INPUT].active) { //The CV can change either clocked or set delay by 10MS
 				delayMod = 0.001f * inputs[TIME_CV_INPUT].value; 
@@ -332,10 +367,9 @@ void PortlandWeather::step() {
 						case FILTER_NOTCH:
 						filterParams[tap].setMode(StateVariableFilterParams<T>::Mode::Notch);
 						break;
-					}
-
+					}					
 				}
-				
+
 				float cutoffExp = clamp(params[TAP_FC_PARAM+tap].value + inputs[TAP_FC_CV_INPUT+tap].value / 10.0f,0.0f,1.0f); 
 				float tapFc = minCutoff * powf(maxCutoff / minCutoff, cutoffExp) / engineGetSampleRate();
 				if(lastTapFc[tap] != tapFc) {
@@ -349,9 +383,10 @@ void PortlandWeather::step() {
 				}
 				wetTap = StateVariableFilter<T>::run(wetTap, filterStates[tap][channel], filterParams[tap]);
 			}
+			lastFilterType[tap] = tapFilterType;
 
 			//If tap is muted should it contribute to feedback? Thinking yes.
-			if(tap == feedbackTap) {
+			if(tap == feedbackTap[channel]) {
 				feedbackValue = wetTap;
 			}
 
@@ -362,10 +397,16 @@ void PortlandWeather::step() {
 			wet += wetTap;
 
 			lights[TAP_STACKED_LIGHT+tap].value = tapStacked[tap];
-			lights[TAP_MUTED_LIGHT+tap].value = (tapMuted[tap]);
+			lights[TAP_MUTED_LIGHT+tap].value = (tapMuted[tap]);	
 		}
 			
 
+		if(feedbackTap[channel] == NUM_TAPS) { //This would be the All  Taps setting
+			float feedbackScaling = 1.5f; // Trying to make full feedback not, well feedback
+			feedbackValue = wet * feedbackScaling / NUM_TAPS; 
+		}
+
+			
 		//Apply global filtering
 		// TODO Make it sound better
 		float color = clamp(params[FEEDBACK_TONE_PARAM].value + inputs[FEEDBACK_TONE_INPUT].value / 10.0f, 0.0f, 1.0f);
@@ -378,11 +419,16 @@ void PortlandWeather::step() {
 		highpassFilter[channel].process(feedbackValue);
 		feedbackValue = highpassFilter[channel].highpass();
 
-		int feedbackChannel = channel;
+
+		feedbackValue = clamp(feedbackValue,-5.0f,5.0f); // Let's keep things civil
+
+
+		int feedbackDestinationChannel = channel;
 		if (pingPong) {
-			feedbackChannel = 1 - feedbackChannel;
+			feedbackDestinationChannel = 1 - channel;
 		}
-		lastFeedback[feedbackChannel] = feedbackValue;
+		lastFeedback[feedbackDestinationChannel] = feedbackValue;
+		outputs[FEEDBACK_L_OUTPUT+feedbackDestinationChannel].value = feedbackValue;
 
 		float mix = clamp(params[MIX_PARAM].value + inputs[MIX_INPUT].value / 10.0f, 0.0f, 1.0f);
 		float out = crossfade(in, wet, mix);
@@ -390,6 +436,104 @@ void PortlandWeather::step() {
 		outputs[OUT_L_OUTPUT + channel].value = out;
 	}
 }
+
+struct PWStatusDisplay : TransparentWidget {
+	PortlandWeather *module;
+	int frame = 0;
+	std::shared_ptr<Font> font;
+
+	
+
+	PWStatusDisplay() {
+		font = Font::load(assetPlugin(plugin, "res/fonts/01 Digit.ttf"));
+	}
+
+	void drawProgress(NVGcontext *vg, float phase) 
+	{
+		const float rotate90 = (M_PI) / 2.0;
+		float startArc = 0 - rotate90;
+		float endArc = (phase * M_PI * 2) - rotate90;
+
+		// Draw indicator
+		nvgFillColor(vg, nvgRGBA(0xff, 0xff, 0x20, 0xff));
+		{
+			nvgBeginPath(vg);
+			nvgArc(vg,75.8,170,35,startArc,endArc,NVG_CW);
+			nvgLineTo(vg,75.8,170);
+			nvgClosePath(vg);
+		}
+		nvgFill(vg);
+	}
+
+	void drawDivision(NVGcontext *vg, Vec pos, int division) {
+		nvgFontSize(vg, 28);
+		nvgFontFaceId(vg, font->handle);
+		nvgTextLetterSpacing(vg, -2);
+
+		nvgFillColor(vg, nvgRGBA(0x00, 0xff, 0x00, 0xff));
+		char text[128];
+		snprintf(text, sizeof(text), "%s", module->divisionNames[division]);
+		nvgText(vg, pos.x, pos.y, text, NULL);
+	}
+
+	void drawDelayTime(NVGcontext *vg, Vec pos, float delayTime) {
+		nvgFontSize(vg, 28);
+		nvgFontFaceId(vg, font->handle);
+		nvgTextLetterSpacing(vg, -2);
+
+		nvgFillColor(vg, nvgRGBA(0x00, 0xff, 0x00, 0xff));
+		char text[128];
+		snprintf(text, sizeof(text), "%6.0f", delayTime*1000);	
+		nvgText(vg, pos.x, pos.y, text, NULL);
+	}
+
+	void drawGrooveType(NVGcontext *vg, Vec pos, int grooveType) {
+		nvgFontSize(vg, 11);
+		nvgFontFaceId(vg, font->handle);
+		nvgTextLetterSpacing(vg, -2);
+
+		nvgFillColor(vg, nvgRGBA(0x00, 0xff, 0x00, 0xff));
+		char text[128];
+		snprintf(text, sizeof(text), "%s", module->grooveNames[grooveType]);
+		nvgText(vg, pos.x, pos.y, text, NULL);
+	}
+
+	void drawFeedbackTaps(NVGcontext *vg, Vec pos, int *feedbackTaps) {
+		nvgFontSize(vg, 12);
+		nvgFontFaceId(vg, font->handle);
+		nvgTextLetterSpacing(vg, -2);
+
+		nvgFillColor(vg, nvgRGBA(0x00, 0x00, 0x00, 0xff));
+		for(int i=0;i<CHANNELS;i++) {
+			char text[128];
+			snprintf(text, sizeof(text), "%s", module->tapNames[feedbackTaps[i]]);
+			nvgText(vg, pos.x + i*100, pos.y, text, NULL);
+		}
+	}
+
+	void drawFilterTypes(NVGcontext *vg, Vec pos, int *filterType) {
+		nvgFontSize(vg, 12);
+		nvgFontFaceId(vg, font->handle);
+		nvgTextLetterSpacing(vg, -2);
+
+		nvgFillColor(vg, nvgRGBA(0x00, 0x00, 0x00, 0xff));
+		for(int i=0;i<NUM_TAPS;i++) {
+			char text[128];
+			snprintf(text, sizeof(text), "%s", module->filterNames[filterType[i]]);
+			nvgText(vg, pos.x + i*50, pos.y, text, NULL);
+		}
+	}
+
+	void draw(NVGcontext *vg) override {
+		
+		//drawProgress(vg,module->oscillator.progress());
+		drawDivision(vg, Vec(150,65), module->division);
+		drawDelayTime(vg, Vec(350,65), module->baseDelay);
+		drawGrooveType(vg, Vec(145,125), module->tapGroovePattern);
+		drawFeedbackTaps(vg, Vec(230,210), module->feedbackTap);
+		drawFilterTypes(vg, Vec(80,420), module->lastFilterType);
+	}
+};
 
 
 struct PortlandWeatherWidget : ModuleWidget {
@@ -412,22 +556,29 @@ PortlandWeatherWidget::PortlandWeatherWidget(PortlandWeather *module) : ModuleWi
 	addChild(Widget::create<ScrewSilver>(Vec(15, 745)));
 	addChild(Widget::create<ScrewSilver>(Vec(box.size.x-30, 745)));
 
+	{
+		PWStatusDisplay *display = new PWStatusDisplay();
+		display->module = module;
+		display->box.pos = Vec(0, 0);
+		display->box.size = Vec(box.size.x, 500);
+		addChild(display);
+	}
+
 	addParam(ParamWidget::create<RoundLargeBlackKnob>(Vec(57, 40), module, PortlandWeather::CLOCK_DIV_PARAM, 0, DIVISIONS-1, 0));
-	addParam(ParamWidget::create<RoundLargeBlackKnob>(Vec(157, 40), module, PortlandWeather::TIME_PARAM, 0.001f, 1.0f, 0.350f));
-	addParam(ParamWidget::create<RoundLargeBlackKnob>(Vec(257, 40), module, PortlandWeather::GRID_PARAM, 0.001f, 10.0f, 0.350f));
+	addParam(ParamWidget::create<RoundLargeBlackKnob>(Vec(257, 40), module, PortlandWeather::TIME_PARAM, 0.001f, 10.0f, 0.350f));
+	//addParam(ParamWidget::create<RoundLargeBlackKnob>(Vec(257, 40), module, PortlandWeather::GRID_PARAM, 0.001f, 10.0f, 0.350f));
 
 	addParam(ParamWidget::create<RoundLargeBlackKnob>(Vec(57, 110), module, PortlandWeather::GROOVE_TYPE_PARAM, 0.0f, 15.0f, 0.0f));
-	addParam(ParamWidget::create<RoundLargeBlackKnob>(Vec(157, 110), module, PortlandWeather::GROOVE_AMOUNT_PARAM, 0.0f, 1.0f, 1.0f));
+	addParam(ParamWidget::create<RoundLargeBlackKnob>(Vec(257, 110), module, PortlandWeather::GROOVE_AMOUNT_PARAM, 0.0f, 1.0f, 1.0f));
 
 	addParam(ParamWidget::create<RoundLargeBlackKnob>(Vec(57, 180), module, PortlandWeather::FEEDBACK_PARAM, 0.0f, 1.0f, 0.0f));
-	addParam(ParamWidget::create<RoundLargeBlackKnob>(Vec(157, 180), module, PortlandWeather::FEEDBACK_TAP_L_PARAM, 0.0f, 15.0f, 15.0f));
-	addParam(ParamWidget::create<RoundLargeBlackKnob>(Vec(257, 180), module, PortlandWeather::FEEDBACK_TAP_R_PARAM, 0.0f, 15.0f, 15.0f));
+	addParam(ParamWidget::create<RoundLargeBlackKnob>(Vec(157, 180), module, PortlandWeather::FEEDBACK_TAP_L_PARAM, 0.0f, 17.0f, 15.0f));
+	addParam(ParamWidget::create<RoundLargeBlackKnob>(Vec(257, 180), module, PortlandWeather::FEEDBACK_TAP_R_PARAM, 0.0f, 17.0f, 15.0f));
 	addParam(ParamWidget::create<RoundLargeBlackKnob>(Vec(357, 180), module, PortlandWeather::FEEDBACK_TONE_PARAM, 0.0f, 5, 0.0f));
 	addParam( ParamWidget::create<LEDButton>(Vec(470,185), module, PortlandWeather::PING_PONG_PARAM, 0.0f, 1.0f, 0.0f));
 
 	addChild(ModuleLightWidget::create<MediumLight<BlueLight>>(Vec(474, 189), module, PortlandWeather::PING_PONG_LIGHT));
 
-	addParam(ParamWidget::create<RoundLargeBlackKnob>(Vec(220, 705), module, PortlandWeather::MIX_PARAM, 0.0f, 1.0f, 0.5f));
 
 	//last tap isn't stacked
 	for (int i = 0; i< NUM_TAPS-1; i++) {
@@ -456,11 +607,11 @@ PortlandWeatherWidget::PortlandWeatherWidget(PortlandWeather *module) : ModuleWi
 	addInput(Port::create<PJ301MPort>(Vec(25, 50), Port::INPUT, module, PortlandWeather::CLOCK_INPUT));
 
 	addInput(Port::create<PJ301MPort>(Vec(100, 45), Port::INPUT, module, PortlandWeather::CLOCK_DIVISION_CV_INPUT));
-	addInput(Port::create<PJ301MPort>(Vec(200, 45), Port::INPUT, module, PortlandWeather::TIME_CV_INPUT));
-	addInput(Port::create<PJ301MPort>(Vec(300, 45), Port::INPUT, module, PortlandWeather::GRID_CV_INPUT));
+	addInput(Port::create<PJ301MPort>(Vec(300, 45), Port::INPUT, module, PortlandWeather::TIME_CV_INPUT));
+	//addInput(Port::create<PJ301MPort>(Vec(300, 45), Port::INPUT, module, PortlandWeather::GRID_CV_INPUT));
 
 	addInput(Port::create<PJ301MPort>(Vec(100, 115), Port::INPUT, module, PortlandWeather::GROOVE_TYPE_CV_INPUT));
-	addInput(Port::create<PJ301MPort>(Vec(200, 115), Port::INPUT, module, PortlandWeather::GROOVE_AMOUNT_CV_INPUT));
+	addInput(Port::create<PJ301MPort>(Vec(300, 115), Port::INPUT, module, PortlandWeather::GROOVE_AMOUNT_CV_INPUT));
 
 
 	addInput(Port::create<PJ301MPort>(Vec(100, 185), Port::INPUT, module, PortlandWeather::FEEDBACK_INPUT));
@@ -468,11 +619,18 @@ PortlandWeatherWidget::PortlandWeatherWidget(PortlandWeather *module) : ModuleWi
 	addInput(Port::create<PJ301MPort>(Vec(300, 185), Port::INPUT, module, PortlandWeather::FEEDBACK_TAP_R_INPUT));
 	addInput(Port::create<PJ301MPort>(Vec(400, 185), Port::INPUT, module, PortlandWeather::FEEDBACK_TONE_INPUT));
 
-	addInput(Port::create<PJ301MPort>(Vec(260, 710), Port::INPUT, module, PortlandWeather::MIX_INPUT));
-	addInput(Port::create<PJ301MPort>(Vec(100, 710), Port::INPUT, module, PortlandWeather::IN_L_INPUT));
-	addInput(Port::create<PJ301MPort>(Vec(130, 710), Port::INPUT, module, PortlandWeather::IN_R_INPUT));
-	addOutput(Port::create<PJ301MPort>(Vec(400, 710), Port::OUTPUT, module, PortlandWeather::OUT_L_OUTPUT));
-	addOutput(Port::create<PJ301MPort>(Vec(430, 710), Port::OUTPUT, module, PortlandWeather::OUT_R_OUTPUT));
+	addParam(ParamWidget::create<RoundLargeBlackKnob>(Vec(440, 705), module, PortlandWeather::MIX_PARAM, 0.0f, 1.0f, 0.5f));
+	addInput(Port::create<PJ301MPort>(Vec(480, 710), Port::INPUT, module, PortlandWeather::MIX_INPUT));
+
+
+	addInput(Port::create<PJ301MPort>(Vec(75, 710), Port::INPUT, module, PortlandWeather::IN_L_INPUT));
+	addInput(Port::create<PJ301MPort>(Vec(105, 710), Port::INPUT, module, PortlandWeather::IN_R_INPUT));
+	addOutput(Port::create<PJ301MPort>(Vec(200, 710), Port::OUTPUT, module, PortlandWeather::FEEDBACK_L_OUTPUT));
+	addOutput(Port::create<PJ301MPort>(Vec(230, 710), Port::OUTPUT, module, PortlandWeather::FEEDBACK_R_OUTPUT));
+	addInput(Port::create<PJ301MPort>(Vec(306, 710), Port::INPUT, module, PortlandWeather::FEEDBACK_L_RETURN));
+	addInput(Port::create<PJ301MPort>(Vec(336, 710), Port::INPUT, module, PortlandWeather::FEEDBACK_R_RETURN));
+	addOutput(Port::create<PJ301MPort>(Vec(595, 710), Port::OUTPUT, module, PortlandWeather::OUT_L_OUTPUT));
+	addOutput(Port::create<PJ301MPort>(Vec(625, 710), Port::OUTPUT, module, PortlandWeather::OUT_R_OUTPUT));
 }
 
 
