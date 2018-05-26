@@ -169,7 +169,7 @@ struct PortlandWeather : Module {
 	        filterParams[i].setFreq(T(800.0f / engineGetSampleRate()));
 	    }
 
-	    pitch_shifter_.Init(pitchShiftBuffer);
+	    //pitch_shifter_.Init(pitchShiftBuffer);
 	}
 
 	const char* tapNames[NUM_TAPS+2] {"1","2","3","4","5","6","7","8","9","10","11","12","13","14","15","16","ALL","EXT"};
