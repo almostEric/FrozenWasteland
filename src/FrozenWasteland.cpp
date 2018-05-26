@@ -23,6 +23,7 @@ void init(rack::Plugin *p) {
 	//p->addModel(modelSpectralDelay);
 	//p->addModel(modelBleedingEdge);
 	p->addModel(modelEverlastingGlottalStopper);
+	p->addModel(modelHairPick);
 	p->addModel(modelLissajousLFO);
 	p->addModel(modelMrBlueSky);
 	p->addModel(modelTheOneRingModulator);

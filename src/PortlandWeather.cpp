@@ -4,11 +4,12 @@
 #include "dsp/filter.hpp"
 #include "ringbuffer.hpp"
 #include "StateVariableFilter.h"
-//#include "clouds/dsp/fx/pitch_shifter.h"
+#include "clouds/dsp/frame.h"
+#include "clouds/dsp/fx/pitch_shifter.h"
 #include <iostream>
 
 #define HISTORY_SIZE (1<<22)
-#define MAX_GRAIN_SIZE (1<<10)
+#define MAX_GRAIN_SIZE (1<<17)
 #define NUM_TAPS 16
 #define MAX_GRAINS 4
 #define CHANNELS 2
@@ -132,7 +133,7 @@ struct PortlandWeather : Module {
 
 	const char* filterNames[5] = {"O","L","H","B","N"};
 	
-	//clouds::PitchShifter pitch_shifter_;
+	clouds::PitchShifter pitch_shifter_;
 	SchmittTrigger clockTrigger,pingPongTrigger,mutingTrigger[NUM_TAPS],stackingTrigger[NUM_TAPS];
 	float divisions[DIVISIONS] = {1/256.0,1/192.0,1/128.0,1/96.0,1/64.0,1/48.0,1/32.0,1/24.0,1/16.0,1/13.0,1/12.0,1/11.0,1/8.0,1/7.0,1/6.0,1/5.0,1/4.0,1/3.0,1/2.0,1/1.5,1};
 	const char* divisionNames[DIVISIONS] = {"/256","/192","/128","/96","/64","/48","/32","/24","/16","/13","/12","/11","/8","/7","/6","/5","/4","/3","/2","/1.5","x 1"};
@@ -144,13 +145,19 @@ struct PortlandWeather : Module {
 
 
 	MultiTapDoubleRingBuffer<float, HISTORY_SIZE,NUM_TAPS> historyBuffer[CHANNELS];
-	DoubleRingBuffer<float,MAX_GRAIN_SIZE> pitchShiftBuffer[MAX_GRAINS][NUM_TAPS+1][CHANNELS];
-	DoubleRingBuffer<float, 16> outBuffer[NUM_TAPS][CHANNELS];
+	//DoubleRingBuffer<float,MAX_GRAIN_SIZE> pitchShiftBuffer[MAX_GRAINS][NUM_TAPS+1][CHANNELS];
+	float pitchShiftBuffer[MAX_GRAIN_SIZE];
+	clouds::FloatFrame pitchShiftOut_[clouds::kMaxBlockSize];
+	DoubleRingBuffer<float, 32> outBuffer[NUM_TAPS][CHANNELS]; //Testing 32, was 16
 	SampleRateConverter<1> src;
 	float lastFeedback[CHANNELS] = {0.0f,0.0f};
 
 	float lerp(float v0, float v1, float t) {
 	  return (1 - t) * v0 + t * v1;
+	}
+
+	float SemitonesToRatio(float semiTone) {
+		return powf(2,semiTone/12.0f);
 	}
 
 	PortlandWeather() : Module(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS, NUM_LIGHTS) {
@@ -161,6 +168,8 @@ struct PortlandWeather : Module {
 			filterParams[i].setQ(5); 	
 	        filterParams[i].setFreq(T(800.0f / engineGetSampleRate()));
 	    }
+
+	    pitch_shifter_.Init(pitchShiftBuffer);
 	}
 
 	const char* tapNames[NUM_TAPS+2] {"1","2","3","4","5","6","7","8","9","10","11","12","13","14","15","16","ALL","EXT"};
@@ -267,9 +276,6 @@ void PortlandWeather::step() {
 		feedbackTap[channel] = (int)clamp(params[FEEDBACK_TAP_L_PARAM+channel].value + (inputs[FEEDBACK_TAP_L_INPUT+channel].value / 10.0f),0.0f,17.0);
 		float feedbackAmount = clamp(params[FEEDBACK_PARAM].value + (inputs[FEEDBACK_INPUT].value / 10.0f), 0.0f, 1.0f);
 		float feedbackInput = lastFeedback[channel];
-		if(inputs[FEEDBACK_L_RETURN+channel].active) {
-			feedbackInput = inputs[FEEDBACK_L_RETURN+channel].value;
-		}
 
 		float dry = in + feedbackInput * feedbackAmount;
 
@@ -292,8 +298,13 @@ void PortlandWeather::step() {
 				tapMuted[tap] = !tapMuted[tap];
 			}
 
+			float pitch_grain_size = 1.0f; //Can be between 0 and 1
+			float pitch = params[TAP_PITCH_SHIFT_PARAM].value + (inputs[TAP_PITCH_SHIFT_CV_INPUT].value*2.4f);
+			float detune = params[TAP_DETUNE_PARAM].value + (inputs[TAP_DETUNE_CV_INPUT].value*10.0f);
+			pitch += detune/100.0f; 
 
-			int inFrames = min(historyBuffer[channel].size(tap), 16);
+
+			int inFrames = min(historyBuffer[channel].size(tap), 32); //was 16, testing 32
 		
 
 			//Normally the delay tap is the same as the tap itself, unless it is stacked, then it is its neighbor;
@@ -317,9 +328,9 @@ void PortlandWeather::step() {
 			if (outBuffer[tap][channel].empty()) {
 				
 				double ratio = 1.0;
-				if (consume <= -16)
+				if (consume <= -32) //Testing 32, was 16
 					ratio = 0.5;
-				else if (consume >= 16)
+				else if (consume >= 32) //Testing 32, was 16
 					ratio = 2.0;
 
 				float inSR = engineGetSampleRate();
@@ -343,12 +354,11 @@ void PortlandWeather::step() {
 				wetTap = outBuffer[tap][channel].shift() * clamp(params[TAP_MIX_PARAM+tap].value + (inputs[TAP_MIX_CV_INPUT+tap].value / 10.0f),0.0f,1.0f) * pan;
 			}
 
-			//float size = 1.0f; //Need to determine permanent value
-			//float pitch = -12.0f; //Just for testing
 			//Apply Pitch Shifting
-		    //pitch_shifter_.set_ratio(SemitonesToRatio(pitch));
-		    //pitch_shifter_.set_size(size);
+		    pitch_shifter_.set_ratio(SemitonesToRatio(pitch));
+		    pitch_shifter_.set_size(pitch_grain_size);
 		    //pitch_shifter_.Process(out_, 32); //32 came from clouds - it is another "size"
+
 
 			int tapFilterType = (int)params[TAP_FILTER_TYPE_PARAM+tap].value;
 			// Apply Filter to tap wet output			
@@ -402,7 +412,7 @@ void PortlandWeather::step() {
 			
 
 		if(feedbackTap[channel] == NUM_TAPS) { //This would be the All  Taps setting
-			float feedbackScaling = 1.5f; // Trying to make full feedback not, well feedback
+			float feedbackScaling = 2.0f; // Trying to make full feedback not, well feedback
 			feedbackValue = wet * feedbackScaling / NUM_TAPS; 
 		}
 
@@ -420,7 +430,13 @@ void PortlandWeather::step() {
 		feedbackValue = highpassFilter[channel].highpass();
 
 
-		feedbackValue = clamp(feedbackValue,-5.0f,5.0f); // Let's keep things civil
+		outputs[FEEDBACK_L_OUTPUT+channel].value = feedbackValue;
+
+		if(inputs[FEEDBACK_L_RETURN+channel].active) {
+			feedbackValue = inputs[FEEDBACK_L_RETURN+channel].value;
+		}
+
+		//feedbackValue = clamp(feedbackValue,-5.0f,5.0f); // Let's keep things civil
 
 
 		int feedbackDestinationChannel = channel;
@@ -428,10 +444,9 @@ void PortlandWeather::step() {
 			feedbackDestinationChannel = 1 - channel;
 		}
 		lastFeedback[feedbackDestinationChannel] = feedbackValue;
-		outputs[FEEDBACK_L_OUTPUT+feedbackDestinationChannel].value = feedbackValue;
 
 		float mix = clamp(params[MIX_PARAM].value + inputs[MIX_INPUT].value / 10.0f, 0.0f, 1.0f);
-		float out = crossfade(in, wet, mix);
+		float out = crossfade(in, wet, mix);  // Not sure this should be wet
 		
 		outputs[OUT_L_OUTPUT + channel].value = out;
 	}

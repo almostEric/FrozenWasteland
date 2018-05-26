@@ -13,6 +13,7 @@ extern Model *modelDamianLillard;
 //extern Model *modelSpectralDelay;
 //extern Model *modelBleedingEdge;
 extern Model *modelEverlastingGlottalStopper;
+extern Model *modelHairPick;
 extern Model *modelLissajousLFO;
 extern Model *modelMrBlueSky;
 extern Model *modelTheOneRingModulator;

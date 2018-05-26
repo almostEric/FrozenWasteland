@@ -66,11 +66,13 @@ struct LowFrequencyOscillator {
 struct QuantussyCell : Module {
 	enum ParamIds {
 		FREQ_PARAM,
+		CV_ATTENUVERTER_PARAM,
 		NUM_PARAMS
 	};
 	enum InputIds {
 		CASTLE_INPUT,
 		CV_INPUT,
+		CV_AMOUNT_INPUT,
 		NUM_INPUTS
 	};
 	enum OutputIds {
@@ -131,7 +133,8 @@ void QuantussyCell::step() {
 	//Process CV
 	if (_cvTrigger.process(squareOutput)) {
 		if (inputs[CV_INPUT].active) {
-			_value2 = inputs[CV_INPUT].value;
+			float attenuverting = params[CV_ATTENUVERTER_PARAM].value + (inputs[CV_AMOUNT_INPUT].value / 10.0f);
+			_value2 = inputs[CV_INPUT].value * attenuverting;
 		}
 		else {
 			_value2 = 0; //Maybe at some point add a default noise source, but not for now
@@ -163,10 +166,12 @@ QuantussyCellWidget::QuantussyCellWidget(QuantussyCell *module) : ModuleWidget(m
 	addChild(Widget::create<ScrewSilver>(Vec(RACK_GRID_WIDTH - 12, RACK_GRID_HEIGHT - RACK_GRID_WIDTH)));
 	addChild(Widget::create<ScrewSilver>(Vec(box.size.x - 2 * RACK_GRID_WIDTH + 12, RACK_GRID_HEIGHT - RACK_GRID_WIDTH)));
 
-	addParam(ParamWidget::create<RoundBlackKnob>(Vec(30, 65), module, QuantussyCell::FREQ_PARAM, -3.0, 3.0, 0.0));
+	addParam(ParamWidget::create<RoundLargeBlackKnob>(Vec(28, 64), module, QuantussyCell::FREQ_PARAM, -3.0, 3.0, 0.0));
+	addParam(ParamWidget::create<RoundBlackKnob>(Vec(13, 182), module, QuantussyCell::CV_ATTENUVERTER_PARAM, -1.0, 1.0, 1.0));
 
 	addInput(Port::create<PJ301MPort>(Vec(35, 113), Port::INPUT, module, QuantussyCell::CASTLE_INPUT));
-	addInput(Port::create<PJ301MPort>(Vec(35, 205), Port::INPUT, module, QuantussyCell::CV_INPUT));
+	addInput(Port::create<PJ301MPort>(Vec(50, 205), Port::INPUT, module, QuantussyCell::CV_INPUT));
+	addInput(Port::create<PJ301MPort>(Vec(15, 213), Port::INPUT, module, QuantussyCell::CV_AMOUNT_INPUT));
 
 	addOutput(Port::create<PJ301MPort>(Vec(35, 160), Port::OUTPUT, module, QuantussyCell::CASTLE_OUTPUT));
 
