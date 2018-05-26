@@ -434,7 +434,7 @@ HairPickWidget::HairPickWidget(HairPick *module) : ModuleWidget(module) {
 	//addParam(ParamWidget::create<RoundLargeBlackKnob>(Vec(257, 40), module, HairPick::GRID_PARAM, 0.001f, 10.0f, 0.350f));
 
 	addParam(ParamWidget::create<RoundLargeBlackKnob>(Vec(17, 115), module, HairPick::PATTERN_TYPE_PARAM, 0.0f, 15.0f, 0.0f));
-	addParam(ParamWidget::create<RoundLargeBlackKnob>(Vec(157, 115), module, HairPick::NUMBER_TAPS_PARAM, 0.0f, 15.0f, 0.0f));
+	addParam(ParamWidget::create<RoundLargeBlackKnob>(Vec(157, 115), module, HairPick::NUMBER_TAPS_PARAM, 1.0f, 64.0f, 64.0f));
 
 	addParam(ParamWidget::create<RoundLargeBlackKnob>(Vec(17, 200), module, HairPick::EDGE_LEVEL_PARAM, 0.0f, 1.0f, 0.5f));
 	addParam(ParamWidget::create<RoundLargeBlackKnob>(Vec(87, 200), module, HairPick::TENT_LEVEL_PARAM, 0.0f, 1.0f, 0.5f));
