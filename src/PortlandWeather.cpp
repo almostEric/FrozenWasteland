@@ -41,7 +41,8 @@ struct PortlandWeather : Module {
 		TAP_Q_PARAM = TAP_FC_PARAM+NUM_TAPS,
 		TAP_PITCH_SHIFT_PARAM = TAP_Q_PARAM+NUM_TAPS,
 		TAP_DETUNE_PARAM = TAP_PITCH_SHIFT_PARAM+NUM_TAPS,
-		NUM_PARAMS = TAP_DETUNE_PARAM+NUM_TAPS
+		CLEAR_BUFFER_PARAM = TAP_DETUNE_PARAM+NUM_TAPS,
+		NUM_PARAMS
 	};
 	enum InputIds {
 		CLOCK_INPUT,
@@ -103,8 +104,8 @@ struct PortlandWeather : Module {
 		{1.0,2.0,4.0,5.0,6.0,8.0,10.0,12.0,12.5,13.0,13.5,14.0,14.5,15.0,15.5,16.0}, // Roller Coaster
 		{1.75,2.5,3.25,4.0,4.75,6.5,7.25,8.0,9.75,10.5,11.25,12.0,12.75,14.5,15.25,16.0}, // Quintuple
 		{0.25,0.75,1.0,1.25,4.0,5.5,7.25,7.5,8.0,8.25,10.0,11.0,13.5,15.0,15.75,16.0}, // Uniform Random 1
-		{0.25,2.0,3.0,4.0,5.0,6.0,7.0,8.0,9.0,10.0,11.0,12.0,13.0,14.0,15.0,16.0}, // Uniform Random 2
-		{1.0,2.0,3.0,4.0,5.0,6.0,7.0,8.0,9.0,10.0,11.0,12.0,13.0,14.0,15.0,16.0}, // Uniform Random 3
+		{0.25,4.75,5.25,5.5,7.0,8.0,8.5,8.75,9.0,9.25,11.75,12.75,13.0,13.25,14.75,15.5}, // Uniform Random 2
+		{0.75,2.0,2.25,5.75,7.25,7.5,7.75,8.5,8.75,12.5,12.75,13.0,13.75,14.0,14.5,16.0}, // Uniform Random 3
 		{0.25,0.5,1.0,1.25,1.75,2.0,2.5,3.5,4.25,4.5,4.75,5,6.25,8.25,11.0,16.0}, // Early Reflection
 		{7.0,7.25,9.0,9.25,10.25,12.5,13.0,13.75,14.0,15.0,15.25,15.5,15.75,16.0,16.0,16.0} // Late Reflection
 	};
@@ -134,7 +135,7 @@ struct PortlandWeather : Module {
 	const char* filterNames[5] = {"O","L","H","B","N"};
 	
 	clouds::PitchShifter pitch_shifter_;
-	SchmittTrigger clockTrigger,pingPongTrigger,mutingTrigger[NUM_TAPS],stackingTrigger[NUM_TAPS];
+	SchmittTrigger clockTrigger,pingPongTrigger,clearBufferTrigger,mutingTrigger[NUM_TAPS],stackingTrigger[NUM_TAPS];
 	float divisions[DIVISIONS] = {1/256.0,1/192.0,1/128.0,1/96.0,1/64.0,1/48.0,1/32.0,1/24.0,1/16.0,1/13.0,1/12.0,1/11.0,1/8.0,1/7.0,1/6.0,1/5.0,1/4.0,1/3.0,1/2.0,1/1.5,1};
 	const char* divisionNames[DIVISIONS] = {"/256","/192","/128","/96","/64","/48","/32","/24","/16","/13","/12","/11","/8","/7","/6","/5","/4","/3","/2","/1.5","x 1"};
 	int division;
@@ -169,7 +170,7 @@ struct PortlandWeather : Module {
 	        filterParams[i].setFreq(T(800.0f / engineGetSampleRate()));
 	    }
 
-	    //pitch_shifter_.Init(pitchShiftBuffer);
+	    pitch_shifter_.Init(pitchShiftBuffer);
 	}
 
 	const char* tapNames[NUM_TAPS+2] {"1","2","3","4","5","6","7","8","9","10","11","12","13","14","15","16","ALL","EXT"};
@@ -229,6 +230,14 @@ struct PortlandWeather : Module {
 
 void PortlandWeather::step() {
 
+
+	if (clearBufferTrigger.process(params[CLEAR_BUFFER_PARAM].value)) {
+		for(int i=0;i<CHANNELS;i++) {
+			historyBuffer[i].clear();
+		}
+	}
+
+
 	tapGroovePattern = (int)clamp(params[GROOVE_TYPE_PARAM].value + (inputs[GROOVE_TYPE_CV_INPUT].value / 10.0f),0.0f,15.0);
 	grooveAmount = clamp(params[GROOVE_AMOUNT_PARAM].value + (inputs[GROOVE_AMOUNT_CV_INPUT].value / 10.0f),0.0f,1.0f);
 
@@ -255,8 +264,8 @@ void PortlandWeather::step() {
 	if(inputs[CLOCK_INPUT].active) {
 		baseDelay = duration / divisions[division];
 	} else {
-		//float delay = clamp(params[TIME_PARAM].value + inputs[TIME_INPUT].value, 0.001f, 10.0f);
-		baseDelay = clamp(params[TIME_PARAM].value, 0.001f, 10.0f);			
+		baseDelay = clamp(params[TIME_PARAM].value + inputs[TIME_CV_INPUT].value, 0.001f, 10.0f);
+		//baseDelay = clamp(params[TIME_PARAM].value, 0.001f, 10.0f);			
 	}
 
 	if (pingPongTrigger.process(params[PING_PONG_PARAM].value)) {
@@ -341,7 +350,22 @@ void PortlandWeather::step() {
 		        src.process((const Frame<1>*)historyBuffer[channel].startData(tap), &inFrames, (Frame<1>*)outBuffer[tap][channel].endData(), &outFrames);
 		        outBuffer[tap][channel].endIncr(outFrames);
 		        historyBuffer[channel].startIncr(tap, inFrames);
+
+		        //TODO: Figure out how to load up the buffer - better yet, make pitch shifter not use float frames
+		        for(float i=0;i<clouds::kMaxBlockSize;i++) {
+		        	//pitchShiftOut_[i]->l = outBuffer[tap][channel].startData();
+		        }
+				//Apply Pitch Shifting
+			    pitch_shifter_.set_ratio(SemitonesToRatio(pitch));
+			    pitch_shifter_.set_size(pitch_grain_size);
+			    pitch_shifter_.Process(pitchShiftOut_, 32); //32 came from clouds - it is another "size"
+
+			    //TODO: Put back into outBuffer
 			}
+
+
+
+
 
 			float wetTap = 0.0f;
 			if (!outBuffer[tap][channel].empty()) {
@@ -354,10 +378,6 @@ void PortlandWeather::step() {
 				wetTap = outBuffer[tap][channel].shift() * clamp(params[TAP_MIX_PARAM+tap].value + (inputs[TAP_MIX_CV_INPUT+tap].value / 10.0f),0.0f,1.0f) * pan;
 			}
 
-			//Apply Pitch Shifting
-		    pitch_shifter_.set_ratio(SemitonesToRatio(pitch));
-		    pitch_shifter_.set_size(pitch_grain_size);
-		    //pitch_shifter_.Process(out_, 32); //32 came from clouds - it is another "size"
 
 
 			int tapFilterType = (int)params[TAP_FILTER_TYPE_PARAM+tap].value;
@@ -455,12 +475,13 @@ void PortlandWeather::step() {
 struct PWStatusDisplay : TransparentWidget {
 	PortlandWeather *module;
 	int frame = 0;
-	std::shared_ptr<Font> font;
+	std::shared_ptr<Font> fontNumbers,fontText;
 
 	
 
 	PWStatusDisplay() {
-		font = Font::load(assetPlugin(plugin, "res/fonts/01 Digit.ttf"));
+		fontNumbers = Font::load(assetPlugin(plugin, "res/fonts/01 Digit.ttf"));
+		fontText = Font::load(assetPlugin(plugin, "res/fonts/DejaVuSansMono.ttf"));
 	}
 
 	void drawProgress(NVGcontext *vg, float phase) 
@@ -482,7 +503,7 @@ struct PWStatusDisplay : TransparentWidget {
 
 	void drawDivision(NVGcontext *vg, Vec pos, int division) {
 		nvgFontSize(vg, 28);
-		nvgFontFaceId(vg, font->handle);
+		nvgFontFaceId(vg, fontNumbers->handle);
 		nvgTextLetterSpacing(vg, -2);
 
 		nvgFillColor(vg, nvgRGBA(0x00, 0xff, 0x00, 0xff));
@@ -493,7 +514,7 @@ struct PWStatusDisplay : TransparentWidget {
 
 	void drawDelayTime(NVGcontext *vg, Vec pos, float delayTime) {
 		nvgFontSize(vg, 28);
-		nvgFontFaceId(vg, font->handle);
+		nvgFontFaceId(vg, fontNumbers->handle);
 		nvgTextLetterSpacing(vg, -2);
 
 		nvgFillColor(vg, nvgRGBA(0x00, 0xff, 0x00, 0xff));
@@ -503,8 +524,8 @@ struct PWStatusDisplay : TransparentWidget {
 	}
 
 	void drawGrooveType(NVGcontext *vg, Vec pos, int grooveType) {
-		nvgFontSize(vg, 11);
-		nvgFontFaceId(vg, font->handle);
+		nvgFontSize(vg, 14);
+		nvgFontFaceId(vg, fontText->handle);
 		nvgTextLetterSpacing(vg, -2);
 
 		nvgFillColor(vg, nvgRGBA(0x00, 0xff, 0x00, 0xff));
@@ -515,7 +536,7 @@ struct PWStatusDisplay : TransparentWidget {
 
 	void drawFeedbackTaps(NVGcontext *vg, Vec pos, int *feedbackTaps) {
 		nvgFontSize(vg, 12);
-		nvgFontFaceId(vg, font->handle);
+		nvgFontFaceId(vg, fontNumbers->handle);
 		nvgTextLetterSpacing(vg, -2);
 
 		nvgFillColor(vg, nvgRGBA(0x00, 0x00, 0x00, 0xff));
@@ -527,8 +548,8 @@ struct PWStatusDisplay : TransparentWidget {
 	}
 
 	void drawFilterTypes(NVGcontext *vg, Vec pos, int *filterType) {
-		nvgFontSize(vg, 12);
-		nvgFontFaceId(vg, font->handle);
+		nvgFontSize(vg, 14);
+		nvgFontFaceId(vg, fontText->handle);
 		nvgTextLetterSpacing(vg, -2);
 
 		nvgFillColor(vg, nvgRGBA(0x00, 0x00, 0x00, 0xff));
@@ -580,7 +601,7 @@ PortlandWeatherWidget::PortlandWeatherWidget(PortlandWeather *module) : ModuleWi
 	}
 
 	addParam(ParamWidget::create<RoundLargeBlackKnob>(Vec(57, 40), module, PortlandWeather::CLOCK_DIV_PARAM, 0, DIVISIONS-1, 0));
-	addParam(ParamWidget::create<RoundLargeBlackKnob>(Vec(257, 40), module, PortlandWeather::TIME_PARAM, 0.001f, 10.0f, 0.350f));
+	addParam(ParamWidget::create<RoundLargeBlackKnob>(Vec(257, 40), module, PortlandWeather::TIME_PARAM, 0.0f, 10.0f, 0.350f));
 	//addParam(ParamWidget::create<RoundLargeBlackKnob>(Vec(257, 40), module, PortlandWeather::GRID_PARAM, 0.001f, 10.0f, 0.350f));
 
 	addParam(ParamWidget::create<RoundLargeBlackKnob>(Vec(57, 110), module, PortlandWeather::GROOVE_TYPE_PARAM, 0.0f, 15.0f, 0.0f));
@@ -591,6 +612,8 @@ PortlandWeatherWidget::PortlandWeatherWidget(PortlandWeather *module) : ModuleWi
 	addParam(ParamWidget::create<RoundLargeBlackKnob>(Vec(257, 180), module, PortlandWeather::FEEDBACK_TAP_R_PARAM, 0.0f, 17.0f, 15.0f));
 	addParam(ParamWidget::create<RoundLargeBlackKnob>(Vec(357, 180), module, PortlandWeather::FEEDBACK_TONE_PARAM, 0.0f, 5, 0.0f));
 	addParam( ParamWidget::create<LEDButton>(Vec(470,185), module, PortlandWeather::PING_PONG_PARAM, 0.0f, 1.0f, 0.0f));
+
+	addParam(ParamWidget::create<CKD6>(Vec(552, 40), module, PortlandWeather::CLEAR_BUFFER_PARAM, 0.0f, 1.0f, 0.0f));
 
 	addChild(ModuleLightWidget::create<MediumLight<BlueLight>>(Vec(474, 189), module, PortlandWeather::PING_PONG_LIGHT));
 
