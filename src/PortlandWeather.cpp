@@ -307,8 +307,8 @@ void PortlandWeather::step() {
 				tapMuted[tap] = !tapMuted[tap];
 			}
 
-			float pitch_grain_size = 1.0f; //Can be between 0 and 1
-			float pitch = params[TAP_PITCH_SHIFT_PARAM].value + (inputs[TAP_PITCH_SHIFT_CV_INPUT].value*2.4f);
+			float pitch_grain_size = 0.5f; //Can be between 0 and 1
+			float pitch = floor(params[TAP_PITCH_SHIFT_PARAM].value + (inputs[TAP_PITCH_SHIFT_CV_INPUT].value*2.4f));
 			float detune = params[TAP_DETUNE_PARAM].value + (inputs[TAP_DETUNE_CV_INPUT].value*10.0f);
 			pitch += detune/100.0f; 
 
@@ -352,8 +352,14 @@ void PortlandWeather::step() {
 		        historyBuffer[channel].startIncr(tap, inFrames);
 
 		        //TODO: Figure out how to load up the buffer - better yet, make pitch shifter not use float frames
-		        for(float i=0;i<clouds::kMaxBlockSize;i++) {
-		        	//pitchShiftOut_[i]->l = outBuffer[tap][channel].startData();
+		        for(int i=0;i<(int)clouds::kMaxBlockSize;i++) {	
+		        	//Totally lame :)
+		        	if(channel == 0) {
+		        		pitchShiftOut_[i].l = outBuffer[tap][channel].shift();
+		        	}
+		        	else {
+		        		pitchShiftOut_[i].r = outBuffer[tap][channel].shift();
+		        	}							        	
 		        }
 				//Apply Pitch Shifting
 			    pitch_shifter_.set_ratio(SemitonesToRatio(pitch));
@@ -361,6 +367,12 @@ void PortlandWeather::step() {
 			    pitch_shifter_.Process(pitchShiftOut_, 32); //32 came from clouds - it is another "size"
 
 			    //TODO: Put back into outBuffer
+		        for(int i=0;i<(int)clouds::kMaxBlockSize;i++) {	
+		        	if(channel == 0)
+		        		outBuffer[tap][channel].push(pitchShiftOut_[i].l);		        	
+		        	else 
+			        	outBuffer[tap][channel].push(pitchShiftOut_[i].r);		        	
+		        }
 			}
 
 
