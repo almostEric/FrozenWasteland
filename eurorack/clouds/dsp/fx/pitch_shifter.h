@@ -61,7 +61,7 @@ class PitchShifter {
   void Process(FloatFrame* input_output) {
     typedef E::Reserve<2047, E::Reserve<2047> > Memory;
     E::DelayLine<Memory, 0> left;
-    E::DelayLine<Memory, 1> right;
+    //E::DelayLine<Memory, 1> right;
     E::Context c;
     engine_.Start(&c);
     
@@ -85,11 +85,11 @@ class PitchShifter {
     c.Interpolate(left, half, 1.0f - tri);
     c.Write(input_output->l, 0.0f);
 
-    c.Read(input_output->r, 1.0f);
-    c.Write(right, 0.0f);
-    c.Interpolate(right, phase, tri);
-    c.Interpolate(right, half, 1.0f - tri);
-    c.Write(input_output->r, 0.0f);
+    //c.Read(input_output->r, 1.0f);
+    //c.Write(right, 0.0f);
+    //c.Interpolate(right, phase, tri);
+    //c.Interpolate(right, half, 1.0f - tri);
+    //c.Write(input_output->r, 0.0f);
   }
   
   inline void set_ratio(float ratio) {
