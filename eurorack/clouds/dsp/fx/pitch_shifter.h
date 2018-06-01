@@ -51,14 +51,14 @@ class PitchShifter {
     engine_.Clear();
   }
 
-  inline void Process(FloatFrame* input_output, size_t size) {
-    while (size--) {
-      Process(input_output);
-      ++input_output;
-    }
-  }
+  //inline void Process(FloatFrame* input_output, size_t size) {
+  //  while (size--) {
+  //    Process(input_output);
+  //    ++input_output;
+  //  }
+  //}
   
-  void Process(FloatFrame* input_output) {
+  void Process(FloatFrame* input_output,bool useTriangleWindow) {
     typedef E::Reserve<2047, E::Reserve<2047> > Memory;
     E::DelayLine<Memory, 0> grain;
     E::Context c;
@@ -71,7 +71,10 @@ class PitchShifter {
     if (phase_ <= 0.0f) {
       phase_ += 1.0f;
     }
-    float tri = 2.0f * (phase_ >= 0.5f ? 1.0f - phase_ : phase_);
+    float tri = 1.0f;
+    if(useTriangleWindow) {
+      tri = 2.0f * (phase_ >= 0.5f ? 1.0f - phase_ : phase_);
+    }
     float phase = phase_ * size_;
     float half = phase + size_ * 0.5f;
     if (half >= size_) {
