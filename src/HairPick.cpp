@@ -278,6 +278,7 @@ void HairPick::step() {
 			wet += wetTap;
 		}
 
+		wet = wet / ((float)tapCount) * sqrt((float)tapCount);
 
 		float feedbackWeight = 0.5;
 		switch(feedbackType) {

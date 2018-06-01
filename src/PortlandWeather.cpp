@@ -330,6 +330,7 @@ void PortlandWeather::step() {
 
 		float wet = 0.0f; // This is the mix of delays and input that is outputed
 		float feedbackValue = 0.0f; // This is the output of a tap that gets sent back to input
+		float activeTapCount = 0.0f; // This will be used to normalize output
 		for(int tap = 0; tap <= NUM_TAPS;tap++) { 
 
 			// Stacking
@@ -337,7 +338,8 @@ void PortlandWeather::step() {
 				tapStacked[tap] = !tapStacked[tap];
 			}
 
-			float pitch_grain_size = 1.0f; //Can be between 0 and 1
+			//float pitch_grain_size = 1.0f; //Can be between 0 and 1
+			float pitch_grain_size = params[GRAIN_SIZE_PARAM].value; //Can be between 0 and 1
 			float pitch,detune;
 			if (tap < NUM_TAPS) {
 				pitch = floor(params[TAP_PITCH_SHIFT_PARAM+tap].value + (inputs[TAP_PITCH_SHIFT_CV_INPUT+tap].value*2.4f));
@@ -441,6 +443,9 @@ void PortlandWeather::step() {
 				// Muting
 				if (mutingTrigger[tap].process(params[TAP_MUTE_PARAM+tap].value + inputs[TAP_MUTE_CV_INPUT+tap].value)) {
 					tapMuted[tap] = !tapMuted[tap];
+					if(!tapMuted[tap]) {
+						activeTapCount +=1.0f;
+					}
 				}
 
 				float pan = 0.0f;
@@ -500,11 +505,14 @@ void PortlandWeather::step() {
 				feedbackValue = wetTap;
 			}
 		}
-			
+		
+		activeTapCount = 16.0f;
+		wet = wet / activeTapCount * sqrt(activeTapCount);	
 
 		if(feedbackTap[channel] == NUM_TAPS) { //This would be the All  Taps setting
-			float feedbackScaling = 4.0f; // Trying to make full feedback not, well feedback
-			feedbackValue = wet * feedbackScaling / NUM_TAPS; 
+			//float feedbackScaling = 4.0f; // Trying to make full feedback not, well feedback
+			//feedbackValue = wet * feedbackScaling / NUM_TAPS; 
+			feedbackValue = wet; 
 		}
 
 			
@@ -748,7 +756,8 @@ PortlandWeatherWidget::PortlandWeatherWidget(PortlandWeather *module) : ModuleWi
 	addParam(ParamWidget::create<RoundBlackKnob>(Vec(642, 180), module, PortlandWeather::FEEDBACK_R_DETUNE_PARAM, -99.0f, 99.0f, 0.0f));
 
 	addParam(ParamWidget::create<RoundBlackKnob>(Vec(766, 40), module, PortlandWeather::GRAIN_QUANTITY_PARAM, 1, 4, 1));
-	addParam(ParamWidget::create<RoundBlackKnob>(Vec(766, 110), module, PortlandWeather::GRAIN_SIZE_PARAM, 8, 11, 11));
+	//addParam(ParamWidget::create<RoundBlackKnob>(Vec(766, 110), module, PortlandWeather::GRAIN_SIZE_PARAM, 8, 11, 11));
+	addParam(ParamWidget::create<RoundBlackKnob>(Vec(766, 110), module, PortlandWeather::GRAIN_SIZE_PARAM, 0.0f, 1.0f, 1.0f));
 	
 
 	addParam(ParamWidget::create<CKD6>(Vec(766, 180), module, PortlandWeather::CLEAR_BUFFER_PARAM, 0.0f, 1.0f, 0.0f));

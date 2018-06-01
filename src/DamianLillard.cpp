@@ -115,7 +115,7 @@ void DamianLillard::step() {
 		}
 	}
 
-	outputs[MIX_OUTPUT].value = out / 4.0;
+	outputs[MIX_OUTPUT].value = out / 2.0; 
 	
 }
 
