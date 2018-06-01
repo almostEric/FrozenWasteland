@@ -36,6 +36,19 @@ A collection of unusual plugins that will add a certain coolness to your patches
 - Can be a bit fussy to create harmonically "rich" waves, but playing with the "Closed" setting can find some sweet spots
 - Use the Noise parameter to add a "breathy" quality to wave
 
+## Hair Pick
+![Hair Pick](./doc/hp.png)
+- Based on the comb filter section of Intellijel/Cylonix Rainmaker
+- Best bet is to refer to this: https://intellijel.com/wp-content/uploads/2016/01/rainmaker_manual-v109.pdf
+- Comb filter size is either based on Clock & Division or Size Parameter - patching a clock in disables Size knob
+- V/Oct works using either method
+- The Size CV can change size +/- 10% using both Clock or Size
+- There are 16 comb patterns, the last 8 are randomly perturbed versions of the first 8
+- The Tap count can vary the number of taps between 1 and 64. They are deactivated in a pattern shown in the rainmaker manual
+- The Edge Level, Tent Level and Tent Tap control the overall volume of the taps.
+- Feedback Type can add non-linearity and exponential decay. Clarinet mode is same as guitar for now.
+- The size out allows the comb's length to control other modules (say the feedback delay time in Portland Weather)
+
 ## Lissajou LFO.
 
 ![Lissajou LFO](./doc/llfo.png)
@@ -98,6 +111,28 @@ A collection of unusual plugins that will add a certain coolness to your patches
 - The **LPF OUT** is normalled to the **VCO CV**, try patching something in between the two
 - Two comparator modes: XOR and D type Flip Flop
 - Does not make pretty sounds, but can be a lot of fun.
+
+## Portland Weather
+![Portland Weather](./doc/pw.png)
+- Based on the rhythmic tap delay section of Intellijel/Cylonix Rainmaker
+
+### This is a crazy deep module and is best just to play with. 
+### Since it is a "rhythmic" delay, short duration or percussive sounds generally work best
+
+- Best bet is to refer to this: https://intellijel.com/wp-content/uploads/2016/01/rainmaker_manual-v109.pdf
+- Delay time is either based on Clock & Division or Size Parameter - patching a clock in disables Size knob
+- There are 16 delay groove patterns. The groove amount balances the delay time between the groove or straight time
+- Stacking a tap makes the tap use the delay time of its neighbor to right. If multiple taps are stacked the right most tap controls time
+- Stacking is useful for making chords
+- Each tap has its own level, pan, filter type, cutoff, Q, pitch shift and pitch detune control
+- The left and right channels can independently use a tap # to determine where feedback comes from (the feedback bypasses the filter and pitchshifting)
+- The feedback slip controls allow the feedback to be ahead/behind the tap time for dragging effects, etc.
+- If feedback tap is set to All, the mix of all 16 taps is fed back (use cautiously)
+- If feedback tap is set to Ext, the feedback time input is used. Useful for sycing with say, the Hair Pick
+- The Grain Number and Grain Size control how the all the pitch shifters work. "RAW" is uses one grain sample but without the a triangle window
+- Ping Pong feeds the L feedback into the right channel and vise versa
+- FB Send and Returns allow you to insert FX into the feedback loop
+
 
 ## Quad Euclidean Rhythm
 

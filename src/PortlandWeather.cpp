@@ -107,14 +107,14 @@ struct PortlandWeather : Module {
 		FILTER_NOTCH
 	};
 
-	const char* grooveNames[NUM_GROOVES] = {"Straight","Swing","Hard Swing","Reverse Swing","Alternate Swing","Accellerando","Ritardando","Waltz Time","Half Swing","Roller Coaster","Quintuple","Random 1","Random 2","Random 3","Early Reflection","Late Reflection"};
+	const char* grooveNames[NUM_GROOVES] = {"Straight","Swing","Hard Swing","Reverse Swing","Alternate Swing","Accelerando","Ritardando","Waltz Time","Half Swing","Roller Coaster","Quintuple","Random 1","Random 2","Random 3","Early Reflection","Late Reflection"};
 	const float tapGroovePatterns[NUM_GROOVES][NUM_TAPS] = {
 		{1.0f,2.0f,3.0,4.0,5.0,6.0,7.0,8.0,9.0,10.0,11.0,12.0,13.0,14.0,15.0,16.0f}, // Straight time
 		{1.25,2.0,3.25,4.0,5.25,6.0,7.25,8.0,9.25,10.0,11.25,12.0,13.25,14.0,15.25,16.0}, // Swing
 		{1.75,2.0,3.75,4.0,5.75,6.0,7.75,8.0,9.75,10.0,11.75,12.0,13.75,14.0,15.75,16.0}, // Hard Swing
 		{0.75,2.0,2.75,4.0,4.75,6.0,6.75,8.0,8.75,10.0,10.75,12.0,12.75,14.0,14.75,16.0}, // Reverse Swing
 		{1.25,2.0,3.0,4.0,5.25,6.0,7.0,8.0,9.25,10.0,11.0,12.0,13.25,14.0,15.0,16.0}, // Alternate Swing
-		{3.0,5.0,7.0,9.0,10.0,11.0,12.0,13.0,13.5,14.0,14.5,15.0,15.25,15.5,15.75,16.0}, // Accellerando
+		{3.0,5.0,7.0,9.0,10.0,11.0,12.0,13.0,13.5,14.0,14.5,15.0,15.25,15.5,15.75,16.0}, // Accelerando
 		{0.25,0.5,0.75,1.0,1.5,2.0,2.5,3.0,4.0,5.0,6.0,7.0,9.0,11.0,13.0,16.0}, // Ritardando
 		{1.25,2.75,3.25,4.0,5.25,6.75,7.25,8.0,9.25,10.75,11.25,12.0,13.25,14.75,15.25,16.0}, // Waltz Time
 		{1.5,2.0,3.5,4.0,5.0,6.0,7.0,8.0,9.5,10.0,11.5,12.0,13.0,14.0,15.0,16.0}, // Half Swing
@@ -134,6 +134,7 @@ struct PortlandWeather : Module {
 	float grooveAmount = 1.0f;
 
 	bool pingPong = false;
+	int grainNumbers;
 	bool tapMuted[NUM_TAPS];
 	bool tapStacked[NUM_TAPS];
 	int lastFilterType[NUM_TAPS];
@@ -208,6 +209,7 @@ struct PortlandWeather : Module {
 	}
 
 	const char* tapNames[NUM_TAPS+2] {"1","2","3","4","5","6","7","8","9","10","11","12","13","14","15","16","ALL","EXT"};
+	const char* grainNames[MAX_GRAINS] {"1","2","4","Raw"};
 
 
 	json_t *toJson() override {
@@ -306,7 +308,7 @@ void PortlandWeather::step() {
 		pingPong = !pingPong;
 	}
 	lights[PING_PONG_LIGHT].value = pingPong;
-
+	grainNumbers = (int)params[GRAIN_QUANTITY_PARAM].value;
 
 	for(int channel = 0;channel < CHANNELS;channel++) {
 		// Get input to delay block
@@ -422,13 +424,14 @@ void PortlandWeather::step() {
 				    pitch_shifter_[tap][channel][k].set_size(pitch_grain_size);
 
 				    //TODO: Put back into outBuffer
-				    pitch_shifter_[tap][channel][k].Process(&pitchShiftOut_); 
+				    bool useTriangleWindow = grainNumbers != 4;
+				    pitch_shifter_[tap][channel][k].Process(&pitchShiftOut_,useTriangleWindow); 
 				    if(k == 0) {
 				    	wetTap +=pitchShiftOut_.l; //First one always use
-				    } else if (k == 2 && params[GRAIN_QUANTITY_PARAM].value >= 2) {
+				    } else if (k == 2 && grainNumbers >= 2) {
 				    	wetTap +=pitchShiftOut_.l; //Use middle grain for 2
 				    	grainVolumeScaling = 1.414;
-				    } else if (k != 2 && params[GRAIN_QUANTITY_PARAM].value > 2) {
+				    } else if (k != 2 && grainNumbers == 3) {
 				    	wetTap +=pitchShiftOut_.l; //Use them all
 				    	grainVolumeScaling = 2;
 				    }
@@ -506,8 +509,8 @@ void PortlandWeather::step() {
 			}
 		}
 		
-		activeTapCount = 16.0f;
-		wet = wet / activeTapCount * sqrt(activeTapCount);	
+		//activeTapCount = 16.0f;
+		//wet = wet / activeTapCount * sqrt(activeTapCount);	
 
 		if(feedbackTap[channel] == NUM_TAPS) { //This would be the All  Taps setting
 			//float feedbackScaling = 4.0f; // Trying to make full feedback not, well feedback
@@ -692,6 +695,17 @@ struct PWStatusDisplay : TransparentWidget {
 		}
 	}
 
+	void drawGrainNumbers(NVGcontext *vg, Vec pos, int grainNumbers) {
+		nvgFontSize(vg, 12);
+		nvgFontFaceId(vg, fontNumbers->handle);
+		nvgTextLetterSpacing(vg, -2);
+
+		nvgFillColor(vg, nvgRGBA(0x00, 0x00, 0x00, 0xff));
+		char text[128];
+		snprintf(text, sizeof(text), "%s", module->grainNames[grainNumbers-1]);
+		nvgText(vg, pos.x, pos.y, text, NULL);
+	}
+
 	void draw(NVGcontext *vg) override {
 		
 		//drawProgress(vg,module->oscillator.progress());
@@ -704,6 +718,7 @@ struct PWStatusDisplay : TransparentWidget {
 		drawFilterTypes(vg, Vec(80,420), module->lastFilterType);
 		drawTapPitchShift(vg, Vec(78,585), module->tapPitchShift);
 		drawTapDetune(vg, Vec(78,645), module->tapDetune);
+		drawGrainNumbers(vg, Vec(800,60), module->grainNumbers);
 	}
 };
 
@@ -744,7 +759,7 @@ PortlandWeatherWidget::PortlandWeatherWidget(PortlandWeather *module) : ModuleWi
 	addParam(ParamWidget::create<RoundLargeBlackKnob>(Vec(257, 110), module, PortlandWeather::GROOVE_AMOUNT_PARAM, 0.0f, 1.0f, 1.0f));
 
 	addParam(ParamWidget::create<RoundLargeBlackKnob>(Vec(57, 180), module, PortlandWeather::FEEDBACK_PARAM, 0.0f, 1.0f, 0.0f));
-	addParam(ParamWidget::create<RoundBlackKnob>(Vec(157, 180), module, PortlandWeather::FEEDBACK_TONE_PARAM, 0.0f, 5, 0.0f));
+	addParam(ParamWidget::create<RoundBlackKnob>(Vec(157, 180), module, PortlandWeather::FEEDBACK_TONE_PARAM, 0.0f, 1.0f, 0.5f));
 
 	addParam(ParamWidget::create<RoundBlackKnob>(Vec(500, 30), module, PortlandWeather::FEEDBACK_TAP_L_PARAM, 0.0f, 17.0f, 15.0f));
 	addParam(ParamWidget::create<RoundBlackKnob>(Vec(642, 30), module, PortlandWeather::FEEDBACK_TAP_R_PARAM, 0.0f, 17.0f, 15.0f));
