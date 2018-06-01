@@ -41,9 +41,9 @@ class PitchShifter {
   PitchShifter() { }
   ~PitchShifter() { }
   
-  void Init(float* buffer) {
+  void Init(float* buffer,float initialPhase) {
     engine_.Init(buffer);
-    phase_ = 0;
+    phase_ = initialPhase;
     size_ = 2047.0f;
   }
   
@@ -60,8 +60,7 @@ class PitchShifter {
   
   void Process(FloatFrame* input_output) {
     typedef E::Reserve<2047, E::Reserve<2047> > Memory;
-    E::DelayLine<Memory, 0> left;
-    //E::DelayLine<Memory, 1> right;
+    E::DelayLine<Memory, 0> grain;
     E::Context c;
     engine_.Start(&c);
     
@@ -80,16 +79,10 @@ class PitchShifter {
     }
     
     c.Read(input_output->l, 1.0f);
-    c.Write(left, 0.0f);
-    c.Interpolate(left, phase, tri);
-    c.Interpolate(left, half, 1.0f - tri);
-    c.Write(input_output->l, 0.0f);
-
-    //c.Read(input_output->r, 1.0f);
-    //c.Write(right, 0.0f);
-    //c.Interpolate(right, phase, tri);
-    //c.Interpolate(right, half, 1.0f - tri);
-    //c.Write(input_output->r, 0.0f);
+    c.Write(grain, 0.0f);
+    c.Interpolate(grain, phase, tri);
+    c.Interpolate(grain, half, 1.0f - tri);
+    c.Write(input_output->l, 0.0f);    
   }
   
   inline void set_ratio(float ratio) {

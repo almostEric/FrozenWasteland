@@ -9,7 +9,7 @@
 #include <iostream>
 
 #define HISTORY_SIZE (1<<22)
-#define MAX_GRAIN_SIZE (1<<15)
+#define MAX_GRAIN_SIZE (1<<16)
 #define NUM_TAPS 16
 #define MAX_GRAINS 4
 #define CHANNELS 2
@@ -56,6 +56,7 @@ struct PortlandWeather : Module {
 		CLOCK_INPUT,
 		CLOCK_DIVISION_CV_INPUT,
 		TIME_CV_INPUT,
+		EXTERNAL_DELAY_TIME_INPUT,
 		GRID_CV_INPUT,
 		GROOVE_TYPE_CV_INPUT,
 		GROOVE_AMOUNT_CV_INPUT,
@@ -72,7 +73,9 @@ struct PortlandWeather : Module {
 		FEEDBACK_L_RETURN,
 		FEEDBACK_R_RETURN,
 		MIX_INPUT,
-		TAP_MIX_CV_INPUT,
+		TAP_MUTE_CV_INPUT,
+		TAP_STACK_CV_INPUT = TAP_MUTE_CV_INPUT + NUM_TAPS,
+		TAP_MIX_CV_INPUT = TAP_STACK_CV_INPUT + NUM_TAPS,
 		TAP_PAN_CV_INPUT = TAP_MIX_CV_INPUT + NUM_TAPS,
 		TAP_FC_CV_INPUT = TAP_PAN_CV_INPUT + NUM_TAPS,
 		TAP_Q_CV_INPUT = TAP_FC_CV_INPUT + NUM_TAPS,
@@ -151,7 +154,7 @@ struct PortlandWeather : Module {
 
 	const char* filterNames[5] = {"O","L","H","B","N"};
 	
-	clouds::PitchShifter pitch_shifter_[NUM_TAPS+1][CHANNELS];
+	clouds::PitchShifter pitch_shifter_[NUM_TAPS+1][CHANNELS][MAX_GRAINS];
 	SchmittTrigger clockTrigger,pingPongTrigger,clearBufferTrigger,mutingTrigger[NUM_TAPS],stackingTrigger[NUM_TAPS];
 	float divisions[DIVISIONS] = {1/256.0,1/192.0,1/128.0,1/96.0,1/64.0,1/48.0,1/32.0,1/24.0,1/16.0,1/13.0,1/12.0,1/11.0,1/8.0,1/7.0,1/6.0,1/5.0,1/4.0,1/3.0,1/2.0,1/1.5,1};
 	const char* divisionNames[DIVISIONS] = {"/256","/192","/128","/96","/64","/48","/32","/24","/16","/13","/12","/11","/8","/7","/6","/5","/4","/3","/2","/1.5","x 1"};
@@ -164,7 +167,7 @@ struct PortlandWeather : Module {
 
 	MultiTapDoubleRingBuffer<float, HISTORY_SIZE,NUM_TAPS+1> historyBuffer[CHANNELS];
 	//DoubleRingBuffer<float,MAX_GRAIN_SIZE> pitchShiftBuffer[MAX_GRAINS][NUM_TAPS+1][CHANNELS];
-	float pitchShiftBuffer[NUM_TAPS+1][CHANNELS][MAX_GRAIN_SIZE];
+	float pitchShiftBuffer[NUM_TAPS+1][CHANNELS][MAX_GRAINS][MAX_GRAIN_SIZE];
 	clouds::FloatFrame pitchShiftOut_;
 	DoubleRingBuffer<float, 16> outBuffer[NUM_TAPS+1][CHANNELS]; 
 	SampleRateConverter<1> src;
@@ -189,11 +192,19 @@ struct PortlandWeather : Module {
 	        filterParams[i].setFreq(T(800.0f / engineGetSampleRate()));
 
 	        for(int j=0;j < CHANNELS;j++) {
-	    	    pitch_shifter_[i][j].Init(pitchShiftBuffer[i][j]);
+	        	for(int k=0;k<MAX_GRAINS;k++) {
+	    	 	   pitch_shifter_[i][j][k].Init(pitchShiftBuffer[i][j][k],k*0.25f);
+	    		}
 	    	}
 	    }
-		pitch_shifter_[NUM_TAPS][0].Init(pitchShiftBuffer[NUM_TAPS][0]);
-		pitch_shifter_[NUM_TAPS][1].Init(pitchShiftBuffer[NUM_TAPS][1]);
+
+	    //Initialize the feedback pitch shifters
+        for(int j=0;j < CHANNELS;j++) {
+        	for(int k=0;k<MAX_GRAINS;k++) {
+    	 	   pitch_shifter_[NUM_TAPS][j][k].Init(pitchShiftBuffer[NUM_TAPS][j][k],k*0.25f);
+    		}
+    	}
+
 	}
 
 	const char* tapNames[NUM_TAPS+2] {"1","2","3","4","5","6","7","8","9","10","11","12","13","14","15","16","ALL","EXT"};
@@ -322,7 +333,7 @@ void PortlandWeather::step() {
 		for(int tap = 0; tap <= NUM_TAPS;tap++) { 
 
 			// Stacking
-			if (tap < NUM_TAPS -1 && stackingTrigger[tap].process(params[TAP_STACKED_PARAM+tap].value)) {
+			if (tap < NUM_TAPS -1 && stackingTrigger[tap].process(params[TAP_STACKED_PARAM+tap].value + inputs[TAP_STACK_CV_INPUT+tap].value)) {
 				tapStacked[tap] = !tapStacked[tap];
 			}
 
@@ -352,12 +363,21 @@ void PortlandWeather::step() {
 			while(delayTap < NUM_TAPS && tapStacked[delayTap]) {
 				delayTap++;			
 			}
+			//Pull feedback off of normal tap time
 			if(tap == NUM_TAPS && feedbackTap[channel] < NUM_TAPS) {
 				delayTap = feedbackTap[channel];
 				delayMod = feedbackSlip[channel] * baseDelay;
 			}
+
 			// Compute delay time in seconds
 			float delay = baseDelay * lerp(tapGroovePatterns[0][delayTap],tapGroovePatterns[tapGroovePattern][delayTap],grooveAmount); //Balance between straight time and groove
+
+			//External feedback time
+			if(tap == NUM_TAPS && feedbackTap[channel] == NUM_TAPS+1) {
+				delay = clamp(inputs[EXTERNAL_DELAY_TIME_INPUT].value, 0.001f, 10.0f);
+			}
+
+
 			if(inputs[TIME_CV_INPUT].active) { //The CV can change either clocked or set delay by 10MS
 				delayMod += (0.001f * inputs[TIME_CV_INPUT].value); 
 			}
@@ -390,16 +410,28 @@ void PortlandWeather::step() {
 
 			float wetTap = 0.0f;	
 			if (!outBuffer[tap][channel].empty()) {
-									
-        		pitchShiftOut_.l = outBuffer[tap][channel].shift();
-				//Apply Pitch Shifting
-			    pitch_shifter_[tap][channel].set_ratio(SemitonesToRatio(pitch));
-			    //pitch_shifter_[tap][channel].set_ratio(1.0f);
-			    pitch_shifter_[tap][channel].set_size(pitch_grain_size);
+				float initialOutput = outBuffer[tap][channel].shift();
 
-			    //TODO: Put back into outBuffer
-			    pitch_shifter_[tap][channel].Process(&pitchShiftOut_); 
-        		wetTap = pitchShiftOut_.l;		        	
+				float grainVolumeScaling = 1;
+				for(int k=0;k<MAX_GRAINS;k++) {
+	        		pitchShiftOut_.l = initialOutput;
+					//Apply Pitch Shifting
+				    pitch_shifter_[tap][channel][k].set_ratio(SemitonesToRatio(pitch));
+				    pitch_shifter_[tap][channel][k].set_size(pitch_grain_size);
+
+				    //TODO: Put back into outBuffer
+				    pitch_shifter_[tap][channel][k].Process(&pitchShiftOut_); 
+				    if(k == 0) {
+				    	wetTap +=pitchShiftOut_.l; //First one always use
+				    } else if (k == 2 && params[GRAIN_QUANTITY_PARAM].value >= 2) {
+				    	wetTap +=pitchShiftOut_.l; //Use middle grain for 2
+				    	grainVolumeScaling = 1.414;
+				    } else if (k != 2 && params[GRAIN_QUANTITY_PARAM].value > 2) {
+				    	wetTap +=pitchShiftOut_.l; //Use them all
+				    	grainVolumeScaling = 2;
+				    }
+				}
+        		wetTap = wetTap / grainVolumeScaling;		        	
 	        	 
 			}
 
@@ -407,7 +439,7 @@ void PortlandWeather::step() {
         	if(tap < NUM_TAPS) {
 
 				// Muting
-				if (mutingTrigger[tap].process(params[TAP_MUTE_PARAM+tap].value)) {
+				if (mutingTrigger[tap].process(params[TAP_MUTE_PARAM+tap].value + inputs[TAP_MUTE_CV_INPUT+tap].value)) {
 					tapMuted[tap] = !tapMuted[tap];
 				}
 
@@ -471,7 +503,7 @@ void PortlandWeather::step() {
 			
 
 		if(feedbackTap[channel] == NUM_TAPS) { //This would be the All  Taps setting
-			float feedbackScaling = 2.0f; // Trying to make full feedback not, well feedback
+			float feedbackScaling = 4.0f; // Trying to make full feedback not, well feedback
 			feedbackValue = wet * feedbackScaling / NUM_TAPS; 
 		}
 
@@ -582,7 +614,7 @@ struct PWStatusDisplay : TransparentWidget {
 		for(int i=0;i<CHANNELS;i++) {
 			char text[128];
 			snprintf(text, sizeof(text), "%s", module->tapNames[feedbackTaps[i]]);
-			nvgText(vg, pos.x + i*100, pos.y, text, NULL);
+			nvgText(vg, pos.x + i*142, pos.y, text, NULL);
 		}
 	}
 
@@ -595,7 +627,7 @@ struct PWStatusDisplay : TransparentWidget {
 		for(int i=0;i<CHANNELS;i++) {
 			char text[128];
 			snprintf(text, sizeof(text), "%-2.0f", feedbackPitch[i]);
-			nvgText(vg, pos.x + i*100, pos.y, text, NULL);
+			nvgText(vg, pos.x + i*142, pos.y, text, NULL);
 		}
 	}
 
@@ -608,7 +640,7 @@ struct PWStatusDisplay : TransparentWidget {
 		for(int i=0;i<CHANNELS;i++) {
 			char text[128];
 			snprintf(text, sizeof(text), "%-3.0f", feedbackDetune[i]);
-			nvgText(vg, pos.x + i*100, pos.y, text, NULL);
+			nvgText(vg, pos.x + i*142, pos.y, text, NULL);
 		}
 	}
 
@@ -658,9 +690,9 @@ struct PWStatusDisplay : TransparentWidget {
 		drawDivision(vg, Vec(150,65), module->division);
 		drawDelayTime(vg, Vec(350,65), module->baseDelay);
 		drawGrooveType(vg, Vec(145,125), module->tapGroovePattern);
-		drawFeedbackTaps(vg, Vec(630,50), module->feedbackTap);
-		drawFeedbackPitch(vg, Vec(630,150), module->feedbackPitch);
-		drawFeedbackDetune(vg, Vec(630,200), module->feedbackDetune);
+		drawFeedbackTaps(vg, Vec(570,50), module->feedbackTap);
+		drawFeedbackPitch(vg, Vec(570,150), module->feedbackPitch);
+		drawFeedbackDetune(vg, Vec(570,200), module->feedbackDetune);
 		drawFilterTypes(vg, Vec(80,420), module->lastFilterType);
 		drawTapPitchShift(vg, Vec(78,585), module->tapPitchShift);
 		drawTapDetune(vg, Vec(78,645), module->tapDetune);
@@ -706,35 +738,42 @@ PortlandWeatherWidget::PortlandWeatherWidget(PortlandWeather *module) : ModuleWi
 	addParam(ParamWidget::create<RoundLargeBlackKnob>(Vec(57, 180), module, PortlandWeather::FEEDBACK_PARAM, 0.0f, 1.0f, 0.0f));
 	addParam(ParamWidget::create<RoundBlackKnob>(Vec(157, 180), module, PortlandWeather::FEEDBACK_TONE_PARAM, 0.0f, 5, 0.0f));
 
-	addParam(ParamWidget::create<RoundBlackKnob>(Vec(557, 30), module, PortlandWeather::FEEDBACK_TAP_L_PARAM, 0.0f, 17.0f, 15.0f));
-	addParam(ParamWidget::create<RoundBlackKnob>(Vec(657, 30), module, PortlandWeather::FEEDBACK_TAP_R_PARAM, 0.0f, 17.0f, 15.0f));
-	addParam(ParamWidget::create<RoundBlackKnob>(Vec(557, 80), module, PortlandWeather::FEEDBACK_L_SLIP_PARAM, -0.5f, 0.5f, 0.0f));
-	addParam(ParamWidget::create<RoundBlackKnob>(Vec(657, 80), module, PortlandWeather::FEEDBACK_R_SLIP_PARAM, -0.5f, 0.5f, 0.0f));
-	addParam(ParamWidget::create<RoundBlackKnob>(Vec(557, 130), module, PortlandWeather::FEEDBACK_L_PITCH_SHIFT_PARAM, -24.0f, 24.0f, 0.0f));
-	addParam(ParamWidget::create<RoundBlackKnob>(Vec(657, 130), module, PortlandWeather::FEEDBACK_R_PITCH_SHIFT_PARAM, -24.0f, 24.0f, 0.0f));
-	addParam(ParamWidget::create<RoundBlackKnob>(Vec(557, 180), module, PortlandWeather::FEEDBACK_L_DETUNE_PARAM, -99.0f, 99.0f, 0.0f));
-	addParam(ParamWidget::create<RoundBlackKnob>(Vec(657, 180), module, PortlandWeather::FEEDBACK_R_DETUNE_PARAM, -99.0f, 99.0f, 0.0f));
-	addParam( ParamWidget::create<LEDButton>(Vec(477,185), module, PortlandWeather::PING_PONG_PARAM, 0.0f, 1.0f, 0.0f));
+	addParam(ParamWidget::create<RoundBlackKnob>(Vec(500, 30), module, PortlandWeather::FEEDBACK_TAP_L_PARAM, 0.0f, 17.0f, 15.0f));
+	addParam(ParamWidget::create<RoundBlackKnob>(Vec(642, 30), module, PortlandWeather::FEEDBACK_TAP_R_PARAM, 0.0f, 17.0f, 15.0f));
+	addParam(ParamWidget::create<RoundBlackKnob>(Vec(500, 80), module, PortlandWeather::FEEDBACK_L_SLIP_PARAM, -0.5f, 0.5f, 0.0f));
+	addParam(ParamWidget::create<RoundBlackKnob>(Vec(642, 80), module, PortlandWeather::FEEDBACK_R_SLIP_PARAM, -0.5f, 0.5f, 0.0f));
+	addParam(ParamWidget::create<RoundBlackKnob>(Vec(500, 130), module, PortlandWeather::FEEDBACK_L_PITCH_SHIFT_PARAM, -24.0f, 24.0f, 0.0f));
+	addParam(ParamWidget::create<RoundBlackKnob>(Vec(642, 130), module, PortlandWeather::FEEDBACK_R_PITCH_SHIFT_PARAM, -24.0f, 24.0f, 0.0f));
+	addParam(ParamWidget::create<RoundBlackKnob>(Vec(500, 180), module, PortlandWeather::FEEDBACK_L_DETUNE_PARAM, -99.0f, 99.0f, 0.0f));
+	addParam(ParamWidget::create<RoundBlackKnob>(Vec(642, 180), module, PortlandWeather::FEEDBACK_R_DETUNE_PARAM, -99.0f, 99.0f, 0.0f));
 
-	addParam(ParamWidget::create<CKD6>(Vec(425, 110), module, PortlandWeather::CLEAR_BUFFER_PARAM, 0.0f, 1.0f, 0.0f));
+	addParam(ParamWidget::create<RoundBlackKnob>(Vec(766, 40), module, PortlandWeather::GRAIN_QUANTITY_PARAM, 1, 4, 1));
+	addParam(ParamWidget::create<RoundBlackKnob>(Vec(766, 110), module, PortlandWeather::GRAIN_SIZE_PARAM, 8, 11, 11));
+	
 
-	addChild(ModuleLightWidget::create<MediumLight<BlueLight>>(Vec(481, 189), module, PortlandWeather::PING_PONG_LIGHT));
+	addParam(ParamWidget::create<CKD6>(Vec(766, 180), module, PortlandWeather::CLEAR_BUFFER_PARAM, 0.0f, 1.0f, 0.0f));
+
+	addParam( ParamWidget::create<LEDButton>(Vec(447,180), module, PortlandWeather::PING_PONG_PARAM, 0.0f, 1.0f, 0.0f));
+	addChild(ModuleLightWidget::create<MediumLight<BlueLight>>(Vec(451, 184), module, PortlandWeather::PING_PONG_LIGHT));
 
 
 	//last tap isn't stacked
 	for (int i = 0; i< NUM_TAPS-1; i++) {
-		addParam( ParamWidget::create<LEDButton>(Vec(54 + 50*i,240), module, PortlandWeather::TAP_STACKED_PARAM + i, 0.0f, 1.0f, 0.0f));
-		addChild(ModuleLightWidget::create<MediumLight<BlueLight>>(Vec(58 + 50*i, 244), module, PortlandWeather::TAP_STACKED_LIGHT+i));
+		addParam( ParamWidget::create<LEDButton>(Vec(54 + 50*i,239), module, PortlandWeather::TAP_STACKED_PARAM + i, 0.0f, 1.0f, 0.0f));
+		addChild(ModuleLightWidget::create<MediumLight<BlueLight>>(Vec(58 + 50*i, 243), module, PortlandWeather::TAP_STACKED_LIGHT+i));
+		addInput(Port::create<PJ301MPort>(Vec(74+ 50*i, 233), Port::INPUT, module, PortlandWeather::TAP_STACK_CV_INPUT+i));
 	}
 
 	for (int i = 0; i < NUM_TAPS; i++) {
 		addParam( ParamWidget::create<LEDButton>(Vec(54 + 50*i,260), module, PortlandWeather::TAP_MUTE_PARAM + i, 0.0f, 1.0f, 0.0f));
 		addChild(ModuleLightWidget::create<MediumLight<RedLight>>(Vec(58 + 50*i, 264), module, PortlandWeather::TAP_MUTED_LIGHT+i));
+		addInput(Port::create<PJ301MPort>(Vec(74+ 50*i, 260), Port::INPUT, module, PortlandWeather::TAP_MUTE_CV_INPUT+i));
+
 		addParam( ParamWidget::create<RoundBlackKnob>(Vec(48 + 50*i, 280), module, PortlandWeather::TAP_MIX_PARAM + i, 0.0f, 1.0f, 0.5f));
 		addInput(Port::create<PJ301MPort>(Vec(51+ 50*i, 311), Port::INPUT, module, PortlandWeather::TAP_MIX_CV_INPUT+i));
 		addParam( ParamWidget::create<RoundBlackKnob>(Vec(48 + 50*i, 340), module, PortlandWeather::TAP_PAN_PARAM + i, 0.0f, 1.0f, 0.5f));
 		addInput(Port::create<PJ301MPort>(Vec(51 + 50*i, 371), Port::INPUT, module, PortlandWeather::TAP_PAN_CV_INPUT+i));
-		addParam( ParamWidget::create<RoundBlackKnob>(Vec(48 + 50*i, 400), module, PortlandWeather::TAP_FILTER_TYPE_PARAM + i, 0, 5, 0));
+		addParam( ParamWidget::create<RoundBlackKnob>(Vec(48 + 50*i, 400), module, PortlandWeather::TAP_FILTER_TYPE_PARAM + i, 0, 4, 0));
 		addParam( ParamWidget::create<RoundBlackKnob>(Vec(48 + 50*i, 440), module, PortlandWeather::TAP_FC_PARAM + i, 0.0f, 1.0f, 0.5f));
 		addInput(Port::create<PJ301MPort>(Vec(51 + 50*i, 471), Port::INPUT, module, PortlandWeather::TAP_FC_CV_INPUT+i));
 		addParam( ParamWidget::create<RoundBlackKnob>(Vec(48 + 50*i, 500), module, PortlandWeather::TAP_Q_PARAM + i, 0.01f, 1.0f, 0.5f));
@@ -757,14 +796,17 @@ PortlandWeatherWidget::PortlandWeatherWidget(PortlandWeather *module) : ModuleWi
 
 	addInput(Port::create<PJ301MPort>(Vec(100, 185), Port::INPUT, module, PortlandWeather::FEEDBACK_INPUT));
 	addInput(Port::create<PJ301MPort>(Vec(195, 182), Port::INPUT, module, PortlandWeather::FEEDBACK_TONE_INPUT));
-	addInput(Port::create<PJ301MPort>(Vec(595, 32), Port::INPUT, module, PortlandWeather::FEEDBACK_TAP_L_INPUT));
-	addInput(Port::create<PJ301MPort>(Vec(695, 32), Port::INPUT, module, PortlandWeather::FEEDBACK_TAP_R_INPUT));
-	addInput(Port::create<PJ301MPort>(Vec(595, 82), Port::INPUT, module, PortlandWeather::FEEDBACK_L_SLIP_CV_INPUT));
-	addInput(Port::create<PJ301MPort>(Vec(695, 82), Port::INPUT, module, PortlandWeather::FEEDBACK_R_SLIP_CV_INPUT));
-	addInput(Port::create<PJ301MPort>(Vec(595, 132), Port::INPUT, module, PortlandWeather::FEEDBACK_L_PITCH_SHIFT_CV_INPUT));
-	addInput(Port::create<PJ301MPort>(Vec(695, 132), Port::INPUT, module, PortlandWeather::FEEDBACK_R_PITCH_SHIFT_CV_INPUT));
-	addInput(Port::create<PJ301MPort>(Vec(595, 182), Port::INPUT, module, PortlandWeather::FEEDBACK_L_DETUNE_CV_INPUT));
-	addInput(Port::create<PJ301MPort>(Vec(695, 182), Port::INPUT, module, PortlandWeather::FEEDBACK_R_DETUNE_CV_INPUT));
+	addInput(Port::create<PJ301MPort>(Vec(295, 182), Port::INPUT, module, PortlandWeather::EXTERNAL_DELAY_TIME_INPUT));
+	addInput(Port::create<PJ301MPort>(Vec(538, 32), Port::INPUT, module, PortlandWeather::FEEDBACK_TAP_L_INPUT));
+	addInput(Port::create<PJ301MPort>(Vec(680, 32), Port::INPUT, module, PortlandWeather::FEEDBACK_TAP_R_INPUT));
+	addInput(Port::create<PJ301MPort>(Vec(538, 82), Port::INPUT, module, PortlandWeather::FEEDBACK_L_SLIP_CV_INPUT));
+	addInput(Port::create<PJ301MPort>(Vec(680, 82), Port::INPUT, module, PortlandWeather::FEEDBACK_R_SLIP_CV_INPUT));
+	addInput(Port::create<PJ301MPort>(Vec(538, 132), Port::INPUT, module, PortlandWeather::FEEDBACK_L_PITCH_SHIFT_CV_INPUT));
+	addInput(Port::create<PJ301MPort>(Vec(680, 132), Port::INPUT, module, PortlandWeather::FEEDBACK_R_PITCH_SHIFT_CV_INPUT));
+	addInput(Port::create<PJ301MPort>(Vec(538, 182), Port::INPUT, module, PortlandWeather::FEEDBACK_L_DETUNE_CV_INPUT));
+	addInput(Port::create<PJ301MPort>(Vec(680, 182), Port::INPUT, module, PortlandWeather::FEEDBACK_R_DETUNE_CV_INPUT));
+
+
 
 	addParam(ParamWidget::create<RoundLargeBlackKnob>(Vec(440, 705), module, PortlandWeather::MIX_PARAM, 0.0f, 1.0f, 0.5f));
 	addInput(Port::create<PJ301MPort>(Vec(480, 710), Port::INPUT, module, PortlandWeather::MIX_INPUT));
