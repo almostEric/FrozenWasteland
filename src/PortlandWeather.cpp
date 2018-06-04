@@ -39,6 +39,7 @@ struct PortlandWeather : Module {
 		FEEDBACK_L_DETUNE_PARAM,
 		FEEDBACK_R_DETUNE_PARAM,		
 		PING_PONG_PARAM,
+		REVERSE_PARAM,
 		MIX_PARAM,
 		TAP_MUTE_PARAM,
 		TAP_STACKED_PARAM = TAP_MUTE_PARAM+NUM_TAPS,
@@ -72,6 +73,8 @@ struct PortlandWeather : Module {
 		FEEDBACK_R_DETUNE_CV_INPUT,
 		FEEDBACK_L_RETURN,
 		FEEDBACK_R_RETURN,
+		PING_PONG_INPUT,
+		REVERSE_INPUT,
 		MIX_INPUT,
 		TAP_MUTE_CV_INPUT,
 		TAP_STACK_CV_INPUT = TAP_MUTE_CV_INPUT + NUM_TAPS,
@@ -94,6 +97,7 @@ struct PortlandWeather : Module {
 	};
 	enum LightIds {
 		PING_PONG_LIGHT,
+		REVERSE_LIGHT,
 		TAP_MUTED_LIGHT,
 		TAP_STACKED_LIGHT = TAP_MUTED_LIGHT+NUM_TAPS,
 		FREQ_LIGHT = TAP_STACKED_LIGHT+NUM_TAPS,
@@ -134,6 +138,7 @@ struct PortlandWeather : Module {
 	float grooveAmount = 1.0f;
 
 	bool pingPong = false;
+	bool reverse = false;
 	int grainNumbers;
 	bool tapMuted[NUM_TAPS];
 	bool tapStacked[NUM_TAPS];
@@ -156,7 +161,7 @@ struct PortlandWeather : Module {
 	const char* filterNames[5] = {"O","L","H","B","N"};
 	
 	clouds::PitchShifter pitch_shifter_[NUM_TAPS+1][CHANNELS][MAX_GRAINS];
-	SchmittTrigger clockTrigger,pingPongTrigger,clearBufferTrigger,mutingTrigger[NUM_TAPS],stackingTrigger[NUM_TAPS];
+	SchmittTrigger clockTrigger,pingPongTrigger,reverseTrigger,clearBufferTrigger,mutingTrigger[NUM_TAPS],stackingTrigger[NUM_TAPS];
 	float divisions[DIVISIONS] = {1/256.0,1/192.0,1/128.0,1/96.0,1/64.0,1/48.0,1/32.0,1/24.0,1/16.0,1/13.0,1/12.0,1/11.0,1/8.0,1/7.0,1/6.0,1/5.0,1/4.0,1/3.0,1/2.0,1/1.5,1};
 	const char* divisionNames[DIVISIONS] = {"/256","/192","/128","/96","/64","/48","/32","/24","/16","/13","/12","/11","/8","/7","/6","/5","/4","/3","/2","/1.5","x 1"};
 	int division;
@@ -167,7 +172,7 @@ struct PortlandWeather : Module {
 
 
 	MultiTapDoubleRingBuffer<float, HISTORY_SIZE,NUM_TAPS+1> historyBuffer[CHANNELS];
-	//DoubleRingBuffer<float,MAX_GRAIN_SIZE> pitchShiftBuffer[MAX_GRAINS][NUM_TAPS+1][CHANNELS];
+	ReverseRingBuffer<float, HISTORY_SIZE> reverseHistoryBuffer[CHANNELS];
 	float pitchShiftBuffer[NUM_TAPS+1][CHANNELS][MAX_GRAINS][MAX_GRAIN_SIZE];
 	clouds::FloatFrame pitchShiftOut_;
 	DoubleRingBuffer<float, 16> outBuffer[NUM_TAPS+1][CHANNELS]; 
@@ -215,6 +220,8 @@ struct PortlandWeather : Module {
 	json_t *toJson() override {
 		json_t *rootJ = json_object();
 		json_object_set_new(rootJ, "pingPong", json_integer((int) pingPong));
+
+		//json_object_set_new(rootJ, "reverse", json_integer((int) reverse));
 		
 		for(int i=0;i<NUM_TAPS;i++) {
 			//This is so stupid!!! why did he not use strings?
@@ -233,9 +240,14 @@ struct PortlandWeather : Module {
 	void fromJson(json_t *rootJ) override {
 
 		json_t *sumJ = json_object_get(rootJ, "pingPong");
-			if (sumJ) {
-				pingPong = json_integer_value(sumJ);			
-			}
+		if (sumJ) {
+			pingPong = json_integer_value(sumJ);			
+		}
+
+		//json_t *sumR = json_object_get(rootJ, "reverse");
+		//if (sumR) {
+		//	reverse = json_integer_value(sumR);			
+		//}
 		
 		char buf[100];			
 		for(int i=0;i<NUM_TAPS;i++) {
@@ -247,6 +259,7 @@ struct PortlandWeather : Module {
 				tapMuted[i] = json_integer_value(sumJ);			
 			}
 		}
+
 		for(int i=0;i<NUM_TAPS;i++) {
 			strcpy(buf, "stacked");
 			strcat(buf, tapNames[i]);
@@ -304,10 +317,21 @@ void PortlandWeather::step() {
 		//baseDelay = clamp(params[TIME_PARAM].value, 0.001f, 10.0f);			
 	}
 
-	if (pingPongTrigger.process(params[PING_PONG_PARAM].value)) {
+	if (pingPongTrigger.process(params[PING_PONG_PARAM].value + inputs[PING_PONG_INPUT].value)) {
 		pingPong = !pingPong;
 	}
 	lights[PING_PONG_LIGHT].value = pingPong;
+
+	if (reverseTrigger.process(params[REVERSE_PARAM].value + inputs[REVERSE_INPUT].value)) {
+		reverse = !reverse;
+		if(reverse) {
+			for(int channel =0;channel <CHANNELS;channel++) {
+				reverseHistoryBuffer[channel].clear();
+			}
+		}
+	}
+	lights[REVERSE_LIGHT].value = reverse;
+
 	grainNumbers = (int)params[GRAIN_QUANTITY_PARAM].value;
 
 	for(int channel = 0;channel < CHANNELS;channel++) {
@@ -325,9 +349,18 @@ void PortlandWeather::step() {
 
 		float dry = in + feedbackInput * feedbackAmount;
 
+		float dryToUse = dry; //Normally the same as dry unless in reverse mode
+
+		// Push dry sample into reverse history buffer
+		reverseHistoryBuffer[channel].push(dry);
+		if(reverse) {
+			float reverseDry = reverseHistoryBuffer[channel].shift();
+			dryToUse = reverseDry;
+		}
+
 		// Push dry sample into history buffer
 		if (!historyBuffer[channel].full(NUM_TAPS-1)) {
-			historyBuffer[channel].push(dry);
+			historyBuffer[channel].push(dryToUse);
 		}
 
 		float wet = 0.0f; // This is the mix of delays and input that is outputed
@@ -357,7 +390,6 @@ void PortlandWeather::step() {
 			pitch += detune/100.0f; 
 
 
-			int inFrames = min(historyBuffer[channel].size(tap), 16); 
 		
 
 			float delayMod = 0.0f;
@@ -385,14 +417,20 @@ void PortlandWeather::step() {
 			if(inputs[TIME_CV_INPUT].active) { //The CV can change either clocked or set delay by 10MS
 				delayMod += (0.001f * inputs[TIME_CV_INPUT].value); 
 			}
+
 			// Number of delay samples
 			float index = (delay+delayMod) * engineGetSampleRate();
 
+			//Set reverse size
+			if(tap == NUM_TAPS) {
+				reverseHistoryBuffer[channel].setDelaySize(index);
+			}
 
 			// How many samples do we need consume to catch up?
 			float consume = index - historyBuffer[channel].size(tap);
 
 			if (outBuffer[tap][channel].empty()) {
+				int inFrames = min(historyBuffer[channel].size(tap), 16); 
 				
 				double ratio = 1.0;
 				if (consume <= -16) 
@@ -777,8 +815,15 @@ PortlandWeatherWidget::PortlandWeatherWidget(PortlandWeather *module) : ModuleWi
 
 	addParam(ParamWidget::create<CKD6>(Vec(766, 180), module, PortlandWeather::CLEAR_BUFFER_PARAM, 0.0f, 1.0f, 0.0f));
 
-	addParam( ParamWidget::create<LEDButton>(Vec(447,180), module, PortlandWeather::PING_PONG_PARAM, 0.0f, 1.0f, 0.0f));
-	addChild(ModuleLightWidget::create<MediumLight<BlueLight>>(Vec(451, 184), module, PortlandWeather::PING_PONG_LIGHT));
+
+	addParam( ParamWidget::create<LEDButton>(Vec(372,180), module, PortlandWeather::REVERSE_PARAM, 0.0f, 1.0f, 0.0f));
+	addChild(ModuleLightWidget::create<MediumLight<BlueLight>>(Vec(376, 184), module, PortlandWeather::REVERSE_LIGHT));
+	addInput(Port::create<PJ301MPort>(Vec(392, 178), Port::INPUT, module, PortlandWeather::REVERSE_INPUT));
+
+	addParam( ParamWidget::create<LEDButton>(Vec(435,180), module, PortlandWeather::PING_PONG_PARAM, 0.0f, 1.0f, 0.0f));
+	addChild(ModuleLightWidget::create<MediumLight<BlueLight>>(Vec(439, 184), module, PortlandWeather::PING_PONG_LIGHT));
+	addInput(Port::create<PJ301MPort>(Vec(455, 178), Port::INPUT, module, PortlandWeather::PING_PONG_INPUT));
+
 
 
 	//last tap isn't stacked
@@ -820,7 +865,7 @@ PortlandWeatherWidget::PortlandWeatherWidget(PortlandWeather *module) : ModuleWi
 
 	addInput(Port::create<PJ301MPort>(Vec(100, 185), Port::INPUT, module, PortlandWeather::FEEDBACK_INPUT));
 	addInput(Port::create<PJ301MPort>(Vec(195, 182), Port::INPUT, module, PortlandWeather::FEEDBACK_TONE_INPUT));
-	addInput(Port::create<PJ301MPort>(Vec(295, 182), Port::INPUT, module, PortlandWeather::EXTERNAL_DELAY_TIME_INPUT));
+	addInput(Port::create<PJ301MPort>(Vec(270, 182), Port::INPUT, module, PortlandWeather::EXTERNAL_DELAY_TIME_INPUT));
 	addInput(Port::create<PJ301MPort>(Vec(538, 32), Port::INPUT, module, PortlandWeather::FEEDBACK_TAP_L_INPUT));
 	addInput(Port::create<PJ301MPort>(Vec(680, 32), Port::INPUT, module, PortlandWeather::FEEDBACK_TAP_R_INPUT));
 	addInput(Port::create<PJ301MPort>(Vec(538, 82), Port::INPUT, module, PortlandWeather::FEEDBACK_L_SLIP_CV_INPUT));

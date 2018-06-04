@@ -132,6 +132,79 @@ struct DoubleRingBuffer {
 	}
 };
 
+
+/** A simple cyclic buffer. that returns items in reverse order they were pushed
+S must be a power of 2.
+Thread-safe for single producers and consumers.
+*/
+template <typename T, size_t S>
+struct ReverseRingBuffer {
+	T data[S];
+	size_t end = 0;
+	size_t delaySize = S;
+	size_t start = delaySize;
+
+
+	void setDelaySize(T t) {
+		delaySize = t;
+	}	
+
+	size_t mask(size_t i) const {
+		return i & (S - 1);
+	}
+
+	void push(T t) {
+		size_t i = mask(end++);
+		data[i] = t;
+	}
+
+	T shift() {
+		return data[start--];	
+		start = mask(start);	
+		if((start > end && start-end >= delaySize) || (end-start >=delaySize)) {
+			start = end;
+		}
+	}
+
+	void pushBuffer(const T *t, int n) {
+		size_t i = mask(end);
+		size_t e1 = i + n;
+		size_t e2 = (e1 < S) ? e1 : S;
+		memcpy(&data[i], t, sizeof(T) * (e2 - i));
+		if (e1 > S) {
+			memcpy(data, &t[S - i], sizeof(T) * (e1 - S));
+		}
+		end += n;
+	}
+
+	void shiftBuffer(T *t, size_t n) {
+		size_t i = mask(start);
+		size_t s1 = i + n;
+		size_t s2 = (s1 < S) ? s1 : S;
+		memcpy(t, &data[i], sizeof(T) * (s2 - i));
+		if (s1 > S) {
+			memcpy(&t[S - i], data, sizeof(T) * (s1 - S));
+		}
+		start += n;
+	}
+	void clear() {
+		start = end;
+		//start = delaySize-1;
+	}
+	bool empty() const {
+		return start == end;
+	}
+	bool full() const {
+		return end - start == S;
+	}
+	size_t size() const {
+		return end - start;
+	}
+	size_t capacity() const {
+		return S - size();
+	}
+};
+
 /** A cyclic buffer which maintains a valid linear array of size S by keeping a copy of the buffer in adjacent memory.
 S must be a power of 2. Provides N # of taps into array
 Thread-safe for single producers and consumers?
@@ -157,9 +230,12 @@ struct MultiTapDoubleRingBuffer {
 		data[i] = t;
 		data[i + S] = t;
 	}
-	T shift() {
-		return data[mask(start++)];
+	T shift(size_t tap) {
+		return data[mask(start[tap]++)];
 	}
+	//T reverseShift() {
+
+	//}
 	void clear() {
 		for(size_t i=0;i<N;i++) {
 			start[i] = end;
@@ -174,8 +250,8 @@ struct MultiTapDoubleRingBuffer {
 	size_t size(size_t tap) const {
 		return end - start[tap];
 	}
-	size_t capacity() const {
-		return S - size();
+	size_t capacity(size_t tap) const {
+		return S - size(tap);
 	}
 	/** Returns a pointer to S consecutive elements for appending.
 	If any data is appended, you must call endIncr afterwards.
@@ -207,6 +283,8 @@ struct MultiTapDoubleRingBuffer {
 		start[tap] += n;
 	}
 };
+
+
 
 /** A cyclic buffer which maintains a valid linear array of size S by sliding along a larger block of size N.
 The linear array of S elements are moved back to the start of the block once it outgrows past the end.
