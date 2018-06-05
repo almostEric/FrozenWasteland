@@ -205,7 +205,7 @@ void HairPick::step() {
 		if(channel == 0) {
 			in = inputs[IN_L_INPUT].value;
 		} else {
-			in = inputs[IN_R_INPUT].active ? in = inputs[IN_R_INPUT].value : in = inputs[IN_L_INPUT].value;			
+			in = inputs[IN_R_INPUT].active ? inputs[IN_R_INPUT].value : inputs[IN_L_INPUT].value;			
 		}
 		float feedbackAmount = clamp(params[FEEDBACK_AMOUNT_PARAM].value + (inputs[FEEDBACK_CV_INPUT].value / 10.0f), 0.0f, 1.0f);
 		float feedbackInput = lastFeedback[channel];

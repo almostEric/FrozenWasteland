@@ -141,7 +141,7 @@ template <typename T, size_t S>
 struct ReverseRingBuffer {
 	T data[S];
 	size_t end = 0;
-	size_t delaySize = S;
+	size_t delaySize = S-1;
 	size_t start = delaySize;
 
 
@@ -155,15 +155,15 @@ struct ReverseRingBuffer {
 
 	void push(T t) {
 		size_t i = mask(end++);
-		data[i] = t;
+		data[i] = t;				
 	}
 
-	T shift() {
-		return data[start--];	
-		start = mask(start);	
+	T shift() {		
+		float value = data[mask(start--)];
 		if((start > end && start-end >= delaySize) || (end-start >=delaySize)) {
-			start = end;
+			start = end;	
 		}
+		return value;
 	}
 
 	void pushBuffer(const T *t, int n) {

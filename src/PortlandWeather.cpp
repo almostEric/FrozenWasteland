@@ -111,6 +111,40 @@ struct PortlandWeather : Module {
 		FILTER_NOTCH
 	};
 
+	struct LowFrequencyOscillator {
+	float phase = 0.0;
+	float freq = 1.0;
+	bool invert = false;
+
+	//void setFrequency(float frequency) {
+	//	freq = frequency;
+	//}
+
+	void hardReset()
+	{
+		phase = 0.0;
+	}
+
+	void reset()
+	{
+		phase -= 1.0;
+	}
+
+
+	void step(float dt) {
+		float deltaPhase = fminf(freq * dt, 0.5);
+		phase += deltaPhase;
+		//if (phase >= 1.0)
+		//	phase -= 1.0;
+	}
+	float sin() {
+		return sinf(2*M_PI * phase) * (invert ? -1.0 : 1.0);
+	}
+	float progress() {
+		return phase;
+	}
+};
+
 	const char* grooveNames[NUM_GROOVES] = {"Straight","Swing","Hard Swing","Reverse Swing","Alternate Swing","Accelerando","Ritardando","Waltz Time","Half Swing","Roller Coaster","Quintuple","Random 1","Random 2","Random 3","Early Reflection","Late Reflection"};
 	const float tapGroovePatterns[NUM_GROOVES][NUM_TAPS] = {
 		{1.0f,2.0f,3.0,4.0,5.0,6.0,7.0,8.0,9.0,10.0,11.0,12.0,13.0,14.0,15.0,16.0f}, // Straight time
@@ -140,18 +174,21 @@ struct PortlandWeather : Module {
 	bool pingPong = false;
 	bool reverse = false;
 	int grainNumbers;
-	bool tapMuted[NUM_TAPS];
-	bool tapStacked[NUM_TAPS];
-	int lastFilterType[NUM_TAPS];
-	float lastTapFc[NUM_TAPS];
-	float lastTapQ[NUM_TAPS];
-	float tapPitchShift[NUM_TAPS];
-	float tapDetune[NUM_TAPS];
-	int tapFilterType[NUM_TAPS];
+	bool tapMuted[NUM_TAPS+1];
+	bool tapStacked[NUM_TAPS+1];
+	int lastFilterType[NUM_TAPS+1];
+	float lastTapFc[NUM_TAPS+1];
+	float lastTapQ[NUM_TAPS+1];
+	float tapPitchShift[NUM_TAPS+1];
+	float tapDetune[NUM_TAPS+1];
+	int tapFilterType[NUM_TAPS+1];
 	int feedbackTap[CHANNELS] = {NUM_TAPS-1,NUM_TAPS-1};
 	float feedbackSlip[CHANNELS] = {0.0f,0.0f};
 	float feedbackPitch[CHANNELS] = {0.0f,0.0f};
 	float feedbackDetune[CHANNELS] = {0.0f,0.0f};
+	float delayTime[NUM_TAPS+1][CHANNELS];
+	float actualDelayTime[NUM_TAPS+1][CHANNELS][2];
+	float initialWindowedOutput[NUM_TAPS+1][CHANNELS][2];
 
 	StateVariableFilterState<T> filterStates[NUM_TAPS][CHANNELS];
     StateVariableFilterParams<T> filterParams[NUM_TAPS];
@@ -170,12 +207,12 @@ struct PortlandWeather : Module {
 	float baseDelay;
 	bool secondClockReceived = false;
 
-
-	MultiTapDoubleRingBuffer<float, HISTORY_SIZE,NUM_TAPS+1> historyBuffer[CHANNELS];
+	LowFrequencyOscillator sinOsc[2];
+	MultiTapDoubleRingBuffer<float, HISTORY_SIZE,NUM_TAPS+1> historyBuffer[CHANNELS][2];
 	ReverseRingBuffer<float, HISTORY_SIZE> reverseHistoryBuffer[CHANNELS];
 	float pitchShiftBuffer[NUM_TAPS+1][CHANNELS][MAX_GRAINS][MAX_GRAIN_SIZE];
 	clouds::FloatFrame pitchShiftOut_;
-	DoubleRingBuffer<float, 16> outBuffer[NUM_TAPS+1][CHANNELS]; 
+	DoubleRingBuffer<float, 16> outBuffer[NUM_TAPS+1][CHANNELS][2]; 
 	SampleRateConverter<1> src;
 	float lastFeedback[CHANNELS] = {0.0f,0.0f};
 
@@ -188,7 +225,9 @@ struct PortlandWeather : Module {
 	}
 
 	PortlandWeather() : Module(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS, NUM_LIGHTS) {
-		for (int i = 0; i < NUM_TAPS; ++i) {
+		sinOsc[1].phase = 0.25; //90 degrees out
+
+		for (int i = 0; i <= NUM_TAPS; ++i) {
 			tapMuted[i] = false;
 			tapStacked[i] = false;
 			tapPitchShift[i] = 0.0f;
@@ -198,6 +237,8 @@ struct PortlandWeather : Module {
 	        filterParams[i].setFreq(T(800.0f / engineGetSampleRate()));
 
 	        for(int j=0;j < CHANNELS;j++) {
+	        	actualDelayTime[i][j][0] = 0.0f;
+	        	actualDelayTime[i][j][1] = 0.0f;
 	        	for(int k=0;k<MAX_GRAINS;k++) {
 	    	 	   pitch_shifter_[i][j][k].Init(pitchShiftBuffer[i][j][k],k*0.25f);
 	    		}
@@ -278,11 +319,13 @@ struct PortlandWeather : Module {
 
 
 void PortlandWeather::step() {
-
+	sinOsc[0].step(1.0 / engineGetSampleRate());
+	sinOsc[1].step(1.0 / engineGetSampleRate());
 
 	if (clearBufferTrigger.process(params[CLEAR_BUFFER_PARAM].value)) {
 		for(int i=0;i<CHANNELS;i++) {
-			historyBuffer[i].clear();
+			historyBuffer[i][0].clear();
+			historyBuffer[i][1].clear();
 		}
 	}
 
@@ -340,7 +383,7 @@ void PortlandWeather::step() {
 		if(channel == 0) {
 			in = inputs[IN_L_INPUT].value;
 		} else {
-			in = inputs[IN_R_INPUT].active ? in = inputs[IN_R_INPUT].value : in = inputs[IN_L_INPUT].value;			
+			in = inputs[IN_R_INPUT].active ? inputs[IN_R_INPUT].value : inputs[IN_L_INPUT].value;			
 		}
 		feedbackTap[channel] = (int)clamp(params[FEEDBACK_TAP_L_PARAM+channel].value + (inputs[FEEDBACK_TAP_L_INPUT+channel].value / 10.0f),0.0f,17.0);
 		feedbackSlip[channel] = clamp(params[FEEDBACK_L_SLIP_PARAM+channel].value + (inputs[FEEDBACK_L_SLIP_CV_INPUT+channel].value / 10.0f),-0.5f,0.5);
@@ -359,8 +402,10 @@ void PortlandWeather::step() {
 		}
 
 		// Push dry sample into history buffer
-		if (!historyBuffer[channel].full(NUM_TAPS-1)) {
-			historyBuffer[channel].push(dryToUse);
+		for(int dualIndex=0;dualIndex<2;dualIndex++) {
+			if (!historyBuffer[channel][dualIndex].full(NUM_TAPS-1)) {
+				historyBuffer[channel][dualIndex].push(dryToUse);
+			}
 		}
 
 		float wet = 0.0f; // This is the mix of delays and input that is outputed
@@ -389,9 +434,6 @@ void PortlandWeather::step() {
 			}
 			pitch += detune/100.0f; 
 
-
-		
-
 			float delayMod = 0.0f;
 
 			//Normally the delay tap is the same as the tap itself, unless it is stacked, then it is its neighbor;
@@ -418,65 +460,76 @@ void PortlandWeather::step() {
 				delayMod += (0.001f * inputs[TIME_CV_INPUT].value); 
 			}
 
-			// Number of delay samples
-			float index = (delay+delayMod) * engineGetSampleRate();
+			delayTime[tap][channel] = delay + delayMod;
+
 
 			//Set reverse size
 			if(tap == NUM_TAPS) {
-				reverseHistoryBuffer[channel].setDelaySize(index);
-			}
-
-			// How many samples do we need consume to catch up?
-			float consume = index - historyBuffer[channel].size(tap);
-
-			if (outBuffer[tap][channel].empty()) {
-				int inFrames = min(historyBuffer[channel].size(tap), 16); 
-				
-				double ratio = 1.0;
-				if (consume <= -16) 
-					ratio = 0.5;
-				else if (consume >= 16) 
-					ratio = 2.0;
-
-				float inSR = engineGetSampleRate();
-		        float outSR = ratio * inSR;
-
-		        int outFrames = outBuffer[tap][channel].capacity();
-		        src.setRates(inSR, outSR);
-		        src.process((const Frame<1>*)historyBuffer[channel].startData(tap), &inFrames, (Frame<1>*)outBuffer[tap][channel].endData(), &outFrames);
-		        outBuffer[tap][channel].endIncr(outFrames);
-		        historyBuffer[channel].startIncr(tap, inFrames);
+				reverseHistoryBuffer[channel].setDelaySize((delay+delayMod) * engineGetSampleRate());
 			}
 
 
+			for(int dualIndex=0;dualIndex<2;dualIndex++) {
+				//if((actualDelayTime[tap][channel][dualIndex] != delayTime[tap][channel] && sinOsc[dualIndex].progress() >= 1) || actualDelayTime[tap][channel][dualIndex] == 0.0f) {
+				if((actualDelayTime[tap][channel][dualIndex] != delayTime[tap][channel]) || actualDelayTime[tap][channel][dualIndex] == 0.0f) {
+					actualDelayTime[tap][channel][dualIndex] = delayTime[tap][channel];
+					sinOsc[dualIndex].reset();									
+				}
+
+				float index = actualDelayTime[tap][channel][dualIndex] * engineGetSampleRate();
+
+				// How many samples do we need consume to catch up?
+				float consume = index - historyBuffer[channel][dualIndex].size(tap);
+
+				if (outBuffer[tap][channel][dualIndex].empty()) {
+					int inFrames = min(historyBuffer[channel][dualIndex].size(tap), 16); 
+					
+					double ratio = 1.0;
+					if (consume <= -16) 
+						ratio = 0.5;
+					else if (consume >= 16) 
+						ratio = 2.0;
+
+					float inSR = engineGetSampleRate();
+			        float outSR = ratio * inSR;
+
+			        int outFrames = outBuffer[tap][channel][dualIndex].capacity();
+			        src.setRates(inSR, outSR);
+			        src.process((const Frame<1>*)historyBuffer[channel][dualIndex].startData(tap), &inFrames, (Frame<1>*)outBuffer[tap][channel][dualIndex].endData(), &outFrames);
+			        outBuffer[tap][channel][dualIndex].endIncr(outFrames);
+			        historyBuffer[channel][dualIndex].startIncr(tap, inFrames);
+				}
+
+				if (!outBuffer[tap][channel][dualIndex].empty()) {
+					initialWindowedOutput[tap][channel][dualIndex] = outBuffer[tap][channel][dualIndex].shift();
+				}
+			}	
 
 			float wetTap = 0.0f;	
-			if (!outBuffer[tap][channel].empty()) {
-				float initialOutput = outBuffer[tap][channel].shift();
+			float initialOutput = (sinOsc[0].sin() * sinOsc[0].sin() * initialWindowedOutput[tap][channel][0]) + (sinOsc[1].sin() * sinOsc[1].sin() * initialWindowedOutput[tap][channel][1]);
 
-				float grainVolumeScaling = 1;
-				for(int k=0;k<MAX_GRAINS;k++) {
-	        		pitchShiftOut_.l = initialOutput;
-					//Apply Pitch Shifting
-				    pitch_shifter_[tap][channel][k].set_ratio(SemitonesToRatio(pitch));
-				    pitch_shifter_[tap][channel][k].set_size(pitch_grain_size);
+			float grainVolumeScaling = 1;
+			for(int k=0;k<MAX_GRAINS;k++) {
+        		pitchShiftOut_.l = initialOutput;
+				//Apply Pitch Shifting
+			    pitch_shifter_[tap][channel][k].set_ratio(SemitonesToRatio(pitch));
+			    pitch_shifter_[tap][channel][k].set_size(pitch_grain_size);
 
-				    //TODO: Put back into outBuffer
-				    bool useTriangleWindow = grainNumbers != 4;
-				    pitch_shifter_[tap][channel][k].Process(&pitchShiftOut_,useTriangleWindow); 
-				    if(k == 0) {
-				    	wetTap +=pitchShiftOut_.l; //First one always use
-				    } else if (k == 2 && grainNumbers >= 2) {
-				    	wetTap +=pitchShiftOut_.l; //Use middle grain for 2
-				    	grainVolumeScaling = 1.414;
-				    } else if (k != 2 && grainNumbers == 3) {
-				    	wetTap +=pitchShiftOut_.l; //Use them all
-				    	grainVolumeScaling = 2;
-				    }
-				}
-        		wetTap = wetTap / grainVolumeScaling;		        	
-	        	 
+			    //TODO: Put back into outBuffer
+			    bool useTriangleWindow = grainNumbers != 4;
+			    pitch_shifter_[tap][channel][k].Process(&pitchShiftOut_,useTriangleWindow); 
+			    if(k == 0) {
+			    	wetTap +=pitchShiftOut_.l; //First one always use
+			    } else if (k == 2 && grainNumbers >= 2) {
+			    	wetTap +=pitchShiftOut_.l; //Use middle grain for 2
+			    	grainVolumeScaling = 1.414;
+			    } else if (k != 2 && grainNumbers == 3) {
+			    	wetTap +=pitchShiftOut_.l; //Use them all
+			    	grainVolumeScaling = 2;
+			    }
 			}
+    		wetTap = wetTap / grainVolumeScaling;		        	
+	        	 
 
 			//Feedback tap doesn't get panned or filtered
         	if(tap < NUM_TAPS) {
@@ -749,7 +802,7 @@ struct PWStatusDisplay : TransparentWidget {
 		//drawProgress(vg,module->oscillator.progress());
 		drawDivision(vg, Vec(150,65), module->division);
 		drawDelayTime(vg, Vec(350,65), module->baseDelay);
-		drawGrooveType(vg, Vec(145,125), module->tapGroovePattern);
+		drawGrooveType(vg, Vec(147,125), module->tapGroovePattern);
 		drawFeedbackTaps(vg, Vec(570,50), module->feedbackTap);
 		drawFeedbackPitch(vg, Vec(570,150), module->feedbackPitch);
 		drawFeedbackDetune(vg, Vec(570,200), module->feedbackDetune);
@@ -816,12 +869,12 @@ PortlandWeatherWidget::PortlandWeatherWidget(PortlandWeather *module) : ModuleWi
 	addParam(ParamWidget::create<CKD6>(Vec(766, 180), module, PortlandWeather::CLEAR_BUFFER_PARAM, 0.0f, 1.0f, 0.0f));
 
 
-	addParam( ParamWidget::create<LEDButton>(Vec(372,180), module, PortlandWeather::REVERSE_PARAM, 0.0f, 1.0f, 0.0f));
-	addChild(ModuleLightWidget::create<MediumLight<BlueLight>>(Vec(376, 184), module, PortlandWeather::REVERSE_LIGHT));
+	addParam( ParamWidget::create<LEDButton>(Vec(372,182), module, PortlandWeather::REVERSE_PARAM, 0.0f, 1.0f, 0.0f));
+	addChild(ModuleLightWidget::create<MediumLight<BlueLight>>(Vec(376, 186), module, PortlandWeather::REVERSE_LIGHT));
 	addInput(Port::create<PJ301MPort>(Vec(392, 178), Port::INPUT, module, PortlandWeather::REVERSE_INPUT));
 
-	addParam( ParamWidget::create<LEDButton>(Vec(435,180), module, PortlandWeather::PING_PONG_PARAM, 0.0f, 1.0f, 0.0f));
-	addChild(ModuleLightWidget::create<MediumLight<BlueLight>>(Vec(439, 184), module, PortlandWeather::PING_PONG_LIGHT));
+	addParam( ParamWidget::create<LEDButton>(Vec(435,182), module, PortlandWeather::PING_PONG_PARAM, 0.0f, 1.0f, 0.0f));
+	addChild(ModuleLightWidget::create<MediumLight<BlueLight>>(Vec(439, 186), module, PortlandWeather::PING_PONG_LIGHT));
 	addInput(Port::create<PJ301MPort>(Vec(455, 178), Port::INPUT, module, PortlandWeather::PING_PONG_INPUT));
 
 
