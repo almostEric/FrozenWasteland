@@ -469,11 +469,13 @@ void PortlandWeather::step() {
 			}
 
 
+			const float useWindowingThreshold = .001; //Number of seconds to just change delay time instead of windowing it 
 			for(int dualIndex=0;dualIndex<2;dualIndex++) {
-				//if((actualDelayTime[tap][channel][dualIndex] != delayTime[tap][channel] && sinOsc[dualIndex].progress() >= 1) || actualDelayTime[tap][channel][dualIndex] == 0.0f) {
-				if((actualDelayTime[tap][channel][dualIndex] != delayTime[tap][channel]) || actualDelayTime[tap][channel][dualIndex] == 0.0f) {
+				if(abs(actualDelayTime[tap][channel][dualIndex] - delayTime[tap][channel]) < useWindowingThreshold || actualDelayTime[tap][channel][dualIndex] == 0.0f) {
 					actualDelayTime[tap][channel][dualIndex] = delayTime[tap][channel];
-					sinOsc[dualIndex].reset();									
+				} else if (sinOsc[dualIndex].progress() >= 1) {
+					actualDelayTime[tap][channel][dualIndex] = delayTime[tap][channel];
+					sinOsc[dualIndex].reset();
 				}
 
 				float index = actualDelayTime[tap][channel][dualIndex] * engineGetSampleRate();
