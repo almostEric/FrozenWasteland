@@ -241,7 +241,7 @@ void QuadEuclideanRhythm::process(const ProcessArgs &args) {
 
 	int beatLocation[16];
 
-	//Set startup state
+	//Set startup state	
 	if(!initialized) {
 		setRunningState();
 		initialized = true;
@@ -334,6 +334,9 @@ void QuadEuclideanRhythm::process(const ProcessArgs &args) {
 			maxStepCount = stepsCountf;
 		if(trackNumber == masterTrack - 1)
 			masterStepCount = stepsCountf;
+		else
+			masterStepCount = maxStepCount;
+		
 
 
 		stepsCount[trackNumber] = int(stepsCountf);

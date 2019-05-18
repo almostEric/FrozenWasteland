@@ -339,6 +339,8 @@ void QuadGolombRulerRhythm::process(const ProcessArgs &args) {
 			maxStepCount = stepsCountf;
 		if(trackNumber == masterTrack - 1)
 			masterStepCount = stepsCountf;
+		else
+			masterStepCount = maxStepCount;
 
 		stepsCount[trackNumber] = int(stepsCountf);
 		int division = int(divisionf);
