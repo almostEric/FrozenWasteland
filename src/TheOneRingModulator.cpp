@@ -1,6 +1,6 @@
 #include <string.h>
 #include "FrozenWasteland.hpp"
-#include "dsp/digital.hpp"
+
 
 #define BUFFER_SIZE 512
 
@@ -68,26 +68,36 @@ struct TheOneRingModulator : Module {
 	    }	    
 	  }
 
-	TheOneRingModulator() : Module(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS) {}
-	void step() override;
+	TheOneRingModulator()  {
+		config(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS, NUM_LIGHTS);		
+		configParam(FORWARD_BIAS_PARAM, 0.0, 10.0, 0.0);
+		configParam(FORWARD_BIAS_ATTENUVERTER_PARAM, -1.0, 1.0, 0.0);
+		configParam(LINEAR_VOLTAGE_PARAM, 0.0, 10.0, 0.5);
+		configParam(LINEAR_VOLTAGE_ATTENUVERTER_PARAM, -1.0, 1.0, 0.0);
+		configParam(SLOPE_PARAM, 0.1, 1.0, 1.0);
+		configParam(SLOPE_ATTENUVERTER_PARAM, -1.0, 1.0, 0.0);
+		configParam(MIX_PARAM, -0.0, 1.0, 0.5);
+
+	}
+	void process(const ProcessArgs &args) override;
 
 	// For more advanced Module features, read Rack's engine.hpp header file
-	// - toJson, fromJson: serialization of internal data
+	// - dataToJson, dataFromJson: serialization of internal data
 	// - onSampleRateChange: event triggered by a change of sample rate
 	// - onReset, onRandomize, onCreate, onDelete: implements special behavior when user clicks these from the context menu
 };
 
 
-void TheOneRingModulator::step() {
+void TheOneRingModulator::process(const ProcessArgs &args) {
 
 	
-    float vIn = inputs[ SIGNAL_INPUT ].value;
-    float vC  = inputs[ CARRIER_INPUT ].value;
-    float wd  = params[ MIX_PARAM ].value;
+    float vIn = inputs[ SIGNAL_INPUT ].getVoltage();
+    float vC  = inputs[ CARRIER_INPUT ].getVoltage();
+    float wd  = params[ MIX_PARAM ].getValue();
 
-    voltageBias = clamp(params[FORWARD_BIAS_PARAM].value + (inputs[FORWARD_BIAS_CV_INPUT].value * params[FORWARD_BIAS_ATTENUVERTER_PARAM].value),0.0,10.0);
-	voltageLinear = clamp(params[LINEAR_VOLTAGE_PARAM].value + (inputs[LINEAR_VOLTAGE_CV_INPUT].value * params[LINEAR_VOLTAGE_ATTENUVERTER_PARAM].value),voltageBias + 0.001f,10.0);
-    h = clamp(params[SLOPE_PARAM].value + (inputs[SLOPE_CV_INPUT].value / 10.0 * params[SLOPE_ATTENUVERTER_PARAM].value),0.1f,1.0f);
+    voltageBias = clamp(params[FORWARD_BIAS_PARAM].getValue() + (inputs[FORWARD_BIAS_CV_INPUT].getVoltage() * params[FORWARD_BIAS_ATTENUVERTER_PARAM].getValue()),0.0,10.0);
+	voltageLinear = clamp(params[LINEAR_VOLTAGE_PARAM].getValue() + (inputs[LINEAR_VOLTAGE_CV_INPUT].getVoltage() * params[LINEAR_VOLTAGE_ATTENUVERTER_PARAM].getValue()),voltageBias + 0.001f,10.0);
+    h = clamp(params[SLOPE_PARAM].getValue() + (inputs[SLOPE_CV_INPUT].getVoltage() / 10.0 * params[SLOPE_ATTENUVERTER_PARAM].getValue()),0.1f,1.0f);
 
     float A = 0.5 * vIn + vC;
     float B = vC - 0.5 * vIn;
@@ -98,8 +108,8 @@ void TheOneRingModulator::step() {
     float dMB = diode_sim( -B );
 
     float res = dPA + dMA - dPB - dMB;
-    //outputs[WET_OUTPUT].value = res;
-    outputs[MIX_OUTPUT].value = wd * res + ( 1.0 - wd ) * vIn;
+    //outputs[WET_OUTPUT].setVoltage(res);
+    outputs[MIX_OUTPUT].setVoltage(wd * res + ( 1.0 - wd ) * vIn);
 }
 
 
@@ -130,99 +140,78 @@ struct DiodeResponseDisplay : TransparentWidget {
 	Stats statsX, statsY;
 
 	DiodeResponseDisplay() {
-		font = Font::load(assetPlugin(plugin, "res/fonts/Sudo.ttf"));
+		font = APP->window->loadFont(asset::plugin(pluginInstance, "res/fonts/Sudo.ttf"));
 	}
 
-	void drawWaveform(NVGcontext *vg, float vB, float vL, float h) {
-		nvgStrokeWidth(vg, 2);
-		nvgBeginPath(vg);
-		nvgMoveTo(vg, 10, 122);
-		nvgLineTo(vg, 10 + vB/10.0*127, 122);
+	void drawWaveform(const DrawArgs &args, float vB, float vL, float h) {
+		nvgStrokeWidth(args.vg, 2);
+		nvgBeginPath(args.vg);
+		nvgMoveTo(args.vg, 10, 122);
+		nvgLineTo(args.vg, 10 + vB/10.0*127, 122);
 		//Draw response as a bunch of small lines for now until I can convert to bezier	
 		for (float inX=vB+.1;inX<=vL;inX+=.1) {
 			float nonLinearY = h * (inX - vB) * (inX - vB) / ((2.0 * vL) - (2.0 * vB));
-			nvgLineTo(vg, 10 + inX/10*127.0,10+(1-nonLinearY/10.0)*112.0);
+			nvgLineTo(args.vg, 10 + inX/10*127.0,10+(1-nonLinearY/10.0)*112.0);
 		}
 
 		float voltLinearConstant = 0 - (h * vL) + (h * ((vL - vB) * (vL - vB) / ((2.0 * vL) - (2.0 * vB))));
 		for (float inX=vL+.1;inX<=10;inX+=.1) {		
 			float linearY = (h * inX) + voltLinearConstant;
-			nvgLineTo(vg, 10 + inX/10*127.0,10+(1-linearY/10.0)*112.0);
+			nvgLineTo(args.vg, 10 + inX/10*127.0,10+(1-linearY/10.0)*112.0);
 		}
-		//nvgLineTo(vg, 137, 12 + (1-h) * 122);
-		nvgStroke(vg);
+		//nvgLineTo(args.vg, 137, 12 + (1-h) * 122);
+		nvgStroke(args.vg);
 	}
 
 	
 
-	void drawStats(NVGcontext *vg, Vec pos, const char *title, Stats *stats) {
-		nvgFontSize(vg, 13);
-		nvgFontFaceId(vg, font->handle);
-		nvgTextLetterSpacing(vg, -2);
+	
+	void draw(const DrawArgs &args) override {
+		if (!module)
+					return;
 
-		nvgFillColor(vg, nvgRGBA(0xff, 0xff, 0xff, 0x40));
-		nvgText(vg, pos.x + 6, pos.y + 11, title, NULL);
-
-		nvgFillColor(vg, nvgRGBA(0xff, 0xff, 0xff, 0x80));
-		char text[128];
-		snprintf(text, sizeof(text), "pp % 06.2f  max % 06.2f  min % 06.2f", stats->vpp, stats->vmax, stats->vmin);
-		nvgText(vg, pos.x + 22, pos.y + 11, text, NULL);
-	}
-
-	void draw(NVGcontext *vg) override {
-		nvgStrokeColor(vg, nvgRGBA(0xff, 0xff, 0x20, 0xff));	
-		drawWaveform(vg, module->voltageBias, module->voltageLinear, module->h);
+		nvgStrokeColor(args.vg, nvgRGBA(0xff, 0xff, 0x20, 0xff));	
+		drawWaveform(args, module->voltageBias, module->voltageLinear, module->h);
 	}
 };
 
 struct TheOneRingModulatorWidget : ModuleWidget {
-	TheOneRingModulatorWidget(TheOneRingModulator *module);
+	TheOneRingModulatorWidget(TheOneRingModulator *module) {
+		setModule(module);
+
+		setPanel(APP->window->loadSvg(asset::plugin(pluginInstance, "res/TheOneRingModulator.svg")));
+		
+
+		addChild(createWidget<ScrewSilver>(Vec(RACK_GRID_WIDTH - 12, 0)));
+		addChild(createWidget<ScrewSilver>(Vec(box.size.x - 2 * RACK_GRID_WIDTH + 12, 0)));
+		addChild(createWidget<ScrewSilver>(Vec(RACK_GRID_WIDTH-12, RACK_GRID_HEIGHT - RACK_GRID_WIDTH)));
+		addChild(createWidget<ScrewSilver>(Vec(box.size.x - 2 * RACK_GRID_WIDTH + 12, RACK_GRID_HEIGHT - RACK_GRID_WIDTH)));
+
+		{
+			DiodeResponseDisplay *display = new DiodeResponseDisplay();
+			display->module = module;
+			display->box.pos = Vec(0, 35);
+			display->box.size = Vec(box.size.x-10, 90);
+			addChild(display);
+		}
+
+		addParam(createParam<RoundBlackKnob>(Vec(10, 190), module, TheOneRingModulator::FORWARD_BIAS_PARAM));
+		addParam(createParam<RoundSmallBlackKnob>(Vec(12, 254), module, TheOneRingModulator::FORWARD_BIAS_ATTENUVERTER_PARAM));
+		addParam(createParam<RoundBlackKnob>(Vec(60, 190), module, TheOneRingModulator::LINEAR_VOLTAGE_PARAM));
+		addParam(createParam<RoundSmallBlackKnob>(Vec(62, 254), module, TheOneRingModulator::LINEAR_VOLTAGE_ATTENUVERTER_PARAM));
+		addParam(createParam<RoundBlackKnob>(Vec(110, 190), module, TheOneRingModulator::SLOPE_PARAM));
+		addParam(createParam<RoundSmallBlackKnob>(Vec(112, 254), module, TheOneRingModulator::SLOPE_ATTENUVERTER_PARAM));
+		addParam(createParam<RoundBlackKnob>(Vec(90, 325), module, TheOneRingModulator::MIX_PARAM));
+
+		addInput(createInput<PJ301MPort>(Vec(14, 330), module, TheOneRingModulator::CARRIER_INPUT));
+		addInput(createInput<PJ301MPort>(Vec(50, 330), module, TheOneRingModulator::SIGNAL_INPUT));
+		addInput(createInput<PJ301MPort>(Vec(13, 225), module, TheOneRingModulator::FORWARD_BIAS_CV_INPUT));
+		addInput(createInput<PJ301MPort>(Vec(63, 225), module, TheOneRingModulator::LINEAR_VOLTAGE_CV_INPUT));
+		addInput(createInput<PJ301MPort>(Vec(113, 225), module, TheOneRingModulator::SLOPE_CV_INPUT));
+
+		addOutput(createOutput<PJ301MPort>(Vec(122, 330), module, TheOneRingModulator::MIX_OUTPUT));
+		
+	}
 };
 
-TheOneRingModulatorWidget::TheOneRingModulatorWidget(TheOneRingModulator *module) : ModuleWidget(module) {
-	box.size = Vec(15*10, RACK_GRID_HEIGHT);
-
-	{
-		SVGPanel *panel = new SVGPanel();
-		panel->box.size = box.size;
-		panel->setBackground(SVG::load(assetPlugin(plugin, "res/TheOneRingModulator.svg")));
-		addChild(panel);
-	}
-
-	addChild(Widget::create<ScrewSilver>(Vec(RACK_GRID_WIDTH - 12, 0)));
-	addChild(Widget::create<ScrewSilver>(Vec(box.size.x - 2 * RACK_GRID_WIDTH + 12, 0)));
-	addChild(Widget::create<ScrewSilver>(Vec(RACK_GRID_WIDTH-12, RACK_GRID_HEIGHT - RACK_GRID_WIDTH)));
-	addChild(Widget::create<ScrewSilver>(Vec(box.size.x - 2 * RACK_GRID_WIDTH + 12, RACK_GRID_HEIGHT - RACK_GRID_WIDTH)));
-
-	{
-		DiodeResponseDisplay *display = new DiodeResponseDisplay();
-		display->module = module;
-		display->box.pos = Vec(0, 35);
-		display->box.size = Vec(box.size.x-10, 90);
-		addChild(display);
-	}
-
-	addParam(ParamWidget::create<RoundBlackKnob>(Vec(10, 190), module, TheOneRingModulator::FORWARD_BIAS_PARAM, 0.0, 10.0, 0.0));
-	addParam(ParamWidget::create<RoundSmallBlackKnob>(Vec(12, 254), module, TheOneRingModulator::FORWARD_BIAS_ATTENUVERTER_PARAM, -1.0, 1.0, 0.0));
-	addParam(ParamWidget::create<RoundBlackKnob>(Vec(60, 190), module, TheOneRingModulator::LINEAR_VOLTAGE_PARAM, 0.0, 10.0, 0.5));
-	addParam(ParamWidget::create<RoundSmallBlackKnob>(Vec(62, 254), module, TheOneRingModulator::LINEAR_VOLTAGE_ATTENUVERTER_PARAM, -1.0, 1.0, 0.0));
-	addParam(ParamWidget::create<RoundBlackKnob>(Vec(110, 190), module, TheOneRingModulator::SLOPE_PARAM, 0.1, 1.0, 1.0));
-	addParam(ParamWidget::create<RoundSmallBlackKnob>(Vec(112, 254), module, TheOneRingModulator::SLOPE_ATTENUVERTER_PARAM, -1.0, 1.0, 0.0));
-	addParam(ParamWidget::create<RoundBlackKnob>(Vec(90, 325), module, TheOneRingModulator::MIX_PARAM, -0.0, 1.0, 0.5));
-
-	addInput(Port::create<PJ301MPort>(Vec(14, 330), Port::INPUT, module, TheOneRingModulator::CARRIER_INPUT));
-	addInput(Port::create<PJ301MPort>(Vec(50, 330), Port::INPUT, module, TheOneRingModulator::SIGNAL_INPUT));
-	addInput(Port::create<PJ301MPort>(Vec(13, 225), Port::INPUT, module, TheOneRingModulator::FORWARD_BIAS_CV_INPUT));
-	addInput(Port::create<PJ301MPort>(Vec(63, 225), Port::INPUT, module, TheOneRingModulator::LINEAR_VOLTAGE_CV_INPUT));
-	addInput(Port::create<PJ301MPort>(Vec(113, 225), Port::INPUT, module, TheOneRingModulator::SLOPE_CV_INPUT));
-
-	//addOutput(Port::create<PJ301MPort>(Vec(51, 330), Port::OUTPUT, module, TheOneRingModulator::WET_OUTPUT));
-	addOutput(Port::create<PJ301MPort>(Vec(122, 330), Port::OUTPUT, module, TheOneRingModulator::MIX_OUTPUT));
-	
-	//addChild(ModuleLightWidget::create<MediumLight<BlueLight>>(Vec(21, 59), module, LissajousLFO::BLINK_LIGHT_1));
-	//addChild(ModuleLightWidget::create<MediumLight<BlueLight>>(Vec(41, 59), module, LissajousLFO::BLINK_LIGHT_2));
-	//addChild(ModuleLightWidget::create<MediumLight<BlueLight>>(Vec(61, 59), module, LissajousLFO::BLINK_LIGHT_3));
-	//addChild(ModuleLightWidget::create<MediumLight<BlueLight>>(Vec(81, 59), module, LissajousLFO::BLINK_LIGHT_4));
-}
-
-Model *modelTheOneRingModulator = Model::create<TheOneRingModulator, TheOneRingModulatorWidget>("Frozen Wasteland", "TheOneRingModulator", "The One Ring Modulator", RING_MODULATOR_TAG);
+Model *modelTheOneRingModulator = createModel<TheOneRingModulator, TheOneRingModulatorWidget>("TheOneRingModulator");

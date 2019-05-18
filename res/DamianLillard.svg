@@ -23,11 +23,15 @@
        inkscape:collect="always"
        id="linearGradient3391">
       <stop
-         style="stop-color:#cce6f1;stop-opacity:1;"
+         style="stop-color:#000002;stop-opacity:1;"
          offset="0"
          id="stop3387" />
       <stop
-         style="stop-color:#ffffff;stop-opacity:1;"
+         style="stop-color:#000005;stop-opacity:1;"
+         offset=".3"
+         id="stop3388" />
+      <stop
+         style="stop-color:#08008f;stop-opacity:1;"
          offset="1"
          id="stop3389" />
     </linearGradient>
@@ -50,7 +54,7 @@
      inkscape:pageopacity="0.0"
      inkscape:pageshadow="2"
      inkscape:zoom="4"
-     inkscape:cx="-36.48012"
+     inkscape:cx="-98.73012"
      inkscape:cy="193.79805"
      inkscape:document-units="mm"
      inkscape:current-layer="layer1"
@@ -92,7 +96,7 @@
        inkscape:export-ydpi="150.22649" />
     <g
        aria-label="SENDS"
-       style="font-style:normal;font-weight:normal;font-size:3.52777767px;line-height:1.25;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.26458332"
+       style="font-style:normal;font-weight:normal;font-size:3.52777767px;line-height:1.25;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.26458332"
        id="text4978"
        transform="translate(0,-2.6458334)">
       <path
@@ -123,7 +127,7 @@
     </g>
     <g
        aria-label="IN"
-       style="font-style:normal;font-weight:normal;font-size:3.52777767px;line-height:1.25;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.26458332"
+       style="font-style:normal;font-weight:normal;font-size:3.52777767px;line-height:1.25;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.26458332"
        id="text4982"
        transform="translate(0,29.184624)">
       <path
@@ -138,11 +142,11 @@
          inkscape:connector-curvature="0" />
     </g>
     <g
-       style="font-style:normal;font-weight:normal;font-size:3.52777767px;line-height:1.25;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.26458332"
+       style="font-style:normal;font-weight:normal;font-size:3.52777767px;line-height:1.25;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.26458332"
        id="text5097" />
     <g
        aria-label="BAND 1"
-       style="font-style:normal;font-weight:normal;font-size:3.52777767px;line-height:1.25;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.26458332"
+       style="font-style:normal;font-weight:normal;font-size:3.52777767px;line-height:1.25;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.26458332"
        id="text5443">
       <path
          d="m 39.29283,64.610344 v -1.801096 h 0.581532 q 0.307302,0 0.460265,0.107487 0.15434,0.107487 0.15434,0.325217 0,0.06752 -0.01654,0.132292 -0.01516,0.06339 -0.04823,0.117133 -0.03307,0.05374 -0.08268,0.09508 -0.04961,0.04134 -0.117134,0.06477 0.06752,0.01102 0.128158,0.0441 0.06201,0.03169 0.107487,0.08406 0.04685,0.05099 0.07304,0.121267 0.02756,0.07028 0.02756,0.157097 0,0.275607 -0.184657,0.414789 -0.184657,0.137804 -0.533301,0.137804 z m 0.843359,-1.309136 q 0,-0.05099 -0.01654,-0.09233 -0.01654,-0.04134 -0.05374,-0.07028 -0.03583,-0.02894 -0.09371,-0.0441 -0.0565,-0.01654 -0.137803,-0.01654 h -0.205328 v 0.476802 h 0.205328 q 0.08268,0 0.139182,-0.01929 0.05788,-0.02067 0.09371,-0.05512 0.03721,-0.03583 0.05237,-0.08131 0.01654,-0.04548 0.01654,-0.09784 z m -0.270095,1.03215 q 0.0813,0 0.141937,-0.02067 0.06201,-0.02067 0.103353,-0.0565 0.04134,-0.03721 0.06201,-0.08682 0.02205,-0.04961 0.02205,-0.106109 0,-0.117133 -0.08819,-0.183279 -0.08682,-0.06615 -0.267339,-0.06615 h -0.21084 v 0.51952 z"
@@ -171,7 +175,7 @@
        id="rect4735" />
     <g
        aria-label="RETURNS"
-       style="font-style:normal;font-weight:normal;font-size:3.52777767px;line-height:1.25;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.26458332"
+       style="font-style:normal;font-weight:normal;font-size:3.52777767px;line-height:1.25;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.26458332"
        id="text4978-4"
        transform="translate(0,-2.6458334)">
       <path
@@ -212,11 +216,11 @@
     </g>
     <g
        transform="matrix(0.26458333,0,0,0.26458333,34.617145,50.389004)"
-       style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:13.33333302px;line-height:1.25;font-family:Consolas;-inkscape-font-specification:'Consolas Bold';text-align:center;letter-spacing:0px;word-spacing:0px;text-anchor:middle;fill:#000000;fill-opacity:1;stroke:none"
+       style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:13.33333302px;line-height:1.25;font-family:Consolas;-inkscape-font-specification:'Consolas Bold';text-align:center;letter-spacing:0px;word-spacing:0px;text-anchor:middle;fill:#ffffff;fill-opacity:1;stroke:none"
        id="flowRoot1527" />
     <g
        aria-label="BAND 2"
-       style="font-style:normal;font-weight:normal;font-size:3.52777767px;line-height:1.25;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.26458332"
+       style="font-style:normal;font-weight:normal;font-size:3.52777767px;line-height:1.25;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.26458332"
        id="text5443-9">
       <path
          d="m 52.655661,64.61084 v -1.801096 h 0.581532 q 0.307302,0 0.460265,0.107487 0.15434,0.107487 0.15434,0.325217 0,0.06752 -0.01654,0.132292 -0.01516,0.06339 -0.04823,0.117133 -0.03307,0.05374 -0.08268,0.09508 -0.04961,0.04134 -0.117133,0.06477 0.06752,0.01103 0.128157,0.0441 0.06201,0.03169 0.107487,0.08406 0.04685,0.05099 0.07304,0.121267 0.02756,0.07028 0.02756,0.157097 0,0.275607 -0.184657,0.414789 -0.184657,0.137804 -0.533301,0.137804 z m 0.843359,-1.309136 q 0,-0.05099 -0.01654,-0.09233 -0.01654,-0.04134 -0.05374,-0.07028 -0.03583,-0.02894 -0.09371,-0.0441 -0.0565,-0.01654 -0.137804,-0.01654 h -0.205328 v 0.476802 h 0.205328 q 0.08268,0 0.139182,-0.01929 0.05788,-0.02067 0.09371,-0.05512 0.03721,-0.03583 0.05237,-0.08131 0.01654,-0.04547 0.01654,-0.09784 z m -0.270095,1.03215 q 0.0813,0 0.141938,-0.02067 0.06201,-0.02067 0.103352,-0.0565 0.04134,-0.03721 0.06201,-0.08682 0.02205,-0.04961 0.02205,-0.106109 0,-0.117134 -0.08819,-0.183279 -0.08682,-0.06615 -0.267339,-0.06615 h -0.21084 v 0.51952 z"
@@ -241,7 +245,7 @@
     </g>
     <g
        aria-label="BAND 3"
-       style="font-style:normal;font-weight:normal;font-size:3.52777767px;line-height:1.25;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.26458332"
+       style="font-style:normal;font-weight:normal;font-size:3.52777767px;line-height:1.25;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.26458332"
        id="text5443-3">
       <path
          d="m 66.480135,64.583275 v -1.801096 h 0.581532 q 0.307303,0 0.460265,0.107487 0.15434,0.107487 0.15434,0.325217 0,0.06752 -0.01654,0.132292 -0.01516,0.06339 -0.04823,0.117133 -0.03307,0.05374 -0.08268,0.09508 -0.04961,0.04134 -0.117133,0.06477 0.06752,0.01102 0.128157,0.0441 0.06201,0.0317 0.107487,0.08406 0.04685,0.05099 0.07304,0.121267 0.02756,0.07028 0.02756,0.157097 0,0.275607 -0.184657,0.414789 -0.184657,0.137804 -0.533301,0.137804 z m 0.843359,-1.309136 q 0,-0.05099 -0.01654,-0.09233 -0.01654,-0.04134 -0.05374,-0.07028 -0.03583,-0.02894 -0.09371,-0.0441 -0.0565,-0.01654 -0.137804,-0.01654 h -0.205328 v 0.476802 h 0.205328 q 0.08268,0 0.139182,-0.01929 0.05788,-0.02067 0.09371,-0.05512 0.03721,-0.03583 0.05236,-0.0813 0.01654,-0.04548 0.01654,-0.09784 z m -0.270095,1.03215 q 0.0813,0 0.141938,-0.02067 0.06201,-0.02067 0.103353,-0.0565 0.04134,-0.03721 0.06201,-0.08682 0.02205,-0.04961 0.02205,-0.106109 0,-0.117134 -0.08819,-0.183279 -0.08682,-0.06615 -0.26734,-0.06615 h -0.21084 v 0.51952 z"
@@ -265,17 +269,17 @@
          id="path4184" />
     </g>
     <g
-       style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:13.33333302px;line-height:1.25;font-family:Consolas;-inkscape-font-specification:'Consolas Bold';text-align:center;letter-spacing:0px;word-spacing:0px;text-anchor:middle;fill:#000000;fill-opacity:1;stroke:none"
+       style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:13.33333302px;line-height:1.25;font-family:Consolas;-inkscape-font-specification:'Consolas Bold';text-align:center;letter-spacing:0px;word-spacing:0px;text-anchor:middle;fill:#ffffff;fill-opacity:1;stroke:none"
        id="flowRoot2489" />
     <g
-       style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:13.33333302px;line-height:1.25;font-family:Consolas;-inkscape-font-specification:'Consolas Bold';text-align:center;letter-spacing:0px;word-spacing:0px;text-anchor:middle;fill:#000000;fill-opacity:1;stroke:none"
+       style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:13.33333302px;line-height:1.25;font-family:Consolas;-inkscape-font-specification:'Consolas Bold';text-align:center;letter-spacing:0px;word-spacing:0px;text-anchor:middle;fill:#ffffff;fill-opacity:1;stroke:none"
        id="flowRoot2497" />
     <g
-       style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:13.33333302px;line-height:1.25;font-family:Consolas;-inkscape-font-specification:'Consolas Bold';text-align:center;letter-spacing:0px;word-spacing:0px;text-anchor:middle;fill:#000000;fill-opacity:1;stroke:none"
+       style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:13.33333302px;line-height:1.25;font-family:Consolas;-inkscape-font-specification:'Consolas Bold';text-align:center;letter-spacing:0px;word-spacing:0px;text-anchor:middle;fill:#ffffff;fill-opacity:1;stroke:none"
        id="flowRoot2505" />
     <g
        aria-label="MIX OUT"
-       style="font-style:normal;font-weight:normal;font-size:3.52777767px;line-height:1.25;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.26458332"
+       style="font-style:normal;font-weight:normal;font-size:3.52777767px;line-height:1.25;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.26458332"
        id="text4978-4-7"
        transform="translate(18.520734,-6.879167)">
       <path
@@ -319,7 +323,7 @@
        id="rect4735-6" />
     <g
        aria-label="LO"
-       style="font-style:normal;font-weight:normal;font-size:3.52777767px;line-height:1.25;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.26458332"
+       style="font-style:normal;font-weight:normal;font-size:3.52777767px;line-height:1.25;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.26458332"
        id="text4982-3"
        transform="translate(0,-2.6458334)">
       <path
@@ -335,7 +339,7 @@
     </g>
     <g
        aria-label="MID-LO"
-       style="font-style:normal;font-weight:normal;font-size:3.52777767px;line-height:1.25;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.26458332"
+       style="font-style:normal;font-weight:normal;font-size:3.52777767px;line-height:1.25;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.26458332"
        id="text4982-3-6"
        transform="translate(0,-2.6458334)">
       <path
@@ -371,7 +375,7 @@
     </g>
     <g
        aria-label="MID-HI"
-       style="font-style:normal;font-weight:normal;font-size:3.52777767px;line-height:1.25;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.26458332"
+       style="font-style:normal;font-weight:normal;font-size:3.52777767px;line-height:1.25;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.26458332"
        id="text4982-3-7"
        transform="translate(0,-2.6458334)">
       <path
@@ -407,7 +411,7 @@
     </g>
     <g
        aria-label="HI"
-       style="font-style:normal;font-weight:normal;font-size:3.52777767px;line-height:1.25;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.26458332"
+       style="font-style:normal;font-weight:normal;font-size:3.52777767px;line-height:1.25;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.26458332"
        id="text4982-3-9"
        transform="translate(0,-2.6458334)">
       <path
@@ -423,7 +427,7 @@
     </g>
     <g
        aria-label="DAMIAN LILLARD"
-       style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:3.52777767px;line-height:1.25;font-family:Consolas;-inkscape-font-specification:'Consolas Bold';text-align:center;letter-spacing:0px;word-spacing:0px;text-anchor:middle;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.26458332"
+       style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:3.52777767px;line-height:1.25;font-family:Consolas;-inkscape-font-specification:'Consolas Bold';text-align:center;letter-spacing:0px;word-spacing:0px;text-anchor:middle;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.26458332"
        id="text4597"
        transform="translate(0,-0.540559)">
       <path
@@ -494,7 +498,7 @@
     </g>
     <g
        aria-label="FROZEN WASTELAND"
-       style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:3.52777767px;line-height:1.25;font-family:Consolas;-inkscape-font-specification:'Consolas Bold';text-align:start;letter-spacing:0px;word-spacing:0px;text-anchor:start;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.26458332"
+       style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:3.52777767px;line-height:1.25;font-family:Consolas;-inkscape-font-specification:'Consolas Bold';text-align:start;letter-spacing:0px;word-spacing:0px;text-anchor:start;fill:#00a3f2;fill-opacity:1;stroke:none;stroke-width:0.26458332"
        id="text3885-7">
       <path
          d="m 42.473149,150.2604 q 0.119944,-0.11995 0.1905,-0.21167 0.07408,-0.0917 0.112889,-0.16933 0.04233,-0.0776 0.05292,-0.14464 0.01411,-0.0706 0.01411,-0.14817 0,-0.0952 -0.04586,-0.22931 -0.04586,-0.13405 -0.102305,-0.28575 -0.05645,-0.15169 -0.102306,-0.31044 -0.04586,-0.15875 -0.04586,-0.30339 0,-0.0776 0.0247,-0.15169 0.02822,-0.0741 0.06703,-0.14111 0.04233,-0.0706 0.09172,-0.13053 0.04939,-0.0635 0.09878,-0.11289 -0.07055,-0.0141 -0.123472,-0.0212 -0.05292,-0.0106 -0.07761,-0.0106 -0.130528,0 -0.22225,0.0706 -0.08819,0.067 -0.1905,0.16934 0,-0.11995 0.03528,-0.24695 0.03881,-0.13052 0.116417,-0.23636 0.07761,-0.10583 0.194027,-0.17286 0.119945,-0.067 0.282223,-0.067 0.112888,0 0.208138,0.0176 0.09878,0.0141 0.179917,0.0353 0.08114,0.0212 0.148167,0.0388 0.06703,0.0141 0.119944,0.0141 0.08114,0 0.141111,-0.0212 0.0635,-0.0247 0.123473,-0.0847 0,0.0776 -0.03175,0.17639 -0.02822,0.0988 -0.08819,0.1905 -0.05644,0.0882 -0.148167,0.1517 -0.09172,0.06 -0.211666,0.06 -0.05997,0 -0.137584,-0.007 -0.07408,-0.0106 -0.155222,-0.0247 -0.0071,0.0247 -0.01058,0.0459 -0.0035,0.0212 -0.0071,0.0388 -0.0035,0.0212 -0.0035,0.0388 0,0.0776 0.01058,0.1517 0.01411,0.0705 0.0388,0.14463 h 0.712612 l -0.08114,0.23989 q -0.01058,0.0459 -0.01411,0.067 -0.0035,0.0212 -0.01058,0.067 l -0.130528,-0.0917 h -0.363361 q 0.07761,0.17639 0.144639,0.35983 0.06703,0.17992 0.06703,0.38453 0,0.18344 -0.07408,0.34219 -0.07408,0.15522 -0.197556,0.27164 -0.119944,0.11642 -0.278694,0.17992 -0.155223,0.067 -0.321028,0.067 z"
