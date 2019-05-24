@@ -1,10 +1,10 @@
 #pragma once
 
 #include <string.h>
-#include "util/common.hpp"
+//#include "util/common.hpp"
 
 
-namespace rack {
+namespace FrozenWasteland {
 
 /** A simple cyclic buffer.
 S must be a power of 2.
@@ -27,9 +27,9 @@ struct RingBuffer {
 		size_t i = mask(end);
 		size_t e1 = i + n;
 		size_t e2 = (e1 < S) ? e1 : S;
-		memcpy(&data[i], t, sizeof(T) * (e2 - i));
+		std::memcpy(&data[i], t, sizeof(T) * (e2 - i));
 		if (e1 > S) {
-			memcpy(data, &t[S - i], sizeof(T) * (e1 - S));
+			std::memcpy(data, &t[S - i], sizeof(T) * (e1 - S));
 		}
 		end += n;
 	}
@@ -40,9 +40,9 @@ struct RingBuffer {
 		size_t i = mask(start);
 		size_t s1 = i + n;
 		size_t s2 = (s1 < S) ? s1 : S;
-		memcpy(t, &data[i], sizeof(T) * (s2 - i));
+		std::memcpy(t, &data[i], sizeof(T) * (s2 - i));
 		if (s1 > S) {
-			memcpy(&t[S - i], data, sizeof(T) * (s1 - S));
+			std::memcpy(&t[S - i], data, sizeof(T) * (s1 - S));
 		}
 		start += n;
 	}
@@ -81,7 +81,7 @@ struct DoubleRingBuffer {
 	void push(T t) {
 		size_t i = mask(end++);
 		data[i] = t;
-		data[i + S] = t;
+		data[i + S] = t;		
 	}
 	T shift() {
 		return data[mask(start++)];
@@ -113,11 +113,11 @@ struct DoubleRingBuffer {
 		size_t e1 = e + n;
 		size_t e2 = (e1 < S) ? e1 : S;
 		// Copy data forward
-		memcpy(&data[S + e], &data[e], sizeof(T) * (e2 - e));
+		std::memcpy(&data[S + e], &data[e], sizeof(T) * (e2 - e));
 
 		if (e1 > S) {
 			// Copy data backward from the doubled block to the main block
-			memcpy(data, &data[S], sizeof(T) * (e1 - S));
+			std::memcpy(data, &data[S], sizeof(T) * (e1 - S));
 		}
 		end += n;
 	}
@@ -170,9 +170,9 @@ struct ReverseRingBuffer {
 		size_t i = mask(end);
 		size_t e1 = i + n;
 		size_t e2 = (e1 < S) ? e1 : S;
-		memcpy(&data[i], t, sizeof(T) * (e2 - i));
+		std::memcpy(&data[i], t, sizeof(T) * (e2 - i));
 		if (e1 > S) {
-			memcpy(data, &t[S - i], sizeof(T) * (e1 - S));
+			std::memcpy(data, &t[S - i], sizeof(T) * (e1 - S));
 		}
 		end += n;
 	}
@@ -181,9 +181,9 @@ struct ReverseRingBuffer {
 		size_t i = mask(start);
 		size_t s1 = i + n;
 		size_t s2 = (s1 < S) ? s1 : S;
-		memcpy(t, &data[i], sizeof(T) * (s2 - i));
+		std::memcpy(t, &data[i], sizeof(T) * (s2 - i));
 		if (s1 > S) {
-			memcpy(&t[S - i], data, sizeof(T) * (s1 - S));
+			std::memcpy(&t[S - i], data, sizeof(T) * (s1 - S));
 		}
 		start += n;
 	}
@@ -209,7 +209,7 @@ struct ReverseRingBuffer {
 S must be a power of 2. Provides N # of taps into array
 Thread-safe for single producers and consumers?
 */
-template <typename T, size_t S, size_t N>
+template <typename T, size_t S, int N>
 struct MultiTapDoubleRingBuffer {
 	T data[S*2];
 
@@ -217,7 +217,7 @@ struct MultiTapDoubleRingBuffer {
 	size_t end = 0;
 
 	MultiTapDoubleRingBuffer() {
-		for(size_t i=0;i<N;i++) {
+		for(int i=0;i<N;i++) {
 			start[i]= 0;
 		}
 	}
@@ -225,32 +225,32 @@ struct MultiTapDoubleRingBuffer {
 	size_t mask(size_t i) const {
 		return i & (S - 1);
 	}
+	
 	void push(T t) {
 		size_t i = mask(end++);
 		data[i] = t;
 		data[i + S] = t;
 	}
-	T shift(size_t tap) {
+
+	T shift(int tap) {
 		return data[mask(start[tap]++)];
 	}
-	//T reverseShift() {
-
-	//}
+	
 	void clear() {
-		for(size_t i=0;i<N;i++) {
+		for(int i=0;i<N;i++) {
 			start[i] = end;
 		}
 	}
-	bool empty(size_t tap) const {
+	bool empty(int tap) const {
 		return start[tap] == end;
 	}
-	bool full(size_t tap) const {
+	bool full(int tap) const {
 		return end - start[tap] == S;
 	}
-	size_t size(size_t tap) const {
+	size_t size(int tap) const {
 		return end - start[tap];
 	}
-	size_t capacity(size_t tap) const {
+	size_t capacity(int tap) const {
 		return S - size(tap);
 	}
 	/** Returns a pointer to S consecutive elements for appending.
@@ -265,21 +265,21 @@ struct MultiTapDoubleRingBuffer {
 		size_t e1 = e + n;
 		size_t e2 = (e1 < S) ? e1 : S;
 		// Copy data forward
-		memcpy(&data[S + e], &data[e], sizeof(T) * (e2 - e));
+		std::memcpy(&data[S + e], &data[e], sizeof(T) * (e2 - e));
 
 		if (e1 > S) {
 			// Copy data backward from the doubled block to the main block
-			memcpy(data, &data[S], sizeof(T) * (e1 - S));
+			std::memcpy(data, &data[S], sizeof(T) * (e1 - S));
 		}
 		end += n;
 	}
 	/** Returns a pointer to S consecutive elements for consumption
 	If any data is consumed, call startIncr afterwards.
 	*/
-	const T *startData(size_t tap) const {
+	const T *startData(int tap) const {
 		return &data[mask(start[tap])];
 	}
-	void startIncr(size_t tap, size_t n) {
+	void startIncr(int tap, size_t n) {
 		start[tap] += n;
 	}
 };
@@ -302,7 +302,7 @@ struct AppleRingBuffer {
 		// move end block to beginning
 		// may overlap, but memmove handles that correctly
 		size_t s = size();
-		memmove(data, &data[start], sizeof(T) * s);
+		std::memmove(data, &data[start], sizeof(T) * s);
 		start = 0;
 		end = s;
 	}

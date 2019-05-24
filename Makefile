@@ -1,18 +1,13 @@
+RACK_DIR ?= ../..
+
 # FLAGS will be passed to both the C and C++ compiler
 FLAGS += \
-	-DTEST \
-	-I./eurorack \
+	-Idep/include \
 	-I./src/ui \
+	-I./eurorack \
 	-I./src/dsp-delay \
-	-I./src/dsp-filter/utils -I./src/dsp-filter/filters -I./src/dsp-filter/third-party/falco \
-	-Wno-unused-local-typedefs
+	-I./src/dsp-filter/utils -I./src/dsp-filter/filters -I./src/dsp-filter/third-party/falco	
 
-CFLAGS +=
-CXXFLAGS +=
-
-# Careful about linking to shared libraries, since you can't assume much about the user's environment and library search path.
-# Static libraries are fine.
-LDFLAGS +=
 
 # Add .cpp and .c files to the build
 SOURCES += $(wildcard src/*.cpp src/filters/*.cpp src/dsp-noise/*.cpp src/dsp-filter/*.cpp rc/dsp-delay/*.hpp src/stmlib/*.cc)
@@ -37,5 +32,4 @@ $(libsamplerate):
 	cd dep/libsamplerate-0.1.9/src && $(MAKE) install
 
 # Include the VCV plugin Makefile framework
-RACK_DIR ?= ../..
 include $(RACK_DIR)/plugin.mk

@@ -101,9 +101,9 @@ struct HairPick : Module {
 	float combLevel[NUM_TAPS];
 
 
-	MultiTapDoubleRingBuffer<float, HISTORY_SIZE,NUM_TAPS> historyBuffer[CHANNELS];
-	dsp::DoubleRingBuffer<float, 16> outBuffer[NUM_TAPS][CHANNELS]; 
-	//SampleRateConverter<1> src;
+	FrozenWasteland::MultiTapDoubleRingBuffer<float, HISTORY_SIZE,NUM_TAPS> historyBuffer[CHANNELS];
+	FrozenWasteland::DoubleRingBuffer<float, 16> outBuffer[NUM_TAPS][CHANNELS]; 
+	
 	SRC_STATE *src;
 	float lastFeedback[CHANNELS] = {0.0f,0.0f};
 
@@ -153,9 +153,12 @@ struct HairPick : Module {
 		configParam(FEEDBACK_TYPE_PARAM, 0.0f, 3, 0.0f);
 		configParam(FEEDBACK_AMOUNT_PARAM, 0.0f, 1.0f, 0.0f);
 
+		//src = src_new(SRC_SINC_FASTEST, 1, NULL);	
+		//src = src_new(SRC_LINEAR, 1, NULL);		
+		src = src_new(SRC_ZERO_ORDER_HOLD, 1, NULL);
 	}
 
-	const char* tapNames[NUM_TAPS+2] {"1","2","3","4","5","6","7","8","9","10","11","12","13","14","15","16","ALL","EXT"};
+	
 
 
 
@@ -214,7 +217,7 @@ void HairPick::process(const ProcessArgs &args) {
 	}
 	float pitchShift = powf(2.0f,inputs[VOLT_OCTAVE_INPUT].getVoltage());
 	baseDelay = baseDelay / pitchShift;
-	outputs[DELAY_LENGTH_OUTPUT].setVoltage(baseDelay);
+	outputs[DELAY_LENGTH_OUTPUT].setVoltage(baseDelay);  
 	
 	for(int channel = 0;channel < CHANNELS;channel++) {
 		// Get input to delay block
@@ -247,54 +250,36 @@ void HairPick::process(const ProcessArgs &args) {
 		float wet = 0.0f; // This is the mix of delays and input that is outputed
 		float feedbackValue = 0.0f; // This is the output of a tap that gets sent back to input
 		for(int tap = 0; tap < NUM_TAPS;tap++) { 
-
-			//int inFrames = min(historyBuffer[channel].size(tap), 16); 
-			int inFrames = std::min((int) historyBuffer[channel].size(tap), 16);
 		
+			
 			// Compute delay time in seconds
 			float delay = baseDelay * delayNonlinearity * combPatterns[combPattern][tap] / NUM_TAPS; 
-
-			//float delayMod = 0.0f;
 			// Number of delay samples
 			float index = delay * args.sampleRate;
 
 
 			// How many samples do we need consume to catch up?
 			float consume = index - historyBuffer[channel].size(tap);
+			if(index > 0)
+			{
+				if (outBuffer[tap][channel].empty()) {
+								
+					double ratio = 1.f;
+					if (std::fabs(consume) >= 16.f) {
+						ratio = std::pow(10.f, clamp(consume / 10000.f, -1.f, 1.f));
+					}
 
-			if (outBuffer[tap][channel].empty()) {
-				
-				// double ratio = 1.0;
-				// if (consume <= -16) 
-				// 	ratio = 0.5;
-				// else if (consume >= 16) 
-				// 	ratio = 2.0;
-
-				// float inSR = args.sampleRate;
-		        // float outSR = ratio * inSR;
-
-		        // int outFrames = outBuffer[tap][channel].capacity();
-		        // src.setRates(inSR, outSR);
-		        // src.process((const Frame<1>*)historyBuffer[channel].startData(tap), &inFrames, (Frame<1>*)outBuffer[tap][channel].endData(), &outFrames);
-		        // outBuffer[tap][channel].endIncr(outFrames);
-		        // historyBuffer[channel].startIncr(tap, inFrames);
-
-				double ratio = 1.f;
-				if (std::fabs(consume) >= 16.f) {
-					ratio = std::pow(10.f, clamp(consume / 10000.f, -1.f, 1.f));
-				}
-
-				SRC_DATA srcData;
-				srcData.data_in = (const float*) historyBuffer[channel].startData(tap);
-				srcData.data_out = (float*) outBuffer[tap][channel].endData();
-				//srcData.input_frames = std::min((int) historyBuffer[channel].size(tap), 16);
-				srcData.input_frames = inFrames;
-				srcData.output_frames = outBuffer[tap][channel].capacity();
-				srcData.end_of_input = false;
-				srcData.src_ratio = ratio;
-				src_process(src, &srcData);
-				historyBuffer[channel].startIncr(tap,srcData.input_frames_used);
-				outBuffer[tap][channel].endIncr(srcData.output_frames_gen);
+					SRC_DATA srcData;
+					srcData.data_in = (const float*) historyBuffer[channel].startData(tap);
+					srcData.data_out = (float*) outBuffer[tap][channel].endData();
+					srcData.input_frames = std::min((int) historyBuffer[channel].size(tap), 16);
+					srcData.output_frames = outBuffer[tap][channel].capacity();
+					srcData.end_of_input = false;
+					srcData.src_ratio = ratio;
+					src_process(src, &srcData);
+					historyBuffer[channel].startIncr(tap,srcData.input_frames_used);
+					outBuffer[tap][channel].endIncr(srcData.output_frames_gen);
+				}			
 			}
 
 			float wetTap = 0.0f;
@@ -336,7 +321,7 @@ void HairPick::process(const ProcessArgs &args) {
 
 		lastFeedback[channel] = feedbackValue;
 
-		float out = wet;
+		float out = wet; 
 		
 		outputs[OUT_L_OUTPUT + channel].setVoltage(out);
 	}
@@ -418,7 +403,6 @@ struct HPStatusDisplay : TransparentWidget {
 		if (!module)
 			return;
 		
-		//drawProgress(args.vg,module->oscillator.progress());
 		drawDivision(args, Vec(91,60), module->division);
 		drawDelayTime(args, Vec(350,65), module->baseDelay);
 		drawPatternType(args, Vec(64,135), module->combPattern);
