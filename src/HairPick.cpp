@@ -1,7 +1,6 @@
 #include "FrozenWasteland.hpp"
-#include "dsp/samplerate.hpp"
-#include "dsp/digital.hpp"
 #include "ringbuffer.hpp"
+#include "samplerate.h"
 #include <iostream>
 
 #define HISTORY_SIZE (1<<22)
@@ -88,7 +87,7 @@ struct HairPick : Module {
 	float tentLevel = 1.0f;
 	int tentTap = 32;
 	
-	SchmittTrigger clockTrigger;
+	dsp::SchmittTrigger clockTrigger;
 	float divisions[DIVISIONS] = {1/256.0,1/192.0,1/128.0,1/96.0,1/64.0,1/48.0,1/32.0,1/24.0,1/16.0,1/13.0,1/12.0,1/11.0,1/8.0,1/7.0,1/6.0,1/5.0,1/4.0,1/3.0,1/2.0,1/1.5,1};
 	const char* divisionNames[DIVISIONS] = {"/256","/192","/128","/96","/64","/48","/32","/24","/16","/13","/12","/11","/8","/7","/6","/5","/4","/3","/2","/1.5","x 1"};
 	int division;
@@ -102,9 +101,10 @@ struct HairPick : Module {
 	float combLevel[NUM_TAPS];
 
 
-	MultiTapDoubleRingBuffer<float, HISTORY_SIZE,NUM_TAPS> historyBuffer[CHANNELS];
-	DoubleRingBuffer<float, 16> outBuffer[NUM_TAPS][CHANNELS]; 
-	SampleRateConverter<1> src;
+	FrozenWasteland::MultiTapDoubleRingBuffer<float, HISTORY_SIZE,NUM_TAPS> historyBuffer[CHANNELS];
+	FrozenWasteland::DoubleRingBuffer<float, 16> outBuffer[NUM_TAPS][CHANNELS]; 
+	
+	SRC_STATE *src;
 	float lastFeedback[CHANNELS] = {0.0f,0.0f};
 
 	float lerp(float v0, float v1, float t) {
@@ -135,29 +135,49 @@ struct HairPick : Module {
         }
     }
 
-	HairPick() : Module(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS, NUM_LIGHTS) {
+	HairPick() {
+		config(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS, NUM_LIGHTS);
+
+		configParam(CLOCK_DIV_PARAM, 0, DIVISIONS-1, 0);
+		configParam(SIZE_PARAM, 0.001f, 10.0f, 0.350f);
+		//configParam(createParam<RoundLargeBlackKnob>(Vec(257, 40), module, HairPick::GRID_PARAM, 0.001f, 10.0f, 0.350f));
+
+		configParam(PATTERN_TYPE_PARAM, 0.0f, 15.0f, 0.0f);
+		configParam(NUMBER_TAPS_PARAM, 1.0f, 64.0f, 64.0f);
+
+		configParam(EDGE_LEVEL_PARAM, 0.0f, 1.0f, 0.5f);
+		configParam(TENT_LEVEL_PARAM, 0.0f, 1.0f, 0.5f);
+		configParam(TENT_TAP_PARAM, 0.0f, 63.0f, 32.0f);
+
+
+		configParam(FEEDBACK_TYPE_PARAM, 0.0f, 3, 0.0f);
+		configParam(FEEDBACK_AMOUNT_PARAM, 0.0f, 1.0f, 0.0f);
+
+		//src = src_new(SRC_SINC_FASTEST, 1, NULL);	
+		//src = src_new(SRC_LINEAR, 1, NULL);		
+		src = src_new(SRC_ZERO_ORDER_HOLD, 1, NULL);
 	}
 
-	const char* tapNames[NUM_TAPS+2] {"1","2","3","4","5","6","7","8","9","10","11","12","13","14","15","16","ALL","EXT"};
+	
 
 
 
-	void step() override;
+	void process(const ProcessArgs &args) override;
 };
 
 
-void HairPick::step() {
+void HairPick::process(const ProcessArgs &args) {
 
-	combPattern = (int)clamp(params[PATTERN_TYPE_PARAM].value + (inputs[PATTERN_TYPE_CV_INPUT].value * 1.5f),0.0f,15.0);
-	feedbackType = (int)clamp(params[FEEDBACK_TYPE_PARAM].value + (inputs[FEEDBACK_TYPE_CV_INPUT].value / 10.0f),0.0f,3.0);
+	combPattern = (int)clamp(params[PATTERN_TYPE_PARAM].getValue() + (inputs[PATTERN_TYPE_CV_INPUT].getVoltage() * 1.5f),0.0f,15.0);
+	feedbackType = (int)clamp(params[FEEDBACK_TYPE_PARAM].getValue() + (inputs[FEEDBACK_TYPE_CV_INPUT].getVoltage() / 10.0f),0.0f,3.0);
 
-	int tapCount = (int)clamp(params[NUMBER_TAPS_PARAM].value + (inputs[NUMBER_TAPS_CV_INPUT].value * 6.4f),1.0f,64.0);
+	int tapCount = (int)clamp(params[NUMBER_TAPS_PARAM].getValue() + (inputs[NUMBER_TAPS_CV_INPUT].getVoltage() * 6.4f),1.0f,64.0);
 
 
-	edgeLevel = clamp(params[EDGE_LEVEL_PARAM].value + (inputs[EDGE_LEVEL_CV_INPUT].value / 10.0f),0.0f,1.0);
-	tentLevel = clamp(params[TENT_LEVEL_PARAM].value + (inputs[TENT_LEVEL_CV_INPUT].value / 10.0f),0.0f,1.0);
+	edgeLevel = clamp(params[EDGE_LEVEL_PARAM].getValue() + (inputs[EDGE_LEVEL_CV_INPUT].getVoltage() / 10.0f),0.0f,1.0);
+	tentLevel = clamp(params[TENT_LEVEL_PARAM].getValue() + (inputs[TENT_LEVEL_CV_INPUT].getVoltage() / 10.0f),0.0f,1.0);
 
-	tentTap = (int)clamp(params[TENT_TAP_PARAM].value + (inputs[TENT_TAP_CV_INPUT].value * 6.3f),1.0f,63.0f);
+	tentTap = (int)clamp(params[TENT_TAP_PARAM].getValue() + (inputs[TENT_TAP_CV_INPUT].getVoltage() * 6.3f),1.0f,63.0f);
 
 
 	//Initialize muting - set all active first
@@ -170,16 +190,16 @@ void HairPick::step() {
 		combActive[tapNumber] = false;
 	}
 
-	float divisionf = params[CLOCK_DIV_PARAM].value;
-	if(inputs[CLOCK_DIVISION_CV_INPUT].active) {
-		divisionf +=(inputs[CLOCK_DIVISION_CV_INPUT].value * (DIVISIONS / 10.0));
+	float divisionf = params[CLOCK_DIV_PARAM].getValue();
+	if(inputs[CLOCK_DIVISION_CV_INPUT].isConnected()) {
+		divisionf +=(inputs[CLOCK_DIVISION_CV_INPUT].getVoltage() * (DIVISIONS / 10.0));
 	}
 	divisionf = clamp(divisionf,0.0f,20.0f);
 	division = (DIVISIONS-1) - int(divisionf); //TODO: Reverse Division Order
 
-	time += 1.0 / engineGetSampleRate();
-	if(inputs[CLOCK_INPUT].active) {
-		if(clockTrigger.process(inputs[CLOCK_INPUT].value)) {
+	time += 1.0 / args.sampleRate;
+	if(inputs[CLOCK_INPUT].isConnected()) {
+		if(clockTrigger.process(inputs[CLOCK_INPUT].getVoltage())) {
 			if(secondClockReceived) {
 				duration = time;
 			}
@@ -190,24 +210,24 @@ void HairPick::step() {
 		//lights[CLOCK_LIGHT].value = time > (duration/2.0);
 	}
 	
-	if(inputs[CLOCK_INPUT].active) {
+	if(inputs[CLOCK_INPUT].isConnected()) {
 		baseDelay = duration / divisions[division];
 	} else {
-		baseDelay = clamp(params[SIZE_PARAM].value, 0.001f, 10.0f);			
+		baseDelay = clamp(params[SIZE_PARAM].getValue(), 0.001f, 10.0f);			
 	}
-	float pitchShift = powf(2.0f,inputs[VOLT_OCTAVE_INPUT].value);
+	float pitchShift = powf(2.0f,inputs[VOLT_OCTAVE_INPUT].getVoltage());
 	baseDelay = baseDelay / pitchShift;
-	outputs[DELAY_LENGTH_OUTPUT].value = baseDelay;
+	outputs[DELAY_LENGTH_OUTPUT].setVoltage(baseDelay);  
 	
 	for(int channel = 0;channel < CHANNELS;channel++) {
 		// Get input to delay block
 		float in = 0.0f;
 		if(channel == 0) {
-			in = inputs[IN_L_INPUT].value;
+			in = inputs[IN_L_INPUT].getVoltage();
 		} else {
-			in = inputs[IN_R_INPUT].active ? inputs[IN_R_INPUT].value : inputs[IN_L_INPUT].value;			
+			in = inputs[IN_R_INPUT].isConnected() ? inputs[IN_R_INPUT].getVoltage() : inputs[IN_L_INPUT].getVoltage();			
 		}
-		float feedbackAmount = clamp(params[FEEDBACK_AMOUNT_PARAM].value + (inputs[FEEDBACK_CV_INPUT].value / 10.0f), 0.0f, 1.0f);
+		float feedbackAmount = clamp(params[FEEDBACK_AMOUNT_PARAM].getValue() + (inputs[FEEDBACK_CV_INPUT].getVoltage() / 10.0f), 0.0f, 1.0f);
 		float feedbackInput = lastFeedback[channel];
 
 		float dry = in + feedbackInput * feedbackAmount;
@@ -230,36 +250,36 @@ void HairPick::step() {
 		float wet = 0.0f; // This is the mix of delays and input that is outputed
 		float feedbackValue = 0.0f; // This is the output of a tap that gets sent back to input
 		for(int tap = 0; tap < NUM_TAPS;tap++) { 
-
-			int inFrames = min(historyBuffer[channel].size(tap), 16); 
 		
+			
 			// Compute delay time in seconds
 			float delay = baseDelay * delayNonlinearity * combPatterns[combPattern][tap] / NUM_TAPS; 
-
-			//float delayMod = 0.0f;
 			// Number of delay samples
-			float index = delay * engineGetSampleRate();
+			float index = delay * args.sampleRate;
 
 
 			// How many samples do we need consume to catch up?
 			float consume = index - historyBuffer[channel].size(tap);
+			if(index > 0)
+			{
+				if (outBuffer[tap][channel].empty()) {
+								
+					double ratio = 1.f;
+					if (std::fabs(consume) >= 16.f) {
+						ratio = std::pow(10.f, clamp(consume / 10000.f, -1.f, 1.f));
+					}
 
-			if (outBuffer[tap][channel].empty()) {
-				
-				double ratio = 1.0;
-				if (consume <= -16) 
-					ratio = 0.5;
-				else if (consume >= 16) 
-					ratio = 2.0;
-
-				float inSR = engineGetSampleRate();
-		        float outSR = ratio * inSR;
-
-		        int outFrames = outBuffer[tap][channel].capacity();
-		        src.setRates(inSR, outSR);
-		        src.process((const Frame<1>*)historyBuffer[channel].startData(tap), &inFrames, (Frame<1>*)outBuffer[tap][channel].endData(), &outFrames);
-		        outBuffer[tap][channel].endIncr(outFrames);
-		        historyBuffer[channel].startIncr(tap, inFrames);
+					SRC_DATA srcData;
+					srcData.data_in = (const float*) historyBuffer[channel].startData(tap);
+					srcData.data_out = (float*) outBuffer[tap][channel].endData();
+					srcData.input_frames = std::min((int) historyBuffer[channel].size(tap), 16);
+					srcData.output_frames = outBuffer[tap][channel].capacity();
+					srcData.end_of_input = false;
+					srcData.src_ratio = ratio;
+					src_process(src, &srcData);
+					historyBuffer[channel].startIncr(tap,srcData.input_frames_used);
+					outBuffer[tap][channel].endIncr(srcData.output_frames_gen);
+				}			
 			}
 
 			float wetTap = 0.0f;
@@ -301,9 +321,9 @@ void HairPick::step() {
 
 		lastFeedback[channel] = feedbackValue;
 
-		float out = wet;
+		float out = wet; 
 		
-		outputs[OUT_L_OUTPUT + channel].value = out;
+		outputs[OUT_L_OUTPUT + channel].setVoltage(out);
 	}
 }
 
@@ -315,157 +335,151 @@ struct HPStatusDisplay : TransparentWidget {
 	
 
 	HPStatusDisplay() {
-		fontNumbers = Font::load(assetPlugin(plugin, "res/fonts/01 Digit.ttf"));
-		fontText = Font::load(assetPlugin(plugin, "res/fonts/DejaVuSansMono.ttf"));
+		fontNumbers = APP->window->loadFont(asset::plugin(pluginInstance, "res/fonts/01 Digit.ttf"));
+		fontText = APP->window->loadFont(asset::plugin(pluginInstance, "res/fonts/DejaVuSansMono.ttf"));
 
 	}
 
 	
 
-	void drawDivision(NVGcontext *vg, Vec pos, int division) {
-		nvgFontSize(vg, 20);
-		nvgFontFaceId(vg, fontNumbers->handle);
-		nvgTextLetterSpacing(vg, -2);
+	void drawDivision(const DrawArgs &args, Vec pos, int division) {
+		nvgFontSize(args.vg, 20);
+		nvgFontFaceId(args.vg, fontNumbers->handle);
+		nvgTextLetterSpacing(args.vg, -2);
 
-		nvgFillColor(vg, nvgRGBA(0x00, 0xff, 0x00, 0xff));
+		nvgFillColor(args.vg, nvgRGBA(0x00, 0xff, 0x00, 0xff));
 		char text[128];
 		snprintf(text, sizeof(text), "%s", module->divisionNames[division]);
-		nvgText(vg, pos.x, pos.y, text, NULL);
+		nvgText(args.vg, pos.x, pos.y, text, NULL);
 	}
 
-	void drawDelayTime(NVGcontext *vg, Vec pos, float delayTime) {
-		nvgFontSize(vg, 28);
-		nvgFontFaceId(vg, fontNumbers->handle);
-		nvgTextLetterSpacing(vg, -2);
+	void drawDelayTime(const DrawArgs &args, Vec pos, float delayTime) {
+		nvgFontSize(args.vg, 28);
+		nvgFontFaceId(args.vg, fontNumbers->handle);
+		nvgTextLetterSpacing(args.vg, -2);
 
-		nvgFillColor(vg, nvgRGBA(0x00, 0xff, 0x00, 0xff));
+		nvgFillColor(args.vg, nvgRGBA(0x00, 0xff, 0x00, 0xff));
 		char text[128];
 		snprintf(text, sizeof(text), "%6.0f", delayTime*1000);	
-		nvgText(vg, pos.x, pos.y, text, NULL);
+		nvgText(args.vg, pos.x, pos.y, text, NULL);
 	}
 
-	void drawPatternType(NVGcontext *vg, Vec pos, int patternType) {
-		nvgFontSize(vg, 14);
-		nvgFontFaceId(vg, fontText->handle);
-		nvgTextLetterSpacing(vg, -2);
+	void drawPatternType(const DrawArgs &args, Vec pos, int patternType) {
+		nvgFontSize(args.vg, 14);
+		nvgFontFaceId(args.vg, fontText->handle);
+		nvgTextLetterSpacing(args.vg, -2);
 
-		nvgFillColor(vg, nvgRGBA(0x00, 0xff, 0x00, 0xff));
+		nvgFillColor(args.vg, nvgRGBA(0x00, 0xff, 0x00, 0xff));
 		char text[128];
 		snprintf(text, sizeof(text), "%s", module->combPatternNames[patternType]);
-		nvgText(vg, pos.x, pos.y, text, NULL);
+		nvgText(args.vg, pos.x, pos.y, text, NULL);
 	}
 
-	void drawEnvelope(NVGcontext *vg, Vec pos,float edgeLevel, float tentLevel, int tentTap) {
-		nvgStrokeWidth(vg, 1);
-		nvgStrokeColor(vg, nvgRGBA(0xff, 0xff, 0x20, 0xff));	
-		nvgBeginPath(vg);
+	void drawEnvelope(const DrawArgs &args, Vec pos,float edgeLevel, float tentLevel, int tentTap) {
+		nvgStrokeWidth(args.vg, 1);
+		nvgStrokeColor(args.vg, nvgRGBA(0xff, 0xff, 0x20, 0xff));	
+		nvgBeginPath(args.vg);
 		float xOffset = (float)(tentTap-1)/64*100;
-		nvgMoveTo(vg, pos.x+0, pos.y+20*(1-edgeLevel));
-		nvgLineTo(vg, pos.x+xOffset, pos.y+20*(1-tentLevel));
-		nvgLineTo(vg, pos.x+99, pos.y+20*(1-edgeLevel));
+		nvgMoveTo(args.vg, pos.x+0, pos.y+20*(1-edgeLevel));
+		nvgLineTo(args.vg, pos.x+xOffset, pos.y+20*(1-tentLevel));
+		nvgLineTo(args.vg, pos.x+99, pos.y+20*(1-edgeLevel));
 			
-		nvgStroke(vg);
+		nvgStroke(args.vg);
 	}
 
 
-	void drawFeedbackType(NVGcontext *vg, Vec pos, int feedbackType) {
-		nvgFontSize(vg, 14);
-		nvgFontFaceId(vg, fontText->handle);
-		nvgTextLetterSpacing(vg, -2);
+	void drawFeedbackType(const DrawArgs &args, Vec pos, int feedbackType) {
+		nvgFontSize(args.vg, 14);
+		nvgFontFaceId(args.vg, fontText->handle);
+		nvgTextLetterSpacing(args.vg, -2);
 
-		nvgFillColor(vg, nvgRGBA(0x00, 0xff, 0x00, 0xff));
+		nvgFillColor(args.vg, nvgRGBA(0x00, 0xff, 0x00, 0xff));
 		char text[128];
 		snprintf(text, sizeof(text), "%s", module->feedbackTypeNames[feedbackType]);
-		nvgText(vg, pos.x, pos.y, text, NULL);
+		nvgText(args.vg, pos.x, pos.y, text, NULL);
 	}
 
-	void draw(NVGcontext *vg) override {
+	void draw(const DrawArgs &args) override {
+		if (!module)
+			return;
 		
-		//drawProgress(vg,module->oscillator.progress());
-		drawDivision(vg, Vec(91,60), module->division);
-		drawDelayTime(vg, Vec(350,65), module->baseDelay);
-		drawPatternType(vg, Vec(64,135), module->combPattern);
-		drawEnvelope(vg,Vec(55,166),module->edgeLevel,module->tentLevel,module->tentTap);
-		drawFeedbackType(vg, Vec(60,303), module->feedbackType);
+		drawDivision(args, Vec(91,60), module->division);
+		drawDelayTime(args, Vec(350,65), module->baseDelay);
+		drawPatternType(args, Vec(64,135), module->combPattern);
+		drawEnvelope(args,Vec(55,166),module->edgeLevel,module->tentLevel,module->tentTap);
+		drawFeedbackType(args, Vec(60,303), module->feedbackType);
 	}
 };
 
 
 struct HairPickWidget : ModuleWidget {
-	HairPickWidget(HairPick *module);
+	HairPickWidget(HairPick *module) {
+		setModule(module);
+
+		setPanel(APP->window->loadSvg(asset::plugin(pluginInstance, "res/HairPick.svg")));
+		
+
+		addChild(createWidget<ScrewSilver>(Vec(15, 0)));
+		addChild(createWidget<ScrewSilver>(Vec(box.size.x-30, 0)));
+		addChild(createWidget<ScrewSilver>(Vec(15, 745)));
+		addChild(createWidget<ScrewSilver>(Vec(box.size.x-30, 745)));
+
+		{
+			HPStatusDisplay *display = new HPStatusDisplay();
+			display->module = module;
+			display->box.pos = Vec(0, 0);
+			display->box.size = Vec(box.size.x, 200);
+			addChild(display);
+		}
+
+		addParam(createParam<RoundLargeBlackKnob>(Vec(45, 33), module, HairPick::CLOCK_DIV_PARAM));
+		addParam(createParam<RoundLargeBlackKnob>(Vec(157, 33), module, HairPick::SIZE_PARAM));
+		//addParam(createParam<RoundLargeBlackKnob>(Vec(257, 40), module, HairPick::GRID_PARAM, 0.001f, 10.0f, 0.350f));
+
+		addParam(createParam<RoundLargeBlackKnob>(Vec(17, 115), module, HairPick::PATTERN_TYPE_PARAM));
+		addParam(createParam<RoundLargeBlackKnob>(Vec(157, 115), module, HairPick::NUMBER_TAPS_PARAM));
+
+		addParam(createParam<RoundLargeBlackKnob>(Vec(17, 200), module, HairPick::EDGE_LEVEL_PARAM));
+		addParam(createParam<RoundLargeBlackKnob>(Vec(87, 200), module, HairPick::TENT_LEVEL_PARAM));
+		addParam(createParam<RoundLargeBlackKnob>(Vec(157, 200), module, HairPick::TENT_TAP_PARAM));
+
+
+		addParam(createParam<RoundLargeBlackKnob>(Vec(17, 283), module, HairPick::FEEDBACK_TYPE_PARAM));
+		addParam(createParam<RoundLargeBlackKnob>(Vec(157, 283), module, HairPick::FEEDBACK_AMOUNT_PARAM));
+
+
+	//	addChild(createLight<MediumLight<BlueLight>>(Vec(474, 189), module, HairPick::PING_PONG_LIGHT));
+
+
+		
+
+		addInput(createInput<PJ301MPort>(Vec(12, 32), module, HairPick::CLOCK_INPUT));
+		addInput(createInput<PJ301MPort>(Vec(12, 74), module, HairPick::VOLT_OCTAVE_INPUT));
+
+		addInput(createInput<PJ301MPort>(Vec(50, 74), module, HairPick::CLOCK_DIVISION_CV_INPUT));
+		addInput(createInput<PJ301MPort>(Vec(162, 74), module, HairPick::SIZE_CV_INPUT));
+		//addInput(createInput<PJ301MPort>(Vec(300, 45), module, HairPick::GRID_CV_INPUT));
+
+		addInput(createInput<PJ301MPort>(Vec(22, 156), module, HairPick::PATTERN_TYPE_CV_INPUT));
+		addInput(createInput<PJ301MPort>(Vec(162, 156), module, HairPick::NUMBER_TAPS_CV_INPUT));
+
+		addInput(createInput<PJ301MPort>(Vec(22, 241), module, HairPick::EDGE_LEVEL_CV_INPUT));
+		addInput(createInput<PJ301MPort>(Vec(92, 241), module, HairPick::TENT_LEVEL_CV_INPUT));
+		addInput(createInput<PJ301MPort>(Vec(162, 241), module, HairPick::TENT_TAP_CV_INPUT));
+
+
+		addInput(createInput<PJ301MPort>(Vec(22, 324), module, HairPick::FEEDBACK_TYPE_CV_INPUT));
+		addInput(createInput<PJ301MPort>(Vec(162, 324), module, HairPick::FEEDBACK_CV_INPUT));
+
+
+		addInput(createInput<PJ301MPort>(Vec(50, 336), module, HairPick::IN_L_INPUT));
+		addInput(createInput<PJ301MPort>(Vec(75, 336), module, HairPick::IN_R_INPUT));
+		addOutput(createOutput<PJ301MPort>(Vec(110, 336), module, HairPick::OUT_L_OUTPUT));
+		addOutput(createOutput<PJ301MPort>(Vec(135, 336), module, HairPick::OUT_R_OUTPUT));
+
+		addOutput(createOutput<PJ301MPort>(Vec(130, 74), module, HairPick::DELAY_LENGTH_OUTPUT));
+	}
 };
 
-HairPickWidget::HairPickWidget(HairPick *module) : ModuleWidget(module) {
-	box.size = Vec(RACK_GRID_WIDTH*14, RACK_GRID_HEIGHT);
 
-	{
-		SVGPanel *panel = new SVGPanel();
-		panel->box.size = box.size;
-		panel->setBackground(SVG::load(assetPlugin(plugin, "res/HairPick.svg")));
-		addChild(panel);
-	}
-
-
-	addChild(Widget::create<ScrewSilver>(Vec(15, 0)));
-	addChild(Widget::create<ScrewSilver>(Vec(box.size.x-30, 0)));
-	addChild(Widget::create<ScrewSilver>(Vec(15, 745)));
-	addChild(Widget::create<ScrewSilver>(Vec(box.size.x-30, 745)));
-
-	{
-		HPStatusDisplay *display = new HPStatusDisplay();
-		display->module = module;
-		display->box.pos = Vec(0, 0);
-		display->box.size = Vec(box.size.x, 200);
-		addChild(display);
-	}
-
-	addParam(ParamWidget::create<RoundLargeBlackKnob>(Vec(45, 33), module, HairPick::CLOCK_DIV_PARAM, 0, DIVISIONS-1, 0));
-	addParam(ParamWidget::create<RoundLargeBlackKnob>(Vec(157, 33), module, HairPick::SIZE_PARAM, 0.001f, 10.0f, 0.350f));
-	//addParam(ParamWidget::create<RoundLargeBlackKnob>(Vec(257, 40), module, HairPick::GRID_PARAM, 0.001f, 10.0f, 0.350f));
-
-	addParam(ParamWidget::create<RoundLargeBlackKnob>(Vec(17, 115), module, HairPick::PATTERN_TYPE_PARAM, 0.0f, 15.0f, 0.0f));
-	addParam(ParamWidget::create<RoundLargeBlackKnob>(Vec(157, 115), module, HairPick::NUMBER_TAPS_PARAM, 1.0f, 64.0f, 64.0f));
-
-	addParam(ParamWidget::create<RoundLargeBlackKnob>(Vec(17, 200), module, HairPick::EDGE_LEVEL_PARAM, 0.0f, 1.0f, 0.5f));
-	addParam(ParamWidget::create<RoundLargeBlackKnob>(Vec(87, 200), module, HairPick::TENT_LEVEL_PARAM, 0.0f, 1.0f, 0.5f));
-	addParam(ParamWidget::create<RoundLargeBlackKnob>(Vec(157, 200), module, HairPick::TENT_TAP_PARAM, 0.0f, 63.0f, 32.0f));
-
-
-	addParam(ParamWidget::create<RoundLargeBlackKnob>(Vec(17, 283), module, HairPick::FEEDBACK_TYPE_PARAM, 0.0f, 3, 0.0f));
-	addParam(ParamWidget::create<RoundLargeBlackKnob>(Vec(157, 283), module, HairPick::FEEDBACK_AMOUNT_PARAM, 0.0f, 1.0f, 0.0f));
-
-
-//	addChild(ModuleLightWidget::create<MediumLight<BlueLight>>(Vec(474, 189), module, HairPick::PING_PONG_LIGHT));
-
-
-	
-
-	addInput(Port::create<PJ301MPort>(Vec(12, 32), Port::INPUT, module, HairPick::CLOCK_INPUT));
-	addInput(Port::create<PJ301MPort>(Vec(12, 74), Port::INPUT, module, HairPick::VOLT_OCTAVE_INPUT));
-
-	addInput(Port::create<PJ301MPort>(Vec(50, 74), Port::INPUT, module, HairPick::CLOCK_DIVISION_CV_INPUT));
-	addInput(Port::create<PJ301MPort>(Vec(162, 74), Port::INPUT, module, HairPick::SIZE_CV_INPUT));
-	//addInput(Port::create<PJ301MPort>(Vec(300, 45), Port::INPUT, module, HairPick::GRID_CV_INPUT));
-
-	addInput(Port::create<PJ301MPort>(Vec(22, 156), Port::INPUT, module, HairPick::PATTERN_TYPE_CV_INPUT));
-	addInput(Port::create<PJ301MPort>(Vec(162, 156), Port::INPUT, module, HairPick::NUMBER_TAPS_CV_INPUT));
-
-	addInput(Port::create<PJ301MPort>(Vec(22, 241), Port::INPUT, module, HairPick::EDGE_LEVEL_CV_INPUT));
-	addInput(Port::create<PJ301MPort>(Vec(92, 241), Port::INPUT, module, HairPick::TENT_LEVEL_CV_INPUT));
-	addInput(Port::create<PJ301MPort>(Vec(162, 241), Port::INPUT, module, HairPick::TENT_TAP_CV_INPUT));
-
-
-	addInput(Port::create<PJ301MPort>(Vec(22, 324), Port::INPUT, module, HairPick::FEEDBACK_TYPE_CV_INPUT));
-	addInput(Port::create<PJ301MPort>(Vec(162, 324), Port::INPUT, module, HairPick::FEEDBACK_CV_INPUT));
-
-
-	addInput(Port::create<PJ301MPort>(Vec(50, 336), Port::INPUT, module, HairPick::IN_L_INPUT));
-	addInput(Port::create<PJ301MPort>(Vec(75, 336), Port::INPUT, module, HairPick::IN_R_INPUT));
-	addOutput(Port::create<PJ301MPort>(Vec(110, 336), Port::OUTPUT, module, HairPick::OUT_L_OUTPUT));
-	addOutput(Port::create<PJ301MPort>(Vec(135, 336), Port::OUTPUT, module, HairPick::OUT_R_OUTPUT));
-
-	addOutput(Port::create<PJ301MPort>(Vec(130, 74), Port::OUTPUT, module, HairPick::DELAY_LENGTH_OUTPUT));
-}
-
-
-Model *modelHairPick = Model::create<HairPick, HairPickWidget>("Frozen Wasteland", "HairPick", "Hair Pick", FILTER_TAG);
+Model *modelHairPick = createModel<HairPick, HairPickWidget>("HairPick");

@@ -1,6 +1,4 @@
 #include "FrozenWasteland.hpp"
-#include "dsp/decimator.hpp"
-#include "dsp/digital.hpp"
 #include "StateVariableFilter.h"
 
 using namespace std;
@@ -142,7 +140,42 @@ struct VoxInhumana : Module {
 		}				
 	};
 
-	VoxInhumana() : Module(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS, NUM_LIGHTS) {
+	VoxInhumana() {
+		config(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS, NUM_LIGHTS);
+
+		configParam(VOWEL_1_PARAM, 0, 4.6, 0);
+		configParam(VOWEL_2_PARAM, 0, 4.6, 0);
+		configParam(VOWEL_BALANCE_PARAM, 0.0, 1.0, 0);
+		configParam(VOICE_TYPE_PARAM, 0, 4.6, 0);
+		configParam(FC_MAIN_CUTOFF_PARAM, 0.0, 2.0, 1);
+
+		configParam(VOWEL_1_ATTENUVERTER_PARAM, -1.0, 1.0, 0);
+		configParam(VOWEL_2_ATTENUVERTER_PARAM, -1.0, 1.0, 0);
+		configParam(VOWEL_BALANCE_ATTENUVERTER_PARAM, -1.0, 1.0, 0);
+		configParam(VOICE_TYPE_ATTENUVERTER_PARAM, -1.0, 1.0, 0);
+		configParam(FC_MAIN_ATTENUVERTER_PARAM, -1.0, 1.0, 0);
+			
+		configParam(FREQ_1_CUTOFF_PARAM, -1.0, 1.0, 0);
+		configParam(FREQ_2_CUTOFF_PARAM, -1.0, 1.0, 0);
+		configParam(FREQ_3_CUTOFF_PARAM, -1.0, 1.0, 0);
+		configParam(FREQ_4_CUTOFF_PARAM, -1.0, 1.0, 0);
+		configParam(FREQ_5_CUTOFF_PARAM, -1.0, 1.0, 0);
+		configParam(FREQ_1_CV_ATTENUVERTER_PARAM, -1.0, 1.0, 0);
+		configParam(FREQ_2_CV_ATTENUVERTER_PARAM, -1.0, 1.0, 0);
+		configParam(FREQ_3_CV_ATTENUVERTER_PARAM, -1.0, 1.0, 0);
+		configParam(FREQ_4_CV_ATTENUVERTER_PARAM, -1.0, 1.0, 0);
+		configParam(FREQ_5_CV_ATTENUVERTER_PARAM, -1.0, 1.0, 0);
+		configParam(AMP_1_PARAM, 0.0, 2.0, 1);
+		configParam(AMP_2_PARAM, 0.0, 2.0, 1);
+		configParam(AMP_3_PARAM, 0.0, 2.0, 1);
+		configParam(AMP_4_PARAM, 0.0, 2.0, 1);
+		configParam(AMP_5_PARAM, 0.0, 2.0, 1);
+		configParam(AMP_1_CV_ATTENUVERTER_PARAM, -1.0, 1.0, 0);
+		configParam(AMP_2_CV_ATTENUVERTER_PARAM, -1.0, 1.0, 0);
+		configParam(AMP_3_CV_ATTENUVERTER_PARAM, -1.0, 1.0, 0);
+		configParam(AMP_4_CV_ATTENUVERTER_PARAM, -1.0, 1.0, 0);
+		configParam(AMP_5_CV_ATTENUVERTER_PARAM, -1.0, 1.0, 0);
+			
 
 		for (int i = 0; i < BANDS; ++i) {
 			filterParams[i].setMode(StateVariableFilterParams<T>::Mode::BandPass);
@@ -151,35 +184,35 @@ struct VoxInhumana : Module {
 	    }
 	}
 
-	void reset() override;
-	void step() override;
+	
+	void process(const ProcessArgs &args) override;
 };
 
-void VoxInhumana::reset() {
-	params[FC_MAIN_CUTOFF_PARAM].value = 1.0f;
-	params[VOWEL_BALANCE_PARAM].value = 0.0f;
-	for(int i = 0;i<BANDS;i++) {
-		params[FREQ_1_CUTOFF_PARAM+i].value = 0.0f;
-		params[AMP_1_PARAM + i].value = 1.0f;
-	}
-}
+// void VoxInhumana::reset() {
+// 	params[FC_MAIN_CUTOFF_PARAM].getValue() = 1.0f;
+// 	params[VOWEL_BALANCE_PARAM].getValue() = 0.0f;
+// 	for(int i = 0;i<BANDS;i++) {
+// 		params[FREQ_1_CUTOFF_PARAM+i].getValue() = 0.0f;
+// 		params[AMP_1_PARAM + i].getValue() = 1.0f;
+// 	}
+// }
 
-void VoxInhumana::step() {
+void VoxInhumana::process(const ProcessArgs &args) {
 	
-	float signalIn = inputs[SIGNAL_IN].value/5.0f;
+	float signalIn = inputs[SIGNAL_IN].getVoltage()/5.0f;
 	
 
-	vowel1 = (int)clamp(params[VOWEL_1_PARAM].value + (inputs[VOWEL_1_CV_IN].value * params[VOWEL_1_ATTENUVERTER_PARAM].value),0.0f,4.0f);
-	vowel2 = (int)clamp(params[VOWEL_2_PARAM].value + (inputs[VOWEL_2_CV_IN].value * params[VOWEL_2_ATTENUVERTER_PARAM].value),0.0f,4.0f);
-	vowelBalance = clamp(params[VOWEL_BALANCE_PARAM].value + (inputs[VOWEL_BALANCE_CV_IN].value * params[VOWEL_BALANCE_ATTENUVERTER_PARAM].value /10.0f),0.0f,1.0f);
-	voiceType = (int)clamp(params[VOICE_TYPE_PARAM].value + (inputs[VOICE_TYPE_CV_IN].value * params[VOICE_TYPE_ATTENUVERTER_PARAM].value),0.0f,4.0f);
-	fcShift = clamp(params[FC_MAIN_CUTOFF_PARAM].value + (inputs[FC_MAIN_CV_IN].value * params[FC_MAIN_ATTENUVERTER_PARAM].value/10.0f) ,0.0f,2.0f);
+	vowel1 = (int)clamp(params[VOWEL_1_PARAM].getValue() + (inputs[VOWEL_1_CV_IN].getVoltage() * params[VOWEL_1_ATTENUVERTER_PARAM].getValue()),0.0f,4.0f);
+	vowel2 = (int)clamp(params[VOWEL_2_PARAM].getValue() + (inputs[VOWEL_2_CV_IN].getVoltage() * params[VOWEL_2_ATTENUVERTER_PARAM].getValue()),0.0f,4.0f);
+	vowelBalance = clamp(params[VOWEL_BALANCE_PARAM].getValue() + (inputs[VOWEL_BALANCE_CV_IN].getVoltage() * params[VOWEL_BALANCE_ATTENUVERTER_PARAM].getValue() /10.0f),0.0f,1.0f);
+	voiceType = (int)clamp(params[VOICE_TYPE_PARAM].getValue() + (inputs[VOICE_TYPE_CV_IN].getVoltage() * params[VOICE_TYPE_ATTENUVERTER_PARAM].getValue()),0.0f,4.0f);
+	fcShift = clamp(params[FC_MAIN_CUTOFF_PARAM].getValue() + (inputs[FC_MAIN_CV_IN].getVoltage() * params[FC_MAIN_ATTENUVERTER_PARAM].getValue()/10.0f) ,0.0f,2.0f);
 
 	lights[VOWEL_1_LIGHT].value = 1.0-vowelBalance;
 	lights[VOWEL_2_LIGHT].value = vowelBalance;
 	
 	for (int i=0; i<BANDS;i++) {
-		float cutoffExp = params[FREQ_1_CUTOFF_PARAM+i].value + inputs[FREQ_1_CUTOFF_INPUT+i].value * params[FREQ_1_CV_ATTENUVERTER_PARAM+i].value; 
+		float cutoffExp = params[FREQ_1_CUTOFF_PARAM+i].getValue() + inputs[FREQ_1_CUTOFF_INPUT+i].getVoltage() * params[FREQ_1_CV_ATTENUVERTER_PARAM+i].getValue(); 
 		cutoffExp = clamp(cutoffExp, -1.0f, 1.0f);
 		freq[i] = lerp(formantParameters[voiceType][vowel1][i][0],formantParameters[voiceType][vowel2][i][0],vowelBalance); 
 		//Apply individual formant CV
@@ -192,7 +225,7 @@ void VoxInhumana::step() {
 
 
 		if(freq[i] != lastFreq[i]) {
-			float Fc = freq[i] / engineGetSampleRate();
+			float Fc = freq[i] / args.sampleRate;
 			filterParams[i].setFreq(T(Fc));
 			lastFreq[i] = freq[i];
 		}
@@ -206,13 +239,13 @@ void VoxInhumana::step() {
 	for(int i=0;i<BANDS;i++) {
 		float filterOut = StateVariableFilter<T>::run(signalIn, filterStates[i], filterParams[i]);;
 		float attenuation = powf(10,peak[i] / 20.0f);
-		float manualAttenuation = params[AMP_1_PARAM+i].value + inputs[AMP_1_INPUT+i].value * params[AMP_1_CV_ATTENUVERTER_PARAM+i].value; 
+		float manualAttenuation = params[AMP_1_PARAM+i].getValue() + inputs[AMP_1_INPUT+i].getVoltage() * params[AMP_1_CV_ATTENUVERTER_PARAM+i].getValue(); 
 		attenuation = clamp(attenuation * manualAttenuation, 0.0f, 1.0f);
 		out += filterOut * attenuation * 5.0f;
 	}
 
 
-	outputs[VOX_OUTPUT].value = out / 5.0f;
+	outputs[VOX_OUTPUT].setVoltage(out / 5.0f);
 	
 }
 
@@ -223,129 +256,126 @@ struct VoxInhumanaBandDisplay : TransparentWidget {
 	std::shared_ptr<Font> font;
 
 	VoxInhumanaBandDisplay() {
-		font = Font::load(assetPlugin(plugin, "res/fonts/DejaVuSansMono.ttf"));
+		font = APP->window->loadFont(asset::plugin(pluginInstance, "res/fonts/DejaVuSansMono.ttf"));
 	}
 
-	void drawVowel(NVGcontext *vg, Vec pos, int vowel) {
-		nvgFontSize(vg, 22);
-		nvgFontFaceId(vg, font->handle);
-		nvgTextLetterSpacing(vg, -2);
+	void drawVowel(const DrawArgs &args, Vec pos, int vowel) {
+		nvgFontSize(args.vg, 22);
+		nvgFontFaceId(args.vg, font->handle);
+		nvgTextLetterSpacing(args.vg, -2);
 
 		const char* vowelNames[5] = {"A","E","I","O","U"};
 
-		nvgFillColor(vg, nvgRGBA(0x00, 0xaf, 0x00, 0xff));
+		nvgFillColor(args.vg, nvgRGBA(0x00, 0xaf, 0x00, 0xff));
 		char text[128];
 		snprintf(text, sizeof(text), "%s", vowelNames[vowel]);
-		nvgText(vg, pos.x + 8, pos.y, text, NULL);
+		nvgText(args.vg, pos.x + 8, pos.y, text, NULL);
 	}
 
-	void drawVoiceType(NVGcontext *vg, Vec pos, int voiceType) {
-		nvgFontSize(vg, 14);
-		nvgFontFaceId(vg, font->handle);
-		nvgTextLetterSpacing(vg, -2);
+	void drawVoiceType(const DrawArgs &args, Vec pos, int voiceType) {
+		nvgFontSize(args.vg, 14);
+		nvgFontFaceId(args.vg, font->handle);
+		nvgTextLetterSpacing(args.vg, -2);
 
 		const char* voiceNames[5] = {"Bass","Tenor","Counter-Tenor","Alto","Soprano"};
 
-		nvgFillColor(vg, nvgRGBA(0x00, 0x8f, 0xff, 0xff));
+		nvgFillColor(args.vg, nvgRGBA(0x00, 0x8f, 0xff, 0xff));
 		char text[128];
 		snprintf(text, sizeof(text), "%s", voiceNames[voiceType]);
-		nvgText(vg, pos.x + 8, pos.y, text, NULL);
+		nvgText(args.vg, pos.x + 8, pos.y, text, NULL);
 	}
 
-	void draw(NVGcontext *vg) override {
-		drawVowel(vg, Vec(24.0, box.size.y - 99),module->vowel1);
-		drawVowel(vg, Vec(156.0, box.size.y - 99),module->vowel2);
-		drawVoiceType(vg, Vec(20.0, box.size.y - 27),module->voiceType);		
+	void draw(const DrawArgs &args) override {
+		if (!module)
+			return;
+
+		drawVowel(args, Vec(24.0, box.size.y - 99),module->vowel1);
+		drawVowel(args, Vec(156.0, box.size.y - 99),module->vowel2);
+		drawVoiceType(args, Vec(20.0, box.size.y - 27),module->voiceType);		
 	}
 };
 
 struct VoxInhumanaWidget : ModuleWidget {
-	VoxInhumanaWidget(VoxInhumana *module);
+	VoxInhumanaWidget(VoxInhumana *module) {
+		setModule(module);
+
+		setPanel(APP->window->loadSvg(asset::plugin(pluginInstance, "res/VoxInhumana.svg")));
+		
+		{
+			VoxInhumanaBandDisplay *offsetDisplay = new VoxInhumanaBandDisplay();
+			offsetDisplay->module = module;
+			offsetDisplay->box.pos = Vec(15, 10);
+			offsetDisplay->box.size = Vec(box.size.x, 140);
+			addChild(offsetDisplay);
+		}
+
+
+		addParam(createParam<RoundBlackKnob>(Vec(10, 30), module, VoxInhumana::VOWEL_1_PARAM));
+		addParam(createParam<RoundBlackKnob>(Vec(140, 30), module, VoxInhumana::VOWEL_2_PARAM));
+		addParam(createParam<RoundBlackKnob>(Vec(89, 30), module, VoxInhumana::VOWEL_BALANCE_PARAM));
+		addParam(createParam<RoundBlackKnob>(Vec(7, 103), module, VoxInhumana::VOICE_TYPE_PARAM));
+		addParam(createParam<RoundBlackKnob>(Vec(140, 103), module, VoxInhumana::FC_MAIN_CUTOFF_PARAM));
+
+		addParam(createParam<RoundSmallBlackKnob>(Vec(40, 62), module, VoxInhumana::VOWEL_1_ATTENUVERTER_PARAM));
+		addParam(createParam<RoundSmallBlackKnob>(Vec(170, 62), module, VoxInhumana::VOWEL_2_ATTENUVERTER_PARAM));
+		addParam(createParam<RoundSmallBlackKnob>(Vec(107, 62), module, VoxInhumana::VOWEL_BALANCE_ATTENUVERTER_PARAM));
+		addParam(createParam<RoundSmallBlackKnob>(Vec(31, 134), module, VoxInhumana::VOICE_TYPE_ATTENUVERTER_PARAM));
+		addParam(createParam<RoundSmallBlackKnob>(Vec(169, 125), module, VoxInhumana::FC_MAIN_ATTENUVERTER_PARAM));
+			
+
+		addParam(createParam<RoundBlackKnob>(Vec(15, 160), module, VoxInhumana::FREQ_1_CUTOFF_PARAM));
+		addParam(createParam<RoundBlackKnob>(Vec(15, 195), module, VoxInhumana::FREQ_2_CUTOFF_PARAM));
+		addParam(createParam<RoundBlackKnob>(Vec(15, 230), module, VoxInhumana::FREQ_3_CUTOFF_PARAM));
+		addParam(createParam<RoundBlackKnob>(Vec(15, 265), module, VoxInhumana::FREQ_4_CUTOFF_PARAM));
+		addParam(createParam<RoundBlackKnob>(Vec(15, 300), module, VoxInhumana::FREQ_5_CUTOFF_PARAM));
+		addParam(createParam<RoundSmallBlackKnob>(Vec(80, 162), module, VoxInhumana::FREQ_1_CV_ATTENUVERTER_PARAM));
+		addParam(createParam<RoundSmallBlackKnob>(Vec(80, 197), module, VoxInhumana::FREQ_2_CV_ATTENUVERTER_PARAM));
+		addParam(createParam<RoundSmallBlackKnob>(Vec(80, 232), module, VoxInhumana::FREQ_3_CV_ATTENUVERTER_PARAM));
+		addParam(createParam<RoundSmallBlackKnob>(Vec(80, 267), module, VoxInhumana::FREQ_4_CV_ATTENUVERTER_PARAM));
+		addParam(createParam<RoundSmallBlackKnob>(Vec(80, 302), module, VoxInhumana::FREQ_5_CV_ATTENUVERTER_PARAM));
+		addParam(createParam<RoundBlackKnob>(Vec(110, 160), module, VoxInhumana::AMP_1_PARAM));
+		addParam(createParam<RoundBlackKnob>(Vec(110, 195), module, VoxInhumana::AMP_2_PARAM));
+		addParam(createParam<RoundBlackKnob>(Vec(110, 230), module, VoxInhumana::AMP_3_PARAM));
+		addParam(createParam<RoundBlackKnob>(Vec(110, 265), module, VoxInhumana::AMP_4_PARAM));
+		addParam(createParam<RoundBlackKnob>(Vec(110, 300), module, VoxInhumana::AMP_5_PARAM));
+		addParam(createParam<RoundSmallBlackKnob>(Vec(175, 162), module, VoxInhumana::AMP_1_CV_ATTENUVERTER_PARAM));
+		addParam(createParam<RoundSmallBlackKnob>(Vec(175, 197), module, VoxInhumana::AMP_2_CV_ATTENUVERTER_PARAM));
+		addParam(createParam<RoundSmallBlackKnob>(Vec(175, 232), module, VoxInhumana::AMP_3_CV_ATTENUVERTER_PARAM));
+		addParam(createParam<RoundSmallBlackKnob>(Vec(175, 267), module, VoxInhumana::AMP_4_CV_ATTENUVERTER_PARAM));
+		addParam(createParam<RoundSmallBlackKnob>(Vec(175, 302), module, VoxInhumana::AMP_5_CV_ATTENUVERTER_PARAM));
+
+		addInput(createInput<PJ301MPort>(Vec(13, 62), module, VoxInhumana::VOWEL_1_CV_IN));
+		addInput(createInput<PJ301MPort>(Vec(143, 62), module, VoxInhumana::VOWEL_2_CV_IN));
+		addInput(createInput<PJ301MPort>(Vec(80, 62), module, VoxInhumana::VOWEL_BALANCE_CV_IN));
+		addInput(createInput<PJ301MPort>(Vec(5, 134), module, VoxInhumana::VOICE_TYPE_CV_IN));
+		addInput(createInput<PJ301MPort>(Vec(170, 97), module, VoxInhumana::FC_MAIN_CV_IN));
+
+
+		addInput(createInput<PJ301MPort>(Vec(50, 162), module, VoxInhumana::FREQ_1_CUTOFF_INPUT));
+		addInput(createInput<PJ301MPort>(Vec(50, 197), module, VoxInhumana::FREQ_2_CUTOFF_INPUT));
+		addInput(createInput<PJ301MPort>(Vec(50, 232), module, VoxInhumana::FREQ_3_CUTOFF_INPUT));
+		addInput(createInput<PJ301MPort>(Vec(50, 267), module, VoxInhumana::FREQ_4_CUTOFF_INPUT));
+		addInput(createInput<PJ301MPort>(Vec(50, 302), module, VoxInhumana::FREQ_5_CUTOFF_INPUT));
+		addInput(createInput<PJ301MPort>(Vec(145, 162), module, VoxInhumana::AMP_1_INPUT)	);
+		addInput(createInput<PJ301MPort>(Vec(145, 197), module, VoxInhumana::AMP_2_INPUT));
+		addInput(createInput<PJ301MPort>(Vec(145, 232), module, VoxInhumana::AMP_3_INPUT));
+		addInput(createInput<PJ301MPort>(Vec(145, 267), module, VoxInhumana::AMP_4_INPUT));
+		addInput(createInput<PJ301MPort>(Vec(145, 302), module, VoxInhumana::AMP_5_INPUT));
+
+		addInput(createInput<PJ301MPort>(Vec(56, 338), module, VoxInhumana::SIGNAL_IN));
+
+		addOutput(createOutput<PJ301MPort>(Vec(130, 338), module, VoxInhumana::VOX_OUTPUT));
+
+		addChild(createLight<LargeLight<GreenLight>>(Vec(72, 37), module, VoxInhumana::VOWEL_1_LIGHT));
+		addChild(createLight<LargeLight<GreenLight>>(Vec(120, 37), module, VoxInhumana::VOWEL_2_LIGHT));
+
+
+		addChild(createWidget<ScrewSilver>(Vec(RACK_GRID_WIDTH-12, 0)));
+		addChild(createWidget<ScrewSilver>(Vec(box.size.x - 2 * RACK_GRID_WIDTH + 12, 0)));
+		addChild(createWidget<ScrewSilver>(Vec(RACK_GRID_WIDTH-12, RACK_GRID_HEIGHT - RACK_GRID_WIDTH)));
+		addChild(createWidget<ScrewSilver>(Vec(box.size.x - 2 * RACK_GRID_WIDTH + 12, RACK_GRID_HEIGHT - RACK_GRID_WIDTH)));
+	}
 };
 
-VoxInhumanaWidget::VoxInhumanaWidget(VoxInhumana *module) : ModuleWidget(module) {
-	box.size = Vec(15*14, 380);
 
-	{
-		SVGPanel *panel = new SVGPanel();
-		panel->box.size = box.size;
-		panel->setBackground(SVG::load(assetPlugin(plugin, "res/VoxInhumana.svg")));
-		addChild(panel);
-	}
-	
-	{
-		VoxInhumanaBandDisplay *offsetDisplay = new VoxInhumanaBandDisplay();
-		offsetDisplay->module = module;
-		offsetDisplay->box.pos = Vec(15, 10);
-		offsetDisplay->box.size = Vec(box.size.x, 140);
-		addChild(offsetDisplay);
-	}
-
-
-	addParam(ParamWidget::create<RoundBlackKnob>(Vec(10, 30), module, VoxInhumana::VOWEL_1_PARAM, 0, 4.6, 0));
-	addParam(ParamWidget::create<RoundBlackKnob>(Vec(140, 30), module, VoxInhumana::VOWEL_2_PARAM, 0, 4.6, 0));
-	addParam(ParamWidget::create<RoundBlackKnob>(Vec(89, 30), module, VoxInhumana::VOWEL_BALANCE_PARAM, 0.0, 1.0, 0));
-	addParam(ParamWidget::create<RoundBlackKnob>(Vec(7, 103), module, VoxInhumana::VOICE_TYPE_PARAM, 0, 4.6, 0));
-	addParam(ParamWidget::create<RoundBlackKnob>(Vec(140, 103), module, VoxInhumana::FC_MAIN_CUTOFF_PARAM, 0.0, 2.0, 1));
-
-	addParam(ParamWidget::create<RoundSmallBlackKnob>(Vec(40, 62), module, VoxInhumana::VOWEL_1_ATTENUVERTER_PARAM, -1.0, 1.0, 0));
-	addParam(ParamWidget::create<RoundSmallBlackKnob>(Vec(170, 62), module, VoxInhumana::VOWEL_2_ATTENUVERTER_PARAM, -1.0, 1.0, 0));
-	addParam(ParamWidget::create<RoundSmallBlackKnob>(Vec(107, 62), module, VoxInhumana::VOWEL_BALANCE_ATTENUVERTER_PARAM, -1.0, 1.0, 0));
-	addParam(ParamWidget::create<RoundSmallBlackKnob>(Vec(31, 134), module, VoxInhumana::VOICE_TYPE_ATTENUVERTER_PARAM, -1.0, 1.0, 0));
-	addParam(ParamWidget::create<RoundSmallBlackKnob>(Vec(169, 125), module, VoxInhumana::FC_MAIN_ATTENUVERTER_PARAM, -1.0, 1.0, 0));
-		
-
-	addParam(ParamWidget::create<RoundBlackKnob>(Vec(15, 160), module, VoxInhumana::FREQ_1_CUTOFF_PARAM, -1.0, 1.0, 0));
-	addParam(ParamWidget::create<RoundBlackKnob>(Vec(15, 195), module, VoxInhumana::FREQ_2_CUTOFF_PARAM, -1.0, 1.0, 0));
-	addParam(ParamWidget::create<RoundBlackKnob>(Vec(15, 230), module, VoxInhumana::FREQ_3_CUTOFF_PARAM, -1.0, 1.0, 0));
-	addParam(ParamWidget::create<RoundBlackKnob>(Vec(15, 265), module, VoxInhumana::FREQ_4_CUTOFF_PARAM, -1.0, 1.0, 0));
-	addParam(ParamWidget::create<RoundBlackKnob>(Vec(15, 300), module, VoxInhumana::FREQ_5_CUTOFF_PARAM, -1.0, 1.0, 0));
-	addParam(ParamWidget::create<RoundSmallBlackKnob>(Vec(80, 162), module, VoxInhumana::FREQ_1_CV_ATTENUVERTER_PARAM, -1.0, 1.0, 0));
-	addParam(ParamWidget::create<RoundSmallBlackKnob>(Vec(80, 197), module, VoxInhumana::FREQ_2_CV_ATTENUVERTER_PARAM, -1.0, 1.0, 0));
-	addParam(ParamWidget::create<RoundSmallBlackKnob>(Vec(80, 232), module, VoxInhumana::FREQ_3_CV_ATTENUVERTER_PARAM, -1.0, 1.0, 0));
-	addParam(ParamWidget::create<RoundSmallBlackKnob>(Vec(80, 267), module, VoxInhumana::FREQ_4_CV_ATTENUVERTER_PARAM, -1.0, 1.0, 0));
-	addParam(ParamWidget::create<RoundSmallBlackKnob>(Vec(80, 302), module, VoxInhumana::FREQ_5_CV_ATTENUVERTER_PARAM, -1.0, 1.0, 0));
-	addParam(ParamWidget::create<RoundBlackKnob>(Vec(110, 160), module, VoxInhumana::AMP_1_PARAM, 0.0, 2.0, 1));
-	addParam(ParamWidget::create<RoundBlackKnob>(Vec(110, 195), module, VoxInhumana::AMP_2_PARAM, 0.0, 2.0, 1));
-	addParam(ParamWidget::create<RoundBlackKnob>(Vec(110, 230), module, VoxInhumana::AMP_3_PARAM, 0.0, 2.0, 1));
-	addParam(ParamWidget::create<RoundBlackKnob>(Vec(110, 265), module, VoxInhumana::AMP_4_PARAM, 0.0, 2.0, 1));
-	addParam(ParamWidget::create<RoundBlackKnob>(Vec(110, 300), module, VoxInhumana::AMP_5_PARAM, 0.0, 2.0, 1));
-	addParam(ParamWidget::create<RoundSmallBlackKnob>(Vec(175, 162), module, VoxInhumana::AMP_1_CV_ATTENUVERTER_PARAM, -1.0, 1.0, 0));
-	addParam(ParamWidget::create<RoundSmallBlackKnob>(Vec(175, 197), module, VoxInhumana::AMP_2_CV_ATTENUVERTER_PARAM, -1.0, 1.0, 0));
-	addParam(ParamWidget::create<RoundSmallBlackKnob>(Vec(175, 232), module, VoxInhumana::AMP_3_CV_ATTENUVERTER_PARAM, -1.0, 1.0, 0));
-	addParam(ParamWidget::create<RoundSmallBlackKnob>(Vec(175, 267), module, VoxInhumana::AMP_4_CV_ATTENUVERTER_PARAM, -1.0, 1.0, 0));
-	addParam(ParamWidget::create<RoundSmallBlackKnob>(Vec(175, 302), module, VoxInhumana::AMP_5_CV_ATTENUVERTER_PARAM, -1.0, 1.0, 0));
-
-	addInput(Port::create<PJ301MPort>(Vec(13, 62), Port::INPUT, module, VoxInhumana::VOWEL_1_CV_IN));
-	addInput(Port::create<PJ301MPort>(Vec(143, 62), Port::INPUT, module, VoxInhumana::VOWEL_2_CV_IN));
-	addInput(Port::create<PJ301MPort>(Vec(80, 62), Port::INPUT, module, VoxInhumana::VOWEL_BALANCE_CV_IN));
-	addInput(Port::create<PJ301MPort>(Vec(5, 134), Port::INPUT, module, VoxInhumana::VOICE_TYPE_CV_IN));
-	addInput(Port::create<PJ301MPort>(Vec(170, 97), Port::INPUT, module, VoxInhumana::FC_MAIN_CV_IN));
-
-
-	addInput(Port::create<PJ301MPort>(Vec(50, 162), Port::INPUT, module, VoxInhumana::FREQ_1_CUTOFF_INPUT));
-	addInput(Port::create<PJ301MPort>(Vec(50, 197), Port::INPUT, module, VoxInhumana::FREQ_2_CUTOFF_INPUT));
-	addInput(Port::create<PJ301MPort>(Vec(50, 232), Port::INPUT, module, VoxInhumana::FREQ_3_CUTOFF_INPUT));
-	addInput(Port::create<PJ301MPort>(Vec(50, 267), Port::INPUT, module, VoxInhumana::FREQ_4_CUTOFF_INPUT));
-	addInput(Port::create<PJ301MPort>(Vec(50, 302), Port::INPUT, module, VoxInhumana::FREQ_5_CUTOFF_INPUT));
-	addInput(Port::create<PJ301MPort>(Vec(145, 162), Port::INPUT, module, VoxInhumana::AMP_1_INPUT)	);
-	addInput(Port::create<PJ301MPort>(Vec(145, 197), Port::INPUT, module, VoxInhumana::AMP_2_INPUT));
-	addInput(Port::create<PJ301MPort>(Vec(145, 232), Port::INPUT, module, VoxInhumana::AMP_3_INPUT));
-	addInput(Port::create<PJ301MPort>(Vec(145, 267), Port::INPUT, module, VoxInhumana::AMP_4_INPUT));
-	addInput(Port::create<PJ301MPort>(Vec(145, 302), Port::INPUT, module, VoxInhumana::AMP_5_INPUT));
-
-	addInput(Port::create<PJ301MPort>(Vec(56, 338), Port::INPUT, module, VoxInhumana::SIGNAL_IN));
-
-	addOutput(Port::create<PJ301MPort>(Vec(130, 338), Port::OUTPUT, module, VoxInhumana::VOX_OUTPUT));
-
-	addChild(ModuleLightWidget::create<LargeLight<GreenLight>>(Vec(72, 37), module, VoxInhumana::VOWEL_1_LIGHT));
-	addChild(ModuleLightWidget::create<LargeLight<GreenLight>>(Vec(120, 37), module, VoxInhumana::VOWEL_2_LIGHT));
-
-
-	addChild(Widget::create<ScrewSilver>(Vec(RACK_GRID_WIDTH-12, 0)));
-	addChild(Widget::create<ScrewSilver>(Vec(box.size.x - 2 * RACK_GRID_WIDTH + 12, 0)));
-	addChild(Widget::create<ScrewSilver>(Vec(RACK_GRID_WIDTH-12, RACK_GRID_HEIGHT - RACK_GRID_WIDTH)));
-	addChild(Widget::create<ScrewSilver>(Vec(box.size.x - 2 * RACK_GRID_WIDTH + 12, RACK_GRID_HEIGHT - RACK_GRID_WIDTH)));
-}
-
-Model *modelVoxInhumana = Model::create<VoxInhumana, VoxInhumanaWidget>("Frozen Wasteland", "VoxInhumana", "Vox Inhumana", FILTER_TAG);
+Model *modelVoxInhumana = createModel<VoxInhumana, VoxInhumanaWidget>("VoxInhumana");

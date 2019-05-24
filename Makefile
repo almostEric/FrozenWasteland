@@ -1,38 +1,35 @@
-SLUG = FrozenWasteland
-VERSION = 0.6.7
+RACK_DIR ?= ../..
 
 # FLAGS will be passed to both the C and C++ compiler
 FLAGS += \
-	-DTEST \
+	-Idep/include \
+	-I./src/ui \
 	-I./eurorack \
 	-I./src/dsp-delay \
-	-I./src/dsp-filter/utils -I./src/dsp-filter/filters -I./src/dsp-filter/third-party/falco \
-	-Wno-unused-local-typedefs
+	-I./src/dsp-filter/utils -I./src/dsp-filter/filters -I./src/dsp-filter/third-party/falco	
 
-CFLAGS +=
-CXXFLAGS +=
-
-# Careful about linking to shared libraries, since you can't assume much about the user's environment and library search path.
-# Static libraries are fine.
-LDFLAGS +=
 
 # Add .cpp and .c files to the build
-#SOURCES += eurorack/stmlib/utils/random.cc
-#SOURCES += eurorack/stmlib/dsp/atan.cc
-#SOURCES += eurorack/stmlib/dsp/units.cc
-#SOURCES += eurorack/clouds/dsp/correlator.cc
-#SOURCES += eurorack/clouds/dsp/granular_processor.cc
-#SOURCES += eurorack/clouds/dsp/mu_law.cc
-#SOURCES += eurorack/clouds/dsp/pvoc/frame_transformation.cc
-#SOURCES += eurorack/clouds/dsp/pvoc/phase_vocoder.cc
-#SOURCES += eurorack/clouds/dsp/pvoc/stft.cc
-#SOURCES += eurorack/clouds/resources.cc
 SOURCES += $(wildcard src/*.cpp src/filters/*.cpp src/dsp-noise/*.cpp src/dsp-filter/*.cpp rc/dsp-delay/*.hpp src/stmlib/*.cc)
 
 # Add files to the ZIP package when running `make dist`
 # The compiled plugin is automatically added.
-DISTRIBUTABLES += $(wildcard LICENSE*) res
+DISTRIBUTABLES += $(wildcard LICENSE*) 
+
+# Static libs
+libsamplerate := dep/lib/libsamplerate.a
+OBJECTS += $(libsamplerate)
+
+# Dependencies
+DEP_LOCAL := dep
+DEPS += $(libsamplerate)
+
+$(libsamplerate):
+	cd dep && $(WGET) http://www.mega-nerd.com/SRC/libsamplerate-0.1.9.tar.gz
+	cd dep && $(UNTAR) libsamplerate-0.1.9.tar.gz
+	cd dep/libsamplerate-0.1.9 && $(CONFIGURE)
+	cd dep/libsamplerate-0.1.9/src && $(MAKE)
+	cd dep/libsamplerate-0.1.9/src && $(MAKE) install
 
 # Include the VCV plugin Makefile framework
-RACK_DIR ?= ../..
 include $(RACK_DIR)/plugin.mk

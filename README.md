@@ -8,6 +8,7 @@ A collection of unusual plugins that will add a certain coolness to your patches
 
 - Tempo Sync'd LFO.
 - CV Control of Time Division
+- Phase Control allows LFOs to be offset (cv controllable). 90° button limits offset to 0, 90, 180, 270 degrees.
 - Pairs well with the Quad Euclidean Rhythm and Quad Golomb Ruler Rhythm
 - When Holding is active, the Outputs stay at last value
 - Hold input can either be a gate (which switches each time) or momentary (active while signal is positve)
@@ -18,6 +19,7 @@ A collection of unusual plugins that will add a certain coolness to your patches
 
 - Variation of original BPM LFO.
 - CV Control of Time Division and Wave Shape
+- Phase Control allows LFOs to be offset (cv controllable). 90° button limits offset to 0, 90, 180, 270 degrees.
 - Can either be variable sawtooth/triangle or variable duty cycle square wave
 
 ## Damian Lillard
@@ -150,7 +152,7 @@ A collection of unusual plugins that will add a certain coolness to your patches
 - Each QER has its own clock input, so tempo changes can easily be created
 - Mute Input keeps rhythm running just no output
 - https://www.youtube.com/watch?v=ARMxz11z9FU is an example of how to patch a couple QERs together and drive some drum synths
-- Normally each track advances one step every clock beat and are independent. If Time Sync is enabled, the track with the most steps becomes the master and the other tracks will fit their patterns to the timing of the master. This allows for complex polyrhythms (ie. 15 on 13 on 11 on 4, etc.)
+- Normally each track advances one step every clock beat and are independent. If Time Sync is enabled, the selected track becomes the master and the other tracks will fit their patterns to the timing of the master. This allows for complex polyrhythms (ie. 15 on 13 on 11 on 4, etc.)
 - https://www.youtube.com/watch?v=eCErJMKAlVY is an example of the QER with Time Sync enabled
 ### Euclidean Rhythms
 - Euclidean are based upon attempting to equally distribute the divisions among the steps available

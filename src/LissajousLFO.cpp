@@ -1,6 +1,5 @@
 #include <string.h>
 #include "FrozenWasteland.hpp"
-#include "dsp/digital.hpp"
 
 #define BUFFER_SIZE 512
 
@@ -96,30 +95,38 @@ struct LowFrequencyOscillator {
 	float x2 = 0.0;
 	float y2 = 0.0;
 
-	LissajousLFO() : Module(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS, NUM_LIGHTS) {}
-	void step() override;
+	LissajousLFO() {
+		config(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS, NUM_LIGHTS);		
+		configParam(AMPLITUDE1_PARAM, 0.0, 5.0, 2.5);
+		configParam(FREQX1_PARAM, -8.0, 3.0, 0.0);
+		configParam(FREQY1_PARAM, -8.0, 3.0, 2.0);
+		configParam(AMPLITUDE2_PARAM, 0.0, 5.0, 2.5);
+		configParam(FREQX2_PARAM, -8.0, 3.0, 0.0);
+		configParam(FREQY2_PARAM, -8.0, 3.0, 1.0);
+	}
+	void process(const ProcessArgs &args) override;
 
 	// For more advanced Module features, read Rack's engine.hpp header file
-	// - toJson, fromJson: serialization of internal data
+	// - dataToJson, dataFromJson: serialization of internal data
 	// - onSampleRateChange: event triggered by a change of sample rate
 	// - onReset, onRandomize, onCreate, onDelete: implements special behavior when user clicks these from the context menu
 };
 
 
-void LissajousLFO::step() {
+void LissajousLFO::process(const ProcessArgs &args) {
 
-	float amplitude1 = clamp(params[AMPLITUDE1_PARAM].value + (inputs[AMPLITUDE1_INPUT].value / 2.0f),0.0f,5.0f);
-	float amplitude2 = clamp(params[AMPLITUDE2_PARAM].value + (inputs[AMPLITUDE2_INPUT].value / 2.0f),0.0f,5.0f);
+	float amplitude1 = clamp(params[AMPLITUDE1_PARAM].getValue() + (inputs[AMPLITUDE1_INPUT].getVoltage() / 2.0f),0.0f,5.0f);
+	float amplitude2 = clamp(params[AMPLITUDE2_PARAM].getValue() + (inputs[AMPLITUDE2_INPUT].getVoltage() / 2.0f),0.0f,5.0f);
 
 	// Implement 4 simple sine oscillators
-	oscillatorX1.setPitch(params[FREQX1_PARAM].value + inputs[FREQX1_INPUT].value);
-	oscillatorY1.setPitch(params[FREQY1_PARAM].value + inputs[FREQY1_INPUT].value);
-	oscillatorX2.setPitch(params[FREQX2_PARAM].value + inputs[FREQX2_INPUT].value);
-	oscillatorY2.setPitch(params[FREQY2_PARAM].value + inputs[FREQY2_INPUT].value);
-	oscillatorX1.step(1.0 / engineGetSampleRate());
-	oscillatorY1.step(1.0 / engineGetSampleRate());
-	oscillatorX2.step(1.0 / engineGetSampleRate());
-	oscillatorY2.step(1.0 / engineGetSampleRate());
+	oscillatorX1.setPitch(params[FREQX1_PARAM].getValue() + inputs[FREQX1_INPUT].getVoltage());
+	oscillatorY1.setPitch(params[FREQY1_PARAM].getValue() + inputs[FREQY1_INPUT].getVoltage());
+	oscillatorX2.setPitch(params[FREQX2_PARAM].getValue() + inputs[FREQX2_INPUT].getVoltage());
+	oscillatorY2.setPitch(params[FREQY2_PARAM].getValue() + inputs[FREQY2_INPUT].getVoltage());
+	oscillatorX1.step(1.0 / args.sampleRate);
+	oscillatorY1.step(1.0 / args.sampleRate);
+	oscillatorX2.step(1.0 / args.sampleRate);
+	oscillatorY2.step(1.0 / args.sampleRate);
 
 	//Amplitude isn't doing anything at the moment
 	float x1 = amplitude1 * oscillatorX1.sin();
@@ -127,16 +134,16 @@ void LissajousLFO::step() {
 	float x2 = amplitude2 * oscillatorX2.sin();
 	float y2 = amplitude2 * oscillatorY2.sin();
 
-	outputs[OUTPUT_1].value = (x1 + x2) / 2;
-	outputs[OUTPUT_2].value = (y1 + y2) / 2;
-	outputs[OUTPUT_3].value = (x1 + x2 + y1 + y2) / 4;
+	outputs[OUTPUT_1].setVoltage((x1 + x2) / 2);
+	outputs[OUTPUT_2].setVoltage((y1 + y2) / 2);
+	outputs[OUTPUT_3].setVoltage((x1 + x2 + y1 + y2) / 4);
 	float out4 = (x1/x2);
-	outputs[OUTPUT_4].value = std::isfinite(out4) ? clamp(out4,-5.0f,5.0f) : 0.f;
+	outputs[OUTPUT_4].setVoltage(std::isfinite(out4) ? clamp(out4,-5.0f,5.0f) : 0.f);
 	float out5 = (y1/y2);
-	outputs[OUTPUT_5].value = std::isfinite(out5) ? clamp(out5,-5.0f,5.0f) : 0.f;
+	outputs[OUTPUT_5].setVoltage(std::isfinite(out5) ? clamp(out5,-5.0f,5.0f) : 0.f);
 
 	//Update scope.
-	int frameCount = (int)ceilf(deltaTime * engineGetSampleRate());
+	int frameCount = (int)ceilf(deltaTime * args.sampleRate);
 
 	// Add frame to buffers
 	if (bufferIndex < BUFFER_SIZE) {
@@ -185,16 +192,16 @@ struct ScopeDisplay : TransparentWidget {
 	Stats statsX, statsY;
 
 	ScopeDisplay() {
-		font = Font::load(assetPlugin(plugin, "res/fonts/Sudo.ttf"));
+		font = APP->window->loadFont(asset::plugin(pluginInstance, "res/fonts/Sudo.ttf"));
 	}
 
-	void drawWaveform(NVGcontext *vg, float *valuesX, float *valuesY) {
+	void drawWaveform(const DrawArgs &args, float *valuesX, float *valuesY) {
 		if (!valuesX)
 			return;
-		nvgSave(vg);
+		nvgSave(args.vg);
 		Rect b = Rect(Vec(0, 15), box.size.minus(Vec(0, 15*2)));
-		nvgScissor(vg, b.pos.x, b.pos.y, b.size.x, b.size.y);
-		nvgBeginPath(vg);
+		nvgScissor(args.vg, b.pos.x, b.pos.y, b.size.x, b.size.y);
+		nvgBeginPath(args.vg);
 		// Draw maximum display left to right
 		for (int i = 0; i < BUFFER_SIZE; i++) {
 			float x, y;
@@ -210,71 +217,25 @@ struct ScopeDisplay : TransparentWidget {
 			p.x = b.pos.x + b.size.x * x;
 			p.y = b.pos.y + b.size.y * (1.0 - y);
 			if (i == 0)
-				nvgMoveTo(vg, p.x, p.y);
+				nvgMoveTo(args.vg, p.x, p.y);
 			else
-				nvgLineTo(vg, p.x, p.y);
+				nvgLineTo(args.vg, p.x, p.y);
 		}
-		nvgLineCap(vg, NVG_ROUND);
-		nvgMiterLimit(vg, 2.0);
-		nvgStrokeWidth(vg, 1.5);
-		nvgGlobalCompositeOperation(vg, NVG_LIGHTER);
-		nvgStroke(vg);
-		nvgResetScissor(vg);
-		nvgRestore(vg);
+		nvgLineCap(args.vg, NVG_ROUND);
+		nvgMiterLimit(args.vg, 2.0);
+		nvgStrokeWidth(args.vg, 1.5);
+		nvgGlobalCompositeOperation(args.vg, NVG_LIGHTER);
+		nvgStroke(args.vg);
+		nvgResetScissor(args.vg);
+		nvgRestore(args.vg);
 	}
 
-	void drawTrig(NVGcontext *vg, float value) {
-		Rect b = Rect(Vec(0, 15), box.size.minus(Vec(0, 15*2)));
-		nvgScissor(vg, b.pos.x, b.pos.y, b.size.x, b.size.y);
+	
 
-		value = value / 2.0 + 0.5;
-		Vec p = Vec(box.size.x, b.pos.y + b.size.y * (1.0 - value));
+	void draw(const DrawArgs &args) override {
+		if (!module)
+			return;
 
-		// Draw line
-		nvgStrokeColor(vg, nvgRGBA(0xff, 0xff, 0xff, 0x10));
-		{
-			nvgBeginPath(vg);
-			nvgMoveTo(vg, p.x - 13, p.y);
-			nvgLineTo(vg, 0, p.y);
-			nvgClosePath(vg);
-		}
-		nvgStroke(vg);
-
-		// Draw indicator
-		nvgFillColor(vg, nvgRGBA(0xff, 0xff, 0xff, 0x60));
-		{
-			nvgBeginPath(vg);
-			nvgMoveTo(vg, p.x - 2, p.y - 4);
-			nvgLineTo(vg, p.x - 9, p.y - 4);
-			nvgLineTo(vg, p.x - 13, p.y);
-			nvgLineTo(vg, p.x - 9, p.y + 4);
-			nvgLineTo(vg, p.x - 2, p.y + 4);
-			nvgClosePath(vg);
-		}
-		nvgFill(vg);
-
-		nvgFontSize(vg, 9);
-		nvgFontFaceId(vg, font->handle);
-		nvgFillColor(vg, nvgRGBA(0x1e, 0x28, 0x2b, 0xff));
-		nvgText(vg, p.x - 8, p.y + 3, "T", NULL);
-		nvgResetScissor(vg);
-	}
-
-	void drawStats(NVGcontext *vg, Vec pos, const char *title, Stats *stats) {
-		nvgFontSize(vg, 13);
-		nvgFontFaceId(vg, font->handle);
-		nvgTextLetterSpacing(vg, -2);
-
-		nvgFillColor(vg, nvgRGBA(0xff, 0xff, 0xff, 0x40));
-		nvgText(vg, pos.x + 6, pos.y + 11, title, NULL);
-
-		nvgFillColor(vg, nvgRGBA(0xff, 0xff, 0xff, 0x80));
-		char text[128];
-		snprintf(text, sizeof(text), "pp % 06.2f  max % 06.2f  min % 06.2f", stats->vpp, stats->vmax, stats->vmin);
-		nvgText(vg, pos.x + 22, pos.y + 11, text, NULL);
-	}
-
-	void draw(NVGcontext *vg) override {
 		float gainX = powf(2.0, 1);
 		float gainY = powf(2.0, 1);
 		//float offsetX = module->x1;
@@ -292,8 +253,8 @@ struct ScopeDisplay : TransparentWidget {
 
 		// Draw waveforms for LFO 1
 		// X x Y
-		nvgStrokeColor(vg, nvgRGBA(0x9f, 0xe4, 0x36, 0xc0));
-		drawWaveform(vg, valuesX, valuesY);
+		nvgStrokeColor(args.vg, nvgRGBA(0x9f, 0xe4, 0x36, 0xc0));
+		drawWaveform(args, valuesX, valuesY);
 
 
 		for (int i = 0; i < BUFFER_SIZE; i++) {
@@ -306,71 +267,51 @@ struct ScopeDisplay : TransparentWidget {
 
 		// Draw waveforms for LFO 2
 		// X x Y
-		nvgStrokeColor(vg, nvgRGBA(0x3f, 0xe4, 0x96, 0xc0));
-		drawWaveform(vg, valuesX, valuesY);
-
-		// Calculate and draw stats
-		//if (++frame >= 4) {
-		//	frame = 0;
-		//	statsX.calculate(module->bufferX);
-		//	statsY.calculate(module->bufferY);
-		//}
-		//drawStats(vg, Vec(0, 0), "X", &statsX);
-		//drawStats(vg, Vec(0, box.size.y - 15), "Y", &statsY);
+		nvgStrokeColor(args.vg, nvgRGBA(0x3f, 0xe4, 0x96, 0xc0));
+		drawWaveform(args, valuesX, valuesY);
 	}
 };
 
 struct LissajousLFOWidget : ModuleWidget {
-	LissajousLFOWidget(LissajousLFO *module);
+	LissajousLFOWidget(LissajousLFO *module) {
+		setModule(module);
+
+		setPanel(APP->window->loadSvg(asset::plugin(pluginInstance, "res/LissajousLFO.svg")));
+		
+
+		addChild(createWidget<ScrewSilver>(Vec(RACK_GRID_WIDTH - 12, 0)));
+		addChild(createWidget<ScrewSilver>(Vec(box.size.x - 2 * RACK_GRID_WIDTH + 12, 0)));
+		addChild(createWidget<ScrewSilver>(Vec(RACK_GRID_WIDTH-12, RACK_GRID_HEIGHT - RACK_GRID_WIDTH)));
+		addChild(createWidget<ScrewSilver>(Vec(box.size.x - 2 * RACK_GRID_WIDTH + 12, RACK_GRID_HEIGHT - RACK_GRID_WIDTH)));
+
+		{
+			ScopeDisplay *display = new ScopeDisplay();
+			display->module = module;
+			display->box.pos = Vec(0, 35);
+			display->box.size = Vec(box.size.x, 140);
+			addChild(display);
+		}
+
+		addParam(createParam<RoundBlackKnob>(Vec(37, 186), module, LissajousLFO::AMPLITUDE1_PARAM));
+		addParam(createParam<RoundBlackKnob>(Vec(87, 186), module, LissajousLFO::FREQX1_PARAM));
+		addParam(createParam<RoundBlackKnob>(Vec(137, 186), module, LissajousLFO::FREQY1_PARAM));
+		addParam(createParam<RoundBlackKnob>(Vec(37, 265), module, LissajousLFO::AMPLITUDE2_PARAM));
+		addParam(createParam<RoundBlackKnob>(Vec(87, 265), module, LissajousLFO::FREQX2_PARAM));
+		addParam(createParam<RoundBlackKnob>(Vec(137, 265), module, LissajousLFO::FREQY2_PARAM));
+
+		addInput(createInput<PJ301MPort>(Vec(41, 219), module, LissajousLFO::AMPLITUDE1_INPUT));
+		addInput(createInput<PJ301MPort>(Vec(91, 219), module, LissajousLFO::FREQX1_INPUT));
+		addInput(createInput<PJ301MPort>(Vec(141, 219), module, LissajousLFO::FREQY1_INPUT));
+		addInput(createInput<PJ301MPort>(Vec(41, 298), module, LissajousLFO::AMPLITUDE2_INPUT));
+		addInput(createInput<PJ301MPort>(Vec(91, 298), module, LissajousLFO::FREQX2_INPUT));
+		addInput(createInput<PJ301MPort>(Vec(141, 298), module, LissajousLFO::FREQY2_INPUT));
+
+		addOutput(createOutput<PJ301MPort>(Vec(22, 338), module, LissajousLFO::OUTPUT_1));
+		addOutput(createOutput<PJ301MPort>(Vec(53, 338), module, LissajousLFO::OUTPUT_2));
+		addOutput(createOutput<PJ301MPort>(Vec(86, 338), module, LissajousLFO::OUTPUT_3));
+		addOutput(createOutput<PJ301MPort>(Vec(126, 338), module, LissajousLFO::OUTPUT_4));
+		addOutput(createOutput<PJ301MPort>(Vec(158, 338), module, LissajousLFO::OUTPUT_5));	
+	}
 };
 
-LissajousLFOWidget::LissajousLFOWidget(LissajousLFO *module) : ModuleWidget(module) {
-	box.size = Vec(15*13, RACK_GRID_HEIGHT);
-
-	{
-		SVGPanel *panel = new SVGPanel();
-		panel->box.size = box.size;
-		panel->setBackground(SVG::load(assetPlugin(plugin, "res/LissajousLFO.svg")));
-		addChild(panel);
-	}
-
-	addChild(Widget::create<ScrewSilver>(Vec(RACK_GRID_WIDTH - 12, 0)));
-	addChild(Widget::create<ScrewSilver>(Vec(box.size.x - 2 * RACK_GRID_WIDTH + 12, 0)));
-	addChild(Widget::create<ScrewSilver>(Vec(RACK_GRID_WIDTH-12, RACK_GRID_HEIGHT - RACK_GRID_WIDTH)));
-	addChild(Widget::create<ScrewSilver>(Vec(box.size.x - 2 * RACK_GRID_WIDTH + 12, RACK_GRID_HEIGHT - RACK_GRID_WIDTH)));
-
-	{
-		ScopeDisplay *display = new ScopeDisplay();
-		display->module = module;
-		display->box.pos = Vec(0, 35);
-		display->box.size = Vec(box.size.x, 140);
-		addChild(display);
-	}
-
-	addParam(ParamWidget::create<RoundBlackKnob>(Vec(37, 186), module, LissajousLFO::AMPLITUDE1_PARAM, 0.0, 5.0, 2.5));
-	addParam(ParamWidget::create<RoundBlackKnob>(Vec(87, 186), module, LissajousLFO::FREQX1_PARAM, -8.0, 3.0, 0.0));
-	addParam(ParamWidget::create<RoundBlackKnob>(Vec(137, 186), module, LissajousLFO::FREQY1_PARAM, -8.0, 3.0, 2.0));
-	addParam(ParamWidget::create<RoundBlackKnob>(Vec(37, 265), module, LissajousLFO::AMPLITUDE2_PARAM, 0.0, 5.0, 2.5));
-	addParam(ParamWidget::create<RoundBlackKnob>(Vec(87, 265), module, LissajousLFO::FREQX2_PARAM, -8.0, 3.0, 0.0));
-	addParam(ParamWidget::create<RoundBlackKnob>(Vec(137, 265), module, LissajousLFO::FREQY2_PARAM, -8.0, 3.0, 1.0));
-
-	addInput(Port::create<PJ301MPort>(Vec(41, 219), Port::INPUT, module, LissajousLFO::AMPLITUDE1_INPUT));
-	addInput(Port::create<PJ301MPort>(Vec(91, 219), Port::INPUT, module, LissajousLFO::FREQX1_INPUT));
-	addInput(Port::create<PJ301MPort>(Vec(141, 219), Port::INPUT, module, LissajousLFO::FREQY1_INPUT));
-	addInput(Port::create<PJ301MPort>(Vec(41, 298), Port::INPUT, module, LissajousLFO::AMPLITUDE2_INPUT));
-	addInput(Port::create<PJ301MPort>(Vec(91, 298), Port::INPUT, module, LissajousLFO::FREQX2_INPUT));
-	addInput(Port::create<PJ301MPort>(Vec(141, 298), Port::INPUT, module, LissajousLFO::FREQY2_INPUT));
-
-	addOutput(Port::create<PJ301MPort>(Vec(22, 338), Port::OUTPUT, module, LissajousLFO::OUTPUT_1));
-	addOutput(Port::create<PJ301MPort>(Vec(53, 338), Port::OUTPUT, module, LissajousLFO::OUTPUT_2));
-	addOutput(Port::create<PJ301MPort>(Vec(86, 338), Port::OUTPUT, module, LissajousLFO::OUTPUT_3));
-	addOutput(Port::create<PJ301MPort>(Vec(126, 338), Port::OUTPUT, module, LissajousLFO::OUTPUT_4));
-	addOutput(Port::create<PJ301MPort>(Vec(158, 338), Port::OUTPUT, module, LissajousLFO::OUTPUT_5));
-
-	//addChild(ModuleLightWidget::create<MediumLight<BlueLight>>(Vec(21, 59), module, LissajousLFO::BLINK_LIGHT_1));
-	//addChild(ModuleLightWidget::create<MediumLight<BlueLight>>(Vec(41, 59), module, LissajousLFO::BLINK_LIGHT_2));
-	//addChild(ModuleLightWidget::create<MediumLight<BlueLight>>(Vec(61, 59), module, LissajousLFO::BLINK_LIGHT_3));
-	//addChild(ModuleLightWidget::create<MediumLight<BlueLight>>(Vec(81, 59), module, LissajousLFO::BLINK_LIGHT_4));
-}
-
-Model *modelLissajousLFO = Model::create<LissajousLFO, LissajousLFOWidget>("Frozen Wasteland", "LissajousLFO", "Lissajous LFO", LFO_TAG);
+Model *modelLissajousLFO = createModel<LissajousLFO, LissajousLFOWidget>("LissajousLFO");
