@@ -282,7 +282,7 @@ void QuadGolombRulerRhythm::process(const ProcessArgs &args) {
 		//clear out the matrix and levels
 		for(int j=0;j<MAX_STEPS;j++)
 		{
-			beatMatrix[trackNumber][j] = false; 
+			// beatMatrix[trackNumber][j] = false; 
 			accentMatrix[trackNumber][j] = false;
 			accentLevelArray[j] = 0;	
 			beatLocation[j] = 0;
@@ -367,6 +367,11 @@ void QuadGolombRulerRhythm::process(const ProcessArgs &args) {
 			}			
 
 			
+			//Set all beats to false
+			for(int j=0;j<actualStepCount;j++)
+			{
+				beatMatrix[trackNumber][j] = false; 			
+			}
 
 			for (int j = 0; j < rulerOrders[rulerToUse];j++)
 			{

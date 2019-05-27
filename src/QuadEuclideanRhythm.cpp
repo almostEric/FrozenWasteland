@@ -160,15 +160,15 @@ struct QuadEuclideanRhythm : Module {
 		configParam(CHAIN_MODE_PARAM, 0.0, 1.0, 0.0);
 		configParam(CONSTANT_TIME_MODE_PARAM, 0.0, 1.0, 0.0);
 		
-		for(unsigned i = 0; i < TRACK_COUNT; i++) {
+		for(int i = 0; i < TRACK_COUNT; i++) {
 			beatIndex[i] = 0;
 			stepsCount[i] = MAX_STEPS;
 			lastStepTime[i] = 0.0;
 			stepDuration[i] = 0.0;
 			running[i] = true;
-			for(unsigned j = 0; j < MAX_STEPS; j++) {
+			for(int j = 0; j < MAX_STEPS; j++) {
 				beatMatrix[i][j] = false;
-				accentMatrix[i][j] = false;
+				accentMatrix[i][j] = false;				
 			}
 		}		
 	}
@@ -275,8 +275,8 @@ void QuadEuclideanRhythm::process(const ProcessArgs &args) {
 		//clear out the matrix and levels
 		for(int j=0;j<16;j++)
 		{
-			beatMatrix[trackNumber][j] = false; 
-			accentMatrix[trackNumber][j] = false;
+			// beatMatrix[trackNumber][j] = false; 
+			// accentMatrix[trackNumber][j] = false;
 			beatLocation[j] = 0;
 		}
 
@@ -360,7 +360,11 @@ void QuadEuclideanRhythm::process(const ProcessArgs &args) {
 					beatMatrix[trackNumber][((stepIndex + offset + pad) % (stepsCount[trackNumber]))] = true;	
 					beatLocation[beatIndex] = (stepIndex + offset + pad) % stepsCount[trackNumber];	
 					beatIndex++;	
+				} else
+				{
+					beatMatrix[trackNumber][((stepIndex + offset + pad) % (stepsCount[trackNumber]))] = false;	
 				}
+				
 			}
 
 
@@ -371,7 +375,11 @@ void QuadEuclideanRhythm::process(const ProcessArgs &args) {
 				if(bucket >= division) {
 					bucket -= division;
 					accentMatrix[trackNumber][beatLocation[(accentIndex + accentRotation) % division]] = true;				
+				} else
+				{
+					accentMatrix[trackNumber][beatLocation[(accentIndex + accentRotation) % division]] = false;
 				}
+				
 			}	        	
         }	
 	}

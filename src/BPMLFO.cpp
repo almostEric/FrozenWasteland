@@ -116,7 +116,8 @@ struct LowFrequencyOscillator {
 
 
 	LowFrequencyOscillator oscillator;
-	dsp::SchmittTrigger clockTrigger,resetTrigger,holdTrigger;
+	dsp::SchmittTrigger clockTrigger,resetTrigger,holdTrigger,quantizePhaseTrigger;
+	
 	float divisions[DIVISIONS] = {1/64.0,1/32.0,1/16.0,1/13.0,1/11.0,1/8.0,1/7.0,1/6.0,1/5.0,1/4.0,1/3.0,1/2.0,1/1.5,1,1.5,2,3,4,5,6,7,8,11,13,16,32,64};
 	const char* divisionNames[DIVISIONS] = {"/64","/32","/16","/13","/11","/8","/7","/6","/5","/4","/3","/2","/1.5","x 1","x 1.5","x 2","x 3","x 4","x 5","x 6","x 7","x 8","x 11","x 13","x 16","x 32","x 64"};
 	int division = 0;
@@ -132,7 +133,7 @@ struct LowFrequencyOscillator {
 	float sawOutputValue = 0.0;
 	float sqrOutputValue = 0.0;
 
-	dsp::SchmittTrigger quantizePhaseTrigger;
+	
 
 
 	BPMLFO() {

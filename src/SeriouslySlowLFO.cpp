@@ -8,10 +8,15 @@ struct SeriouslySlowLFO : Module {
 		TIME_BASE_PARAM,
 		DURATION_PARAM,
 		FM_CV_ATTENUVERTER_PARAM,
+		PHASE_PARAM,
+		PHASE_CV_ATTENUVERTER_PARAM,
+		QUANTIZE_PHASE_PARAM,
+		OFFSET_PARAM,
 		NUM_PARAMS
 	};
 	enum InputIds {
 		FM_INPUT,
+		PHASE_INPUT,
 		RESET_INPUT,
 		NUM_INPUTS
 	};
@@ -28,10 +33,12 @@ struct SeriouslySlowLFO : Module {
 		DAYS_LIGHT,
 		WEEKS_LIGHT,
 		MONTHS_LIGHT,
+		QUANTIZE_PHASE_LIGHT,
 		NUM_LIGHTS
 	};
 
 struct LowFrequencyOscillator {
+	float basePhase = 0.0;
 	double phase = 0.0;
 	float pw = 0.5;
 	float freq = 1.0;
@@ -50,14 +57,25 @@ struct LowFrequencyOscillator {
 		const float pwMin = 0.01;
 		pw = clamp(pw_, pwMin, 1.0f - pwMin);
 	}
+
+	void setBasePhase(float initialPhase) {
+		//Apply change, then remember
+		phase += initialPhase - basePhase;
+		if (phase >= 1.0)
+			phase -= 1.0;
+		else if (phase < 0)
+			phase += 1.0;	
+		basePhase = initialPhase;
+	}	
+
 	void setReset(float reset) {
 		if (resetTrigger.process(reset)) {
-			phase = 0.0;
+			phase = basePhase;
 		}
 	}
 	void hardReset()
 	{
-		phase = 0.0;
+		phase = basePhase;
 	}
 
 	void step(float dt) {
@@ -104,10 +122,12 @@ struct LowFrequencyOscillator {
 
 
 	LowFrequencyOscillator oscillator;
-	dsp::SchmittTrigger sumTrigger;
+	dsp::SchmittTrigger sumTrigger, quantizePhaseTrigger;
+	
 	float duration = 0.0;
+	float initialPhase = 0.0;
 	int timeBase = 0;
-
+	bool phase_quantized = false;
 
 	SeriouslySlowLFO() {
 		config(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS, NUM_LIGHTS);
@@ -115,6 +135,10 @@ struct LowFrequencyOscillator {
 		configParam(TIME_BASE_PARAM, 0.0, 1.0, 0.0);
 		configParam(DURATION_PARAM, 1.0, 100.0, 1.0);
 		configParam(FM_CV_ATTENUVERTER_PARAM, -1.0, 1.0, 0.0);
+		configParam(PHASE_PARAM, 0.0, 0.9999, 0.0);
+		configParam(PHASE_CV_ATTENUVERTER_PARAM, -1.0, 1.0, 0.0);
+		configParam(QUANTIZE_PHASE_PARAM, 0.0, 1.0, 0.0);
+		configParam(OFFSET_PARAM, 0.0, 1.0, 1.0);
 	}
 
 	void process(const ProcessArgs &args) override;
@@ -175,6 +199,27 @@ void SeriouslySlowLFO::process(const ProcessArgs &args) {
 	duration = clamp(duration,1.0f,100.0f);
 
 	oscillator.setFrequency(1.0 / (duration * numberOfSeconds));
+
+	if (quantizePhaseTrigger.process(params[QUANTIZE_PHASE_PARAM].getValue())) {
+		phase_quantized = !phase_quantized;
+	}
+	lights[QUANTIZE_PHASE_LIGHT].value = phase_quantized;
+
+	initialPhase = params[PHASE_PARAM].getValue();
+	if(inputs[PHASE_INPUT].isConnected()) {
+		initialPhase += (inputs[PHASE_INPUT].getVoltage() / 10 * params[PHASE_CV_ATTENUVERTER_PARAM].getValue());
+	}
+	if (initialPhase >= 1.0)
+		initialPhase -= 1.0;
+	else if (initialPhase < 0)
+		initialPhase += 1.0;	
+	if(phase_quantized) // Limit to 90 degree increments
+		initialPhase = std::round(initialPhase * 4.0f) / 4.0f;
+	
+	oscillator.offset = (params[OFFSET_PARAM].getValue() > 0.0);
+	oscillator.setBasePhase(initialPhase);
+
+
 	oscillator.step(1.0 / args.sampleRate);
 	if(inputs[RESET_INPUT].isConnected()) {
 		oscillator.setReset(inputs[RESET_INPUT].getVoltage());
@@ -215,8 +260,8 @@ struct SSLFOProgressDisplay : TransparentWidget {
 		nvgFillColor(args.vg, nvgRGBA(0xff, 0xff, 0x20, 0xff));
 		{
 			nvgBeginPath(args.vg);
-			nvgArc(args.vg,109.8,194.5,35,startArc,endArc,NVG_CW);
-			nvgLineTo(args.vg,109.8,194.5);
+			nvgArc(args.vg,141,194.5,35,startArc,endArc,NVG_CW);
+			nvgLineTo(args.vg,141,194.5);
 			nvgClosePath(args.vg);
 		}
 		nvgFill(args.vg);
@@ -230,14 +275,14 @@ struct SSLFOProgressDisplay : TransparentWidget {
 		nvgFillColor(args.vg, nvgRGBA(0x00, 0xff, 0x00, 0xff));
 		char text[128];
 		snprintf(text, sizeof(text), " % #6.1f", duration);
-		nvgText(args.vg, pos.x + 22, pos.y, text, NULL);
+		nvgText(args.vg, pos.x + 40, pos.y, text, NULL);
 	}
 
 	void draw(const DrawArgs &args) override {
 		if (!module)
 			return;
 		drawProgress(args,module->oscillator.progress());
-		drawDuration(args, Vec(0, box.size.y - 140), module->duration);
+		drawDuration(args, Vec(0, box.size.y - 155), module->duration);
 	}
 };
 
@@ -261,24 +306,31 @@ struct SeriouslySlowLFOWidget : ModuleWidget {
 			addChild(display);
 		}
 
-		addParam(createParam<CKD6>(Vec(10, 240), module, SeriouslySlowLFO::TIME_BASE_PARAM));
-		addParam(createParam<RoundFWKnob>(Vec(41, 90), module, SeriouslySlowLFO::DURATION_PARAM));
-		addParam(createParam<RoundSmallFWKnob>(Vec(75, 121), module, SeriouslySlowLFO::FM_CV_ATTENUVERTER_PARAM));
+		addParam(createParam<CKD6>(Vec(8, 240), module, SeriouslySlowLFO::TIME_BASE_PARAM));
+		addParam(createParam<RoundLargeFWKnob>(Vec(56, 80), module, SeriouslySlowLFO::DURATION_PARAM));
+		addParam(createParam<RoundSmallFWKnob>(Vec(99, 111), module, SeriouslySlowLFO::FM_CV_ATTENUVERTER_PARAM));
 
+		addParam(createParam<RoundFWKnob>(Vec(72, 162), module, SeriouslySlowLFO::PHASE_PARAM));
+		addParam(createParam<RoundSmallFWKnob>(Vec(75, 223), module, SeriouslySlowLFO::PHASE_CV_ATTENUVERTER_PARAM));
+		addParam(createParam<LEDButton>(Vec(58, 184), module, SeriouslySlowLFO::QUANTIZE_PHASE_PARAM));
+		
+		addParam(createParam<CKSS>(Vec(48, 266), module, SeriouslySlowLFO::OFFSET_PARAM));
+		
+		addInput(createInput<PJ301MPort>(Vec(98, 83), module, SeriouslySlowLFO::FM_INPUT));
+		addInput(createInput<PJ301MPort>(Vec(74, 195), module, SeriouslySlowLFO::PHASE_INPUT));
+		addInput(createInput<PJ301MPort>(Vec(80, 272), module, SeriouslySlowLFO::RESET_INPUT));
 
-		addInput(createInput<PJ301MPort>(Vec(75, 93), module, SeriouslySlowLFO::FM_INPUT));
-		addInput(createInput<PJ301MPort>(Vec(63, 272), module, SeriouslySlowLFO::RESET_INPUT));
+		addOutput(createOutput<PJ301MPort>(Vec(29, 320), module, SeriouslySlowLFO::SIN_OUTPUT));
+		addOutput(createOutput<PJ301MPort>(Vec(63, 320), module, SeriouslySlowLFO::TRI_OUTPUT));
+		addOutput(createOutput<PJ301MPort>(Vec(98, 320), module, SeriouslySlowLFO::SAW_OUTPUT));
+		addOutput(createOutput<PJ301MPort>(Vec(132, 320), module, SeriouslySlowLFO::SQR_OUTPUT));
 
-		addOutput(createOutput<PJ301MPort>(Vec(11, 320), module, SeriouslySlowLFO::SIN_OUTPUT));
-		addOutput(createOutput<PJ301MPort>(Vec(45, 320), module, SeriouslySlowLFO::TRI_OUTPUT));
-		addOutput(createOutput<PJ301MPort>(Vec(80, 320), module, SeriouslySlowLFO::SAW_OUTPUT));
-		addOutput(createOutput<PJ301MPort>(Vec(114, 320), module, SeriouslySlowLFO::SQR_OUTPUT));
-
-		addChild(createLight<MediumLight<BlueLight>>(Vec(10, 168), module, SeriouslySlowLFO::MINUTES_LIGHT));
-		addChild(createLight<MediumLight<BlueLight>>(Vec(10, 183), module, SeriouslySlowLFO::HOURS_LIGHT));
-		addChild(createLight<MediumLight<BlueLight>>(Vec(10, 198), module, SeriouslySlowLFO::DAYS_LIGHT));
-		addChild(createLight<MediumLight<BlueLight>>(Vec(10, 213), module, SeriouslySlowLFO::WEEKS_LIGHT));
-		addChild(createLight<MediumLight<BlueLight>>(Vec(10, 228), module, SeriouslySlowLFO::MONTHS_LIGHT));
+		addChild(createLight<MediumLight<BlueLight>>(Vec(5, 168), module, SeriouslySlowLFO::MINUTES_LIGHT));
+		addChild(createLight<MediumLight<BlueLight>>(Vec(5, 183), module, SeriouslySlowLFO::HOURS_LIGHT));
+		addChild(createLight<MediumLight<BlueLight>>(Vec(5, 198), module, SeriouslySlowLFO::DAYS_LIGHT));
+		addChild(createLight<MediumLight<BlueLight>>(Vec(5, 213), module, SeriouslySlowLFO::WEEKS_LIGHT));
+		addChild(createLight<MediumLight<BlueLight>>(Vec(5, 228), module, SeriouslySlowLFO::MONTHS_LIGHT));
+		addChild(createLight<MediumLight<BlueLight>>(Vec(62, 188), module, SeriouslySlowLFO::QUANTIZE_PHASE_LIGHT));
 	}
 };
 
