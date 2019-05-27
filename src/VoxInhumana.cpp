@@ -279,7 +279,8 @@ struct VoxInhumanaBandDisplay : TransparentWidget {
 
 		const char* voiceNames[5] = {"Bass","Tenor","Counter-Tenor","Alto","Soprano"};
 
-		nvgFillColor(args.vg, nvgRGBA(0x00, 0x8f, 0xff, 0xff));
+		//nvgFillColor(args.vg, nvgRGBA(0x00, 0x8f, 0xff, 0xff));
+		nvgFillColor(args.vg, nvgRGBA(0x00, 0xaf, 0x00, 0xff));
 		char text[128];
 		snprintf(text, sizeof(text), "%s", voiceNames[voiceType]);
 		nvgText(args.vg, pos.x + 8, pos.y, text, NULL);
