@@ -182,72 +182,76 @@ struct VoxInhumana : Module {
 			filterParams[i].setQ(5); 	
 	        filterParams[i].setFreq(T(.1));
 	    }
+
+		onReset();
 	}
 
+	void onReset() override {
+		//params[FC_MAIN_CUTOFF_PARAM].getValue() = 1.0f;
+		params[FC_MAIN_CUTOFF_PARAM].setValue(1.0f);
+		params[VOWEL_BALANCE_PARAM].setValue(0.0f);
+		for(int i = 0;i<BANDS;i++) {
+			params[FREQ_1_CUTOFF_PARAM+i].setValue(0.0f);
+			params[AMP_1_PARAM + i].setValue(1.0f);
+		}
+	}
 	
-	void process(const ProcessArgs &args) override;
+	void process(const ProcessArgs &args) override {
+	
+		float signalIn = inputs[SIGNAL_IN].getVoltage()/5.0f;
+		
+
+		vowel1 = (int)clamp(params[VOWEL_1_PARAM].getValue() + (inputs[VOWEL_1_CV_IN].getVoltage() * params[VOWEL_1_ATTENUVERTER_PARAM].getValue()),0.0f,4.0f);
+		vowel2 = (int)clamp(params[VOWEL_2_PARAM].getValue() + (inputs[VOWEL_2_CV_IN].getVoltage() * params[VOWEL_2_ATTENUVERTER_PARAM].getValue()),0.0f,4.0f);
+		vowelBalance = clamp(params[VOWEL_BALANCE_PARAM].getValue() + (inputs[VOWEL_BALANCE_CV_IN].getVoltage() * params[VOWEL_BALANCE_ATTENUVERTER_PARAM].getValue() /10.0f),0.0f,1.0f);
+		voiceType = (int)clamp(params[VOICE_TYPE_PARAM].getValue() + (inputs[VOICE_TYPE_CV_IN].getVoltage() * params[VOICE_TYPE_ATTENUVERTER_PARAM].getValue()),0.0f,4.0f);
+		fcShift = clamp(params[FC_MAIN_CUTOFF_PARAM].getValue() + (inputs[FC_MAIN_CV_IN].getVoltage() * params[FC_MAIN_ATTENUVERTER_PARAM].getValue()/10.0f) ,0.0f,2.0f);
+
+		lights[VOWEL_1_LIGHT].value = 1.0-vowelBalance;
+		lights[VOWEL_2_LIGHT].value = vowelBalance;
+		
+		for (int i=0; i<BANDS;i++) {
+			float cutoffExp = params[FREQ_1_CUTOFF_PARAM+i].getValue() + inputs[FREQ_1_CUTOFF_INPUT+i].getVoltage() * params[FREQ_1_CV_ATTENUVERTER_PARAM+i].getValue(); 
+			cutoffExp = clamp(cutoffExp, -1.0f, 1.0f);
+			freq[i] = lerp(formantParameters[voiceType][vowel1][i][0],formantParameters[voiceType][vowel2][i][0],vowelBalance); 
+			//Apply individual formant CV
+			freq[i] = freq[i] + (freq[i] / 2 * cutoffExp); //Formant CV can alter formant by +/- 50%
+			//Apply global Fc shift
+			freq[i] = freq[i] * fcShift; //Global can double or really lower freq
+			
+			Q[i] = lerp(formantParameters[voiceType][vowel1][i][1],formantParameters[voiceType][vowel2][i][1],vowelBalance);
+			peak[i] = lerp(formantParameters[voiceType][vowel1][i][2],formantParameters[voiceType][vowel2][i][2],vowelBalance);		
+
+
+			if(freq[i] != lastFreq[i]) {
+				float Fc = freq[i] / args.sampleRate;
+				filterParams[i].setFreq(T(Fc));
+				lastFreq[i] = freq[i];
+			}
+			if(Q[i] != lastQ[i]) {
+				filterParams[i].setQ(Q[i]); 
+				lastQ[i] = Q[i];
+			}		
+		}
+
+		float out = 0.0f;	
+		for(int i=0;i<BANDS;i++) {
+			float filterOut = StateVariableFilter<T>::run(signalIn, filterStates[i], filterParams[i]);;
+			float attenuation = powf(10,peak[i] / 20.0f);
+			float manualAttenuation = params[AMP_1_PARAM+i].getValue() + inputs[AMP_1_INPUT+i].getVoltage() * params[AMP_1_CV_ATTENUVERTER_PARAM+i].getValue(); 
+			attenuation = clamp(attenuation * manualAttenuation, 0.0f, 1.0f);
+			out += filterOut * attenuation * 5.0f;
+		}
+
+
+		outputs[VOX_OUTPUT].setVoltage(out / 5.0f);
+		
+	}
 };
 
-// void VoxInhumana::reset() {
-// 	params[FC_MAIN_CUTOFF_PARAM].getValue() = 1.0f;
-// 	params[VOWEL_BALANCE_PARAM].getValue() = 0.0f;
-// 	for(int i = 0;i<BANDS;i++) {
-// 		params[FREQ_1_CUTOFF_PARAM+i].getValue() = 0.0f;
-// 		params[AMP_1_PARAM + i].getValue() = 1.0f;
-// 	}
-// }
-
-void VoxInhumana::process(const ProcessArgs &args) {
-	
-	float signalIn = inputs[SIGNAL_IN].getVoltage()/5.0f;
-	
-
-	vowel1 = (int)clamp(params[VOWEL_1_PARAM].getValue() + (inputs[VOWEL_1_CV_IN].getVoltage() * params[VOWEL_1_ATTENUVERTER_PARAM].getValue()),0.0f,4.0f);
-	vowel2 = (int)clamp(params[VOWEL_2_PARAM].getValue() + (inputs[VOWEL_2_CV_IN].getVoltage() * params[VOWEL_2_ATTENUVERTER_PARAM].getValue()),0.0f,4.0f);
-	vowelBalance = clamp(params[VOWEL_BALANCE_PARAM].getValue() + (inputs[VOWEL_BALANCE_CV_IN].getVoltage() * params[VOWEL_BALANCE_ATTENUVERTER_PARAM].getValue() /10.0f),0.0f,1.0f);
-	voiceType = (int)clamp(params[VOICE_TYPE_PARAM].getValue() + (inputs[VOICE_TYPE_CV_IN].getVoltage() * params[VOICE_TYPE_ATTENUVERTER_PARAM].getValue()),0.0f,4.0f);
-	fcShift = clamp(params[FC_MAIN_CUTOFF_PARAM].getValue() + (inputs[FC_MAIN_CV_IN].getVoltage() * params[FC_MAIN_ATTENUVERTER_PARAM].getValue()/10.0f) ,0.0f,2.0f);
-
-	lights[VOWEL_1_LIGHT].value = 1.0-vowelBalance;
-	lights[VOWEL_2_LIGHT].value = vowelBalance;
-	
-	for (int i=0; i<BANDS;i++) {
-		float cutoffExp = params[FREQ_1_CUTOFF_PARAM+i].getValue() + inputs[FREQ_1_CUTOFF_INPUT+i].getVoltage() * params[FREQ_1_CV_ATTENUVERTER_PARAM+i].getValue(); 
-		cutoffExp = clamp(cutoffExp, -1.0f, 1.0f);
-		freq[i] = lerp(formantParameters[voiceType][vowel1][i][0],formantParameters[voiceType][vowel2][i][0],vowelBalance); 
-		//Apply individual formant CV
-		freq[i] = freq[i] + (freq[i] / 2 * cutoffExp); //Formant CV can alter formant by +/- 50%
-		//Apply global Fc shift
-		freq[i] = freq[i] * fcShift; //Global can double or really lower freq
-		
-		Q[i] = lerp(formantParameters[voiceType][vowel1][i][1],formantParameters[voiceType][vowel2][i][1],vowelBalance);
-		peak[i] = lerp(formantParameters[voiceType][vowel1][i][2],formantParameters[voiceType][vowel2][i][2],vowelBalance);		
 
 
-		if(freq[i] != lastFreq[i]) {
-			float Fc = freq[i] / args.sampleRate;
-			filterParams[i].setFreq(T(Fc));
-			lastFreq[i] = freq[i];
-		}
-		if(Q[i] != lastQ[i]) {
-			filterParams[i].setQ(Q[i]); 
-			lastQ[i] = Q[i];
-		}		
-	}
 
-	float out = 0.0f;	
-	for(int i=0;i<BANDS;i++) {
-		float filterOut = StateVariableFilter<T>::run(signalIn, filterStates[i], filterParams[i]);;
-		float attenuation = powf(10,peak[i] / 20.0f);
-		float manualAttenuation = params[AMP_1_PARAM+i].getValue() + inputs[AMP_1_INPUT+i].getVoltage() * params[AMP_1_CV_ATTENUVERTER_PARAM+i].getValue(); 
-		attenuation = clamp(attenuation * manualAttenuation, 0.0f, 1.0f);
-		out += filterOut * attenuation * 5.0f;
-	}
-
-
-	outputs[VOX_OUTPUT].setVoltage(out / 5.0f);
-	
-}
 
 
 struct VoxInhumanaBandDisplay : TransparentWidget {
