@@ -137,40 +137,47 @@ A collection of unusual plugins that will add a certain coolness to your patches
 - FB Send and Returns allow you to insert FX into the feedback loop
 
 
-## Quad Euclidean Rhythm
+## Quad Algorithmic Rhythm
 
-![Quad Euclidean Rhythm](./doc/qer.png)
+![Quad Algorithmic Rhythm](./doc/qar.png)
 
-- 4 Euclidiean rhythm based triggers
+- 4 Algorithmic rhythm based triggers
+- 2 Algorithms, Euclidean and Golumb Ruler. Each track can use its own Algorithm.
+- CV Control of Alogorithm. Try hooking EOC output to Algorithm trigger to get alternating rhythms
 - CV control of Steps, Divisions and Offset, Padding, Accents and Accent Rotation
-- QERs can be chained together to create arbitrarily long sequences. 
-- If Chain Mode is Boss, the QER runs on start up, then stops if the track's Start input is patched, until a Start trigger is received - basically the first QER should be set to this
-- If Chain Mode is Employee, the QER track will be idle until a Start trigger is received.
-- Patch EoC (End of Cycle) outputs to next QER's Start Inputs
-- Last QER's EoC should be patched back to first QER's Start Input to create a complete loop.
-- May want to consider using an OR module (Qwelk has a nice one) so that mutiple QER's outs and accent outs can gate a single unit
-- Each QER has its own clock input, so tempo changes can easily be created
+- QARs can be chained together to create arbitrarily long sequences. 
+- If Chain Mode is Boss, the QAR runs on start up, then stops if the track's Start input is patched, until a Start trigger is received - basically the first QAR should be set to this
+- If Chain Mode is Employee, the QAR track will be idle until a Start trigger is received.
+- Patch EoC (End of Cycle) outputs to next QAR's Start Inputs
+- Last QAR's EoC should be patched back to first QAR's Start Input to create a complete loop.
+- May want to consider using an OR module (Qwelk has a nice one) so that mutiple QAR's outs and accent outs can gate a single unit
+- Each QAR has its own clock input, so tempo changes can easily be created
 - Mute Input keeps rhythm running just no output
-- https://www.youtube.com/watch?v=ARMxz11z9FU is an example of how to patch a couple QERs together and drive some drum synths
+- https://www.youtube.com/watch?v=ARMxz11z9FU is an example of how to patch a couple QARs together and drive some drum synths
 - Normally each track advances one step every clock beat and are independent. If Time Sync is enabled, the selected track becomes the master and the other tracks will fit their patterns to the timing of the master. This allows for complex polyrhythms (ie. 15 on 13 on 11 on 4, etc.)
-- https://www.youtube.com/watch?v=eCErJMKAlVY is an example of the QER with Time Sync enabled
+- https://www.youtube.com/watch?v=eCErJMKAlVY is an example of the QAR with Time Sync enabled
 ### Euclidean Rhythms
 - Euclidean are based upon attempting to equally distribute the divisions among the steps available
 - Basic example, with a step count of 16, and 2 divisions, the divisions will be on the 1 and the 9.
 - A division of 4 would give you a basic 4 on the floor rhythm
 - The Offset control lets you move the starting point of the rhythm to something other than the 1
-
-## Quad Golumb Ruler Rhythm
-
-![Quad Golumb Ruler Rhythm](./doc/qgrr.png)
-
-- 4 Golumb Ruler rhythm based triggers
-- For when QER is "too danceable" :)
-- Features identical to the Quad Euclidean Rhythm and both units can be chained together
-- 18 step sequencer since Golomb Ruler Rhythms like prime numbers having more than 17 steps allows for more patterns
 ### Golomb Ruler Rhythms
 - Unlike Euclidean Rhythms which seek to evenly distribute the divisions, Golomb Rulers try to ensure unequal distribution
 - Basic example, with a step count of 16, and 4 divisions, the divisions will be on the 1,4,9 and 13.
+
+
+![Quad Rhythm Expander](./doc/qre.png)
+
+- Expander Modue for Quad Algorithmic Rhythm
+- Allows controlling probability and swing for tracks/beats.
+- Probability and Swing can be enabled/disabled track by track
+- Beats to be affected can be selected by buttons on bottom
+- If Steps/Divs is in Steps mode, the step selected has its probability/swing changed whethere there is a beat or not (and if there is no beat, this means no effect)
+- If Steps/Divs is in Divs mode, then the button select the first beat, second beat, etc. no matter which step the beat is on
+- CV Control of Probability and Swing for each track allows multiple steps/beats to be controlled at once
+- Expanders can be chained with each one controlling its own subsets of tracks and steps
+- Left expander has priority over expander(s) on right
+- Left expander sets STEP/DIV mode for all expanders 
 
 
 ## Quantussy Cell

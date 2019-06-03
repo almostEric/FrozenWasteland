@@ -59,17 +59,17 @@
 		{
 			"slug": "PortlandWeather",
 			"name": "Portland Weather",
-			"tags": ["Delay", "VCF"]
+			"tags": ["Delay", "Granular", "VCF"]
 		},
 		{
-			"slug": "QuadGolombRulerRhythmGenerator",
-			"name": "Quad Golomb Ruler Rhythm Generator",
+			"slug": "QuadAlgorithmicRhythmGenerator",
+			"name": "Quad Algorithmic Rhythm Generator",
 			"tags": ["Sequencer"]
 		},
 		{
-			"slug": "QuadEuclideanRhythmGenerator",
-			"name": "Quad Euclidean Rhythm Generator",
-			"tags": ["Sequencer"]
+			"slug": "QuadRhythmExpander",
+			"name": "Quad Rhythm Expander",
+			"tags": ["Sequencer","Expander"]
 		},
 		{
 			"slug": "QuantussyCell",
