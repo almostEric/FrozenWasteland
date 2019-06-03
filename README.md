@@ -213,6 +213,7 @@ A collection of unusual plugins that will add a certain coolness to your patches
 
 - Waiting for the next Ice Age? Tidal Modulator too fast paced? This is the LFO for you.
 - Generate oscillating CVs with range from 1 minute to 100 months
+- Phase Control allows LFOs to be offset (cv controllable). 90° button limits offset to 0, 90, 180, 270 degrees.
 - NOTE: Pretty sure my math is correct, but 100 month LFOs have not been unit tested
 
 ## Vox Inhumana
