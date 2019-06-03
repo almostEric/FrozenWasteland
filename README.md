@@ -166,6 +166,8 @@ A collection of unusual plugins that will add a certain coolness to your patches
 - Basic example, with a step count of 16, and 4 divisions, the divisions will be on the 1,4,9 and 13.
 
 
+## Quad Rhythm Expander
+
 ![Quad Rhythm Expander](./doc/qre.png)
 
 - Expander Modue for Quad Algorithmic Rhythm
@@ -178,6 +180,7 @@ A collection of unusual plugins that will add a certain coolness to your patches
 - Expanders can be chained with each one controlling its own subsets of tracks and steps
 - Left expander has priority over expander(s) on right
 - Left expander sets STEP/DIV mode for all expanders 
+
 
 
 ## Quantussy Cell
