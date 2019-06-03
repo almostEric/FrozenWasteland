@@ -108,7 +108,7 @@ inline float SoftClip(float x) {
   }
 }
 
-#ifdef TEST
+
   inline int32_t Clip16(int32_t x) {
     if (x < -32768) {
       return -32768;
@@ -127,30 +127,11 @@ inline float SoftClip(float x) {
       return x;
     }
   }
-#else
-  inline int32_t Clip16(int32_t x) {
-    int32_t result;
-    __asm ("ssat %0, %1, %2" : "=r" (result) :  "I" (16), "r" (x) );
-    return result;
-  }
-  inline uint32_t ClipU16(int32_t x) {
-    uint32_t result;
-    __asm ("usat %0, %1, %2" : "=r" (result) :  "I" (16), "r" (x) );
-    return result;
-  }
-#endif
   
-#ifdef TEST
-  inline float Sqrt(float x) {
-    return sqrtf(x);
-  }
-#else
-  inline float Sqrt(float x) {
-    float result;
-    __asm ("vsqrt.f32 %0, %1" : "=w" (result) : "w" (x) );
-    return result;
-  }
-#endif
+
+inline float Sqrt(float x) {
+  return sqrtf(x);
+}
 
 inline int16_t SoftConvert(float x) {
   return Clip16(static_cast<int32_t>(SoftLimit(x * 0.5f) * 32768.0f));
