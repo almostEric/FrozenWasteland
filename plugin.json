@@ -27,8 +27,8 @@
 			"tags": ["LFO"]
 		},
 		{
-			"slug": "DamianLilliard",
-			"name": "Damian Lilliard",
+			"slug": "DamianLillard",
+			"name": "Damian Lillard",
 			"tags": ["VCA"]
 		},
 		{
@@ -52,7 +52,7 @@
 			"tags": ["Vocoder"]
 		},
 		{
-			"slug": "PLL",
+			"slug": "PhasedLockedLoop",
 			"name": "Phased Locked Loop",
 			"tags": ["VCO"]
 		},
@@ -62,7 +62,7 @@
 			"tags": ["Delay", "Granular", "VCF"]
 		},
 		{
-			"slug": "QuadAlgorithmicRhythmGenerator",
+			"slug": "QuadAlgorithmicRhythm",
 			"name": "Quad Algorithmic Rhythm Generator",
 			"tags": ["Sequencer"]
 		},
