@@ -24,11 +24,27 @@ struct RoundFWKnob : RoundKnob {
 	}
 };
 
+struct RoundFWSnapKnob : RoundKnob {
+	RoundFWSnapKnob() {
+		setSvg(APP->window->loadSvg(asset::plugin(pluginInstance,"res/ComponentLibrary/RoundFWKnob.svg")));
+		snap = true;
+	}
+};
+
+
 struct RoundSmallFWKnob : RoundKnob {
 	RoundSmallFWKnob() {
 		setSvg(APP->window->loadSvg(asset::plugin(pluginInstance,"res/ComponentLibrary/RoundSmallFWKnob.svg")));
 	}
 };
+
+struct RoundSmallFWSnapKnob : RoundKnob {
+	RoundSmallFWSnapKnob() {
+		setSvg(APP->window->loadSvg(asset::plugin(pluginInstance,"res/ComponentLibrary/RoundSmallFWKnob.svg")));
+		snap = true;
+	}
+};
+
 
 struct RoundLargeFWKnob : RoundKnob {
 	RoundLargeFWKnob() {
@@ -36,8 +52,24 @@ struct RoundLargeFWKnob : RoundKnob {
 	}
 };
 
+struct RoundLargeFWSnapKnob : RoundKnob {
+	RoundLargeFWSnapKnob() {
+		setSvg(APP->window->loadSvg(asset::plugin(pluginInstance,"res/ComponentLibrary/RoundLargeFWKnob.svg")));
+		snap = true;
+	}
+};
+
+
+
 struct RoundHugeFWKnob : RoundKnob {
 	RoundHugeFWKnob() {
 		setSvg(APP->window->loadSvg(asset::plugin(pluginInstance,"res/ComponentLibrary/RoundHugeFWKnob.svg")));
+	}
+};
+
+struct RoundHugeFWSnapKnob : RoundKnob {
+	RoundHugeFWSnapKnob() {
+		setSvg(APP->window->loadSvg(asset::plugin(pluginInstance,"res/ComponentLibrary/RoundHugeFWKnob.svg")));
+		snap = true;
 	}
 };

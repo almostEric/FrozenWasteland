@@ -197,6 +197,10 @@ struct PortlandWeather : Module {
 	dsp::RCFilter highpassFilter[CHANNELS];
 
 	const char* filterNames[5] = {"OFF","LP","HP","BP","NOTCH"};
+
+	const char* tapNames[NUM_TAPS+2] {"1","2","3","4","5","6","7","8","9","10","11","12","13","14","15","16","ALL","EXT"};
+	const char* grainNames[MAX_GRAINS] {"1","2","4","Raw"};
+
 	
 	clouds::PitchShifter pitch_shifter_[NUM_TAPS+1][CHANNELS][MAX_GRAINS];
 	dsp::SchmittTrigger clockTrigger,pingPongTrigger,reverseTrigger,clearBufferTrigger,mutingTrigger[NUM_TAPS],stackingTrigger[NUM_TAPS];
@@ -229,28 +233,28 @@ struct PortlandWeather : Module {
 	PortlandWeather() {
 		config(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS, NUM_LIGHTS);
 
-		configParam(CLOCK_DIV_PARAM, 0, DIVISIONS-1, 0);
-		configParam(TIME_PARAM, 0.0f, 10.0f, 0.350f);
+		configParam(CLOCK_DIV_PARAM, 0, DIVISIONS-1, 0,"Divisions");
+		configParam(TIME_PARAM, 0.0f, 10.0f, 0.350f,"Time"," ms",0,1000);
 		//configParam(GRID_PARAM, 0.001f, 10.0f, 0.350f);
 
-		configParam(GROOVE_TYPE_PARAM, 0.0f, 15.0f, 0.0f);
-		configParam(GROOVE_AMOUNT_PARAM, 0.0f, 1.0f, 1.0f);
+		configParam(GROOVE_TYPE_PARAM, 0.0f, 15.0f, 0.0f,"Groove Type");
+		configParam(GROOVE_AMOUNT_PARAM, 0.0f, 1.0f, 1.0f,"Groove Amount","%",0,100);
 
-		configParam(FEEDBACK_PARAM, 0.0f, 1.0f, 0.0f);
-		configParam(FEEDBACK_TONE_PARAM, 0.0f, 1.0f, 0.5f);
+		configParam(FEEDBACK_PARAM, 0.0f, 1.0f, 0.0f,"Feedback","%",0,100);
+		configParam(FEEDBACK_TONE_PARAM, 0.0f, 1.0f, 0.5f,"Feedback Tone","%",0,100);
 
-		configParam(FEEDBACK_TAP_L_PARAM, 0.0f, 17.0f, 15.0f);
-		configParam(FEEDBACK_TAP_R_PARAM, 0.0f, 17.0f, 15.0f);
-		configParam(FEEDBACK_L_SLIP_PARAM, -0.5f, 0.5f, 0.0f);
-		configParam(FEEDBACK_R_SLIP_PARAM, -0.5f, 0.5f, 0.0f);
-		configParam(FEEDBACK_L_PITCH_SHIFT_PARAM, -24.0f, 24.0f, 0.0f);
-		configParam(FEEDBACK_R_PITCH_SHIFT_PARAM, -24.0f, 24.0f, 0.0f);
-		configParam(FEEDBACK_L_DETUNE_PARAM, -99.0f, 99.0f, 0.0f);
-		configParam(FEEDBACK_R_DETUNE_PARAM, -99.0f, 99.0f, 0.0f);
+		configParam(FEEDBACK_TAP_L_PARAM, 0.0f, 17.0f, 15.0f,"Feedback L Tap");
+		configParam(FEEDBACK_TAP_R_PARAM, 0.0f, 17.0f, 15.0f,"Feedback R Tap");
+		configParam(FEEDBACK_L_SLIP_PARAM, -0.5f, 0.5f, 0.0f,"Feedback L Slip","%",0,100);
+		configParam(FEEDBACK_R_SLIP_PARAM, -0.5f, 0.5f, 0.0f,"Feedback R Slip","%",0,100);
+		configParam(FEEDBACK_L_PITCH_SHIFT_PARAM, -24.0f, 24.0f, 0.0f,"Feedback L Pitch Shift", " semitones");
+		configParam(FEEDBACK_R_PITCH_SHIFT_PARAM, -24.0f, 24.0f, 0.0f,"Feedback R Pitch Shift", " semitones");
+		configParam(FEEDBACK_L_DETUNE_PARAM, -99.0f, 99.0f, 0.0f,"Feedback L Detune", " cents");
+		configParam(FEEDBACK_R_DETUNE_PARAM, -99.0f, 99.0f, 0.0f,"Feedback R Detune", " cents");
 
-		configParam(GRAIN_QUANTITY_PARAM, 1, 4, 1);
+		configParam(GRAIN_QUANTITY_PARAM, 1, 4, 1,"# Grains");
 		//configParam(GRAIN_SIZE_PARAM, 8, 11, 11);
-		configParam(GRAIN_SIZE_PARAM, 0.0f, 1.0f, 1.0f);
+		configParam(GRAIN_SIZE_PARAM, 0.0f, 1.0f, 1.0f,"Grain Size");
 		
 
 		configParam(CLEAR_BUFFER_PARAM, 0.0f, 1.0f, 0.0f);
@@ -267,16 +271,16 @@ struct PortlandWeather : Module {
 
 		for (int i = 0; i < NUM_TAPS; i++) {
 			configParam(TAP_MUTE_PARAM + i, 0.0f, 1.0f, 0.0f);		
-			configParam(TAP_MIX_PARAM + i, 0.0f, 1.0f, 0.5f);
-			configParam(TAP_PAN_PARAM + i, 0.0f, 1.0f, 0.5f);
-			configParam(TAP_FILTER_TYPE_PARAM + i, 0, 4, 0);
-			configParam(TAP_FC_PARAM + i, 0.0f, 1.0f, 0.5f);
-			configParam(TAP_Q_PARAM + i, 0.01f, 1.0f, 0.5f);
-			configParam(TAP_PITCH_SHIFT_PARAM + i, -24.0f, 24.0f, 0.0f);
-			configParam(TAP_DETUNE_PARAM + i, -99.0f, 99.0f, 0.0f);
+			configParam(TAP_MIX_PARAM + i, 0.0f, 1.0f, 0.5f,"Tap " + std::to_string(i+1) + " mix","%",0,100);
+			configParam(TAP_PAN_PARAM + i, 0.0f, 1.0f, 0.5f,"Tap " + std::to_string(i+1) + " pan","%",0,100);
+			configParam(TAP_FILTER_TYPE_PARAM + i, 0, 4, 0,"Tap " + std::to_string(i+1) + " filter type");
+			configParam(TAP_FC_PARAM + i, 0.0f, 1.0f, 0.5f,"Tap " + std::to_string(i+1) + " Fc"," Hz",560,15);
+			configParam(TAP_Q_PARAM + i, 0.01f, 1.0f, 0.5f,"Tap " + std::to_string(i+1) + " Q","%",0,100);
+			configParam(TAP_PITCH_SHIFT_PARAM + i, -24.0f, 24.0f, 0.0f,"Tap " + std::to_string(i+1) + " pitch shift"," semitones");
+			configParam(TAP_DETUNE_PARAM + i, -99.0f, 99.0f, 0.0f,"Tap " + std::to_string(i+1) + " detune"," cents");
 		}
 
-		configParam(MIX_PARAM, 0.0f, 1.0f, 0.5f);
+		configParam(MIX_PARAM, 0.0f, 1.0f, 0.5f,"Mix","%",0,100);
 
 		//src = src_new(SRC_SINC_FASTEST, 1, NULL);
 		src = src_new(SRC_ZERO_ORDER_HOLD, 1, NULL);
@@ -316,8 +320,6 @@ struct PortlandWeather : Module {
 
 	}
 
-	const char* tapNames[NUM_TAPS+2] {"1","2","3","4","5","6","7","8","9","10","11","12","13","14","15","16","ALL","EXT"};
-	const char* grainNames[MAX_GRAINS] {"1","2","4","Raw"};
 
 
 	json_t *dataToJson() override {
@@ -577,7 +579,6 @@ void PortlandWeather::process(const ProcessArgs &args) {
 			
 			float initialOutput = (sinValue * sinValue * initialWindowedOutput[tap][channel][0]) + (cosValue * cosValue * initialWindowedOutput[tap][channel][1]);
 
-			//Bypassing pitch shifting for now
 			float grainVolumeScaling = 1;
 			for(int k=0;k<MAX_GRAINS;k++) {
         	//for(int k=0;k<1;k++) {
@@ -912,27 +913,27 @@ struct PortlandWeatherWidget : ModuleWidget {
 			addChild(display);
 		}
 
-		addParam(createParam<RoundLargeFWKnob>(Vec(12, 40), module, PortlandWeather::CLOCK_DIV_PARAM));
-		addParam(createParam<RoundLargeFWKnob>(Vec(12, 100), module, PortlandWeather::TIME_PARAM));
+		addParam(createParam<RoundLargeFWSnapKnob>(Vec(12, 40), module, PortlandWeather::CLOCK_DIV_PARAM));
+		addParam(createParam<RoundLargeFWSnapKnob>(Vec(12, 100), module, PortlandWeather::TIME_PARAM));
 		//addParam(createParam<RoundLargeBlackKnob>(Vec(257, 40), module, PortlandWeather::GRID_PARAM));
 
-		addParam(createParam<RoundLargeFWKnob>(Vec(12, 190), module, PortlandWeather::GROOVE_TYPE_PARAM));
+		addParam(createParam<RoundLargeFWSnapKnob>(Vec(12, 190), module, PortlandWeather::GROOVE_TYPE_PARAM));
 		addParam(createParam<RoundLargeFWKnob>(Vec(200, 190), module, PortlandWeather::GROOVE_AMOUNT_PARAM));
 
 		addParam(createParam<RoundLargeFWKnob>(Vec(280, 55), module, PortlandWeather::FEEDBACK_PARAM));
 		addParam(createParam<RoundLargeFWKnob>(Vec(376, 55), module, PortlandWeather::FEEDBACK_TONE_PARAM));
 
-		addParam(createParam<RoundFWKnob>(Vec(293, 153), module, PortlandWeather::FEEDBACK_TAP_L_PARAM));
-		addParam(createParam<RoundFWKnob>(Vec(428, 153), module, PortlandWeather::FEEDBACK_TAP_R_PARAM));
+		addParam(createParam<RoundFWSnapKnob>(Vec(293, 153), module, PortlandWeather::FEEDBACK_TAP_L_PARAM));
+		addParam(createParam<RoundFWSnapKnob>(Vec(428, 153), module, PortlandWeather::FEEDBACK_TAP_R_PARAM));
 		addParam(createParam<RoundFWKnob>(Vec(293, 193), module, PortlandWeather::FEEDBACK_L_SLIP_PARAM));
 		addParam(createParam<RoundFWKnob>(Vec(428, 193), module, PortlandWeather::FEEDBACK_R_SLIP_PARAM));
-		addParam(createParam<RoundFWKnob>(Vec(293, 233), module, PortlandWeather::FEEDBACK_L_PITCH_SHIFT_PARAM));
-		addParam(createParam<RoundFWKnob>(Vec(428, 233), module, PortlandWeather::FEEDBACK_R_PITCH_SHIFT_PARAM));
+		addParam(createParam<RoundFWSnapKnob>(Vec(293, 233), module, PortlandWeather::FEEDBACK_L_PITCH_SHIFT_PARAM));
+		addParam(createParam<RoundFWSnapKnob>(Vec(428, 233), module, PortlandWeather::FEEDBACK_R_PITCH_SHIFT_PARAM));
 		addParam(createParam<RoundFWKnob>(Vec(293, 273), module, PortlandWeather::FEEDBACK_L_DETUNE_PARAM));
 		addParam(createParam<RoundFWKnob>(Vec(428, 273), module, PortlandWeather::FEEDBACK_R_DETUNE_PARAM));
 
-		addParam(createParam<RoundLargeFWKnob>(Vec(599, 55), module, PortlandWeather::GRAIN_QUANTITY_PARAM));		
-		addParam(createParam<RoundLargeFWKnob>(Vec(599, 123), module, PortlandWeather::GRAIN_SIZE_PARAM));
+		addParam(createParam<RoundLargeFWSnapKnob>(Vec(599, 55), module, PortlandWeather::GRAIN_QUANTITY_PARAM));		
+		addParam(createParam<RoundLargeFWSnapKnob>(Vec(599, 123), module, PortlandWeather::GRAIN_SIZE_PARAM));
 		
 
 		addParam(createParam<CKD6>(Vec(582, 330), module, PortlandWeather::CLEAR_BUFFER_PARAM));
@@ -964,12 +965,12 @@ struct PortlandWeatherWidget : ModuleWidget {
 			addInput(createInput<PJ301MPort>(Vec(690 + 81 + 63*i, 91), module, PortlandWeather::TAP_MIX_CV_INPUT+i));
 			addParam( createParam<RoundFWKnob>(Vec(690 + 48 + 63*i, 130), module, PortlandWeather::TAP_PAN_PARAM + i));
 			addInput(createInput<PJ301MPort>(Vec(690 + 81 + 63*i, 131), module, PortlandWeather::TAP_PAN_CV_INPUT+i));
-			addParam( createParam<RoundFWKnob>(Vec(690 + 48 + 63*i, 170), module, PortlandWeather::TAP_FILTER_TYPE_PARAM + i));
+			addParam( createParam<RoundFWSnapKnob>(Vec(690 + 48 + 63*i, 170), module, PortlandWeather::TAP_FILTER_TYPE_PARAM + i));
 			addParam( createParam<RoundFWKnob>(Vec(690 + 48 + 63*i, 210), module, PortlandWeather::TAP_FC_PARAM + i));
 			addInput(createInput<PJ301MPort>(Vec(690 + 81 + 63*i, 211), module, PortlandWeather::TAP_FC_CV_INPUT+i));
 			addParam( createParam<RoundFWKnob>(Vec(690 + 48 + 63*i, 250), module, PortlandWeather::TAP_Q_PARAM + i));
 			addInput(createInput<PJ301MPort>(Vec(690 + 81 + 63*i, 251), module, PortlandWeather::TAP_Q_CV_INPUT+i));
-			addParam( createParam<RoundFWKnob>(Vec(690 + 48 + 63*i, 290), module, PortlandWeather::TAP_PITCH_SHIFT_PARAM + i));
+			addParam( createParam<RoundFWSnapKnob>(Vec(690 + 48 + 63*i, 290), module, PortlandWeather::TAP_PITCH_SHIFT_PARAM + i));
 			addInput(createInput<PJ301MPort>(Vec(690 + 81 + 63*i, 291), module, PortlandWeather::TAP_PITCH_SHIFT_CV_INPUT+i));
 			addParam( createParam<RoundFWKnob>(Vec(690 + 48 + 63*i, 330), module, PortlandWeather::TAP_DETUNE_PARAM + i));
 			addInput(createInput<PJ301MPort>(Vec(690 + 81 + 63*i, 331), module, PortlandWeather::TAP_DETUNE_CV_INPUT+i));

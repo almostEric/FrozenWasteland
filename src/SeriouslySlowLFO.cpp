@@ -133,10 +133,10 @@ struct LowFrequencyOscillator {
 		config(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS, NUM_LIGHTS);
 
 		configParam(TIME_BASE_PARAM, 0.0, 1.0, 0.0);
-		configParam(DURATION_PARAM, 1.0, 100.0, 1.0);
-		configParam(FM_CV_ATTENUVERTER_PARAM, -1.0, 1.0, 0.0);
-		configParam(PHASE_PARAM, 0.0, 0.9999, 0.0);
-		configParam(PHASE_CV_ATTENUVERTER_PARAM, -1.0, 1.0, 0.0);
+		configParam(DURATION_PARAM, 1.0, 100.0, 1.0,"Duration Multiplier");
+		configParam(FM_CV_ATTENUVERTER_PARAM, -1.0, 1.0, 0.0,"FM CV Attenuation","%",0,100);
+		configParam(PHASE_PARAM, 0.0, 0.9999, 0.0,"Phase","°",0,360);
+		configParam(PHASE_CV_ATTENUVERTER_PARAM, -1.0, 1.0, 0.0,"Phase CV Attenuation","%",0,100);
 		configParam(QUANTIZE_PHASE_PARAM, 0.0, 1.0, 0.0);
 		configParam(OFFSET_PARAM, 0.0, 1.0, 1.0);
 	}

@@ -2,6 +2,7 @@
 #include "ringbuffer.hpp"
 #include "samplerate.h"
 #include <iostream>
+#include "ui/knobs.hpp"
 
 #define HISTORY_SIZE (1<<22)
 #define NUM_TAPS 64
@@ -138,16 +139,16 @@ struct HairPick : Module {
 	HairPick() {
 		config(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS, NUM_LIGHTS);
 
-		configParam(CLOCK_DIV_PARAM, 0, DIVISIONS-1, 0);
-		configParam(SIZE_PARAM, 0.001f, 10.0f, 0.350f);
+		configParam(CLOCK_DIV_PARAM, 0, DIVISIONS-1, 0,"Divisions");
+		configParam(SIZE_PARAM, 0.001f, 10.0f, 0.350f,"Size");
 		//configParam(createParam<RoundLargeBlackKnob>(Vec(257, 40), module, HairPick::GRID_PARAM, 0.001f, 10.0f, 0.350f));
 
-		configParam(PATTERN_TYPE_PARAM, 0.0f, 15.0f, 0.0f);
-		configParam(NUMBER_TAPS_PARAM, 1.0f, 64.0f, 64.0f);
+		configParam(PATTERN_TYPE_PARAM, 0.0f, 15.0f, 0.0f,"Pattern Type");
+		configParam(NUMBER_TAPS_PARAM, 1.0f, 64.0f, 64.0f,"# of Taps");
 
-		configParam(EDGE_LEVEL_PARAM, 0.0f, 1.0f, 0.5f);
-		configParam(TENT_LEVEL_PARAM, 0.0f, 1.0f, 0.5f);
-		configParam(TENT_TAP_PARAM, 0.0f, 63.0f, 32.0f);
+		configParam(EDGE_LEVEL_PARAM, 0.0f, 1.0f, 0.5f,"Edge Level","%",0,100);
+		configParam(TENT_LEVEL_PARAM, 0.0f, 1.0f, 0.5f,"Tent Level","%",0,100);
+		configParam(TENT_TAP_PARAM, 0.0f, 63.0f, 32.0f,"Tent Tap #");
 
 
 		configParam(FEEDBACK_TYPE_PARAM, 0.0f, 3, 0.0f);
@@ -432,20 +433,20 @@ struct HairPickWidget : ModuleWidget {
 			addChild(display);
 		}
 
-		addParam(createParam<RoundLargeBlackKnob>(Vec(45, 33), module, HairPick::CLOCK_DIV_PARAM));
-		addParam(createParam<RoundLargeBlackKnob>(Vec(157, 33), module, HairPick::SIZE_PARAM));
+		addParam(createParam<RoundLargeFWSnapKnob>(Vec(45, 33), module, HairPick::CLOCK_DIV_PARAM));
+		addParam(createParam<RoundLargeFWKnob>(Vec(157, 33), module, HairPick::SIZE_PARAM));
 		//addParam(createParam<RoundLargeBlackKnob>(Vec(257, 40), module, HairPick::GRID_PARAM, 0.001f, 10.0f, 0.350f));
 
-		addParam(createParam<RoundLargeBlackKnob>(Vec(17, 115), module, HairPick::PATTERN_TYPE_PARAM));
-		addParam(createParam<RoundLargeBlackKnob>(Vec(157, 115), module, HairPick::NUMBER_TAPS_PARAM));
+		addParam(createParam<RoundLargeFWSnapKnob>(Vec(17, 115), module, HairPick::PATTERN_TYPE_PARAM));
+		addParam(createParam<RoundLargeFWSnapKnob>(Vec(157, 115), module, HairPick::NUMBER_TAPS_PARAM));
 
-		addParam(createParam<RoundLargeBlackKnob>(Vec(17, 200), module, HairPick::EDGE_LEVEL_PARAM));
-		addParam(createParam<RoundLargeBlackKnob>(Vec(87, 200), module, HairPick::TENT_LEVEL_PARAM));
-		addParam(createParam<RoundLargeBlackKnob>(Vec(157, 200), module, HairPick::TENT_TAP_PARAM));
+		addParam(createParam<RoundLargeFWKnob>(Vec(17, 200), module, HairPick::EDGE_LEVEL_PARAM));
+		addParam(createParam<RoundLargeFWKnob>(Vec(87, 200), module, HairPick::TENT_LEVEL_PARAM));
+		addParam(createParam<RoundLargeFWSnapKnob>(Vec(157, 200), module, HairPick::TENT_TAP_PARAM));
 
 
-		addParam(createParam<RoundLargeBlackKnob>(Vec(17, 283), module, HairPick::FEEDBACK_TYPE_PARAM));
-		addParam(createParam<RoundLargeBlackKnob>(Vec(157, 283), module, HairPick::FEEDBACK_AMOUNT_PARAM));
+		addParam(createParam<RoundLargeFWSnapKnob>(Vec(17, 283), module, HairPick::FEEDBACK_TYPE_PARAM));
+		addParam(createParam<RoundLargeFWKnob>(Vec(157, 283), module, HairPick::FEEDBACK_AMOUNT_PARAM));
 
 
 	//	addChild(createLight<MediumLight<BlueLight>>(Vec(474, 189), module, HairPick::PING_PONG_LIGHT));

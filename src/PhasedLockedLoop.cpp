@@ -29,6 +29,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
 #include "FrozenWasteland.hpp"
+#include "ui/knobs.hpp"
 
 // The clipping function of a transistor pair is approximately tanh(x)
 // TODO: Put this in a lookup table. 5th order approx doesn't seem to cut it
@@ -215,10 +216,10 @@ struct PhasedLockedLoop : Module {
 	PhasedLockedLoop() {
 		config(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS, NUM_LIGHTS);
 		
-		configParam(VCO_FREQ_PARAM, -54.0, 54.0, 0.0);
-		configParam(VCO_PW_PARAM, 0, 1, 0.5);
-		configParam(VCO_PWCV_PARAM, 0, 1, 0);
-		configParam(LPF_FREQ_PARAM, 0, 1, 0.5);
+		configParam(VCO_FREQ_PARAM, -54.0, 54.0, 0.0,"VCO Frequency", " Hz", dsp::FREQ_SEMITONE, dsp::FREQ_C4);
+		configParam(VCO_PW_PARAM, 0, 1, 0.5,"Pulse Width","%",0,100);
+		configParam(VCO_PWCV_PARAM, 0, 1, 0,"Pulse Width CV","%",0,100);
+		configParam(LPF_FREQ_PARAM, 0, 1, 0.5,"LPF Frequency"," Hz",540,15);
 		configParam(COMPARATOR_TYPE_PARAM, 0.0, 1.0, 0.0);
 
 	}
@@ -338,10 +339,10 @@ struct PhasedLockedLoopWidget : ModuleWidget {
 		addChild(createWidget<ScrewSilver>(Vec(RACK_GRID_WIDTH-12, RACK_GRID_HEIGHT - RACK_GRID_WIDTH)));
 		addChild(createWidget<ScrewSilver>(Vec(box.size.x - 2 * RACK_GRID_WIDTH + 12, RACK_GRID_HEIGHT - RACK_GRID_WIDTH)));
 
-		addParam(createParam<RoundSmallBlackKnob>(Vec(100, 44), module, PhasedLockedLoop::VCO_FREQ_PARAM));
-		addParam(createParam<RoundSmallBlackKnob>(Vec(85, 78), module, PhasedLockedLoop::VCO_PW_PARAM));
-		addParam(createParam<RoundSmallBlackKnob>(Vec(118, 78), module, PhasedLockedLoop::VCO_PWCV_PARAM));
-		addParam(createParam<RoundBlackKnob>(Vec(97, 305), module, PhasedLockedLoop::LPF_FREQ_PARAM));
+		addParam(createParam<RoundSmallFWKnob>(Vec(100, 46), module, PhasedLockedLoop::VCO_FREQ_PARAM));
+		addParam(createParam<RoundSmallFWKnob>(Vec(85, 79), module, PhasedLockedLoop::VCO_PW_PARAM));
+		addParam(createParam<RoundSmallFWKnob>(Vec(118, 79), module, PhasedLockedLoop::VCO_PWCV_PARAM));
+		addParam(createParam<RoundFWKnob>(Vec(97, 307), module, PhasedLockedLoop::LPF_FREQ_PARAM));
 		addParam(createParam<CKD6>(Vec(18, 202), module, PhasedLockedLoop::COMPARATOR_TYPE_PARAM));
 
 		addInput(createInput<PJ301MPort>(Vec(8, 30), module, PhasedLockedLoop::VCO_CV_INPUT));

@@ -40,14 +40,14 @@ struct EverlastingGlottalStopper : Module {
 
 	EverlastingGlottalStopper() {
 		config(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS, NUM_LIGHTS);
-		configParam(FREQUENCY_PARAM, -54.0f, 54.0f, 0.0f);
-		configParam(TIME_OPEN_PARAM, 0.01f, 1.0f, 0.5f);
-		configParam(TIME_CLOSED_PARAM, 0.0f, 0.9f, 0.0f);
-		configParam(BREATHINESS_PARAM, 0.0f, 0.9f, 0.0f);
-		configParam(FM_CV_ATTENUVERTER_PARAM, 0.0, 1.0, 0);
-		configParam(TIME_OPEN_CV_ATTENUVERTER_PARAM, -1.0, 1.0, 0);
-		configParam(TIME_CLOSED_CV_ATTENUVERTER_PARAM, -1.0, 1.0, 0);
-		configParam(BREATHINESS_CV_ATTENUVERTER_PARAM, -1.0, 1.0, 0);
+		configParam(FREQUENCY_PARAM, -54.0f, 54.0f, 0.0f,"Frequency", " Hz", dsp::FREQ_SEMITONE, dsp::FREQ_C4);
+		configParam(TIME_OPEN_PARAM, 0.01f, 1.0f, 0.5f, "Time Open","%",0,100);
+		configParam(TIME_CLOSED_PARAM, 0.0f, 0.9f, 0.0f, "Time Closed","%",0,100);
+		configParam(BREATHINESS_PARAM, 0.0f, 0.9f, 0.0f, "Breathiness","%",0,100);
+		configParam(FM_CV_ATTENUVERTER_PARAM, 0.0, 1.0, 0, "FM CV Attenuation","%",0,100);
+		configParam(TIME_OPEN_CV_ATTENUVERTER_PARAM, -1.0, 1.0, 0, "Time Open CV Attenuation","%",0,100);
+		configParam(TIME_CLOSED_CV_ATTENUVERTER_PARAM, -1.0, 1.0, 0, "Time Closed CV Attenuation","%",0,100);
+		configParam(BREATHINESS_CV_ATTENUVERTER_PARAM, -1.0, 1.0, 0, "Breathiness CV Attenuation","%",0,100);
 		//addParam(createParam<CKSS>(Vec(123, 300), module, EverlastingGlottalStopper::DEEMPHASIS_FILTER_PARAM, 0.0, 1.0, 0));
 
 		float sampleRate = APP->engine->getSampleRate();

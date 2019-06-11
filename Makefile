@@ -14,7 +14,7 @@ SOURCES += $(wildcard src/*.cpp src/filters/*.cpp src/dsp-noise/*.cpp src/dsp-fi
 
 # Add files to the ZIP package when running `make dist`
 # The compiled plugin is automatically added.
-DISTRIBUTABLES += $(wildcard LICENSE*) 
+DISTRIBUTABLES += $(wildcard LICENSE*) res
 
 # Static libs
 libsamplerate := dep/lib/libsamplerate.a

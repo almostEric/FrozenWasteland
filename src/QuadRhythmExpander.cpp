@@ -3,6 +3,7 @@
 
 #define TRACK_COUNT 4
 #define MAX_STEPS 18
+#define PASSTHROUGH_VARIABLE_COUNT 21
 
 struct QuadRhythmExpander : Module {
 	enum ParamIds {
@@ -66,8 +67,8 @@ struct QuadRhythmExpander : Module {
 	const char* stepNames[MAX_STEPS] {"1","2","3","4","5","6","7","8","9","10","11","12","13","14","15","16","17","18"};
 
 	// Expander
-	float consumerMessage[MAX_STEPS * TRACK_COUNT * 2 + 1] = {};// this module must read from here
-	float producerMessage[MAX_STEPS * TRACK_COUNT * 2 + 1] = {};// mother will write into here
+	float consumerMessage[MAX_STEPS * TRACK_COUNT * 2 + 1 + PASSTHROUGH_VARIABLE_COUNT] = {};// this module must read from here
+	float producerMessage[MAX_STEPS * TRACK_COUNT * 2 + 1 + PASSTHROUGH_VARIABLE_COUNT] = {};// mother will write into here
 
 	
 	dsp::SchmittTrigger stepDivTrigger[MAX_STEPS],trackProbabilityTrigger[TRACK_COUNT],trackSwingTrigger[TRACK_COUNT];
@@ -78,29 +79,29 @@ struct QuadRhythmExpander : Module {
 	QuadRhythmExpander() {
 		config(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS, NUM_LIGHTS);
 		
-		configParam(PROBABILITY_1_PARAM, 0.0, 1.0, 1.0);
-		configParam(PROBABILITY_ATTEN_1_PARAM, -1.0, 1.0, 0.0);
+		configParam(PROBABILITY_1_PARAM, 0.0, 1.0, 1.0,"Track 1 Probability","%",0,100);
+		configParam(PROBABILITY_ATTEN_1_PARAM, -1.0, 1.0, 0.0,"Track 1 Probability CV Attenuation","%",0,100);
 
-		configParam(PROBABILITY_2_PARAM, 0.0, 1.0, 1.0);
-		configParam(PROBABILITY_ATTEN_2_PARAM, -1.0, 1.0, 0.0);
+		configParam(PROBABILITY_2_PARAM, 0.0, 1.0, 1.0,"Track 2 Probability","%",0,100);
+		configParam(PROBABILITY_ATTEN_2_PARAM, -1.0, 1.0, 0.0,"Track 2 Probability CV Attenuation","%",0,100);
 
-		configParam(PROBABILITY_3_PARAM, 0.0, 1.0, 1.0);
-		configParam(PROBABILITY_ATTEN_3_PARAM, -1.0, 1.0, 0.0);
+		configParam(PROBABILITY_3_PARAM, 0.0, 1.0, 1.0,"Track 3 Probability","%",0,100);
+		configParam(PROBABILITY_ATTEN_3_PARAM, -1.0, 1.0, 0.0,"Track 3 Probability CV Attenuation","%",0,100);
 
-		configParam(PROBABILITY_4_PARAM, 0.0, 1.0, 1.0);
-		configParam(PROBABILITY_ATTEN_4_PARAM, -1.0, 1.0, 0.0);
+		configParam(PROBABILITY_4_PARAM, 0.0, 1.0, 1.0,"Track 4 Probability","%",0,100);
+		configParam(PROBABILITY_ATTEN_4_PARAM, -1.0, 1.0, 0.0,"Track 4 Probability CV Attenuation","%",0,100);
 
-		configParam(SWING_1_PARAM, -0.5, 0.5, 0.0);
-		configParam(SWING_ATTEN_1_PARAM, -1.0, 1.0, 0.0);
+		configParam(SWING_1_PARAM, -0.5, 0.5, 0.0, "Track 1 Swing","%",0,100);
+		configParam(SWING_ATTEN_1_PARAM, -1.0, 1.0, 0.0,"Track 1 Swing CV Attenuation","%",0,100);
 
-		configParam(SWING_2_PARAM, -0.5, 0.5, 0.0);
-		configParam(SWING_ATTEN_2_PARAM, -1.0, 1.0, 0.0);
+		configParam(SWING_2_PARAM, -0.5, 0.5, 0.0, "Track 2 Swing","%",0,100);
+		configParam(SWING_ATTEN_2_PARAM, -1.0, 1.0, 0.0,"Track 2 Swing CV Attenuation","%",0,100);
 
-		configParam(SWING_3_PARAM, -0.5, 0.5, 0.0);
-		configParam(SWING_ATTEN_3_PARAM, -1.0, 1.0, 0.0);
+		configParam(SWING_3_PARAM, -0.5, 0.5, 0.0, "Track 3 Swing","%",0,100);
+		configParam(SWING_ATTEN_3_PARAM, -1.0, 1.0, 0.0,"Track 3 Swing CV Attenuation","%",0,100);
 
-		configParam(SWING_4_PARAM, -0.5, 0.5, 0.0);
-		configParam(SWING_ATTEN_4_PARAM, -1.0, 1.0, 0.0);
+		configParam(SWING_4_PARAM, -0.5, 0.5, 0.0, "Track 4 Swing","%",0,100);
+		configParam(SWING_ATTEN_4_PARAM, -1.0, 1.0, 0.0,"Track 4 Swing CV Attenuation","%",0,100);
 
 		leftExpander.producerMessage = producerMessage;
 		leftExpander.consumerMessage = consumerMessage;
@@ -223,9 +224,8 @@ struct QuadRhythmExpander : Module {
 				}
 			}
 
-
 			//If another expander is present, get its values (we can overwrite them)
-			bool anotherExpanderPresent = (rightExpander.module && rightExpander.module->model == modelQuadRhythmExpander);
+			bool anotherExpanderPresent = (rightExpander.module && (rightExpander.module->model == modelQuadRhythmExpander || rightExpander.module->model == modelQuadAlgorithmicRhythm));
 			if(anotherExpanderPresent)
 			{			
 				float *message = (float*) rightExpander.module->leftExpander.consumerMessage;								
@@ -235,6 +235,15 @@ struct QuadRhythmExpander : Module {
 						producerMessage[1 + (i + TRACK_COUNT) * MAX_STEPS + j] = message[1 + (i + TRACK_COUNT) * MAX_STEPS  + j];
 					} 
 				}
+
+
+				bool slaveQARsPresent = rightExpander.module->model == modelQuadAlgorithmicRhythm;				
+				//QAR Pass through
+				for(int i = 0; i < PASSTHROUGH_VARIABLE_COUNT; i++) {
+					producerMessage[MAX_STEPS * TRACK_COUNT * 2 + 1 + i] = message[MAX_STEPS * TRACK_COUNT * 2 + 1 + i];
+				}
+				//Pass through if there are QARs somewhere
+				producerMessage[MAX_STEPS * TRACK_COUNT * 2 + 1 + TRACK_COUNT * 4 + 3] = producerMessage[MAX_STEPS * TRACK_COUNT * 2 + 1 + TRACK_COUNT * 4 + 3] || slaveQARsPresent; 
 			}
 		
 			for (int i = 0; i < TRACK_COUNT; i++) {
@@ -246,13 +255,20 @@ struct QuadRhythmExpander : Module {
 						producerMessage[1 + (i + TRACK_COUNT) * MAX_STEPS + j] = clamp(params[SWING_1_PARAM+i].getValue() + (inputs[SWING_1_INPUT + i].isConnected() ? inputs[SWING_1_INPUT + i].getVoltage() / 10 * params[SWING_ATTEN_1_PARAM + i].getValue() : 0.0f),-1.0,1.0);
 					} 
 				}
-			}
+			}			
+						
+			// From Mother	
+			bool masterQARsPresent = leftExpander.module->model == modelQuadRhythmExpander;
+			float *messagesFromMother = (float*)leftExpander.consumerMessage;
+			for(int i = 0; i < PASSTHROUGH_VARIABLE_COUNT;i++) {
+				consumerMessage[MAX_STEPS * TRACK_COUNT * 2 + 1 + i] = messagesFromMother[MAX_STEPS * TRACK_COUNT * 2 + 1 + i];
+			}	
+			consumerMessage[MAX_STEPS * TRACK_COUNT * 2 + 1 + TRACK_COUNT * 4 + 4] = consumerMessage[MAX_STEPS * TRACK_COUNT * 2 + 1 + TRACK_COUNT * 4 + 4] || masterQARsPresent; 
+
 			leftExpander.messageFlipRequested = true;
 		
-			// From Mother			
-			//Nothing!		
 		}		
-		// }// expanderRefreshCounter
+		
 	}
 
     

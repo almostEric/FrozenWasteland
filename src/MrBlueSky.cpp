@@ -1,4 +1,5 @@
 #include "FrozenWasteland.hpp"
+#include "ui/knobs.hpp"
 #include "filters/biquad.h"
 
 using namespace std;
@@ -65,20 +66,20 @@ struct MrBlueSky : Module {
 		for (int i = 0; i < BANDS; i++) {
 			configParam(BG_PARAM + i, 0, 2, 1);
 		}
-		configParam(ATTACK_PARAM, 0.0, 0.25, 0.0);
-		configParam(DECAY_PARAM, 0.0, 0.25, 0.0);
-		configParam(CARRIER_Q_PARAM, 1.0, 15.0, 5.0);
-		configParam(MOD_Q_PARAM, 1.0, 15.0, 5.0);
-		configParam(BAND_OFFSET_PARAM, -15.5, 15.5, 0.0);
-		configParam(GMOD_PARAM, 1, 10, 5);
-		configParam(GCARR_PARAM, 1, 10, 5);
-		configParam(G_PARAM, 1, 10, 5);
+		configParam(ATTACK_PARAM, 0.0, 0.25, 0.0,"Attack");
+		configParam(DECAY_PARAM, 0.0, 0.25, 0.0,"Decay");
+		configParam(CARRIER_Q_PARAM, 1.0, 15.0, 5.0,"Carrier Q");
+		configParam(MOD_Q_PARAM, 1.0, 15.0, 5.0,"Modulator Q");
+		configParam(BAND_OFFSET_PARAM, -15.5, 15.5, 0.0,"Band Offset");
+		configParam(GMOD_PARAM, 1, 10, 5,"Modulator Gain");
+		configParam(GCARR_PARAM, 1, 10, 5,"Carrier Gain");
+		configParam(G_PARAM, 1, 10, 5,"Overall Gain");
 
-		configParam(ATTACK_CV_ATTENUVERTER_PARAM, -1.0, 1.0, 0);
-		configParam(DECAY_CV_ATTENUVERTER_PARAM, -1.0, 1.0, 0);
-		configParam(CARRIER_Q_CV_ATTENUVERTER_PARAM, -1.0, 1.0, 0);
-		configParam(MODIFER_Q_CV_ATTENUVERTER_PARAM, -1.0, 1.0, 0);
-		configParam(SHIFT_BAND_OFFSET_CV_ATTENUVERTER_PARAM, -1.0, 1.0, 0);
+		configParam(ATTACK_CV_ATTENUVERTER_PARAM, -1.0, 1.0, 0,"Attack CV Attentuation","%",0,100);
+		configParam(DECAY_CV_ATTENUVERTER_PARAM, -1.0, 1.0, 0,"Decay CV Attentuation","%",0,100);
+		configParam(CARRIER_Q_CV_ATTENUVERTER_PARAM, -1.0, 1.0, 0,"Carrier Q CV Attentuation","%",0,100);
+		configParam(MODIFER_Q_CV_ATTENUVERTER_PARAM, -1.0, 1.0, 0,"Modulator Q CV Attentuation","%",0,100);
+		configParam(SHIFT_BAND_OFFSET_CV_ATTENUVERTER_PARAM, -1.0, 1.0, 0,"Band Offset CV Attentuation","%",0,100);
 
 		float sampleRate = APP->engine->getSampleRate();
 
@@ -294,22 +295,22 @@ struct MrBlueSkyWidget : ModuleWidget {
 		}
 
 		for (int i = 0; i < BANDS; i++) {
-			addParam( createParam<RoundBlackKnob>(Vec(53 + 33*i, 120), module, MrBlueSky::BG_PARAM + i));
+			addParam( createParam<RoundFWKnob>(Vec(53 + 33*i, 120), module, MrBlueSky::BG_PARAM + i));
 		}
-		addParam(createParam<RoundBlackKnob>(Vec(34, 177), module, MrBlueSky::ATTACK_PARAM));
-		addParam(createParam<RoundBlackKnob>(Vec(116, 177), module, MrBlueSky::DECAY_PARAM));
-		addParam(createParam<RoundBlackKnob>(Vec(198, 177), module, MrBlueSky::CARRIER_Q_PARAM));
-		addParam(createParam<RoundBlackKnob>(Vec(280, 177), module, MrBlueSky::MOD_Q_PARAM));
-		addParam(createParam<RoundBlackKnob>(Vec(392, 177), module, MrBlueSky::BAND_OFFSET_PARAM));
-		addParam(createParam<RoundBlackKnob>(Vec(40, 284), module, MrBlueSky::GMOD_PARAM));
-		addParam(createParam<RoundBlackKnob>(Vec(120, 284), module, MrBlueSky::GCARR_PARAM));
-		addParam(createParam<RoundBlackKnob>(Vec(207, 284), module, MrBlueSky::G_PARAM));
+		addParam(createParam<RoundFWKnob>(Vec(34, 177), module, MrBlueSky::ATTACK_PARAM));
+		addParam(createParam<RoundFWKnob>(Vec(116, 177), module, MrBlueSky::DECAY_PARAM));
+		addParam(createParam<RoundFWKnob>(Vec(198, 177), module, MrBlueSky::CARRIER_Q_PARAM));
+		addParam(createParam<RoundFWKnob>(Vec(280, 177), module, MrBlueSky::MOD_Q_PARAM));
+		addParam(createParam<RoundFWSnapKnob>(Vec(392, 177), module, MrBlueSky::BAND_OFFSET_PARAM));
+		addParam(createParam<RoundFWKnob>(Vec(40, 284), module, MrBlueSky::GMOD_PARAM));
+		addParam(createParam<RoundFWKnob>(Vec(120, 284), module, MrBlueSky::GCARR_PARAM));
+		addParam(createParam<RoundFWKnob>(Vec(207, 284), module, MrBlueSky::G_PARAM));
 
-		addParam(createParam<RoundSmallBlackKnob>(Vec(37, 238), module, MrBlueSky::ATTACK_CV_ATTENUVERTER_PARAM));
-		addParam(createParam<RoundSmallBlackKnob>(Vec(119, 238), module, MrBlueSky::DECAY_CV_ATTENUVERTER_PARAM));
-		addParam(createParam<RoundSmallBlackKnob>(Vec(202, 238), module, MrBlueSky::CARRIER_Q_CV_ATTENUVERTER_PARAM));
-		addParam(createParam<RoundSmallBlackKnob>(Vec(284, 238), module, MrBlueSky::MODIFER_Q_CV_ATTENUVERTER_PARAM));
-		addParam(createParam<RoundSmallBlackKnob>(Vec(395, 238), module, MrBlueSky::SHIFT_BAND_OFFSET_CV_ATTENUVERTER_PARAM));
+		addParam(createParam<RoundSmallFWKnob>(Vec(37, 238), module, MrBlueSky::ATTACK_CV_ATTENUVERTER_PARAM));
+		addParam(createParam<RoundSmallFWKnob>(Vec(119, 238), module, MrBlueSky::DECAY_CV_ATTENUVERTER_PARAM));
+		addParam(createParam<RoundSmallFWKnob>(Vec(202, 238), module, MrBlueSky::CARRIER_Q_CV_ATTENUVERTER_PARAM));
+		addParam(createParam<RoundSmallFWKnob>(Vec(284, 238), module, MrBlueSky::MODIFER_Q_CV_ATTENUVERTER_PARAM));
+		addParam(createParam<RoundSmallFWKnob>(Vec(395, 238), module, MrBlueSky::SHIFT_BAND_OFFSET_CV_ATTENUVERTER_PARAM));
 
 
 		for (int i = 0; i < BANDS; i++) {

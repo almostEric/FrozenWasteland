@@ -1,6 +1,6 @@
 #include <string.h>
 #include "FrozenWasteland.hpp"
-
+#include "ui/knobs.hpp"
 
 #define BUFFER_SIZE 512
 
@@ -70,13 +70,13 @@ struct TheOneRingModulator : Module {
 
 	TheOneRingModulator()  {
 		config(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS, NUM_LIGHTS);		
-		configParam(FORWARD_BIAS_PARAM, 0.0, 10.0, 0.0);
-		configParam(FORWARD_BIAS_ATTENUVERTER_PARAM, -1.0, 1.0, 0.0);
-		configParam(LINEAR_VOLTAGE_PARAM, 0.0, 10.0, 0.5);
-		configParam(LINEAR_VOLTAGE_ATTENUVERTER_PARAM, -1.0, 1.0, 0.0);
-		configParam(SLOPE_PARAM, 0.1, 1.0, 1.0);
-		configParam(SLOPE_ATTENUVERTER_PARAM, -1.0, 1.0, 0.0);
-		configParam(MIX_PARAM, -0.0, 1.0, 0.5);
+		configParam(FORWARD_BIAS_PARAM, 0.0, 10.0, 0.0,"Forward Bias","v");
+		configParam(FORWARD_BIAS_ATTENUVERTER_PARAM, -1.0, 1.0, 0.0,"Forward Bias CV Attenuation","%",0,100);
+		configParam(LINEAR_VOLTAGE_PARAM, 0.0, 10.0, 0.5,"Linear Voltage","v");
+		configParam(LINEAR_VOLTAGE_ATTENUVERTER_PARAM, -1.0, 1.0, 0.0,"Linear Voltage CV Attenuation","%",0,100);
+		configParam(SLOPE_PARAM, 0.1, 1.0, 1.0,"Slope","v/v");
+		configParam(SLOPE_ATTENUVERTER_PARAM, -1.0, 1.0, 0.0,"Slope CV Attenuation","%",0,100);
+		configParam(MIX_PARAM, -0.0, 1.0, 0.5,"Mix","%",0,100);
 
 	}
 	void process(const ProcessArgs &args) override;
@@ -195,13 +195,13 @@ struct TheOneRingModulatorWidget : ModuleWidget {
 			addChild(display);
 		}
 
-		addParam(createParam<RoundBlackKnob>(Vec(10, 190), module, TheOneRingModulator::FORWARD_BIAS_PARAM));
-		addParam(createParam<RoundSmallBlackKnob>(Vec(12, 254), module, TheOneRingModulator::FORWARD_BIAS_ATTENUVERTER_PARAM));
-		addParam(createParam<RoundBlackKnob>(Vec(60, 190), module, TheOneRingModulator::LINEAR_VOLTAGE_PARAM));
-		addParam(createParam<RoundSmallBlackKnob>(Vec(62, 254), module, TheOneRingModulator::LINEAR_VOLTAGE_ATTENUVERTER_PARAM));
-		addParam(createParam<RoundBlackKnob>(Vec(110, 190), module, TheOneRingModulator::SLOPE_PARAM));
-		addParam(createParam<RoundSmallBlackKnob>(Vec(112, 254), module, TheOneRingModulator::SLOPE_ATTENUVERTER_PARAM));
-		addParam(createParam<RoundBlackKnob>(Vec(90, 325), module, TheOneRingModulator::MIX_PARAM));
+		addParam(createParam<RoundFWKnob>(Vec(10, 190), module, TheOneRingModulator::FORWARD_BIAS_PARAM));
+		addParam(createParam<RoundSmallFWKnob>(Vec(12, 254), module, TheOneRingModulator::FORWARD_BIAS_ATTENUVERTER_PARAM));
+		addParam(createParam<RoundFWKnob>(Vec(60, 190), module, TheOneRingModulator::LINEAR_VOLTAGE_PARAM));
+		addParam(createParam<RoundSmallFWKnob>(Vec(62, 254), module, TheOneRingModulator::LINEAR_VOLTAGE_ATTENUVERTER_PARAM));
+		addParam(createParam<RoundFWKnob>(Vec(110, 190), module, TheOneRingModulator::SLOPE_PARAM));
+		addParam(createParam<RoundSmallFWKnob>(Vec(112, 254), module, TheOneRingModulator::SLOPE_ATTENUVERTER_PARAM));
+		addParam(createParam<RoundFWKnob>(Vec(90, 325), module, TheOneRingModulator::MIX_PARAM));
 
 		addInput(createInput<PJ301MPort>(Vec(14, 330), module, TheOneRingModulator::CARRIER_INPUT));
 		addInput(createInput<PJ301MPort>(Vec(50, 330), module, TheOneRingModulator::SIGNAL_INPUT));

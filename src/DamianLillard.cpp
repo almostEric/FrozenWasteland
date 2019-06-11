@@ -55,12 +55,12 @@ struct DamianLillard : Module {
 	DamianLillard() {
 		config(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS, NUM_LIGHTS);
 
-		configParam(FREQ_1_CUTOFF_PARAM, 0, 1.0, .25);
-		configParam(FREQ_2_CUTOFF_PARAM, 0, 1.0, .5);
-		configParam(FREQ_3_CUTOFF_PARAM, 0, 1.0, .75);
-		configParam(FREQ_1_CV_ATTENUVERTER_PARAM, -1.0, 1.0, 0);
-		configParam(FREQ_2_CV_ATTENUVERTER_PARAM, -1.0, 1.0, 0);
-		configParam(FREQ_3_CV_ATTENUVERTER_PARAM, -1.0, 1.0, 0);
+		configParam(FREQ_1_CUTOFF_PARAM, 0, 1.0, .25,"Cutoff Frequency 1","Hz",560,15);
+		configParam(FREQ_2_CUTOFF_PARAM, 0, 1.0, .5,"Cutoff Frequency 2","Hz",560,15);
+		configParam(FREQ_3_CUTOFF_PARAM, 0, 1.0, .75,"Cutoff Frequency 3","Hz",560,15);
+		configParam(FREQ_1_CV_ATTENUVERTER_PARAM, -1.0, 1.0, 0,"Cutoff Frequency 1 CV Attenuation","%",0,100);
+		configParam(FREQ_2_CV_ATTENUVERTER_PARAM, -1.0, 1.0, 0,"Cutoff Frequency 2 CV Attenuation","%",0,100);
+		configParam(FREQ_3_CV_ATTENUVERTER_PARAM, -1.0, 1.0, 0,"Cutoff Frequency 3 CV Attenuation","%",0,100);
 
 		filterParams[0].setMode(StateVariableFilterParams<T>::Mode::LowPass);
 		filterParams[1].setMode(StateVariableFilterParams<T>::Mode::HiPass);

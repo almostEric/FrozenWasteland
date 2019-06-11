@@ -145,11 +145,11 @@ struct LowFrequencyOscillator {
 	BPMLFO2() {
 		config(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS, NUM_LIGHTS);
 		configParam(DIVISION_PARAM, 0.0, 26.5, 13.0);
-		configParam(DIVISION_CV_ATTENUVERTER_PARAM, -1.0, 1.0, 0.0);
-		configParam(SKEW_PARAM, 0.0, 1.0, 0.5);
-		configParam(SKEW_CV_ATTENUVERTER_PARAM, -1.0, 1.0, 0.0);
-		configParam(PHASE_PARAM, 0.0, 0.9999, 0.0);
-		configParam(PHASE_CV_ATTENUVERTER_PARAM, -1.0, 1.0, 0.0);
+		configParam(DIVISION_CV_ATTENUVERTER_PARAM, -1.0, 1.0, 0.0,"Division CV Attenuation","%",0,100);
+		configParam(SKEW_PARAM, 0.0, 1.0, 0.5,"Skew","%",0,100);
+		configParam(SKEW_CV_ATTENUVERTER_PARAM, -1.0, 1.0, 0.0,"Skew CV Attenuation","%",0,100);
+		configParam(PHASE_PARAM, 0.0, 0.9999, 0.0,"Phase","°",0,360);
+		configParam(PHASE_CV_ATTENUVERTER_PARAM, -1.0, 1.0, 0.0,"Phase CV Attenuation","%",0,100);
 		configParam(QUANTIZE_PHASE_PARAM, 0.0, 1.0, 0.0);
 		configParam(OFFSET_PARAM, 0.0, 1.0, 1.0);
 		configParam(WAVESHAPE_PARAM, 0.0, 1.0, 0.0);
@@ -378,7 +378,7 @@ struct BPMLFO2Widget : ModuleWidget {
 			addChild(display);
 		}
 
-		addParam(createParam<RoundLargeFWKnob>(Vec(50, 78), module, BPMLFO2::DIVISION_PARAM));
+		addParam(createParam<RoundLargeFWSnapKnob>(Vec(50, 78), module, BPMLFO2::DIVISION_PARAM));
 		addParam(createParam<RoundSmallFWKnob>(Vec(91, 109), module, BPMLFO2::DIVISION_CV_ATTENUVERTER_PARAM));
 		addParam(createParam<RoundFWKnob>(Vec(5, 142), module, BPMLFO2::SKEW_PARAM));
 		addParam(createParam<RoundSmallFWKnob>(Vec(8, 201), module, BPMLFO2::SKEW_CV_ATTENUVERTER_PARAM));

@@ -97,12 +97,12 @@ struct LowFrequencyOscillator {
 
 	LissajousLFO() {
 		config(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS, NUM_LIGHTS);		
-		configParam(AMPLITUDE1_PARAM, 0.0, 5.0, 2.5);
-		configParam(FREQX1_PARAM, -8.0, 3.0, 0.0);
-		configParam(FREQY1_PARAM, -8.0, 3.0, 2.0);
-		configParam(AMPLITUDE2_PARAM, 0.0, 5.0, 2.5);
-		configParam(FREQX2_PARAM, -8.0, 3.0, 0.0);
-		configParam(FREQY2_PARAM, -8.0, 3.0, 1.0);
+		configParam(AMPLITUDE1_PARAM, 0.0, 5.0, 2.5,"Amplitude 1","%",0,25);
+		configParam(FREQX1_PARAM, -8.0, 3.0, 0.0,"X 1 Frequency", " Hz", 2, 1);
+		configParam(FREQY1_PARAM, -8.0, 3.0, 2.0,"Y 1 Frequency", " Hz", 2, 1);
+		configParam(AMPLITUDE2_PARAM, 0.0, 5.0, 2.5,"Amplitude 1","%",0,25);
+		configParam(FREQX2_PARAM, -8.0, 3.0, 0.0,"X 2 Frequency", " Hz", 2, 1);
+		configParam(FREQY2_PARAM, -8.0, 3.0, 1.0,"Y 2 Frequency", " Hz", 2, 1);
 	}
 	void process(const ProcessArgs &args) override;
 

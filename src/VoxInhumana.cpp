@@ -1,5 +1,6 @@
 #include "FrozenWasteland.hpp"
 #include "StateVariableFilter.h"
+#include "ui/knobs.hpp"
 
 using namespace std;
 
@@ -143,38 +144,38 @@ struct VoxInhumana : Module {
 	VoxInhumana() {
 		config(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS, NUM_LIGHTS);
 
-		configParam(VOWEL_1_PARAM, 0, 4.6, 0);
-		configParam(VOWEL_2_PARAM, 0, 4.6, 0);
-		configParam(VOWEL_BALANCE_PARAM, 0.0, 1.0, 0);
-		configParam(VOICE_TYPE_PARAM, 0, 4.6, 0);
-		configParam(FC_MAIN_CUTOFF_PARAM, 0.0, 2.0, 1);
+		configParam(VOWEL_1_PARAM, 0, 4.6, 0,"Vowel 1");
+		configParam(VOWEL_2_PARAM, 0, 4.6, 0,"Vowel 2");
+		configParam(VOWEL_BALANCE_PARAM, 0.0, 1.0, 0,"Vowel Balance","%",0,100);
+		configParam(VOICE_TYPE_PARAM, 0, 4.6, 0,"Voice Type");
+		configParam(FC_MAIN_CUTOFF_PARAM, 0.0, 2.0, 1,"Main Freqency Cutoff Shift","%",0,100);
 
-		configParam(VOWEL_1_ATTENUVERTER_PARAM, -1.0, 1.0, 0);
-		configParam(VOWEL_2_ATTENUVERTER_PARAM, -1.0, 1.0, 0);
-		configParam(VOWEL_BALANCE_ATTENUVERTER_PARAM, -1.0, 1.0, 0);
-		configParam(VOICE_TYPE_ATTENUVERTER_PARAM, -1.0, 1.0, 0);
-		configParam(FC_MAIN_ATTENUVERTER_PARAM, -1.0, 1.0, 0);
+		configParam(VOWEL_1_ATTENUVERTER_PARAM, -1.0, 1.0, 0,"Vowel 1 CV Attenuation","%",0,100);
+		configParam(VOWEL_2_ATTENUVERTER_PARAM, -1.0, 1.0, 0,"Vowel 2 CV Attenuation","%",0,100);
+		configParam(VOWEL_BALANCE_ATTENUVERTER_PARAM, -1.0, 1.0, 0,"Vowel Balance CV Attenuation","%",0,100);
+		configParam(VOICE_TYPE_ATTENUVERTER_PARAM, -1.0, 1.0, 0,"Voice Type CV Attenuation","%",0,100);
+		configParam(FC_MAIN_ATTENUVERTER_PARAM, -1.0, 1.0, 0,"Main Freqency Cutoff CV Attenuation","%",0,100);
 			
-		configParam(FREQ_1_CUTOFF_PARAM, -1.0, 1.0, 0);
-		configParam(FREQ_2_CUTOFF_PARAM, -1.0, 1.0, 0);
-		configParam(FREQ_3_CUTOFF_PARAM, -1.0, 1.0, 0);
-		configParam(FREQ_4_CUTOFF_PARAM, -1.0, 1.0, 0);
-		configParam(FREQ_5_CUTOFF_PARAM, -1.0, 1.0, 0);
-		configParam(FREQ_1_CV_ATTENUVERTER_PARAM, -1.0, 1.0, 0);
-		configParam(FREQ_2_CV_ATTENUVERTER_PARAM, -1.0, 1.0, 0);
-		configParam(FREQ_3_CV_ATTENUVERTER_PARAM, -1.0, 1.0, 0);
-		configParam(FREQ_4_CV_ATTENUVERTER_PARAM, -1.0, 1.0, 0);
-		configParam(FREQ_5_CV_ATTENUVERTER_PARAM, -1.0, 1.0, 0);
-		configParam(AMP_1_PARAM, 0.0, 2.0, 1);
-		configParam(AMP_2_PARAM, 0.0, 2.0, 1);
-		configParam(AMP_3_PARAM, 0.0, 2.0, 1);
-		configParam(AMP_4_PARAM, 0.0, 2.0, 1);
-		configParam(AMP_5_PARAM, 0.0, 2.0, 1);
-		configParam(AMP_1_CV_ATTENUVERTER_PARAM, -1.0, 1.0, 0);
-		configParam(AMP_2_CV_ATTENUVERTER_PARAM, -1.0, 1.0, 0);
-		configParam(AMP_3_CV_ATTENUVERTER_PARAM, -1.0, 1.0, 0);
-		configParam(AMP_4_CV_ATTENUVERTER_PARAM, -1.0, 1.0, 0);
-		configParam(AMP_5_CV_ATTENUVERTER_PARAM, -1.0, 1.0, 0);
+		configParam(FREQ_1_CUTOFF_PARAM, -1.0, 1.0, 0,"Formant 1 Freqency Shift","%",0,50);
+		configParam(FREQ_2_CUTOFF_PARAM, -1.0, 1.0, 0,"Formant 2 Freqency Shift","%",0,50);
+		configParam(FREQ_3_CUTOFF_PARAM, -1.0, 1.0, 0,"Formant 3 Freqency Shift","%",0,50);
+		configParam(FREQ_4_CUTOFF_PARAM, -1.0, 1.0, 0,"Formant 4 Freqency Shift","%",0,50);
+		configParam(FREQ_5_CUTOFF_PARAM, -1.0, 1.0, 0,"Formant 5 Freqency Shift","%",0,50);
+		configParam(FREQ_1_CV_ATTENUVERTER_PARAM, -1.0, 1.0, 0,"Formant 1 FM CV Attenuation","%",0,100);
+		configParam(FREQ_2_CV_ATTENUVERTER_PARAM, -1.0, 1.0, 0,"Formant 2 FM CV Attenuation","%",0,100);
+		configParam(FREQ_3_CV_ATTENUVERTER_PARAM, -1.0, 1.0, 0,"Formant 3 FM CV Attenuation","%",0,100);
+		configParam(FREQ_4_CV_ATTENUVERTER_PARAM, -1.0, 1.0, 0,"Formant 4 FM CV Attenuation","%",0,100);
+		configParam(FREQ_5_CV_ATTENUVERTER_PARAM, -1.0, 1.0, 0,"Formant 5 FM CV Attenuation","%",0,100);
+		configParam(AMP_1_PARAM, 0.0, 2.0, 1,"Formant 1 Amplitude","%",0,100);
+		configParam(AMP_2_PARAM, 0.0, 2.0, 1,"Formant 2 Amplitude","%",0,100);
+		configParam(AMP_3_PARAM, 0.0, 2.0, 1,"Formant 3 Amplitude","%",0,100);
+		configParam(AMP_4_PARAM, 0.0, 2.0, 1,"Formant 4 Amplitude","%",0,100);
+		configParam(AMP_5_PARAM, 0.0, 2.0, 1,"Formant 5 Amplitude","%",0,100);
+		configParam(AMP_1_CV_ATTENUVERTER_PARAM, -1.0, 1.0, 0,"Formant 1 Amplitude CV Attenuation","%",0,100);
+		configParam(AMP_2_CV_ATTENUVERTER_PARAM, -1.0, 1.0, 0,"Formant 2 Amplitude CV Attenuation","%",0,100);
+		configParam(AMP_3_CV_ATTENUVERTER_PARAM, -1.0, 1.0, 0,"Formant 3 Amplitude CV Attenuation","%",0,100);
+		configParam(AMP_4_CV_ATTENUVERTER_PARAM, -1.0, 1.0, 0,"Formant 4 Amplitude CV Attenuation","%",0,100);
+		configParam(AMP_5_CV_ATTENUVERTER_PARAM, -1.0, 1.0, 0,"Formant 5 Amplitude CV Attenuation","%",0,100);
 			
 
 		for (int i = 0; i < BANDS; ++i) {
@@ -187,7 +188,7 @@ struct VoxInhumana : Module {
 	}
 
 	void onReset() override {
-		//params[FC_MAIN_CUTOFF_PARAM].getValue() = 1.0f;
+		
 		params[FC_MAIN_CUTOFF_PARAM].setValue(1.0f);
 		params[VOWEL_BALANCE_PARAM].setValue(0.0f);
 		for(int i = 0;i<BANDS;i++) {
@@ -315,39 +316,39 @@ struct VoxInhumanaWidget : ModuleWidget {
 		}
 
 
-		addParam(createParam<RoundBlackKnob>(Vec(10, 30), module, VoxInhumana::VOWEL_1_PARAM));
-		addParam(createParam<RoundBlackKnob>(Vec(140, 30), module, VoxInhumana::VOWEL_2_PARAM));
-		addParam(createParam<RoundBlackKnob>(Vec(89, 30), module, VoxInhumana::VOWEL_BALANCE_PARAM));
-		addParam(createParam<RoundBlackKnob>(Vec(7, 103), module, VoxInhumana::VOICE_TYPE_PARAM));
-		addParam(createParam<RoundBlackKnob>(Vec(140, 103), module, VoxInhumana::FC_MAIN_CUTOFF_PARAM));
+		addParam(createParam<RoundFWSnapKnob>(Vec(10, 30), module, VoxInhumana::VOWEL_1_PARAM));
+		addParam(createParam<RoundFWSnapKnob>(Vec(140, 30), module, VoxInhumana::VOWEL_2_PARAM));
+		addParam(createParam<RoundFWKnob>(Vec(89, 30), module, VoxInhumana::VOWEL_BALANCE_PARAM));
+		addParam(createParam<RoundFWSnapKnob>(Vec(7, 103), module, VoxInhumana::VOICE_TYPE_PARAM));
+		addParam(createParam<RoundFWKnob>(Vec(140, 103), module, VoxInhumana::FC_MAIN_CUTOFF_PARAM));
 
-		addParam(createParam<RoundSmallBlackKnob>(Vec(40, 62), module, VoxInhumana::VOWEL_1_ATTENUVERTER_PARAM));
-		addParam(createParam<RoundSmallBlackKnob>(Vec(170, 62), module, VoxInhumana::VOWEL_2_ATTENUVERTER_PARAM));
-		addParam(createParam<RoundSmallBlackKnob>(Vec(107, 62), module, VoxInhumana::VOWEL_BALANCE_ATTENUVERTER_PARAM));
-		addParam(createParam<RoundSmallBlackKnob>(Vec(31, 134), module, VoxInhumana::VOICE_TYPE_ATTENUVERTER_PARAM));
-		addParam(createParam<RoundSmallBlackKnob>(Vec(169, 125), module, VoxInhumana::FC_MAIN_ATTENUVERTER_PARAM));
+		addParam(createParam<RoundSmallFWKnob>(Vec(40, 62), module, VoxInhumana::VOWEL_1_ATTENUVERTER_PARAM));
+		addParam(createParam<RoundSmallFWKnob>(Vec(170, 62), module, VoxInhumana::VOWEL_2_ATTENUVERTER_PARAM));
+		addParam(createParam<RoundSmallFWKnob>(Vec(107, 62), module, VoxInhumana::VOWEL_BALANCE_ATTENUVERTER_PARAM));
+		addParam(createParam<RoundSmallFWKnob>(Vec(31, 134), module, VoxInhumana::VOICE_TYPE_ATTENUVERTER_PARAM));
+		addParam(createParam<RoundSmallFWKnob>(Vec(169, 125), module, VoxInhumana::FC_MAIN_ATTENUVERTER_PARAM));
 			
 
-		addParam(createParam<RoundBlackKnob>(Vec(15, 160), module, VoxInhumana::FREQ_1_CUTOFF_PARAM));
-		addParam(createParam<RoundBlackKnob>(Vec(15, 195), module, VoxInhumana::FREQ_2_CUTOFF_PARAM));
-		addParam(createParam<RoundBlackKnob>(Vec(15, 230), module, VoxInhumana::FREQ_3_CUTOFF_PARAM));
-		addParam(createParam<RoundBlackKnob>(Vec(15, 265), module, VoxInhumana::FREQ_4_CUTOFF_PARAM));
-		addParam(createParam<RoundBlackKnob>(Vec(15, 300), module, VoxInhumana::FREQ_5_CUTOFF_PARAM));
-		addParam(createParam<RoundSmallBlackKnob>(Vec(80, 162), module, VoxInhumana::FREQ_1_CV_ATTENUVERTER_PARAM));
-		addParam(createParam<RoundSmallBlackKnob>(Vec(80, 197), module, VoxInhumana::FREQ_2_CV_ATTENUVERTER_PARAM));
-		addParam(createParam<RoundSmallBlackKnob>(Vec(80, 232), module, VoxInhumana::FREQ_3_CV_ATTENUVERTER_PARAM));
-		addParam(createParam<RoundSmallBlackKnob>(Vec(80, 267), module, VoxInhumana::FREQ_4_CV_ATTENUVERTER_PARAM));
-		addParam(createParam<RoundSmallBlackKnob>(Vec(80, 302), module, VoxInhumana::FREQ_5_CV_ATTENUVERTER_PARAM));
-		addParam(createParam<RoundBlackKnob>(Vec(110, 160), module, VoxInhumana::AMP_1_PARAM));
-		addParam(createParam<RoundBlackKnob>(Vec(110, 195), module, VoxInhumana::AMP_2_PARAM));
-		addParam(createParam<RoundBlackKnob>(Vec(110, 230), module, VoxInhumana::AMP_3_PARAM));
-		addParam(createParam<RoundBlackKnob>(Vec(110, 265), module, VoxInhumana::AMP_4_PARAM));
-		addParam(createParam<RoundBlackKnob>(Vec(110, 300), module, VoxInhumana::AMP_5_PARAM));
-		addParam(createParam<RoundSmallBlackKnob>(Vec(175, 162), module, VoxInhumana::AMP_1_CV_ATTENUVERTER_PARAM));
-		addParam(createParam<RoundSmallBlackKnob>(Vec(175, 197), module, VoxInhumana::AMP_2_CV_ATTENUVERTER_PARAM));
-		addParam(createParam<RoundSmallBlackKnob>(Vec(175, 232), module, VoxInhumana::AMP_3_CV_ATTENUVERTER_PARAM));
-		addParam(createParam<RoundSmallBlackKnob>(Vec(175, 267), module, VoxInhumana::AMP_4_CV_ATTENUVERTER_PARAM));
-		addParam(createParam<RoundSmallBlackKnob>(Vec(175, 302), module, VoxInhumana::AMP_5_CV_ATTENUVERTER_PARAM));
+		addParam(createParam<RoundFWKnob>(Vec(15, 160), module, VoxInhumana::FREQ_1_CUTOFF_PARAM));
+		addParam(createParam<RoundFWKnob>(Vec(15, 195), module, VoxInhumana::FREQ_2_CUTOFF_PARAM));
+		addParam(createParam<RoundFWKnob>(Vec(15, 230), module, VoxInhumana::FREQ_3_CUTOFF_PARAM));
+		addParam(createParam<RoundFWKnob>(Vec(15, 265), module, VoxInhumana::FREQ_4_CUTOFF_PARAM));
+		addParam(createParam<RoundFWKnob>(Vec(15, 300), module, VoxInhumana::FREQ_5_CUTOFF_PARAM));
+		addParam(createParam<RoundSmallFWKnob>(Vec(80, 162), module, VoxInhumana::FREQ_1_CV_ATTENUVERTER_PARAM));
+		addParam(createParam<RoundSmallFWKnob>(Vec(80, 197), module, VoxInhumana::FREQ_2_CV_ATTENUVERTER_PARAM));
+		addParam(createParam<RoundSmallFWKnob>(Vec(80, 232), module, VoxInhumana::FREQ_3_CV_ATTENUVERTER_PARAM));
+		addParam(createParam<RoundSmallFWKnob>(Vec(80, 267), module, VoxInhumana::FREQ_4_CV_ATTENUVERTER_PARAM));
+		addParam(createParam<RoundSmallFWKnob>(Vec(80, 302), module, VoxInhumana::FREQ_5_CV_ATTENUVERTER_PARAM));
+		addParam(createParam<RoundFWKnob>(Vec(110, 160), module, VoxInhumana::AMP_1_PARAM));
+		addParam(createParam<RoundFWKnob>(Vec(110, 195), module, VoxInhumana::AMP_2_PARAM));
+		addParam(createParam<RoundFWKnob>(Vec(110, 230), module, VoxInhumana::AMP_3_PARAM));
+		addParam(createParam<RoundFWKnob>(Vec(110, 265), module, VoxInhumana::AMP_4_PARAM));
+		addParam(createParam<RoundFWKnob>(Vec(110, 300), module, VoxInhumana::AMP_5_PARAM));
+		addParam(createParam<RoundSmallFWKnob>(Vec(175, 162), module, VoxInhumana::AMP_1_CV_ATTENUVERTER_PARAM));
+		addParam(createParam<RoundSmallFWKnob>(Vec(175, 197), module, VoxInhumana::AMP_2_CV_ATTENUVERTER_PARAM));
+		addParam(createParam<RoundSmallFWKnob>(Vec(175, 232), module, VoxInhumana::AMP_3_CV_ATTENUVERTER_PARAM));
+		addParam(createParam<RoundSmallFWKnob>(Vec(175, 267), module, VoxInhumana::AMP_4_CV_ATTENUVERTER_PARAM));
+		addParam(createParam<RoundSmallFWKnob>(Vec(175, 302), module, VoxInhumana::AMP_5_CV_ATTENUVERTER_PARAM));
 
 		addInput(createInput<PJ301MPort>(Vec(13, 62), module, VoxInhumana::VOWEL_1_CV_IN));
 		addInput(createInput<PJ301MPort>(Vec(143, 62), module, VoxInhumana::VOWEL_2_CV_IN));

@@ -139,9 +139,9 @@ struct LowFrequencyOscillator {
 	BPMLFO() {
 		config(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS, NUM_LIGHTS);
 		configParam(DIVISION_PARAM, 0.0, 26.5, 13.0);
-		configParam(DIVISION_CV_ATTENUVERTER_PARAM, -1.0, 1.0, 0.0);
-		configParam(PHASE_PARAM, 0.0, 0.9999, 0.0);
-		configParam(PHASE_CV_ATTENUVERTER_PARAM, -1.0, 1.0, 0.0);
+		configParam(DIVISION_CV_ATTENUVERTER_PARAM, -1.0, 1.0, 0.0,"Division CV Attenuation","%",0,100);
+		configParam(PHASE_PARAM, 0.0, 0.9999, 0.0,"Phase","°",0,360);
+		configParam(PHASE_CV_ATTENUVERTER_PARAM, -1.0, 1.0, 0.0,"Phase CV Attenuation","%",0,100);
 		configParam(QUANTIZE_PHASE_PARAM, 0.0, 1.0, 0.0);
 		configParam(OFFSET_PARAM, 0.0, 1.0, 1.0);
 		configParam(HOLD_CLOCK_BEHAVIOR_PARAM, 0.0, 1.0, 1.0);
@@ -318,7 +318,7 @@ struct BPMLFOWidget : ModuleWidget {
 			addChild(display);
 		}
 
-		addParam(createParam<RoundLargeFWKnob>(Vec(35, 78), module, BPMLFO::DIVISION_PARAM));
+		addParam(createParam<RoundLargeFWSnapKnob>(Vec(35, 78), module, BPMLFO::DIVISION_PARAM));
 		addParam(createParam<RoundSmallFWKnob>(Vec(75, 109), module, BPMLFO::DIVISION_CV_ATTENUVERTER_PARAM));
 		
 		addParam(createParam<RoundFWKnob>(Vec(27, 132), module, BPMLFO::PHASE_PARAM));

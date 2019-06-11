@@ -50,10 +50,10 @@ struct RouletteLFO : Module {
 
 	RouletteLFO() {
 		config(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS, NUM_LIGHTS);
-		configParam(FIXED_RADIUS_PARAM, 1, 20.0, 5);
-		configParam(ROTATING_RADIUS_PARAM, 1, 10.0, 3);
-		configParam(DISTANCE_PARAM, 1, 10.0, 5.0);
-		configParam(FREQUENCY_PARAM, -8.0, 4.0, 0.0);
+		configParam(FIXED_RADIUS_PARAM, 1, 20.0, 5,"Fixed Radius");
+		configParam(ROTATING_RADIUS_PARAM, 1, 10.0, 3,"Rotating Radius");
+		configParam(DISTANCE_PARAM, 1, 10.0, 5.0,"Distance");
+		configParam(FREQUENCY_PARAM, -8.0, 4.0, 0.0,"Frequency", " Hz", 2, 1);
 		configParam(EPI_HYPO_PARAM, 0.0, 1.0, 0.0);
 		configParam(FIXED_D_PARAM, 0.0, 1.0, 0.0);
 	}
