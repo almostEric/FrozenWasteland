@@ -3,7 +3,9 @@
 
 #define TRACK_COUNT 4
 #define MAX_STEPS 18
-#define PASSTHROUGH_VARIABLE_COUNT 21
+#define PASSTHROUGH_LEFT_VARIABLE_COUNT 13
+#define PASSTHROUGH_RIGHT_VARIABLE_COUNT 8
+#define PASSTHROUGH_OFFSET MAX_STEPS * TRACK_COUNT * 2 + 1
 
 struct QuadRhythmExpander : Module {
 	enum ParamIds {
@@ -67,8 +69,8 @@ struct QuadRhythmExpander : Module {
 	const char* stepNames[MAX_STEPS] {"1","2","3","4","5","6","7","8","9","10","11","12","13","14","15","16","17","18"};
 
 	// Expander
-	float consumerMessage[MAX_STEPS * TRACK_COUNT * 2 + 1 + PASSTHROUGH_VARIABLE_COUNT] = {};// this module must read from here
-	float producerMessage[MAX_STEPS * TRACK_COUNT * 2 + 1 + PASSTHROUGH_VARIABLE_COUNT] = {};// mother will write into here
+	float consumerMessage[PASSTHROUGH_OFFSET + PASSTHROUGH_LEFT_VARIABLE_COUNT + PASSTHROUGH_RIGHT_VARIABLE_COUNT] = {};// this module must read from here
+	float producerMessage[PASSTHROUGH_OFFSET + 1 + PASSTHROUGH_LEFT_VARIABLE_COUNT + PASSTHROUGH_RIGHT_VARIABLE_COUNT] = {};// mother will write into here
 
 	
 	dsp::SchmittTrigger stepDivTrigger[MAX_STEPS],trackProbabilityTrigger[TRACK_COUNT],trackSwingTrigger[TRACK_COUNT];
@@ -213,7 +215,7 @@ struct QuadRhythmExpander : Module {
 		//lights[CONNECTED_LIGHT].value = motherPresent;
 		if (motherPresent) {
 			// To Mother
-			float *producerMessage = reinterpret_cast<float*>(leftExpander.producerMessage);
+			float *producerMessage = (float*) leftExpander.producerMessage;
 			producerMessage[0] = params[STEP_OR_DIV_PARAM].getValue();
 
 			//Initalize
@@ -223,27 +225,36 @@ struct QuadRhythmExpander : Module {
 					producerMessage[1 + (i + TRACK_COUNT) * MAX_STEPS + j] = 0.0;
 				}
 			}
+			for(int i = 0; i < PASSTHROUGH_LEFT_VARIABLE_COUNT; i++) {
+				producerMessage[MAX_STEPS * TRACK_COUNT * 2 + 1 + i] = 0.0;
+			}
 
 			//If another expander is present, get its values (we can overwrite them)
 			bool anotherExpanderPresent = (rightExpander.module && (rightExpander.module->model == modelQuadRhythmExpander || rightExpander.module->model == modelQuadAlgorithmicRhythm));
 			if(anotherExpanderPresent)
 			{			
-				float *message = (float*) rightExpander.module->leftExpander.consumerMessage;								
-				for(int i = 0; i < TRACK_COUNT; i++) {
-					for(int j = 0; j < MAX_STEPS; j++) { // Assign probabilites and swing
-						producerMessage[1 + i * MAX_STEPS + j] = message[1 + i * MAX_STEPS + j];
-						producerMessage[1 + (i + TRACK_COUNT) * MAX_STEPS + j] = message[1 + (i + TRACK_COUNT) * MAX_STEPS  + j];
-					} 
+				float *message = (float*) rightExpander.module->leftExpander.consumerMessage;	
+
+				if(rightExpander.module->model == modelQuadRhythmExpander) { // Get QRE values							
+					for(int i = 0; i < TRACK_COUNT; i++) {
+						for(int j = 0; j < MAX_STEPS; j++) { // Assign probabilites and swing
+							producerMessage[1 + i * MAX_STEPS + j] = message[1 + i * MAX_STEPS + j];
+							producerMessage[1 + (i + TRACK_COUNT) * MAX_STEPS + j] = message[1 + (i + TRACK_COUNT) * MAX_STEPS  + j];
+						} 
+					}
 				}
 
-
-				bool slaveQARsPresent = rightExpander.module->model == modelQuadAlgorithmicRhythm;				
-				//QAR Pass through
-				for(int i = 0; i < PASSTHROUGH_VARIABLE_COUNT; i++) {
-					producerMessage[MAX_STEPS * TRACK_COUNT * 2 + 1 + i] = message[MAX_STEPS * TRACK_COUNT * 2 + 1 + i];
+				//QAR Pass through left
+				for(int i = 0; i < PASSTHROUGH_LEFT_VARIABLE_COUNT; i++) {
+					producerMessage[PASSTHROUGH_OFFSET + i] = message[PASSTHROUGH_OFFSET + i];
 				}
-				//Pass through if there are QARs somewhere
-				producerMessage[MAX_STEPS * TRACK_COUNT * 2 + 1 + TRACK_COUNT * 4 + 3] = producerMessage[MAX_STEPS * TRACK_COUNT * 2 + 1 + TRACK_COUNT * 4 + 3] || slaveQARsPresent; 
+
+				//QAR Pass through right
+				float *messagesFromMother = (float*)leftExpander.consumerMessage;
+				float *messageToSlave = (float*)(rightExpander.module->leftExpander.producerMessage);	
+				for(int i = 0; i < PASSTHROUGH_RIGHT_VARIABLE_COUNT;i++) {
+					messageToSlave[PASSTHROUGH_OFFSET + PASSTHROUGH_LEFT_VARIABLE_COUNT + i] = messagesFromMother[PASSTHROUGH_OFFSET + PASSTHROUGH_LEFT_VARIABLE_COUNT + i];
+				}	
 			}
 		
 			for (int i = 0; i < TRACK_COUNT; i++) {
@@ -258,13 +269,8 @@ struct QuadRhythmExpander : Module {
 			}			
 						
 			// From Mother	
-			bool masterQARsPresent = leftExpander.module->model == modelQuadRhythmExpander;
-			float *messagesFromMother = (float*)leftExpander.consumerMessage;
-			for(int i = 0; i < PASSTHROUGH_VARIABLE_COUNT;i++) {
-				consumerMessage[MAX_STEPS * TRACK_COUNT * 2 + 1 + i] = messagesFromMother[MAX_STEPS * TRACK_COUNT * 2 + 1 + i];
-			}	
-			consumerMessage[MAX_STEPS * TRACK_COUNT * 2 + 1 + TRACK_COUNT * 4 + 4] = consumerMessage[MAX_STEPS * TRACK_COUNT * 2 + 1 + TRACK_COUNT * 4 + 4] || masterQARsPresent; 
-
+			
+			
 			leftExpander.messageFlipRequested = true;
 		
 		}		
@@ -288,6 +294,11 @@ struct QuadRhythmExpander : Module {
             params[SWING_1_PARAM+i].setValue(0);
 			trackProbabilitySelected[i] = true;
 			trackSwingSelected[i] = true;
+		}
+
+		for(int i = 0; i < PASSTHROUGH_LEFT_VARIABLE_COUNT + PASSTHROUGH_RIGHT_VARIABLE_COUNT; i++) {
+			producerMessage[MAX_STEPS * TRACK_COUNT * 2 + 1 + i] = 0;
+			consumerMessage[MAX_STEPS * TRACK_COUNT * 2 + 1 + i] = 0;
 		}
 	}
 };

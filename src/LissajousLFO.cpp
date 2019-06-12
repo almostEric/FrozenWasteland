@@ -1,5 +1,6 @@
 #include <string.h>
 #include "FrozenWasteland.hpp"
+#include "ui/knobs.hpp"
 
 #define BUFFER_SIZE 512
 
@@ -292,12 +293,12 @@ struct LissajousLFOWidget : ModuleWidget {
 			addChild(display);
 		}
 
-		addParam(createParam<RoundBlackKnob>(Vec(37, 186), module, LissajousLFO::AMPLITUDE1_PARAM));
-		addParam(createParam<RoundBlackKnob>(Vec(87, 186), module, LissajousLFO::FREQX1_PARAM));
-		addParam(createParam<RoundBlackKnob>(Vec(137, 186), module, LissajousLFO::FREQY1_PARAM));
-		addParam(createParam<RoundBlackKnob>(Vec(37, 265), module, LissajousLFO::AMPLITUDE2_PARAM));
-		addParam(createParam<RoundBlackKnob>(Vec(87, 265), module, LissajousLFO::FREQX2_PARAM));
-		addParam(createParam<RoundBlackKnob>(Vec(137, 265), module, LissajousLFO::FREQY2_PARAM));
+		addParam(createParam<RoundFWKnob>(Vec(39, 186), module, LissajousLFO::AMPLITUDE1_PARAM));
+		addParam(createParam<RoundFWKnob>(Vec(89, 186), module, LissajousLFO::FREQX1_PARAM));
+		addParam(createParam<RoundFWKnob>(Vec(139, 186), module, LissajousLFO::FREQY1_PARAM));
+		addParam(createParam<RoundFWKnob>(Vec(39, 265), module, LissajousLFO::AMPLITUDE2_PARAM));
+		addParam(createParam<RoundFWKnob>(Vec(89, 265), module, LissajousLFO::FREQX2_PARAM));
+		addParam(createParam<RoundFWKnob>(Vec(139, 265), module, LissajousLFO::FREQY2_PARAM));
 
 		addInput(createInput<PJ301MPort>(Vec(41, 219), module, LissajousLFO::AMPLITUDE1_INPUT));
 		addInput(createInput<PJ301MPort>(Vec(91, 219), module, LissajousLFO::FREQX1_INPUT));

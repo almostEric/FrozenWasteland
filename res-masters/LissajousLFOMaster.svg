@@ -53,8 +53,8 @@
      inkscape:pageopacity="0.0"
      inkscape:pageshadow="2"
      inkscape:zoom="5.6568542"
-     inkscape:cx="-22.05668"
-     inkscape:cy="261.40637"
+     inkscape:cx="-66.074078"
+     inkscape:cy="91.700741"
      inkscape:document-units="mm"
      inkscape:current-layer="layer1"
      showgrid="false"
@@ -76,7 +76,7 @@
         <dc:format>image/svg+xml</dc:format>
         <dc:type
            rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
-        <dc:title />
+        <dc:title></dc:title>
       </cc:Work>
     </rdf:RDF>
   </metadata>
@@ -219,23 +219,23 @@
        xml:space="preserve"
        style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:3.52777767px;line-height:1.25;font-family:Consolas;-inkscape-font-specification:'Consolas Bold';text-align:center;letter-spacing:0px;word-spacing:0px;text-anchor:middle;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.26458332"
        x="44.406734"
-       y="146.56496"
+       y="139.15671"
        id="text365"><tspan
          sodipodi:role="line"
          id="tspan363"
          x="44.406734"
-         y="146.56496"
+         y="139.15671"
          style="font-size:2.11666656px;stroke-width:0.26458332">Xs</tspan></text>
     <text
        xml:space="preserve"
        style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:3.52777767px;line-height:1.25;font-family:Consolas;-inkscape-font-specification:'Consolas Bold';text-align:center;letter-spacing:0px;word-spacing:0px;text-anchor:middle;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.26458332"
        x="52.542675"
-       y="146.56474"
+       y="139.15649"
        id="text369"><tspan
          sodipodi:role="line"
          id="tspan367"
          x="52.542675"
-         y="146.56474"
+         y="139.15649"
          style="font-size:2.11666656px;stroke-width:0.26458332">Ys</tspan></text>
     <text
        xml:space="preserve"
@@ -252,12 +252,12 @@
        xml:space="preserve"
        style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:3.52777767px;line-height:1.25;font-family:Consolas;-inkscape-font-specification:'Consolas Bold';text-align:center;letter-spacing:0px;word-spacing:0px;text-anchor:middle;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.26458332"
        x="80.25779"
-       y="146.36646"
+       y="138.95821"
        id="text377"><tspan
          sodipodi:role="line"
          id="tspan375"
          x="80.25779"
-         y="146.36646"
+         y="138.95821"
          style="font-size:2.11666656px;stroke-width:0.26458332">/Y</tspan></text>
     <rect
        style="fill:#cce6f1;fill-opacity:1;stroke-width:0.26458332"
@@ -403,23 +403,23 @@
        xml:space="preserve"
        style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:3.52777767px;line-height:1.25;font-family:Consolas;-inkscape-font-specification:'Consolas Bold';text-align:center;letter-spacing:0px;word-spacing:0px;text-anchor:middle;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.26458332"
        x="61.505428"
-       y="146.5649"
+       y="139.15665"
        id="text1470"><tspan
          sodipodi:role="line"
          id="tspan1468"
          x="61.505428"
-         y="146.5649"
+         y="139.15665"
          style="font-size:2.11666656px;stroke-width:0.26458332">Xs+Ys</tspan></text>
     <text
        xml:space="preserve"
        style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:3.52777767px;line-height:1.25;font-family:Consolas;-inkscape-font-specification:'Consolas Bold';text-align:center;letter-spacing:0px;word-spacing:0px;text-anchor:middle;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.26458332"
        x="71.228859"
-       y="146.36646"
+       y="138.95821"
        id="text1474"><tspan
          sodipodi:role="line"
          id="tspan1472"
          x="71.228859"
-         y="146.36646"
+         y="138.95821"
          style="font-size:2.11666656px;stroke-width:0.26458332">/X</tspan></text>
     <text
        xml:space="preserve"

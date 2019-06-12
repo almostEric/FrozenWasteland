@@ -1,5 +1,6 @@
 #include <string.h>
 #include "FrozenWasteland.hpp"
+#include "ui/knobs.hpp"
 
 
 #define BUFFER_SIZE 512
@@ -216,17 +217,17 @@ struct RouletteLFOWidget : ModuleWidget {
 			addChild(display);
 		}
 
-		addParam(createParam<RoundBlackKnob>(Vec(10, 186), module, RouletteLFO::FIXED_RADIUS_PARAM));
-		addParam(createParam<RoundBlackKnob>(Vec(60, 186), module, RouletteLFO::ROTATING_RADIUS_PARAM));
-		addParam(createParam<RoundBlackKnob>(Vec(113, 186), module, RouletteLFO::DISTANCE_PARAM));
-		addParam(createParam<RoundBlackKnob>(Vec(160, 186), module, RouletteLFO::FREQUENCY_PARAM));
+		addParam(createParam<RoundFWKnob>(Vec(10, 186), module, RouletteLFO::FIXED_RADIUS_PARAM));
+		addParam(createParam<RoundFWKnob>(Vec(60, 186), module, RouletteLFO::ROTATING_RADIUS_PARAM));
+		addParam(createParam<RoundFWKnob>(Vec(113, 186), module, RouletteLFO::DISTANCE_PARAM));
+		addParam(createParam<RoundFWKnob>(Vec(160, 186), module, RouletteLFO::FREQUENCY_PARAM));
 		addParam(createParam<CKSS>(Vec(55, 265), module, RouletteLFO::EPI_HYPO_PARAM));
 		addParam(createParam<CKSS>(Vec(130, 265), module, RouletteLFO::FIXED_D_PARAM));
 
-		addInput(createInput<PJ301MPort>(Vec(13, 219), module, RouletteLFO::FIXED_RADIUS_INPUT));
-		addInput(createInput<PJ301MPort>(Vec(63, 219), module, RouletteLFO::ROATATING_RADIUS_INPUT));
-		addInput(createInput<PJ301MPort>(Vec(116, 219), module, RouletteLFO::DISTANCE_INPUT));
-		addInput(createInput<PJ301MPort>(Vec(163, 219), module, RouletteLFO::FREQUENCY_INPUT));
+		addInput(createInput<PJ301MPort>(Vec(13, 220), module, RouletteLFO::FIXED_RADIUS_INPUT));
+		addInput(createInput<PJ301MPort>(Vec(63, 220), module, RouletteLFO::ROATATING_RADIUS_INPUT));
+		addInput(createInput<PJ301MPort>(Vec(116, 220), module, RouletteLFO::DISTANCE_INPUT));
+		addInput(createInput<PJ301MPort>(Vec(163, 220), module, RouletteLFO::FREQUENCY_INPUT));
 
 		addOutput(createOutput<PJ301MPort>(Vec(57, 335), module, RouletteLFO::OUTPUT_X));
 		addOutput(createOutput<PJ301MPort>(Vec(113, 335), module, RouletteLFO::OUTPUT_Y));

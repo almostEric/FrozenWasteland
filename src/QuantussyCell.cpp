@@ -1,5 +1,5 @@
 #include "FrozenWasteland.hpp"
-
+#include "ui/knobs.hpp"
 
 struct LowFrequencyOscillator {
 	float phase = 0.0;
@@ -100,8 +100,8 @@ struct QuantussyCell : Module {
 	QuantussyCell() {
 		config(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS, NUM_LIGHTS);
 
-		configParam(FREQ_PARAM, -3.0, 3.0, 0.0);
-		configParam(CV_ATTENUVERTER_PARAM, -1.0, 1.0, 1.0);	
+		configParam(FREQ_PARAM, -3.0, 3.0, 0.0,"Frequency", " Hz", 2, 1);
+		configParam(CV_ATTENUVERTER_PARAM, -1.0, 1.0, 1.0,"CV Attenuator","%",0,100);	
 	}
 	void process(const ProcessArgs &args) override;
 
@@ -163,8 +163,8 @@ struct QuantussyCellWidget : ModuleWidget {
 		addChild(createWidget<ScrewSilver>(Vec(RACK_GRID_WIDTH - 12, RACK_GRID_HEIGHT - RACK_GRID_WIDTH)));
 		addChild(createWidget<ScrewSilver>(Vec(box.size.x - 2 * RACK_GRID_WIDTH + 12, RACK_GRID_HEIGHT - RACK_GRID_WIDTH)));
 
-		addParam(createParam<RoundLargeBlackKnob>(Vec(28, 64), module, QuantussyCell::FREQ_PARAM));
-		addParam(createParam<RoundBlackKnob>(Vec(13, 182), module, QuantussyCell::CV_ATTENUVERTER_PARAM));
+		addParam(createParam<RoundLargeFWKnob>(Vec(28, 64), module, QuantussyCell::FREQ_PARAM));
+		addParam(createParam<RoundFWKnob>(Vec(13, 182), module, QuantussyCell::CV_ATTENUVERTER_PARAM));
 
 		addInput(createInput<PJ301MPort>(Vec(35, 113), module, QuantussyCell::CASTLE_INPUT));
 		addInput(createInput<PJ301MPort>(Vec(50, 205), module, QuantussyCell::CV_INPUT));

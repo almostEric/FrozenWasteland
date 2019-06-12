@@ -1,4 +1,5 @@
 #include "FrozenWasteland.hpp"
+#include "ui/knobs.hpp"
 #include "dsp-noise/noise.hpp"
 #include "filters/biquad.h"
 
@@ -135,14 +136,14 @@ struct EverlastingGlottalStopperWidget : ModuleWidget {
 		
 		
 
-		addParam(createParam<RoundHugeBlackKnob>(Vec(54, 60), module, EverlastingGlottalStopper::FREQUENCY_PARAM));
-		addParam(createParam<RoundBlackKnob>(Vec(15, 215), module, EverlastingGlottalStopper::TIME_OPEN_PARAM));
-		addParam(createParam<RoundBlackKnob>(Vec(68, 215), module, EverlastingGlottalStopper::TIME_CLOSED_PARAM));
-		addParam(createParam<RoundBlackKnob>(Vec(120, 215), module, EverlastingGlottalStopper::BREATHINESS_PARAM));
-		addParam(createParam<RoundSmallBlackKnob>(Vec(108, 162), module, EverlastingGlottalStopper::FM_CV_ATTENUVERTER_PARAM));
-		addParam(createParam<RoundSmallBlackKnob>(Vec(17, 275), module, EverlastingGlottalStopper::TIME_OPEN_CV_ATTENUVERTER_PARAM));
-		addParam(createParam<RoundSmallBlackKnob>(Vec(70, 275), module, EverlastingGlottalStopper::TIME_CLOSED_CV_ATTENUVERTER_PARAM));
-		addParam(createParam<RoundSmallBlackKnob>(Vec(123, 275), module, EverlastingGlottalStopper::BREATHINESS_CV_ATTENUVERTER_PARAM));
+		addParam(createParam<RoundHugeFWKnob>(Vec(54, 60), module, EverlastingGlottalStopper::FREQUENCY_PARAM));
+		addParam(createParam<RoundFWKnob>(Vec(15, 215), module, EverlastingGlottalStopper::TIME_OPEN_PARAM));
+		addParam(createParam<RoundFWKnob>(Vec(68, 215), module, EverlastingGlottalStopper::TIME_CLOSED_PARAM));
+		addParam(createParam<RoundFWKnob>(Vec(120, 215), module, EverlastingGlottalStopper::BREATHINESS_PARAM));
+		addParam(createParam<RoundSmallFWKnob>(Vec(108, 162), module, EverlastingGlottalStopper::FM_CV_ATTENUVERTER_PARAM));
+		addParam(createParam<RoundSmallFWKnob>(Vec(17, 275), module, EverlastingGlottalStopper::TIME_OPEN_CV_ATTENUVERTER_PARAM));
+		addParam(createParam<RoundSmallFWKnob>(Vec(70, 275), module, EverlastingGlottalStopper::TIME_CLOSED_CV_ATTENUVERTER_PARAM));
+		addParam(createParam<RoundSmallFWKnob>(Vec(123, 275), module, EverlastingGlottalStopper::BREATHINESS_CV_ATTENUVERTER_PARAM));
 		//addParam(createParam<CKSS>(Vec(123, 300), module, EverlastingGlottalStopper::DEEMPHASIS_FILTER_PARAM));
 
 		addInput(createInput<PJ301MPort>(Vec(30, 134), module, EverlastingGlottalStopper::PITCH_INPUT));

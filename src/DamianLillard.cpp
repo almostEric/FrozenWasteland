@@ -1,4 +1,5 @@
 #include "FrozenWasteland.hpp"
+#include "ui/knobs.hpp"
 #include "StateVariableFilter.h"
 
 using namespace std;
@@ -172,18 +173,18 @@ struct DamianLillardWidget : ModuleWidget {
 			addChild(offsetDisplay);
 		}
 
-		addParam(createParam<RoundBlackKnob>(Vec(15, 84), module, DamianLillard::FREQ_1_CUTOFF_PARAM));
-		addParam(createParam<RoundBlackKnob>(Vec(66, 84), module, DamianLillard::FREQ_2_CUTOFF_PARAM));
-		addParam(createParam<RoundBlackKnob>(Vec(117, 84), module, DamianLillard::FREQ_3_CUTOFF_PARAM));
-		addParam(createParam<RoundSmallBlackKnob>(Vec(19, 146), module, DamianLillard::FREQ_1_CV_ATTENUVERTER_PARAM));
-		addParam(createParam<RoundSmallBlackKnob>(Vec(70, 146), module, DamianLillard::FREQ_2_CV_ATTENUVERTER_PARAM));
-		addParam(createParam<RoundSmallBlackKnob>(Vec(121, 146), module, DamianLillard::FREQ_3_CV_ATTENUVERTER_PARAM));
+		addParam(createParam<RoundFWKnob>(Vec(18, 84), module, DamianLillard::FREQ_1_CUTOFF_PARAM));
+		addParam(createParam<RoundFWKnob>(Vec(69, 84), module, DamianLillard::FREQ_2_CUTOFF_PARAM));
+		addParam(createParam<RoundFWKnob>(Vec(120, 84), module, DamianLillard::FREQ_3_CUTOFF_PARAM));
+		addParam(createParam<RoundSmallFWKnob>(Vec(21, 146), module, DamianLillard::FREQ_1_CV_ATTENUVERTER_PARAM));
+		addParam(createParam<RoundSmallFWKnob>(Vec(72, 146), module, DamianLillard::FREQ_2_CV_ATTENUVERTER_PARAM));
+		addParam(createParam<RoundSmallFWKnob>(Vec(123, 146), module, DamianLillard::FREQ_3_CV_ATTENUVERTER_PARAM));
 
 
 
-		addInput(createInput<PJ301MPort>(Vec(18, 117), module, DamianLillard::FREQ_1_CUTOFF_INPUT));
-		addInput(createInput<PJ301MPort>(Vec(69, 117), module, DamianLillard::FREQ_2_CUTOFF_INPUT));
-		addInput(createInput<PJ301MPort>(Vec(120, 117), module, DamianLillard::FREQ_3_CUTOFF_INPUT));
+		addInput(createInput<PJ301MPort>(Vec(20, 117), module, DamianLillard::FREQ_1_CUTOFF_INPUT));
+		addInput(createInput<PJ301MPort>(Vec(71, 117), module, DamianLillard::FREQ_2_CUTOFF_INPUT));
+		addInput(createInput<PJ301MPort>(Vec(122, 117), module, DamianLillard::FREQ_3_CUTOFF_INPUT));
 
 		addInput(createInput<PJ301MPort>(Vec(10, 317), module, DamianLillard::SIGNAL_IN));
 
@@ -198,7 +199,7 @@ struct DamianLillardWidget : ModuleWidget {
 		addOutput(createOutput<PJ301MPort>(Vec(90, 215), module, DamianLillard::BAND_3_OUTPUT));
 		addOutput(createOutput<PJ301MPort>(Vec(130, 215), module, DamianLillard::BAND_4_OUTPUT));
 
-		addOutput(createOutput<PJ301MPort>(Vec(90, 317), module, DamianLillard::MIX_OUTPUT));
+		addOutput(createOutput<PJ301MPort>(Vec(89, 317), module, DamianLillard::MIX_OUTPUT));
 
 		addChild(createWidget<ScrewSilver>(Vec(RACK_GRID_WIDTH-12, 0)));
 		addChild(createWidget<ScrewSilver>(Vec(box.size.x - 2 * RACK_GRID_WIDTH + 12, 0)));

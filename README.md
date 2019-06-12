@@ -145,7 +145,8 @@ A collection of unusual plugins that will add a certain coolness to your patches
 - 2 Algorithms, Euclidean and Golumb Ruler. Each track can use its own Algorithm.
 - CV Control of Alogorithm. Try hooking EOC output to Algorithm trigger to get alternating rhythms
 - CV control of Steps, Divisions and Offset, Padding, Accents and Accent Rotation
-- QARs can be chained together to create arbitrarily long sequences. 
+- QARs can be chained together to create arbitrarily long sequences. This can either be done manually by patching the appropriate outputs and input triggers together, or just by having multiple QARs be adjaent.
+When they are connected this way, the Clock, Mute and Reset signals, and Eoc outputs and Start inputs are normallized, this means they are automatically patched together, but you can still override this by patching something in. Additionally the master QAR will output all of the triggers from the attached modules 
 - If Chain Mode is Boss, the QAR runs on start up, then stops if the track's Start input is patched, until a Start trigger is received - basically the first QAR should be set to this
 - If Chain Mode is Employee, the QAR track will be idle until a Start trigger is received.
 - Patch EoC (End of Cycle) outputs to next QAR's Start Inputs
