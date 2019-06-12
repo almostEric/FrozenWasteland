@@ -463,7 +463,8 @@ struct QuadAlgorithmicRhythm : Module {
                         
                     }
                 } else { //Golomb Ruler Algorithm
-                    int rulerToUse = division - 1;
+				
+                    int rulerToUse = clamp(division - 1,0,MAX_DIVISIONS);
                     int actualStepCount = stepsCount[trackNumber] - pad;
                     while(rulerLengths[rulerToUse] + 1 > actualStepCount && rulerToUse >= 	0) {
                         rulerToUse -=1;
