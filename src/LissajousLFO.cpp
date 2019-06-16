@@ -10,8 +10,18 @@ struct LissajousLFO : Module {
 		AMPLITUDE2_PARAM,
 		FREQX1_PARAM,
 		FREQY1_PARAM,
+		PHASEX1_PARAM,		
+		WAVESHAPEX1_PARAM,
+		WAVESHAPEY1_PARAM,
+		SKEWX1_PARAM,
+		SKEWY1_PARAM,
 		FREQX2_PARAM,
 		FREQY2_PARAM,
+		PHASEX2_PARAM,
+		WAVESHAPEX2_PARAM,
+		WAVESHAPEY2_PARAM,
+		SKEWX2_PARAM,
+		SKEWY2_PARAM,
 		NUM_PARAMS
 	};
 	enum InputIds {
@@ -19,8 +29,18 @@ struct LissajousLFO : Module {
 		AMPLITUDE2_INPUT,
 		FREQX1_INPUT,
 		FREQY1_INPUT,
+		PHASEX1_INPUT,
+		WAVESHAPEX1_INPUT,
+		WAVESHAPEY1_INPUT,
+		SKEWX1_INPUT,
+		SKEWY1_INPUT,
 		FREQX2_INPUT,
 		FREQY2_INPUT,
+		PHASEX2_INPUT,
+		WAVESHAPEX2_INPUT,
+		WAVESHAPEY2_INPUT,
+		SKEWX2_INPUT,
+		SKEWY2_INPUT,
 		NUM_INPUTS
 	};
 	enum OutputIds {
@@ -29,6 +49,9 @@ struct LissajousLFO : Module {
 		OUTPUT_3,
 		OUTPUT_4,
 		OUTPUT_5,
+		OUTPUT_6,
+		OUTPUT_7,
+		OUTPUT_8,
 		NUM_OUTPUTS
 	};
 	enum LightIds {
@@ -39,42 +62,73 @@ struct LissajousLFO : Module {
 		NUM_LIGHTS
 	};
 
-struct LowFrequencyOscillator {
-	float phase = 0.0;
-	float freq = 1.0;
-	bool offset = false;
-	bool invert = false;
-	//SchmittTrigger resetTrigger;
-	//LowFrequencyOscillator() {
-	//}
-	void setPitch(float pitch) {
-		pitch = fminf(pitch, 8.0);
-		freq = powf(2.0, pitch);
-	}
-	//void setReset(float reset) {
-	//	if (resetTrigger.process(reset)) {
-	//		phase = 0.0;
-	//	}
-	//}
+	struct LowFrequencyOscillator {
+		float basePhase = 0.0;
+		float phase = 0.0;
+		float freq = 1.0;
+		float skew = 0.5; // Triangle
+		float waveSlope = 1.0; //Original (1 is sin)
+		bool offset = false;
+		
+		float lerp(float v0, float v1, float t) {
+			return (1 - t) * v0 + t * v1;
+		}
+		
+		void setPitch(float pitch) {
+			pitch = fminf(pitch, 8.0);
+			freq = powf(2.0, pitch);
+		}
 
-	void step(float dt) {
-		float deltaPhase = fminf(freq * dt, 0.5);
-		phase += deltaPhase;
-		if (phase >= 1.0)
-			phase -= 1.0;
-	}
-	float sin() {
-		if (offset)
-			return 1.0 - cosf(2*M_PI * phase) * (invert ? -1.0 : 1.0);
-		else
-			return sinf(2*M_PI * phase) * (invert ? -1.0 : 1.0);
-	}
+		void setBasePhase(float initialPhase) {
+			//Apply change, then remember
+			phase += initialPhase - basePhase;
+			if (phase >= 1.0)
+				phase -= 1.0;
+			else if (phase < 0)
+				phase += 1.0;	
+			basePhase = initialPhase;
+		}
+		
 
-	float light() {
-		return sinf(2*M_PI * phase);
-	}
-};
+		void step(float dt) {
+			float deltaPhase = fminf(freq * dt, 0.5);
+			phase += deltaPhase;
+			if (phase >= 1.0)
+				phase -= 1.0;
+		}
 
+		float skewsaw(float x) {
+			
+			x = std::fabs(std::fmod(x ,1.0f));
+
+			float inverseSkew = 1 - skew;
+			float originalWave;
+			if (skew == 0 && x == 0) //Avoid /0 error
+				originalWave = 2;
+			if (x <= skew)
+				originalWave = 2.0 * (1- (-1 / skew * x + 1));
+			else
+				originalWave = 2.0 * (1-(1 / inverseSkew * (x - skew)));
+			return originalWave;
+		}
+		
+		float skewsaw() {
+			if (offset)
+				return lerp(skewsaw(phase),sin(),waveSlope);
+			
+			return lerp(skewsaw(phase) - 1 ,sin(),waveSlope);skewsaw(phase) ; //Going to keep same phase for now				
+		}
+
+		float sin() {
+			if (offset)
+				return 1.0 - cosf(2*M_PI * phase) ;
+			else
+				return sinf(2*M_PI * phase) ;
+		}
+
+	};
+
+	
 
 	float phase = 0.0;
 
@@ -101,9 +155,21 @@ struct LowFrequencyOscillator {
 		configParam(AMPLITUDE1_PARAM, 0.0, 5.0, 2.5,"Amplitude 1","%",0,25);
 		configParam(FREQX1_PARAM, -8.0, 3.0, 0.0,"X 1 Frequency", " Hz", 2, 1);
 		configParam(FREQY1_PARAM, -8.0, 3.0, 2.0,"Y 1 Frequency", " Hz", 2, 1);
+		configParam(PHASEX1_PARAM, 0.0, 0.9999, 0.0,"Phase X 1","°",0,360);
+		configParam(WAVESHAPEX1_PARAM, 0.0, 1.0, 0.0,"Wave Shape X 1","%",0,100);
+		configParam(WAVESHAPEY1_PARAM, 0.0, 1.0, 0.0,"Wave Shape Y 1","%",0,100);
+		configParam(SKEWX1_PARAM, 0.0, 1.0, 0.5,"Skew X 1","%",0,100);
+		configParam(SKEWY1_PARAM, 0.0, 1.0, 0.5,"Skew Y 1","%",0,100);
+		
+
 		configParam(AMPLITUDE2_PARAM, 0.0, 5.0, 2.5,"Amplitude 1","%",0,25);
 		configParam(FREQX2_PARAM, -8.0, 3.0, 0.0,"X 2 Frequency", " Hz", 2, 1);
 		configParam(FREQY2_PARAM, -8.0, 3.0, 1.0,"Y 2 Frequency", " Hz", 2, 1);
+		configParam(PHASEX2_PARAM, 0.0, 0.9999, 0.0,"Phase X 2","°",0,360);
+		configParam(WAVESHAPEX2_PARAM, 0.0, 1.0, 0.0,"Wave Shape X 2","%",0,100);
+		configParam(WAVESHAPEY2_PARAM, 0.0, 1.0, 0.0,"Wave Shape Y 2","%",0,100);
+		configParam(SKEWX2_PARAM, 0.0, 1.0, 0.5,"Skew X 2","%",0,100);
+		configParam(SKEWY2_PARAM, 0.0, 1.0, 0.5,"Skew Y 2","%",0,100);
 	}
 	void process(const ProcessArgs &args) override;
 
@@ -116,24 +182,52 @@ struct LowFrequencyOscillator {
 
 void LissajousLFO::process(const ProcessArgs &args) {
 
+	float initialPhase;
+
 	float amplitude1 = clamp(params[AMPLITUDE1_PARAM].getValue() + (inputs[AMPLITUDE1_INPUT].getVoltage() / 2.0f),0.0f,5.0f);
 	float amplitude2 = clamp(params[AMPLITUDE2_PARAM].getValue() + (inputs[AMPLITUDE2_INPUT].getVoltage() / 2.0f),0.0f,5.0f);
 
-	// Implement 4 simple sine oscillators
+
+	// Implement 4 oscillators
 	oscillatorX1.setPitch(params[FREQX1_PARAM].getValue() + inputs[FREQX1_INPUT].getVoltage());
+	initialPhase = params[PHASEX1_PARAM].getValue() + inputs[PHASEX1_INPUT].getVoltage();
+	if (initialPhase >= 1.0)
+		initialPhase -= 1.0;
+	else if (initialPhase < 0)
+		initialPhase += 1.0;
+	oscillatorX1.setBasePhase(initialPhase);
+	oscillatorX1.waveSlope = clamp(params[WAVESHAPEX1_PARAM].getValue() + inputs[WAVESHAPEX1_INPUT].getVoltage(),0.0f,1.0f);
+	oscillatorX1.skew = clamp(params[SKEWX1_PARAM].getValue() + inputs[SKEWX1_INPUT].getVoltage(),0.0f,1.0f);
+	
 	oscillatorY1.setPitch(params[FREQY1_PARAM].getValue() + inputs[FREQY1_INPUT].getVoltage());
+	oscillatorY1.waveSlope = clamp(params[WAVESHAPEY1_PARAM].getValue() + inputs[WAVESHAPEY1_INPUT].getVoltage(),0.0f,1.0f);
+	oscillatorY1.skew = clamp(params[SKEWY1_PARAM].getValue() + inputs[SKEWY1_INPUT].getVoltage(),0.0f,1.0f);
+	
 	oscillatorX2.setPitch(params[FREQX2_PARAM].getValue() + inputs[FREQX2_INPUT].getVoltage());
+	initialPhase = params[PHASEX2_PARAM].getValue() + inputs[PHASEX2_INPUT].getVoltage();
+	if (initialPhase >= 1.0)
+		initialPhase -= 1.0;
+	else if (initialPhase < 0)
+		initialPhase += 1.0;
+	oscillatorX2.setBasePhase(initialPhase);
+	oscillatorX2.waveSlope = clamp(params[WAVESHAPEX2_PARAM].getValue() + inputs[WAVESHAPEX2_INPUT].getVoltage(),0.0f,1.0f);
+	oscillatorX2.skew = clamp(params[SKEWX2_PARAM].getValue() + inputs[SKEWX2_INPUT].getVoltage(),0.0f,1.0f);
+	
 	oscillatorY2.setPitch(params[FREQY2_PARAM].getValue() + inputs[FREQY2_INPUT].getVoltage());
+	oscillatorY2.waveSlope = clamp(params[WAVESHAPEY2_PARAM].getValue() + inputs[WAVESHAPEY2_INPUT].getVoltage(),0.0f,1.0f);
+	oscillatorY2.skew = clamp(params[SKEWY2_PARAM].getValue() + inputs[SKEWY2_INPUT].getVoltage(),0.0f,1.0f);
+
+
 	oscillatorX1.step(1.0 / args.sampleRate);
 	oscillatorY1.step(1.0 / args.sampleRate);
 	oscillatorX2.step(1.0 / args.sampleRate);
 	oscillatorY2.step(1.0 / args.sampleRate);
 
-	//Amplitude isn't doing anything at the moment
-	float x1 = amplitude1 * oscillatorX1.sin();
-	float y1 = amplitude1 * oscillatorY1.sin();
-	float x2 = amplitude2 * oscillatorX2.sin();
-	float y2 = amplitude2 * oscillatorY2.sin();
+	
+	float x1 = amplitude1 * oscillatorX1.skewsaw();
+	float y1 = amplitude1 * oscillatorY1.skewsaw();
+	float x2 = amplitude2 * oscillatorX2.skewsaw();
+	float y2 = amplitude2 * oscillatorY2.skewsaw();
 
 	outputs[OUTPUT_1].setVoltage((x1 + x2) / 2);
 	outputs[OUTPUT_2].setVoltage((y1 + y2) / 2);
@@ -142,6 +236,12 @@ void LissajousLFO::process(const ProcessArgs &args) {
 	outputs[OUTPUT_4].setVoltage(std::isfinite(out4) ? clamp(out4,-5.0f,5.0f) : 0.f);
 	float out5 = (y1/y2);
 	outputs[OUTPUT_5].setVoltage(std::isfinite(out5) ? clamp(out5,-5.0f,5.0f) : 0.f);
+	float out6 = (x1*x2);
+	outputs[OUTPUT_6].setVoltage(clamp(out6,-5.0f,5.0f) );
+	float out7 = (y1*y2);
+	outputs[OUTPUT_7].setVoltage(clamp(out7,-5.0f,5.0f) );
+	float out8 = (x1*x2*y1*y2);
+	outputs[OUTPUT_8].setVoltage(clamp(out8,-5.0f,5.0f) );
 
 	//Update scope.
 	int frameCount = (int)ceilf(deltaTime * args.sampleRate);
@@ -293,25 +393,52 @@ struct LissajousLFOWidget : ModuleWidget {
 			addChild(display);
 		}
 
-		addParam(createParam<RoundFWKnob>(Vec(39, 186), module, LissajousLFO::AMPLITUDE1_PARAM));
-		addParam(createParam<RoundFWKnob>(Vec(89, 186), module, LissajousLFO::FREQX1_PARAM));
-		addParam(createParam<RoundFWKnob>(Vec(139, 186), module, LissajousLFO::FREQY1_PARAM));
-		addParam(createParam<RoundFWKnob>(Vec(39, 265), module, LissajousLFO::AMPLITUDE2_PARAM));
-		addParam(createParam<RoundFWKnob>(Vec(89, 265), module, LissajousLFO::FREQX2_PARAM));
-		addParam(createParam<RoundFWKnob>(Vec(139, 265), module, LissajousLFO::FREQY2_PARAM));
+		addParam(createParam<RoundFWKnob>(Vec(20, 186), module, LissajousLFO::AMPLITUDE1_PARAM));
+		addParam(createParam<RoundFWKnob>(Vec(52, 186), module, LissajousLFO::FREQX1_PARAM));
+		addParam(createParam<RoundFWKnob>(Vec(87, 186), module, LissajousLFO::FREQY1_PARAM));
+		addParam(createParam<RoundFWKnob>(Vec(122, 186), module, LissajousLFO::PHASEX1_PARAM));
+		addParam(createParam<RoundFWKnob>(Vec(157, 186), module, LissajousLFO::WAVESHAPEX1_PARAM));
+		addParam(createParam<RoundFWKnob>(Vec(192, 186), module, LissajousLFO::WAVESHAPEY1_PARAM));
+		addParam(createParam<RoundFWKnob>(Vec(227, 186), module, LissajousLFO::SKEWX1_PARAM));
+		addParam(createParam<RoundFWKnob>(Vec(262, 186), module, LissajousLFO::SKEWY1_PARAM));
+		
 
-		addInput(createInput<PJ301MPort>(Vec(41, 219), module, LissajousLFO::AMPLITUDE1_INPUT));
-		addInput(createInput<PJ301MPort>(Vec(91, 219), module, LissajousLFO::FREQX1_INPUT));
-		addInput(createInput<PJ301MPort>(Vec(141, 219), module, LissajousLFO::FREQY1_INPUT));
-		addInput(createInput<PJ301MPort>(Vec(41, 298), module, LissajousLFO::AMPLITUDE2_INPUT));
-		addInput(createInput<PJ301MPort>(Vec(91, 298), module, LissajousLFO::FREQX2_INPUT));
-		addInput(createInput<PJ301MPort>(Vec(141, 298), module, LissajousLFO::FREQY2_INPUT));
+		addParam(createParam<RoundFWKnob>(Vec(20, 265), module, LissajousLFO::AMPLITUDE2_PARAM));
+		addParam(createParam<RoundFWKnob>(Vec(52, 265), module, LissajousLFO::FREQX2_PARAM));
+		addParam(createParam<RoundFWKnob>(Vec(87, 265), module, LissajousLFO::FREQY2_PARAM));
+		addParam(createParam<RoundFWKnob>(Vec(122, 265), module, LissajousLFO::PHASEX2_PARAM));
+		addParam(createParam<RoundFWKnob>(Vec(157, 265), module, LissajousLFO::WAVESHAPEX2_PARAM));
+		addParam(createParam<RoundFWKnob>(Vec(192, 265), module, LissajousLFO::WAVESHAPEY2_PARAM));
+		addParam(createParam<RoundFWKnob>(Vec(227, 265), module, LissajousLFO::SKEWX2_PARAM));
+		addParam(createParam<RoundFWKnob>(Vec(262, 265), module, LissajousLFO::SKEWY2_PARAM));
+
+		addInput(createInput<PJ301MPort>(Vec(22, 219), module, LissajousLFO::AMPLITUDE1_INPUT));
+		addInput(createInput<PJ301MPort>(Vec(54, 219), module, LissajousLFO::FREQX1_INPUT));
+		addInput(createInput<PJ301MPort>(Vec(89, 219), module, LissajousLFO::FREQY1_INPUT));
+		addInput(createInput<PJ301MPort>(Vec(124, 219), module, LissajousLFO::PHASEX1_INPUT));
+		addInput(createInput<PJ301MPort>(Vec(159, 219), module, LissajousLFO::WAVESHAPEX1_INPUT));
+		addInput(createInput<PJ301MPort>(Vec(194, 219), module, LissajousLFO::WAVESHAPEY1_INPUT));
+		addInput(createInput<PJ301MPort>(Vec(229, 219), module, LissajousLFO::SKEWX1_INPUT));
+		addInput(createInput<PJ301MPort>(Vec(264, 219), module, LissajousLFO::SKEWY1_INPUT));
+		
+		addInput(createInput<PJ301MPort>(Vec(22, 298), module, LissajousLFO::AMPLITUDE2_INPUT));
+		addInput(createInput<PJ301MPort>(Vec(54, 298), module, LissajousLFO::FREQX2_INPUT));
+		addInput(createInput<PJ301MPort>(Vec(89, 298), module, LissajousLFO::FREQY2_INPUT));
+		addInput(createInput<PJ301MPort>(Vec(124, 298), module, LissajousLFO::PHASEX2_INPUT));
+		addInput(createInput<PJ301MPort>(Vec(159, 298), module, LissajousLFO::WAVESHAPEX2_INPUT));
+		addInput(createInput<PJ301MPort>(Vec(194, 298), module, LissajousLFO::WAVESHAPEY2_INPUT));
+		addInput(createInput<PJ301MPort>(Vec(229, 298), module, LissajousLFO::SKEWX1_INPUT));
+		addInput(createInput<PJ301MPort>(Vec(264, 298), module, LissajousLFO::SKEWY1_INPUT));
 
 		addOutput(createOutput<PJ301MPort>(Vec(22, 338), module, LissajousLFO::OUTPUT_1));
 		addOutput(createOutput<PJ301MPort>(Vec(53, 338), module, LissajousLFO::OUTPUT_2));
 		addOutput(createOutput<PJ301MPort>(Vec(86, 338), module, LissajousLFO::OUTPUT_3));
 		addOutput(createOutput<PJ301MPort>(Vec(126, 338), module, LissajousLFO::OUTPUT_4));
 		addOutput(createOutput<PJ301MPort>(Vec(158, 338), module, LissajousLFO::OUTPUT_5));	
+		addOutput(createOutput<PJ301MPort>(Vec(158, 338), module, LissajousLFO::OUTPUT_5));	
+		addOutput(createOutput<PJ301MPort>(Vec(190, 338), module, LissajousLFO::OUTPUT_6));	
+		addOutput(createOutput<PJ301MPort>(Vec(222, 338), module, LissajousLFO::OUTPUT_7));	
+		addOutput(createOutput<PJ301MPort>(Vec(254, 338), module, LissajousLFO::OUTPUT_8));	
 	}
 };
 

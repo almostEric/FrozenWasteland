@@ -11,6 +11,7 @@ extern Model *modelBPMLFO2;
 extern Model *modelDamianLillard;
 extern Model *modelEverlastingGlottalStopper;
 extern Model *modelHairPick;
+//extern Model *modelHyperMeasures;
 extern Model *modelLissajousLFO;
 extern Model *modelMrBlueSky;
 extern Model *modelTheOneRingModulator;

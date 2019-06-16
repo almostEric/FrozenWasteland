@@ -10,9 +10,9 @@
    xmlns:xlink="http://www.w3.org/1999/xlink"
    xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
    xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
-   width="180"
+   width="225"
    height="380"
-   viewBox="0 0 47.625001 100.54167"
+   viewBox="0 0 59.531251 100.54167"
    version="1.1"
    id="svg11003"
    inkscape:version="0.92.2 (5c3e80d, 2017-08-06)"
@@ -44,7 +44,7 @@
        x2="35.219627"
        y2="50.462322"
        gradientUnits="userSpaceOnUse"
-       gradientTransform="matrix(1.2025944,0,0,1.0014499,-7.1352991,-0.08643399)" />
+       gradientTransform="matrix(1.503243,0,0,1.0014499,-17.724031,-0.08643399)" />
   </defs>
   <sodipodi:namedview
      id="base"
@@ -54,7 +54,7 @@
      inkscape:pageopacity="0.0"
      inkscape:pageshadow="2"
      inkscape:zoom="4"
-     inkscape:cx="-268.81752"
+     inkscape:cx="-44.484015"
      inkscape:cy="174.10808"
      inkscape:document-units="mm"
      inkscape:current-layer="layer1"
@@ -68,7 +68,9 @@
      inkscape:window-x="-13"
      inkscape:window-y="-13"
      inkscape:window-maximized="1"
-     units="px" />
+     units="px"
+     inkscape:measure-start="115.25,330.25"
+     inkscape:measure-end="0,0" />
   <metadata
      id="metadata11000">
     <rdf:RDF>
@@ -77,7 +79,7 @@
         <dc:format>image/svg+xml</dc:format>
         <dc:type
            rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
-        <dc:title />
+        <dc:title></dc:title>
       </cc:Work>
     </rdf:RDF>
   </metadata>
@@ -89,31 +91,31 @@
     <path
        inkscape:connector-curvature="0"
        id="path33493"
-       d="m 35.219628,50.449053 h 47.625 V 150.99072 h -47.625 z m 0,0"
-       style="fill:url(#linearGradient3393);fill-opacity:1;fill-rule:nonzero;stroke:none;stroke-width:0.30291492"
+       d="m 35.219628,50.449053 h 59.53125 V 150.99072 h -59.53125 z m 0,0"
+       style="fill:url(#linearGradient3393);fill-opacity:1;fill-rule:nonzero;stroke:none;stroke-width:0.33866918"
        inkscape:export-filename="/home/vortico/pics/tmp/LFOs.png"
        inkscape:export-xdpi="150.22649"
        inkscape:export-ydpi="150.22649" />
     <text
        xml:space="preserve"
        style="font-style:normal;font-weight:normal;font-size:3.52777767px;line-height:1.25;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.26458332"
-       x="55.324829"
+       x="61.145668"
        y="126.21229"
        id="text4978"><tspan
          sodipodi:role="line"
          id="tspan4976"
-         x="55.324829"
+         x="61.145668"
          y="126.21229"
          style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:2.82222223px;font-family:Calibri;-inkscape-font-specification:'Calibri Bold';stroke-width:0.26458332">RESET</tspan></text>
     <text
        xml:space="preserve"
        style="font-style:normal;font-weight:normal;font-size:3.52777767px;line-height:1.25;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.26458332"
-       x="42.970718"
+       x="48.791557"
        y="126.24393"
        id="text4982"><tspan
          sodipodi:role="line"
          id="tspan4980"
-         x="42.970718"
+         x="48.791557"
          y="126.24393"
          style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:2.82222223px;font-family:Calibri;-inkscape-font-specification:'Calibri Bold';stroke-width:0.26458332">CLOCK</tspan></text>
     <text
@@ -130,70 +132,70 @@
     <text
        xml:space="preserve"
        style="font-style:normal;font-weight:normal;font-size:3.52777767px;line-height:1.25;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.26458332"
-       x="53.534859"
+       x="74.701546"
        y="58.128029"
        id="text5443"><tspan
          sodipodi:role="line"
          id="tspan5441"
-         x="53.534859"
+         x="74.701546"
          y="58.128029"
          style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:2.82222223px;font-family:Calibri;-inkscape-font-specification:'Calibri Bold';stroke-width:0.26458332">DIVISION</tspan></text>
     <text
        xml:space="preserve"
        style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:3.52777767px;line-height:1.25;font-family:Consolas;-inkscape-font-specification:'Consolas Bold';text-align:start;letter-spacing:0px;word-spacing:0px;text-anchor:start;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.26458332"
-       x="50.588448"
+       x="57.996788"
        y="54.283669"
        id="text3885"><tspan
          sodipodi:role="line"
          id="tspan3883"
-         x="50.588448"
+         x="57.996788"
          y="54.283669"
          style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:3.88055563px;font-family:Calibri;-inkscape-font-specification:'Calibri Bold';text-align:start;text-anchor:start;stroke-width:0.26458332">BPM LFO 2</tspan></text>
     <rect
-       style="fill:#999999;fill-opacity:1;stroke-width:0.2581985"
+       style="fill:#999999;fill-opacity:1;stroke-width:0.22657207"
        id="rect6948"
-       width="25.598438"
+       width="19.711458"
        height="11.773958"
-       x="46.258812"
+       x="70.666641"
        y="58.789524" />
     <rect
-       style="fill:#323232;fill-opacity:1;stroke-width:0.23209724"
+       style="fill:#323232;fill-opacity:1;stroke-width:0.20366792"
        id="rect4735"
-       width="23.746353"
+       width="18.285305"
        height="9.9880209"
-       x="47.184849"
+       x="71.379715"
        y="59.715565" />
     <text
        xml:space="preserve"
        style="font-style:normal;font-weight:normal;font-size:3.52777767px;line-height:1.25;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.26458332"
-       x="67.541145"
+       x="73.361984"
        y="126.21229"
        id="text4978-4"><tspan
          sodipodi:role="line"
          id="tspan4976-4"
-         x="67.541145"
+         x="73.361984"
          y="126.21229"
          style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:2.82222223px;font-family:Calibri;-inkscape-font-specification:'Calibri Bold';stroke-width:0.26458332">HOLD</tspan></text>
     <text
        xml:space="preserve"
        style="font-style:normal;font-weight:normal;font-size:3.52777767px;line-height:1.25;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.26458332"
-       x="71.525398"
+       x="77.346237"
        y="121.4696"
        id="text5443-0"><tspan
          sodipodi:role="line"
          id="tspan5441-5"
-         x="71.525398"
+         x="77.346237"
          y="121.4696"
          style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:2.11666656px;font-family:Calibri;-inkscape-font-specification:'Calibri Bold';stroke-width:0.26458332">MOM.</tspan></text>
     <text
        xml:space="preserve"
        style="font-style:normal;font-weight:normal;font-size:3.52777767px;line-height:1.25;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.26458332"
-       x="71.833305"
+       x="77.654144"
        y="113.17544"
        id="text5443-0-4"><tspan
          sodipodi:role="line"
          id="tspan5441-5-0"
-         x="71.833305"
+         x="77.654144"
          y="113.17544"
          style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:2.11666656px;font-family:Calibri;-inkscape-font-specification:'Calibri Bold';stroke-width:0.26458332">GATE</tspan></text>
     <flowRoot
@@ -210,56 +212,56 @@
          id="flowPara1533" /></flowRoot>    <text
        xml:space="preserve"
        style="font-style:normal;font-weight:normal;font-size:3.52777767px;line-height:1.25;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.26458332"
-       x="43.177174"
+       x="48.998013"
        y="121.46918"
        id="text5443-0-6"><tspan
          sodipodi:role="line"
          id="tspan5441-5-5"
-         x="43.177174"
+         x="48.998013"
          y="121.46918"
          style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:2.11666656px;font-family:Calibri;-inkscape-font-specification:'Calibri Bold';stroke-width:0.26458332">BI</tspan></text>
     <text
        xml:space="preserve"
        style="font-style:normal;font-weight:normal;font-size:3.52777767px;line-height:1.25;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.26458332"
-       x="42.426884"
+       x="48.247723"
        y="113.17538"
        id="text5443-0-4-9"><tspan
          sodipodi:role="line"
          id="tspan5441-5-0-0"
-         x="42.426884"
+         x="48.247723"
          y="113.17538"
          style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:2.11666656px;font-family:Calibri;-inkscape-font-specification:'Calibri Bold';stroke-width:0.26458332">UNI</tspan></text>
     <text
        xml:space="preserve"
        style="font-style:normal;font-weight:normal;font-size:3.52777767px;line-height:1.25;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.26458332"
-       x="59.828842"
+       x="65.649681"
        y="113.26991"
        id="text5443-0-4-7"><tspan
          sodipodi:role="line"
          id="tspan5441-5-0-02"
-         x="59.828842"
+         x="65.649681"
          y="113.26991"
          style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:2.11666656px;font-family:Consolas;-inkscape-font-specification:'Consolas Bold';stroke-width:0.26458332">PAUSE</tspan></text>
     <text
        xml:space="preserve"
        style="font-style:normal;font-weight:normal;font-size:3.52777767px;line-height:1.25;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.26458332"
-       x="60.755035"
+       x="66.575874"
        y="121.5759"
        id="text5443-0-4-0"><tspan
          sodipodi:role="line"
          id="tspan5441-5-0-3"
-         x="60.755035"
+         x="66.575874"
          y="121.5759"
          style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:2.11666656px;font-family:Calibri;-inkscape-font-specification:'Calibri Bold';stroke-width:0.26458332">FREE</tspan></text>
     <text
        xml:space="preserve"
        style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:3.52777767px;line-height:1.25;font-family:Consolas;-inkscape-font-specification:'Consolas Bold';text-align:start;letter-spacing:0px;word-spacing:0px;text-anchor:start;fill:#00a3f2;fill-opacity:1;stroke:none;stroke-width:0.26458332"
-       x="44.10379"
+       x="50.453796"
        y="149.95259"
        id="text3885-7"><tspan
          sodipodi:role="line"
          id="tspan3883-0"
-         x="44.10379"
+         x="50.453796"
          y="149.95259"
          style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-family:'Bradley Gratis';-inkscape-font-specification:'Bradley Gratis';text-align:start;text-anchor:start;stroke-width:0.26458332">FROZEN WASTELAND</tspan></text>
     <rect
@@ -267,28 +269,28 @@
        id="rect4735-3"
        width="20.637501"
        height="20.637501"
-       x="58.330425"
+       x="71.030434"
        y="86.736137" />
     <text
        xml:space="preserve"
        style="font-style:normal;font-weight:normal;font-size:3.52777767px;line-height:1.25;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.26458332"
-       x="36.485077"
+       x="48.655922"
        y="86.999352"
        id="text5443-7"><tspan
          sodipodi:role="line"
          id="tspan5441-1"
-         x="36.485077"
+         x="48.655922"
          y="86.999352"
          style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:2.82222223px;font-family:Calibri;-inkscape-font-specification:'Calibri Bold';stroke-width:0.26458332">SKEW</tspan></text>
     <text
        xml:space="preserve"
        style="font-style:normal;font-weight:normal;font-size:3.52777767px;line-height:1.25;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.26458332"
-       x="56.309437"
+       x="62.130276"
        y="138.59311"
        id="text4978-4-9"><tspan
          sodipodi:role="line"
          id="tspan4976-4-4"
-         x="56.309437"
+         x="62.130276"
          y="138.59311"
          style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:2.82222223px;font-family:Calibri;-inkscape-font-specification:'Calibri Bold';stroke-width:0.26458332">OUT</tspan></text>
     <flowRoot
@@ -313,36 +315,83 @@
            y="215.5" /></flowRegion><flowPara
          id="flowPara5775" /></flowRoot>    <path
        style="fill:none;stroke:#ffffff;stroke-width:0.26458332px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
-       d="m 51.550386,121.2808 0.529167,-0.95911 0.578776,0.89297"
+       d="m 57.371223,121.2808 0.529167,-0.95911 0.578776,0.89297"
        id="path870"
        inkscape:connector-curvature="0"
        sodipodi:nodetypes="ccc" />
     <path
        style="fill:none;stroke:#ffffff;stroke-width:0.26458332px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
-       d="m 50.806246,113.01257 h 0.760677 v -1.02526 h 0.628385 v 1.0418 h 0.396875"
+       d="m 56.627083,113.01257 h 0.760677 v -1.02526 h 0.628385 v 1.0418 h 0.396875"
        id="path872"
        inkscape:connector-curvature="0" />
     <text
        xml:space="preserve"
        style="font-style:normal;font-weight:normal;font-size:3.52777767px;line-height:1.25;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.26458332"
-       x="48.330494"
+       x="61.030506"
        y="86.999344"
        id="text5443-7-3"><tspan
          sodipodi:role="line"
          id="tspan5441-1-9"
-         x="48.330494"
+         x="61.030506"
          y="86.999344"
          style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:2.82222223px;font-family:Calibri;-inkscape-font-specification:'Calibri Bold';stroke-width:0.26458332">PHASE</tspan></text>
     <text
        xml:space="preserve"
        style="font-style:normal;font-weight:normal;font-size:3.52777767px;line-height:1.25;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.26458332"
-       x="45.11935"
+       x="57.819363"
        y="92.985367"
        id="text5443-0-4-9-8"><tspan
          sodipodi:role="line"
          id="tspan5441-5-0-0-4"
-         x="45.11935"
+         x="57.819363"
          y="92.985367"
          style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:2.11666656px;font-family:Calibri;-inkscape-font-specification:'Calibri Bold';stroke-width:0.26458332">90°</tspan></text>
+    <rect
+       style="fill:#999999;fill-opacity:1;stroke-width:0.22657208"
+       id="rect6948-0"
+       width="19.711458"
+       height="11.773958"
+       x="40.305668"
+       y="58.657227" />
+    <rect
+       style="fill:#323232;fill-opacity:1;stroke-width:0.20366792"
+       id="rect4735-6"
+       width="18.285305"
+       height="9.9880209"
+       x="41.018742"
+       y="59.583267" />
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-weight:normal;font-size:3.52777767px;line-height:1.25;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.26458332"
+       x="36.821095"
+       y="87.065491"
+       id="text5443-7-7"><tspan
+         sodipodi:role="line"
+         id="tspan5441-1-1"
+         x="36.821095"
+         y="87.065491"
+         style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:2.82222223px;font-family:Calibri;-inkscape-font-specification:'Calibri Bold';stroke-width:0.26458332">SLOPE</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-weight:normal;font-size:3.52777767px;line-height:1.25;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.26458332"
+       x="43.172703"
+       y="58.159737"
+       id="text5443-7-7-1"><tspan
+         sodipodi:role="line"
+         id="tspan5441-1-1-1"
+         x="43.172703"
+         y="58.159737"
+         style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:2.82222223px;font-family:Calibri;-inkscape-font-specification:'Calibri Bold';stroke-width:0.26458332">MULTIPLIER</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-weight:normal;font-size:3.52777767px;line-height:1.25;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.26458332"
+       x="64.228432"
+       y="65.688675"
+       id="text5443-7-7-1-0"><tspan
+         sodipodi:role="line"
+         id="tspan5441-1-1-1-6"
+         x="64.228432"
+         y="65.688675"
+         style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:7.05555534px;font-family:Calibri;-inkscape-font-specification:'Calibri Bold';stroke-width:0.26458332">:</tspan></text>
   </g>
 </svg>

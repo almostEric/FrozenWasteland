@@ -7,9 +7,9 @@ A collection of unusual plugins that will add a certain coolness to your patches
 ![BPM LFO](./doc/bpmlfo.png)
 
 - Tempo Sync'd LFO.
-- CV Control of Time Division
+- CV Control of Time Multiplication/Division to create LFOs sync'd to some ratio of clock
 - Phase Control allows LFOs to be offset (cv controllable). 90° button limits offset to 0, 90, 180, 270 degrees.
-- Pairs well with the Quad Euclidean Rhythm and Quad Golomb Ruler Rhythm
+- Pairs well with the Quad Algorithmic Rhythm
 - When Holding is active, the Outputs stay at last value
 - Hold input can either be a gate (which switches each time) or momentary (active while signal is positve)
 - If set to Free, LFO still runs while being held (even if outputs don't change), Pause causes LFO to pause.
@@ -18,7 +18,9 @@ A collection of unusual plugins that will add a certain coolness to your patches
 ![BPM LFO](./doc/bpmlfo2.png)
 
 - Variation of original BPM LFO.
-- CV Control of Time Division and Wave Shape
+- CV Control of Time Multiplication/Division and Wave Shape
+- Slope control interpolates between selected waveform and a sin wave
+- Skew either moves between sawtooth and triangle waves or controls duty cycle of square wave
 - Phase Control allows LFOs to be offset (cv controllable). 90° button limits offset to 0, 90, 180, 270 degrees.
 - Can either be variable sawtooth/triangle or variable duty cycle square wave
 
@@ -58,12 +60,18 @@ A collection of unusual plugins that will add a certain coolness to your patches
 - Loosely based on ADDAC Systems now discontinued 502 module https://www.modulargrid.net/e/addac-system-addac502-ultra-lissajous
 - Each LFO is actually a pair of LFOs (x and y)
 - Adjusting them will show harmonic relationship between the two
+- Phase of the X oscillators can be adjusted in relation to its Y oscillator
+- Shape control allows interpolation between tri/sawooth and sin waveshape
+- Skew control moves waveshape between sawtooth - triangle - reverse sawtooth
 - Yellow is LFO 1, Blue is LFO 2
 - Output 1: (x1 + x2) / 2
 - Output 2: (y1 + y2) / 2
 - Output 3: (x1 + y1 + x2 + y2) / 4
 - Output 4: x1/x2
 - Output 5: y1/y2
+- Output 6: x1 * x2 (essentially ring modulating them)
+- Output 7: y1 * y2
+- Output 8: x1 * x2 * y1 * y2
 
 ## Mr. Blue Sky
 

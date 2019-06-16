@@ -4,14 +4,16 @@
 #include "FrozenWasteland.hpp"
 #include "ui/knobs.hpp"
 
-
-#define DIVISIONS 27
-
+#define DISPLAY_SIZE 68
 
 struct BPMLFO2 : Module {
 	enum ParamIds {
+		MULTIPLIER_PARAM,
+		MULTIPLIER_CV_ATTENUVERTER_PARAM,
 		DIVISION_PARAM,
 		DIVISION_CV_ATTENUVERTER_PARAM,
+		WAVESLOPE_PARAM,
+		WAVESLOPE_CV_ATTENUVERTER_PARAM,
 		SKEW_PARAM,
 		SKEW_CV_ATTENUVERTER_PARAM,
 		PHASE_PARAM,
@@ -25,7 +27,9 @@ struct BPMLFO2 : Module {
 	};
 	enum InputIds {
 		CLOCK_INPUT,
+		MULTIPLIER_INPUT,
 		DIVISION_INPUT,
+		WAVESLOPE_INPUT,
 		SKEW_INPUT,
 		PHASE_INPUT,
 		RESET_INPUT,
@@ -38,7 +42,6 @@ struct BPMLFO2 : Module {
 	};
 	enum LightIds {
 		QUANTIZE_PHASE_LIGHT,
-		CLOCK_LIGHT,
 		HOLD_LIGHT,
 		NUM_LIGHTS
 	};	
@@ -47,105 +50,130 @@ struct BPMLFO2 : Module {
 		SQUARE_WAV
 	};
 
-struct LowFrequencyOscillator {
-	float basePhase = 0.0;
-	float phase = 0.0;
-	float freq = 1.0;
-	float pw = 0.5;
-	float skew = 0.5; // Triangle
-	bool offset = false;
-
-
-	void setPitch(float pitch) {
-		pitch = fminf(pitch, 8.0);
-		freq = powf(2.0, pitch);
-	}
-	void setFrequency(float frequency) {
-		freq = frequency;
-	}
-	void setPulseWidth(float pw_) {
-		const float pwMin = 0.01;
-		pw = clamp(pw_, pwMin, 1.0f - pwMin);
-	}
-	void setBasePhase(float initialPhase) {
-		//Apply change, then remember
-		phase += initialPhase - basePhase;
-		if (phase >= 1.0)
-			phase -= 1.0;
-		else if (phase < 0)
-			phase += 1.0;	
-		basePhase = initialPhase;
-	}
-
-	void hardReset()
-	{
-		phase = basePhase;
-	}
-
-	void step(float dt) {
-		float deltaPhase = fminf(freq * dt, 0.5);
-		phase += deltaPhase;
-		if (phase >= 1.0)
-			phase -= 1.0;
-	}
-
-	float skewsaw(float x) {
-		//x = dsp::eucmod(x,1.0);
-		x = std::fabs(std::fmod(x ,1.0f));
-
-		float inverseSkew = 1 - skew;
-		float result;
-        if (skew == 0 && x == 0) //Avoid /0 error
-            return 2;
-        if (x <= skew)
-            result = 2.0 * (1- (-1 / skew * x + 1));
-        else
-            result = 2.0 * (1-(1 / inverseSkew * (x - skew)));
-		return result;
-	}
-
-	float skewsaw() {
-		if (offset)
-			return skewsaw(phase);
-		else
-			return skewsaw(phase) - 1; //Going to keep same phase for now
-			//return skewsaw(phase - .5) - 1;
-	}
-
-	float sqr() {
-		float sqr = (phase < pw) ? 1.0 : -1.0;
-		return offset ? sqr + 1.0 : sqr;
-	}
 	
-	float progress() {
-		return phase;
-	}
-};
+
+	struct LowFrequencyOscillator {
+		float basePhase = 0.0;
+		float phase = 0.0;
+		float freq = 1.0;
+		float pw = 0.5;
+		float skew = 0.5; // Triangle
+		float waveSlope = 0.0; //Original (1 is sin)
+		bool offset = false;
+
+		float lerp(float v0, float v1, float t) {
+			return (1 - t) * v0 + t * v1;
+		}
+
+		void setPitch(float pitch) {
+			pitch = fminf(pitch, 8.0);
+			freq = powf(2.0, pitch);
+		}
+		void setFrequency(float frequency) {
+			freq = frequency;
+		}
+		void setPulseWidth(float pw_) {
+			const float pwMin = 0.01;
+			pw = clamp(pw_, pwMin, 1.0f - pwMin);
+		}
+		
+		void setBasePhase(float initialPhase) {
+			//Apply change, then remember
+			phase += initialPhase - basePhase;
+			if (phase >= 1.0)
+				phase -= 1.0;
+			else if (phase < 0)
+				phase += 1.0;	
+			basePhase = initialPhase;
+		}
+
+		void hardReset()
+		{
+			phase = basePhase;
+		}
+
+		void step(float dt) {
+			float deltaPhase = fminf(freq * dt, 0.5);
+			phase += deltaPhase;
+			if (phase >= 1.0)
+				phase -= 1.0;
+		}
+
+		float skewsaw(float x) {
+			//x = dsp::eucmod(x,1.0);
+			x = std::fabs(std::fmod(x ,1.0f));
+
+			float inverseSkew = 1 - skew;
+			float originalWave;
+			if (skew == 0 && x == 0) //Avoid /0 error
+				originalWave = 2;
+			if (x <= skew)
+				originalWave = 2.0 * (1- (-1 / skew * x + 1));
+			else
+				originalWave = 2.0 * (1-(1 / inverseSkew * (x - skew)));
+			return originalWave;
+		}
+		
+		float skewsaw() {
+			if (offset)
+				return lerp(skewsaw(phase),sin(),waveSlope);
+			
+			return lerp(skewsaw(phase) - 1 ,sin(),waveSlope);skewsaw(phase) ; //Going to keep same phase for now				
+		}
 
 
-	LowFrequencyOscillator oscillator;
+		float sin() {
+			if (offset)
+				return 1.0 - cosf(2*M_PI * (phase-skew*0));
+			
+			return sinf(2*M_PI * (phase-skew*0));
+		}
+
+		float sqr() {
+			float sqr = (phase < pw) ? 1.0 : -1.0;
+			sqr = offset ? sqr + 1.0 : sqr;
+
+			float result = lerp(sqr,sin(),waveSlope);
+			return result;
+		}
+		
+		float progress() {
+			return phase;
+		}
+	};
+
+
+	LowFrequencyOscillator oscillator,displayOscillator;
 	dsp::SchmittTrigger clockTrigger,resetTrigger,holdTrigger;
-	float divisions[DIVISIONS] = {1/64.0,1/32.0,1/16.0,1/13.0,1/11.0,1/8.0,1/7.0,1/6.0,1/5.0,1/4.0,1/3.0,1/2.0,1/1.5,1,1.5,2,3,4,5,6,7,8,11,13,16,32,64};
-	const char* divisionNames[DIVISIONS] = {"/64","/32","/16","/13","/11","/8","/7","/6","/5","/4","/3","/2","/1.5","x 1","x 1.5","x 2","x 3","x 4","x 5","x 6","x 7","x 8","x 11","x 13","x 16","x 32","x 64"};
-	int division = 0;
+	float multiplier = 1;
+	float division = 1;
 	float time = 0.0;
 	float duration = 0;
 	float waveshape = 0;
+	float waveSlope = 0.0;
 	float skew = 0.5;
 	float initialPhase = 0.0;
 	bool holding = false;
 	bool secondClockReceived = false;
 	bool phase_quantized = false;
-
 	float lfoOutputValue = 0.0;
+
+	float lastWaveShape = -1;
+	float lastWaveSlope = -1;
+	float lastSkew = -1;
+	float waveValues[DISPLAY_SIZE] = {};
 
 	dsp::SchmittTrigger quantizePhaseTrigger;
 
 
 	BPMLFO2() {
 		config(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS, NUM_LIGHTS);
-		configParam(DIVISION_PARAM, 0.0, 26.5, 13.0);
+		configParam(MULTIPLIER_PARAM, 1.0, 128, 1.0,"Multiplier");
+		configParam(MULTIPLIER_CV_ATTENUVERTER_PARAM, -1.0, 1.0, 0.0,"Multiplier CV Attenuation","%",0,100);
+		configParam(DIVISION_PARAM, 1.0, 128, 1.0,"Divisor");
 		configParam(DIVISION_CV_ATTENUVERTER_PARAM, -1.0, 1.0, 0.0,"Division CV Attenuation","%",0,100);
+		configParam(WAVESLOPE_PARAM, 0.0, 1.0, 0.0,"Wave Slope","%",0,100);
+		configParam(WAVESLOPE_CV_ATTENUVERTER_PARAM, -1.0, 1.0, 0.0,"Wave Slope CV Attenuation","%",0,100);
 		configParam(SKEW_PARAM, 0.0, 1.0, 0.5,"Skew","%",0,100);
 		configParam(SKEW_CV_ATTENUVERTER_PARAM, -1.0, 1.0, 0.0,"Skew CV Attenuation","%",0,100);
 		configParam(PHASE_PARAM, 0.0, 0.9999, 0.0,"Phase","°",0,360);
@@ -179,20 +207,29 @@ void BPMLFO2::process(const ProcessArgs &args) {
 			}
 			time = 0;
 			secondClockReceived = true;			
-		}
-		lights[CLOCK_LIGHT].value = time > (duration/2.0);
+		}	
 	}
 	
 	
+	multiplier = params[MULTIPLIER_PARAM].getValue();
+	if(inputs[MULTIPLIER_INPUT].isConnected()) {
+		multiplier +=(inputs[MULTIPLIER_INPUT].getVoltage() * params[MULTIPLIER_CV_ATTENUVERTER_PARAM].getValue() * 12.8);
+	}
+	multiplier = clamp(multiplier,1.0f,128.0f);
 
-	float divisionf = params[DIVISION_PARAM].getValue();
+	division = params[DIVISION_PARAM].getValue();
 	if(inputs[DIVISION_INPUT].isConnected()) {
-		divisionf +=(inputs[DIVISION_INPUT].getVoltage() * params[DIVISION_CV_ATTENUVERTER_PARAM].getValue() * (DIVISIONS / 10.0));
+		division +=(inputs[DIVISION_INPUT].getVoltage() * params[DIVISION_CV_ATTENUVERTER_PARAM].getValue() * 12.8);
 	}
-	divisionf = clamp(divisionf,0.0f,26.0f);
-	division = int(divisionf);
+	division = clamp(division,1.0f,128.0f);
 
 	waveshape = params[WAVESHAPE_PARAM].getValue();
+
+	waveSlope = params[WAVESLOPE_PARAM].getValue();
+	if(inputs[WAVESLOPE_INPUT].isConnected()) {
+		waveSlope +=inputs[WAVESLOPE_INPUT].getVoltage() / 10 * params[WAVESLOPE_CV_ATTENUVERTER_PARAM].getValue();
+	}
+	waveSlope = clamp(waveSlope,0.0f,1.0f);
 
 	skew = params[SKEW_PARAM].getValue();
 	if(inputs[SKEW_INPUT].isConnected()) {
@@ -219,11 +256,28 @@ void BPMLFO2::process(const ProcessArgs &args) {
 	
 	oscillator.offset = (params[OFFSET_PARAM].getValue() > 0.0);
 	oscillator.setBasePhase(initialPhase);
+	oscillator.waveSlope = waveSlope;
 	oscillator.skew = skew;
 	oscillator.setPulseWidth(skew);
 
+	//Recalcluate display waveform if something changed
+	if(lastWaveShape != waveshape || lastWaveSlope != waveSlope || lastSkew != skew) {
+		displayOscillator.waveSlope = waveSlope;
+		displayOscillator.skew = skew;
+		displayOscillator.setPulseWidth(skew);
+		displayOscillator.setFrequency(1.0);
+		displayOscillator.phase = 0;
+		for(int i=0;i<DISPLAY_SIZE;i++) {
+			waveValues[i] = (waveshape == SKEWSAW_WAV ? displayOscillator.skewsaw() : displayOscillator.sqr()) * DISPLAY_SIZE / 2;
+			displayOscillator.step(1.0 / DISPLAY_SIZE);			
+		}
+		lastWaveShape = waveshape;
+		lastWaveSlope = waveSlope;
+		lastSkew = skew;
+	}
+
 	if(duration != 0) {
-		oscillator.setFrequency(1.0 / (duration / divisions[division]));
+		oscillator.setFrequency(1.0 / (duration / multiplier * division));
 	}
 	else {
 		oscillator.setFrequency(0);
@@ -272,88 +326,124 @@ struct BPMLFO2ProgressDisplay : TransparentWidget {
 		font = APP->window->loadFont(asset::plugin(pluginInstance, "res/fonts/01 Digit.ttf"));
 	}
 
-	void drawProgress(const DrawArgs &args, int waveshape, float skew, float phase) 
+	void drawProgress(const DrawArgs &args, int waveshape, float skew, float waveslope, float phase) 
 	{
-		float inverseSkew = 1 - skew;
-		float y;
-        if (skew == 0 && phase == 0) //Avoid /0 error
-            y = 72.0;
-        if (phase <= skew)
-            y = 72.0 * (1- (-1 / skew * phase + 1));
-        else
-            y = 72.0 * (1-(1 / inverseSkew * (phase - skew)));
+		// float inverseSkew = 1 - skew;
+		// float y;
+        // if (skew == 0 && phase == 0) //Avoid /0 error
+        //     y = 72.0;
+        // if (phase <= skew)
+        //     y = 72.0 * (1- (-1 / skew * phase + 1));
+        // else
+        //     y = 72.0 * (1-(1 / inverseSkew * (phase - skew)));
 
 		// Draw indicator
-		nvgFillColor(args.vg, nvgRGBA(0xff, 0xff, 0x20, 0xff));
-		if(waveshape == BPMLFO2::SKEWSAW_WAV)
-		{
-			nvgBeginPath(args.vg);
-			nvgMoveTo(args.vg,90,213);
-			if(phase > skew) {
-				nvgLineTo(args.vg,90 + (skew * 68),141);
-			}
-			nvgLineTo(args.vg,90 + (phase * 68),213-y);
-			nvgLineTo(args.vg,90 + (phase * 68),213);
-			nvgClosePath(args.vg);
-			nvgFill(args.vg);
-		} else 
-		{
-			float endpoint = fminf(phase,skew);
-			nvgBeginPath(args.vg);
-			nvgMoveTo(args.vg,90,177);
-			nvgRect(args.vg,90,177,endpoint*68,36.0);
-			nvgClosePath(args.vg);
-			nvgFill(args.vg);
-			if(phase > skew) {
-				nvgBeginPath(args.vg);
-				nvgMoveTo(args.vg,90 + (skew * 68),141);
-				nvgRect(args.vg,90 + (skew * 68),141,(phase-skew)*68,36.0);
-				nvgClosePath(args.vg);
-				nvgFill(args.vg);
-			}
+		//nvgFillColor(args.vg, nvgRGBA(0xff, 0xff, 0x20, 0xff));
+		nvgStrokeColor(args.vg, nvgRGBA(0xff, 0xff, 0x20, 0xff));	
+		nvgStrokeWidth(args.vg, 1.5);
 
+		nvgBeginPath(args.vg);
+		//nvgMoveTo(args.vg,140,177 - module->waveValues[0]);
+		for(int i=0;i<phase * DISPLAY_SIZE;i++) {
+			nvgMoveTo(args.vg,140 + i,177 - module->waveValues[i]);
+			nvgLineTo(args.vg,140 + i, module->waveValues[i] > 0 ? 211 : 211 );
+			
 		}
+		//nvgLineTo(args.vg,140 + phase * 68,177 - module->waveValues[0]);
+		//nvgClosePath(args.vg);
+		nvgStroke(args.vg);		
+		//nvgFill(args.vg);
+
+		// if(waveshape == BPMLFO2::SKEWSAW_WAV)
+		// {
+		// 	nvgBeginPath(args.vg);
+		// 	nvgMoveTo(args.vg,140,213);
+		// 	if(phase > skew) {
+		// 		nvgLineTo(args.vg,140 + (skew * 68),141);
+		// 	}
+		// 	nvgLineTo(args.vg,140 + (phase * 68),213-y);
+		// 	nvgLineTo(args.vg,140 + (phase * 68),213);
+		// 	nvgClosePath(args.vg);
+		// 	nvgFill(args.vg);
+		// } else 
+		// {
+		// 	float endpoint = fminf(phase,skew);
+		// 	nvgBeginPath(args.vg);
+		// 	nvgMoveTo(args.vg,140,177);
+		// 	nvgRect(args.vg,140,177,endpoint*68,36.0);
+		// 	nvgClosePath(args.vg);
+		// 	nvgFill(args.vg);
+		// 	if(phase > skew) {
+		// 		nvgBeginPath(args.vg);
+		// 		nvgMoveTo(args.vg,140 + (skew * 68),141);
+		// 		nvgRect(args.vg,140 + (skew * 68),141,(phase-skew)*68,36.0);
+		// 		nvgClosePath(args.vg);
+		// 		nvgFill(args.vg);
+		// 	}
+
+		// }
 	}
 
-	void drawWaveShape(const DrawArgs &args, int waveshape, float skew) 
+	void drawWaveShape(const DrawArgs &args, int waveshape, float skew, float waveslope) 
 	{
 		// Draw wave shape
 		nvgStrokeColor(args.vg, nvgRGBA(0xff, 0xff, 0x20, 0xff));	
 		nvgStrokeWidth(args.vg, 2.0);
-		if(waveshape == BPMLFO2::SKEWSAW_WAV) {						
-			nvgBeginPath(args.vg);
-			nvgMoveTo(args.vg,90,213);
-			nvgLineTo(args.vg,90 + (skew * 68),141);
-			nvgLineTo(args.vg,161,213);
-			nvgClosePath(args.vg);			
-		} else 
-		{
-			nvgBeginPath(args.vg);
-			nvgMoveTo(args.vg,90,213);
-			nvgLineTo(args.vg,90 + (skew * 68),213);
-			nvgLineTo(args.vg,90 + (skew * 68),141);
-			nvgLineTo(args.vg,161,141);
-			//nvgClosePath(args.vg);			
+
+		nvgBeginPath(args.vg);
+		nvgMoveTo(args.vg,140,177 - module->waveValues[0]);
+		for(int i=1;i<DISPLAY_SIZE;i++) {
+			nvgLineTo(args.vg,140 + i,177 - module->waveValues[i]);
 		}
+		//nvgLineTo(args.vg,208,213);
+		//nvgClosePath(args.vg);	
+
+		// if(waveshape == BPMLFO2::SKEWSAW_WAV) {						
+		// 	nvgBeginPath(args.vg);
+		// 	nvgMoveTo(args.vg,140,213);
+		// 	nvgLineTo(args.vg,140 + (skew * 68),141);
+		// 	nvgLineTo(args.vg,208,213);
+		// 	nvgClosePath(args.vg);			
+		// } else 
+		// {
+		// 	nvgBeginPath(args.vg);
+		// 	nvgMoveTo(args.vg,140,213);
+		// 	nvgLineTo(args.vg,140 + (skew * 68),213);
+		// 	nvgLineTo(args.vg,140 + (skew * 68),141);
+		// 	nvgLineTo(args.vg,208,141);
+		// 	//nvgClosePath(args.vg);			
+		// }
 		nvgStroke(args.vg);		
 	}
 
-	void drawDivision(const DrawArgs &args, Vec pos, int division) {
+	void drawMultiplier(const DrawArgs &args, Vec pos, float multiplier) {
 		nvgFontSize(args.vg, 28);
 		nvgFontFaceId(args.vg, font->handle);
 		nvgTextLetterSpacing(args.vg, -2);
 
 		nvgFillColor(args.vg, nvgRGBA(0x00, 0xff, 0x00, 0xff));
 		char text[128];
-		snprintf(text, sizeof(text), "%s", module->divisionNames[division]);
-		nvgText(args.vg, pos.x + 52, pos.y, text, NULL);
+		snprintf(text, sizeof(text), " % 3.0f", multiplier);
+		nvgText(args.vg, pos.x + 15, pos.y, text, NULL);
+	}
+
+	void drawDivision(const DrawArgs &args, Vec pos, float division) {
+		nvgFontSize(args.vg, 28);
+		nvgFontFaceId(args.vg, font->handle);
+		nvgTextLetterSpacing(args.vg, -2);
+
+		nvgFillColor(args.vg, nvgRGBA(0x00, 0xff, 0x00, 0xff));
+		char text[128];
+		snprintf(text, sizeof(text), " % 3.0f", division);
+		nvgText(args.vg, pos.x + 130, pos.y, text, NULL);
 	}
 
 	void draw(const DrawArgs &args) override {
 		if (!module)
 			return;	
-		drawWaveShape(args,module->waveshape, module->skew);
-		drawProgress(args,module->waveshape, module->skew, module->oscillator.progress());
+		drawWaveShape(args,module->waveshape, module->skew, module->waveSlope);
+		drawProgress(args,module->waveshape, module->skew, module->waveSlope, module->oscillator.progress());
+		drawMultiplier(args, Vec(0, box.size.y - 153), module->multiplier);
 		drawDivision(args, Vec(0, box.size.y - 153), module->division);
 	}
 };
@@ -378,32 +468,37 @@ struct BPMLFO2Widget : ModuleWidget {
 			addChild(display);
 		}
 
-		addParam(createParam<RoundLargeFWSnapKnob>(Vec(50, 78), module, BPMLFO2::DIVISION_PARAM));
-		addParam(createParam<RoundSmallFWKnob>(Vec(91, 109), module, BPMLFO2::DIVISION_CV_ATTENUVERTER_PARAM));
-		addParam(createParam<RoundFWKnob>(Vec(5, 142), module, BPMLFO2::SKEW_PARAM));
-		addParam(createParam<RoundSmallFWKnob>(Vec(8, 201), module, BPMLFO2::SKEW_CV_ATTENUVERTER_PARAM));
-		addParam(createParam<RoundFWKnob>(Vec(52, 142), module, BPMLFO2::PHASE_PARAM));
-		addParam(createParam<RoundSmallFWKnob>(Vec(55, 201), module, BPMLFO2::PHASE_CV_ATTENUVERTER_PARAM));
-		addParam(createParam<LEDButton>(Vec(38, 162), module, BPMLFO2::QUANTIZE_PHASE_PARAM));
+		addParam(createParam<RoundLargeFWSnapKnob>(Vec(22, 78), module, BPMLFO2::MULTIPLIER_PARAM));
+		addParam(createParam<RoundSmallFWKnob>(Vec(62, 109), module, BPMLFO2::MULTIPLIER_CV_ATTENUVERTER_PARAM));
+		addParam(createParam<RoundLargeFWSnapKnob>(Vec(140, 78), module, BPMLFO2::DIVISION_PARAM));
+		addParam(createParam<RoundSmallFWKnob>(Vec(181, 109), module, BPMLFO2::DIVISION_CV_ATTENUVERTER_PARAM));
+		addParam(createParam<RoundFWKnob>(Vec(5, 144), module, BPMLFO2::WAVESLOPE_PARAM));
+		addParam(createParam<RoundSmallFWKnob>(Vec(7, 203), module, BPMLFO2::WAVESLOPE_CV_ATTENUVERTER_PARAM));
+		addParam(createParam<RoundFWKnob>(Vec(50, 144), module, BPMLFO2::SKEW_PARAM));
+		addParam(createParam<RoundSmallFWKnob>(Vec(53, 203), module, BPMLFO2::SKEW_CV_ATTENUVERTER_PARAM));
+		addParam(createParam<RoundFWKnob>(Vec(100, 144), module, BPMLFO2::PHASE_PARAM));
+		addParam(createParam<RoundSmallFWKnob>(Vec(103, 203), module, BPMLFO2::PHASE_CV_ATTENUVERTER_PARAM));
+		addParam(createParam<LEDButton>(Vec(83, 164), module, BPMLFO2::QUANTIZE_PHASE_PARAM));
 		
 		
-		addParam(createParam<CKSS>(Vec(27, 240), module, BPMLFO2::OFFSET_PARAM));
-		addParam(createParam<CKSS>(Vec(57, 240), module, BPMLFO2::WAVESHAPE_PARAM));
-		addParam(createParam<CKSS>(Vec(97, 240), module, BPMLFO2::HOLD_CLOCK_BEHAVIOR_PARAM));
-		addParam(createParam<CKSS>(Vec(140, 240), module, BPMLFO2::HOLD_MODE_PARAM));
+		addParam(createParam<CKSS>(Vec(30, 242), module, BPMLFO2::OFFSET_PARAM));
+		addParam(createParam<CKSS>(Vec(73, 242), module, BPMLFO2::WAVESHAPE_PARAM));
+		addParam(createParam<CKSS>(Vec(119, 242), module, BPMLFO2::HOLD_CLOCK_BEHAVIOR_PARAM));
+		addParam(createParam<CKSS>(Vec(169, 242), module, BPMLFO2::HOLD_MODE_PARAM));
 
-		addInput(createInput<PJ301MPort>(Vec(90, 81), module, BPMLFO2::DIVISION_INPUT));
-		addInput(createInput<PJ301MPort>(Vec(7, 173), module, BPMLFO2::SKEW_INPUT));
-		addInput(createInput<PJ301MPort>(Vec(54, 173), module, BPMLFO2::PHASE_INPUT));
-		addInput(createInput<PJ301MPort>(Vec(46, 290), module, BPMLFO2::CLOCK_INPUT));
-		addInput(createInput<PJ301MPort>(Vec(77, 290), module, BPMLFO2::RESET_INPUT));
-		addInput(createInput<PJ301MPort>(Vec(109, 290), module, BPMLFO2::HOLD_INPUT));
+		addInput(createInput<PJ301MPort>(Vec(62, 81), module, BPMLFO2::MULTIPLIER_INPUT));
+		addInput(createInput<PJ301MPort>(Vec(181, 81), module, BPMLFO2::DIVISION_INPUT));
+		addInput(createInput<PJ301MPort>(Vec(7, 175), module, BPMLFO2::WAVESLOPE_INPUT));
+		addInput(createInput<PJ301MPort>(Vec(53, 175), module, BPMLFO2::SKEW_INPUT));
+		addInput(createInput<PJ301MPort>(Vec(103, 175), module, BPMLFO2::PHASE_INPUT));
+		addInput(createInput<PJ301MPort>(Vec(45, 292), module, BPMLFO2::CLOCK_INPUT));
+		addInput(createInput<PJ301MPort>(Vec(100, 292), module, BPMLFO2::RESET_INPUT));
+		addInput(createInput<PJ301MPort>(Vec(149, 292), module, BPMLFO2::HOLD_INPUT));
 
-		addOutput(createOutput<PJ301MPort>(Vec(78, 336), module, BPMLFO2::LFO_OUTPUT));
+		addOutput(createOutput<PJ301MPort>(Vec(100, 336), module, BPMLFO2::LFO_OUTPUT));
 
-		addChild(createLight<MediumLight<BlueLight>>(Vec(42, 166), module, BPMLFO2::QUANTIZE_PHASE_LIGHT));
-		addChild(createLight<LargeLight<BlueLight>>(Vec(27, 294), module, BPMLFO2::CLOCK_LIGHT));
-		addChild(createLight<LargeLight<RedLight>>(Vec(137, 294), module, BPMLFO2::HOLD_LIGHT));
+		addChild(createLight<MediumLight<BlueLight>>(Vec(87, 168), module, BPMLFO2::QUANTIZE_PHASE_LIGHT));
+		addChild(createLight<LargeLight<RedLight>>(Vec(177, 296), module, BPMLFO2::HOLD_LIGHT));
 	}
 };
 
