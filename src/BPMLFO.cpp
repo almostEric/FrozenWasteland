@@ -109,7 +109,7 @@ struct BPMLFO : Module {
 				return saw(phase);
 		}
 		float sqr() {
-			float sqr = (phase < pw);
+			float sqr = (phase < pw) ? 1.0 : -1.0;
 			return offset ? sqr + 1.0 : sqr;
 		}
 		float progress() {

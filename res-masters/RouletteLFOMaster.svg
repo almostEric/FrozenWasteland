@@ -53,8 +53,8 @@
      inkscape:pageopacity="0.0"
      inkscape:pageshadow="2"
      inkscape:zoom="5.6568542"
-     inkscape:cx="-53.112554"
-     inkscape:cy="139.77686"
+     inkscape:cx="-73.618652"
+     inkscape:cy="231.70074"
      inkscape:document-units="mm"
      inkscape:current-layer="layer1"
      showgrid="false"
@@ -118,68 +118,68 @@
     <text
        xml:space="preserve"
        style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:3.52777767px;line-height:1.25;font-family:Consolas;-inkscape-font-specification:'Consolas Bold';text-align:center;letter-spacing:0px;word-spacing:0px;text-anchor:middle;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.26458332"
-       x="41.430168"
-       y="99.072319"
+       x="39.833019"
+       y="99.063805"
        id="text299"><tspan
          sodipodi:role="line"
          id="tspan297"
-         x="41.430168"
-         y="99.072319"
-         style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:2.82222223px;font-family:Calibri;-inkscape-font-specification:'Calibri Bold';stroke-width:0.26458332">BIG R</tspan></text>
+         x="39.833019"
+         y="99.063805"
+         style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:2.82222223px;font-family:Calibri;-inkscape-font-specification:'Calibri Bold';stroke-width:0.26458332">Rx</tspan></text>
     <text
        xml:space="preserve"
        style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:3.52777767px;line-height:1.25;font-family:Consolas;-inkscape-font-specification:'Consolas Bold';text-align:center;letter-spacing:0px;word-spacing:0px;text-anchor:middle;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.26458332"
-       x="54.262463"
-       y="99.072159"
+       x="61.13887"
+       y="99.063805"
        id="text303"><tspan
          sodipodi:role="line"
          id="tspan301"
-         x="54.262463"
-         y="99.072159"
-         style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:2.82222223px;font-family:Calibri;-inkscape-font-specification:'Calibri Bold';stroke-width:0.26458332">SMALL r</tspan></text>
+         x="61.13887"
+         y="99.063805"
+         style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:2.82222223px;font-family:Calibri;-inkscape-font-specification:'Calibri Bold';stroke-width:0.26458332">r</tspan></text>
     <text
        xml:space="preserve"
        style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:3.52777767px;line-height:1.25;font-family:Consolas;-inkscape-font-specification:'Consolas Bold';text-align:center;letter-spacing:0px;word-spacing:0px;text-anchor:middle;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.26458332"
-       x="68.74839"
+       x="70.335892"
        y="99.072159"
        id="text307"><tspan
          sodipodi:role="line"
          id="tspan305"
-         x="68.74839"
+         x="70.335892"
          y="99.072159"
-         style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:2.82222223px;font-family:Calibri;-inkscape-font-specification:'Calibri Bold';stroke-width:0.26458332">DISTANCE</tspan></text>
+         style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:2.82222223px;font-family:Calibri;-inkscape-font-specification:'Calibri Bold';stroke-width:0.26458332">D</tspan></text>
     <text
        xml:space="preserve"
        style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:3.52777767px;line-height:1.25;font-family:Consolas;-inkscape-font-specification:'Consolas Bold';text-align:center;letter-spacing:0px;word-spacing:0px;text-anchor:middle;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.26458332"
        x="81.646843"
-       y="99.014458"
+       y="99.063805"
        id="text299-1"><tspan
          sodipodi:role="line"
          id="tspan297-5"
          x="81.646843"
-         y="99.014458"
-         style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:2.82222223px;font-family:Calibri;-inkscape-font-specification:'Calibri Bold';stroke-width:0.26458332">FREQ.</tspan></text>
+         y="99.063805"
+         style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:2.82222223px;font-family:Calibri;-inkscape-font-specification:'Calibri Bold';stroke-width:0.26458332">F</tspan></text>
     <text
        xml:space="preserve"
        style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:3.52777767px;line-height:1.25;font-family:Consolas;-inkscape-font-specification:'Consolas Bold';text-align:center;letter-spacing:0px;word-spacing:0px;text-anchor:middle;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.26458332"
-       x="53.402576"
-       y="138.0984"
+       x="44.935902"
+       y="138.22034"
        id="text365"><tspan
          sodipodi:role="line"
          id="tspan363"
-         x="53.402576"
-         y="138.0984"
+         x="44.935902"
+         y="138.22034"
          style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:3.52777767px;font-family:Calibri;-inkscape-font-specification:'Calibri Bold';stroke-width:0.26458332">X</tspan></text>
     <text
        xml:space="preserve"
        style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:3.52777767px;line-height:1.25;font-family:Consolas;-inkscape-font-specification:'Consolas Bold';text-align:center;letter-spacing:0px;word-spacing:0px;text-anchor:middle;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.26458332"
-       x="68.417686"
-       y="138.09819"
+       x="62.06768"
+       y="138.22034"
        id="text369"><tspan
          sodipodi:role="line"
          id="tspan367"
-         x="68.417686"
-         y="138.09819"
+         x="62.06768"
+         y="138.22034"
          style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:3.52777767px;font-family:Calibri;-inkscape-font-specification:'Calibri Bold';stroke-width:0.26458332">Y</tspan></text>
     <text
        xml:space="preserve"
@@ -296,46 +296,90 @@
     <text
        xml:space="preserve"
        style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:3.52777767px;line-height:1.25;font-family:Consolas;-inkscape-font-specification:'Consolas Bold';text-align:center;letter-spacing:0px;word-spacing:0px;text-anchor:middle;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.26458332"
-       x="51.219749"
+       x="45.398911"
        y="128.67398"
        id="text6641"><tspan
          sodipodi:role="line"
          id="tspan6639"
-         x="51.219749"
+         x="45.398911"
          y="128.67398"
          style="font-size:2.82222223px;stroke-width:0.26458332">INSIDE</tspan></text>
     <text
        xml:space="preserve"
        style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:3.52777767px;line-height:1.25;font-family:Consolas;-inkscape-font-specification:'Consolas Bold';text-align:center;letter-spacing:0px;word-spacing:0px;text-anchor:middle;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.26458332"
-       x="51.224571"
-       y="119.5776"
+       x="45.403732"
+       y="119.67814"
        id="text6641-2"><tspan
          sodipodi:role="line"
          id="tspan6639-1"
-         x="51.224571"
-         y="119.5776"
+         x="45.403732"
+         y="119.67814"
          style="font-size:2.82222223px;stroke-width:0.26458332">OUTSIDE</tspan></text>
     <text
        xml:space="preserve"
        style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:3.52777767px;line-height:1.25;font-family:Consolas;-inkscape-font-specification:'Consolas Bold';text-align:center;letter-spacing:0px;word-spacing:0px;text-anchor:middle;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.26458332"
-       x="71.658813"
+       x="78.537987"
        y="119.70985"
        id="text6663"><tspan
          sodipodi:role="line"
          id="tspan6661"
-         x="71.658813"
+         x="78.537987"
          y="119.70985"
          style="font-size:2.82222223px;stroke-width:0.26458332">D=r</tspan></text>
     <text
        xml:space="preserve"
        style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:2.82222223px;line-height:1.25;font-family:Consolas;-inkscape-font-specification:'Consolas Bold';text-align:center;letter-spacing:0px;word-spacing:0px;text-anchor:middle;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.26458332"
-       x="71.35714"
+       x="78.236313"
        y="128.70567"
        id="text6667"><tspan
          sodipodi:role="line"
          id="tspan6665"
-         x="71.35714"
+         x="78.236313"
          y="128.70567"
          style="stroke-width:0.26458332">D</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:3.52777767px;line-height:1.25;font-family:Consolas;-inkscape-font-specification:'Consolas Bold';text-align:center;letter-spacing:0px;word-spacing:0px;text-anchor:middle;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.26458332"
+       x="62.402531"
+       y="119.39565"
+       id="text6663-6"><tspan
+         sodipodi:role="line"
+         id="tspan6661-9"
+         x="62.402531"
+         y="119.39565"
+         style="font-size:2.82222223px;stroke-width:0.26458332">Ry=Rx</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:2.82222223px;line-height:1.25;font-family:Consolas;-inkscape-font-specification:'Consolas Bold';text-align:center;letter-spacing:0px;word-spacing:0px;text-anchor:middle;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.26458332"
+       x="62.262909"
+       y="128.39148"
+       id="text6667-0"><tspan
+         sodipodi:role="line"
+         id="tspan6665-0"
+         x="62.262909"
+         y="128.39148"
+         style="stroke-width:0.26458332">Ry</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:3.52777767px;line-height:1.25;font-family:Consolas;-inkscape-font-specification:'Consolas Bold';text-align:center;letter-spacing:0px;word-spacing:0px;text-anchor:middle;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.26458332"
+       x="78.161591"
+       y="138.22034"
+       id="text369-2"><tspan
+         sodipodi:role="line"
+         id="tspan367-9"
+         x="78.161591"
+         y="138.22034"
+         style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:3.52777767px;font-family:Calibri;-inkscape-font-specification:'Calibri Bold';stroke-width:0.26458332">X+Y</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:3.52777767px;line-height:1.25;font-family:Consolas;-inkscape-font-specification:'Consolas Bold';text-align:center;letter-spacing:0px;word-spacing:0px;text-anchor:middle;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.26458332"
+       x="49.101704"
+       y="99.012352"
+       id="text299-6"><tspan
+         sodipodi:role="line"
+         id="tspan297-8"
+         x="49.101704"
+         y="99.012352"
+         style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:2.82222223px;font-family:Calibri;-inkscape-font-specification:'Calibri Bold';stroke-width:0.26458332">Ry</tspan></text>
   </g>
 </svg>

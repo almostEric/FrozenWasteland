@@ -7,16 +7,19 @@
 
 struct RouletteLFO : Module {
 	enum ParamIds {
-		FIXED_RADIUS_PARAM,
+		FIXED_RADIUS_X_PARAM,
+		FIXED_RADIUS_Y_PARAM,
 		ROTATING_RADIUS_PARAM,
 		DISTANCE_PARAM,
 		FREQUENCY_PARAM,
 		EPI_HYPO_PARAM,
 		FIXED_D_PARAM,
+		FIXED_RY_PARAM,
 		NUM_PARAMS
 	};
 	enum InputIds {
-		FIXED_RADIUS_INPUT,
+		FIXED_RADIUS_X_INPUT,
+		FIXED_RADIUS_Y_INPUT,
 		ROATATING_RADIUS_INPUT,
 		DISTANCE_INPUT,
 		FREQUENCY_INPUT,
@@ -25,6 +28,7 @@ struct RouletteLFO : Module {
 	enum OutputIds {
 		OUTPUT_X,
 		OUTPUT_Y,
+		OUTPUT_XY,
 		NUM_OUTPUTS
 	};
 	enum LightIds {
@@ -51,12 +55,14 @@ struct RouletteLFO : Module {
 
 	RouletteLFO() {
 		config(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS, NUM_LIGHTS);
-		configParam(FIXED_RADIUS_PARAM, 1, 20.0, 5,"Fixed Radius");
+		configParam(FIXED_RADIUS_X_PARAM, 1, 20.0, 5,"Fixed Radius X");
+		configParam(FIXED_RADIUS_Y_PARAM, 1, 20.0, 5,"Fixed Radius Y");
 		configParam(ROTATING_RADIUS_PARAM, 1, 10.0, 3,"Rotating Radius");
 		configParam(DISTANCE_PARAM, 1, 10.0, 5.0,"Distance");
 		configParam(FREQUENCY_PARAM, -8.0, 4.0, 0.0,"Frequency", " Hz", 2, 1);
 		configParam(EPI_HYPO_PARAM, 0.0, 1.0, 0.0);
 		configParam(FIXED_D_PARAM, 0.0, 1.0, 0.0);
+		configParam(FIXED_RY_PARAM, 0.0, 1.0, 1.0);
 	}
 	void process(const ProcessArgs &args) override;
 
@@ -79,34 +85,46 @@ void RouletteLFO::process(const ProcessArgs &args) {
 
 	if(params[EPI_HYPO_PARAM].getValue() == HYPOTROCHOID_ROULETTE) {
 		float r = clamp(params[ROTATING_RADIUS_PARAM].getValue() + inputs[ROATATING_RADIUS_INPUT].getVoltage(),1.0,10.0);
-		float R = clamp(params[FIXED_RADIUS_PARAM].getValue() +inputs[FIXED_RADIUS_INPUT].getVoltage(),r,20.0);
+		float Rx = clamp(params[FIXED_RADIUS_X_PARAM].getValue() +inputs[FIXED_RADIUS_X_INPUT].getVoltage(),r,20.0);
+		float Ry = clamp(params[FIXED_RADIUS_Y_PARAM].getValue() +inputs[FIXED_RADIUS_Y_INPUT].getVoltage(),r,20.0);
 		float d = clamp(params[DISTANCE_PARAM].getValue() + inputs[DISTANCE_INPUT].getVoltage(),1.0,10.0);
 		if(params[FIXED_D_PARAM].getValue()) {
 			d=r;
 		}
+		if(params[FIXED_RY_PARAM].getValue()) {
+			Ry=Rx;
+		}
 
+		//float R = std::max(Rx,Ry);
+		float R =(Rx + Ry) / 2.0f;
 		float amplitudeScaling = 5.0 / (R-r+d);
 
 		float theta = phase * 2 * M_PI;
-		x1 = amplitudeScaling * (((R-r) * cosf(theta)) + (d * cosf((R-r)/r * theta)));
-		y1 = amplitudeScaling * (((R-r) * sinf(theta)) - (d * sinf((R-r)/r * theta)));
+		x1 = amplitudeScaling * (((Rx-r) * cosf(theta)) + (d * cosf((Rx-r)/r * theta)));
+		y1 = amplitudeScaling * (((Ry-r) * sinf(theta)) - (d * sinf((Ry-r)/r * theta)));
 	} else {
-		float R = clamp(params[FIXED_RADIUS_PARAM].getValue() +inputs[FIXED_RADIUS_INPUT].getVoltage(),1.0,20.0);
 		float r = clamp(params[ROTATING_RADIUS_PARAM].getValue() + inputs[ROATATING_RADIUS_INPUT].getVoltage(),1.0,10.0);
+		float Rx = clamp(params[FIXED_RADIUS_X_PARAM].getValue() +inputs[FIXED_RADIUS_X_INPUT].getVoltage(),r,20.0);
+		float Ry = clamp(params[FIXED_RADIUS_Y_PARAM].getValue() +inputs[FIXED_RADIUS_Y_INPUT].getVoltage(),r,20.0);
 		float d = clamp(params[DISTANCE_PARAM].getValue() + inputs[DISTANCE_INPUT].getVoltage(),1.0,20.0);
 		if(params[FIXED_D_PARAM].getValue()) {
 			d=r;
 		}
-
+		if(params[FIXED_RY_PARAM].getValue()) {
+			Ry=Rx;
+		}
+		//float R = std::max(Rx,Ry);
+		float R =(Rx + Ry) / 2.0f;
 		float amplitudeScaling = 5.0 / (R+r+d);
 
 		float theta = phase * 2 * M_PI;
-		x1 = amplitudeScaling * (((R+r) * cosf(theta)) - (d * cosf((R+r)/r * theta)));
-		y1 = amplitudeScaling * (((R+r) * sinf(theta)) - (d * sinf((R+r)/r * theta)));
+		x1 = amplitudeScaling * (((Rx+r) * cosf(theta)) - (d * cosf((Rx+r)/r * theta)));
+		y1 = amplitudeScaling * (((Ry+r) * sinf(theta)) - (d * sinf((Ry+r)/r * theta)));
 
 	}
 	outputs[OUTPUT_X].setVoltage(x1);
 	outputs[OUTPUT_Y].setVoltage(y1);
+	outputs[OUTPUT_XY].setVoltage((x1+y1)/2);
 	
 
 	//Update scope.
@@ -189,8 +207,8 @@ struct RouletteScopeDisplay : TransparentWidget {
 			int j = i;
 			// Lock display to buffer if buffer update deltaTime <= 2^-11
 			j = (i + module->bufferIndex) % BUFFER_SIZE;
-			valuesX[i] = (module->bufferX1[j]) / 5.0;
-			valuesY[i] = (module->bufferY1[j]) / 5.0;
+			valuesX[i] = (module->bufferX1[j]) / 6.0;
+			valuesY[i] = (module->bufferY1[j]) / 6.0;
 		}
 
 		nvgStrokeColor(args.vg, nvgRGBA(0x9f, 0xe4, 0x36, 0xc0));
@@ -217,20 +235,24 @@ struct RouletteLFOWidget : ModuleWidget {
 			addChild(display);
 		}
 
-		addParam(createParam<RoundFWKnob>(Vec(10, 186), module, RouletteLFO::FIXED_RADIUS_PARAM));
-		addParam(createParam<RoundFWKnob>(Vec(60, 186), module, RouletteLFO::ROTATING_RADIUS_PARAM));
-		addParam(createParam<RoundFWKnob>(Vec(113, 186), module, RouletteLFO::DISTANCE_PARAM));
-		addParam(createParam<RoundFWKnob>(Vec(160, 186), module, RouletteLFO::FREQUENCY_PARAM));
-		addParam(createParam<CKSS>(Vec(55, 265), module, RouletteLFO::EPI_HYPO_PARAM));
-		addParam(createParam<CKSS>(Vec(130, 265), module, RouletteLFO::FIXED_D_PARAM));
+		addParam(createParam<RoundFWKnob>(Vec(4, 187), module, RouletteLFO::FIXED_RADIUS_X_PARAM));
+		addParam(createParam<RoundFWKnob>(Vec(38, 187), module, RouletteLFO::FIXED_RADIUS_Y_PARAM));
+		addParam(createParam<RoundFWKnob>(Vec(84, 187), module, RouletteLFO::ROTATING_RADIUS_PARAM));
+		addParam(createParam<RoundFWKnob>(Vec(118, 187), module, RouletteLFO::DISTANCE_PARAM));
+		addParam(createParam<RoundFWKnob>(Vec(160, 187), module, RouletteLFO::FREQUENCY_PARAM));
+		addParam(createParam<CKSS>(Vec(32, 265), module, RouletteLFO::EPI_HYPO_PARAM));
+		addParam(createParam<CKSS>(Vec(96, 265), module, RouletteLFO::FIXED_RY_PARAM));
+		addParam(createParam<CKSS>(Vec(156, 265), module, RouletteLFO::FIXED_D_PARAM));
 
-		addInput(createInput<PJ301MPort>(Vec(13, 220), module, RouletteLFO::FIXED_RADIUS_INPUT));
-		addInput(createInput<PJ301MPort>(Vec(63, 220), module, RouletteLFO::ROATATING_RADIUS_INPUT));
-		addInput(createInput<PJ301MPort>(Vec(116, 220), module, RouletteLFO::DISTANCE_INPUT));
+		addInput(createInput<PJ301MPort>(Vec(7, 220), module, RouletteLFO::FIXED_RADIUS_X_INPUT));
+		addInput(createInput<PJ301MPort>(Vec(41, 220), module, RouletteLFO::FIXED_RADIUS_Y_INPUT));
+		addInput(createInput<PJ301MPort>(Vec(87, 220), module, RouletteLFO::ROATATING_RADIUS_INPUT));
+		addInput(createInput<PJ301MPort>(Vec(121, 220), module, RouletteLFO::DISTANCE_INPUT));
 		addInput(createInput<PJ301MPort>(Vec(163, 220), module, RouletteLFO::FREQUENCY_INPUT));
 
-		addOutput(createOutput<PJ301MPort>(Vec(57, 335), module, RouletteLFO::OUTPUT_X));
-		addOutput(createOutput<PJ301MPort>(Vec(113, 335), module, RouletteLFO::OUTPUT_Y));
+		addOutput(createOutput<PJ301MPort>(Vec(25, 335), module, RouletteLFO::OUTPUT_X));
+		addOutput(createOutput<PJ301MPort>(Vec(90, 335), module, RouletteLFO::OUTPUT_Y));
+		addOutput(createOutput<PJ301MPort>(Vec(150, 335), module, RouletteLFO::OUTPUT_XY));
 
 	}
 };

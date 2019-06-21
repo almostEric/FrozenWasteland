@@ -150,7 +150,7 @@ A collection of unusual plugins that will add a certain coolness to your patches
 ![Quad Algorithmic Rhythm](./doc/qar.png)
 
 - 4 Algorithmic rhythm based triggers
-- 2 Algorithms, Euclidean and Golumb Ruler. Each track can use its own Algorithm.
+- 3 Algorithms, Euclidean, Golumb Ruler and Boolean. Each track can use its own Algorithm (Boolean only available on tracks 3 & 4).
 - CV Control of Alogorithm. Try hooking EOC output to Algorithm trigger to get alternating rhythms
 - CV control of Steps, Divisions and Offset, Padding, Accents and Accent Rotation
 - QARs can be chained together to create arbitrarily long sequences. This can either be done manually by patching the appropriate outputs and input triggers together, or just by having multiple QARs be adjaent.
@@ -173,6 +173,17 @@ When they are connected this way, the Clock, Mute and Reset signals, and Eoc out
 ### Golomb Ruler Rhythms
 - Unlike Euclidean Rhythms which seek to evenly distribute the divisions, Golomb Rulers try to ensure unequal distribution
 - Basic example, with a step count of 16, and 4 divisions, the divisions will be on the 1,4,9 and 13.
+### Boolean Logic
+- Uses a boolean operator to combine the previous two tracks (so 3 = 1 & 2, 4 = 2 & 3)
+- Length can't be longer than shortest of the 2 tracks combined
+- Division controls the logical operator.
+-- 1 = AND
+-- 2 = OR
+-- 3 = XOR
+-- 4 = NAND
+-- 5 = NOR
+-- 6 = NXOR
+- Operators repeat if Division is past 6
 
 
 ## Quad Rhythm Expander
@@ -214,8 +225,9 @@ When they are connected this way, the Clock, Mute and Reset signals, and Eoc out
 ![Roulette LFO](./doc/rlfo.png)
 
 - Based on the concept of a couple different types of Roulettes: https://en.wikipedia.org/wiki/Roulette_(curve)
-- A circle rolling either inside a bigger circle (Hypotrochoid) or circle rolling outside a bigger circle (Epitrochoid)
-- The ratio of the Big R to small r can create interesting patterns
+- A circle rolling either inside a bigger circle (Hypotrochoid) or circle rolling outside a bigger circle/ellipse (Epitrochoid)
+- Rx and Ry control the radii of the x and y dimensions of outer shape. If they are the same, or Ry=Rx switch is on, shape is a circle
+- The ratio of the Big Rs to small r can create interesting patterns
 - d is the distance of the 'pen' from the center of small circle.
 - if d = r the shapes become a special form of the shapes - either a Hypocycloid or Epicycloid
 
