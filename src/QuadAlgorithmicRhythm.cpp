@@ -141,7 +141,7 @@ struct QuadAlgorithmicRhythm : Module {
 	int beatIndex[TRACK_COUNT];
 	int stepsCount[TRACK_COUNT];
 	int lastStepsCount[TRACK_COUNT];
-	float stepDuration[TRACK_COUNT];
+	double stepDuration[TRACK_COUNT];
 	float lastStepTime[TRACK_COUNT];	
     float lastSwingDuration[TRACK_COUNT];
 
@@ -182,8 +182,8 @@ struct QuadAlgorithmicRhythm : Module {
 	int masterTrack = 0;
 	bool QREDisconnectReset = true;
 
-	float timeElapsed = 0.0;
-	float duration = 0.0;
+	double timeElapsed = 0.0;
+	double duration = 0.0;
 	bool secondClockReceived = false;
 
 	dsp::SchmittTrigger clockTrigger,resetTrigger,chainModeTrigger,constantTimeTrigger,muteTrigger,algorithmButtonTrigger[TRACK_COUNT],algorithmInputTrigger[TRACK_COUNT],startTrigger[TRACK_COUNT];
@@ -241,7 +241,7 @@ struct QuadAlgorithmicRhythm : Module {
 
 		for(int i = 0; i < TRACK_COUNT; i++) {
             algorithnMatrix[i] = 0;
-			beatIndex[i] = 0;
+			beatIndex[i] = -1;
 			stepsCount[i] = MAX_STEPS;
 			lastStepsCount[i] = -1;
 			lastStepTime[i] = 0.0;
@@ -342,7 +342,7 @@ struct QuadAlgorithmicRhythm : Module {
 			masterTrack = (masterTrack + 1) % 5;
 			constantTime = masterTrack > 0;
 			for(int trackNumber=0;trackNumber<TRACK_COUNT;trackNumber++) {
-				beatIndex[trackNumber] = 0;
+				beatIndex[trackNumber] = -1;
                 lastStepTime[trackNumber] = 0;
                 lastSwingDuration[trackNumber] = 0; // Not sure about this
 				expanderEocValue[trackNumber] = 0; 
@@ -579,12 +579,14 @@ struct QuadAlgorithmicRhythm : Module {
 		if(resetTrigger.process(resetInput)) {
 			for(int trackNumber=0;trackNumber<4;trackNumber++)
 			{
-				beatIndex[trackNumber] = 0;
+				beatIndex[trackNumber] = -1;
 				lastStepTime[trackNumber] = 0;
 				lastSwingDuration[trackNumber] = 0; // Not sure about this
 				expanderEocValue[trackNumber] = 0; 
 				lastExpanderEocValue[trackNumber] = 0;		
 			}
+			timeElapsed = 0;
+			secondClockReceived = false;
 			setRunningState();
 		}
 		
@@ -672,12 +674,14 @@ struct QuadAlgorithmicRhythm : Module {
 			if(chainMode != CHAIN_MODE_NONE && (inputs[(trackNumber * 8) + START_1_INPUT].isConnected() || masterQARPresent || slavedQARPresent) && !running[trackNumber]) {
 				if(startTrigger[trackNumber].process(startInput)) {
 					running[trackNumber] = true;
+					beatIndex[trackNumber] = -1;
+					lastStepTime[trackNumber] = 200000; //Trying some arbitrary large value
 				}
 			}
 		}
 
 		//Calculate clock duration
-		float timeAdvance =1.0 / args.sampleRate;
+		double timeAdvance =1.0 / args.sampleRate;
 		timeElapsed += timeAdvance;
 
 		float clockInput = inputs[CLOCK_INPUT].getVoltage();
@@ -697,9 +701,9 @@ struct QuadAlgorithmicRhythm : Module {
 			}			
 			
 			for(int trackNumber=0;trackNumber < TRACK_COUNT;trackNumber++) {
-				if(stepsCount[trackNumber] > 0 && constantTime) {
-					float stepsChangeAdjustemnt = (float)(lastStepsCount[trackNumber] / (float)stepsCount[trackNumber]); 
-					stepDuration[trackNumber] = duration * masterStepCount / (float)stepsCount[trackNumber] * stepsChangeAdjustemnt; //Constant Time scales duration based on a master track
+				if(stepsCount[trackNumber] > 0 && constantTime && beatIndex[trackNumber] >= 0 ) {
+					double stepsChangeAdjustemnt = (double)(lastStepsCount[trackNumber] / (double)stepsCount[trackNumber]); 
+					stepDuration[trackNumber] = duration * masterStepCount / (double)stepsCount[trackNumber] * stepsChangeAdjustemnt; //Constant Time scales duration based on a master track
 				}
 				else
 					stepDuration[trackNumber] = duration; //Otherwise Clock based
@@ -708,7 +712,7 @@ struct QuadAlgorithmicRhythm : Module {
                 int nextBeat = beatIndex[trackNumber] + 1;
                 if(nextBeat >= stepsCount[trackNumber])
                     nextBeat = 0;
-                float swingDuration = swingMatrix[trackNumber][nextBeat] * stepDuration[trackNumber];
+                double swingDuration = swingMatrix[trackNumber][nextBeat] * stepDuration[trackNumber];
         
             
 				if(running[trackNumber]) {
@@ -830,21 +834,6 @@ struct QuadAlgorithmicRhythm : Module {
 
 	void advanceBeat(int trackNumber) {
        
-		
-
-        bool probabilityResult = (float) rand()/RAND_MAX < probabilityMatrix[trackNumber][beatIndex[trackNumber]];	
-        
-
-        //Create Beat Trigger    
-        if(beatMatrix[trackNumber][beatIndex[trackNumber]] == true && probabilityResult && running[trackNumber] && !muted) {
-            beatPulse[trackNumber].trigger(1e-3);
-        }
-
-        //Create Accent Trigger
-        if(accentMatrix[trackNumber][beatIndex[trackNumber]] == true && probabilityResult && running[trackNumber] && !muted) {
-            accentPulse[trackNumber].trigger(1e-3);
-        }
-
 		beatIndex[trackNumber]++;
 		lastStepTime[trackNumber] = 0.0;
 
@@ -857,9 +846,19 @@ struct QuadAlgorithmicRhythm : Module {
 				running[trackNumber] = false;
 			}
 		}
-	
-		
 
+        bool probabilityResult = (float) rand()/RAND_MAX < probabilityMatrix[trackNumber][beatIndex[trackNumber]];	
+        
+
+        //Create Beat Trigger    
+        if(beatMatrix[trackNumber][beatIndex[trackNumber]] == true && probabilityResult && running[trackNumber] && !muted) {
+            beatPulse[trackNumber].trigger(1e-3);
+        }
+
+        //Create Accent Trigger
+        if(accentMatrix[trackNumber][beatIndex[trackNumber]] == true && probabilityResult && running[trackNumber] && !muted) {
+            accentPulse[trackNumber].trigger(1e-3);
+        }			
 	}
 	// For more advanced Module features, read Rack's engine.hpp header file
 	// - onSampleRateChange: event triggered by a change of sample rate
@@ -867,8 +866,8 @@ struct QuadAlgorithmicRhythm : Module {
 
     void onReset() override {
 		for(int i = 0; i < TRACK_COUNT; i++) {
-            algorithnMatrix[i] = 0;
-			beatIndex[i] = 0;
+            algorithnMatrix[i] = EUCLIDEAN_ALGO;
+			beatIndex[i] = -1;
 			stepsCount[i] = MAX_STEPS;
 			lastStepTime[i] = 0.0;
 			stepDuration[i] = 0.0;

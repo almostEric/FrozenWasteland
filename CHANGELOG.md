@@ -1,4 +1,7 @@
-### 1.2.0 (2019-06-17)
+### 1.2.1 (2019-06-22)
+- Fixed bug with QAR startup/reset. Improved clock accuracy 
+
+### 1.2.0 (2019-06-21)
 - Added Boolean Algorithm to Quad Algortithmic Rhythm
 - Added Limited Ellipse to Roulette LFO (better model forthcoming)
 - Fixed bug in BPM LFO Square output
