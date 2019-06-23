@@ -23,15 +23,15 @@
        inkscape:collect="always"
        id="linearGradient4682">
       <stop
-         style="stop-color:#000002;stop-opacity:1;"
+         style="stop-color:#202022;stop-opacity:1;"
          offset="0"
          id="stop3387" />
       <stop
-         style="stop-color:#000005;stop-opacity:1;"
+         style="stop-color:#202025;stop-opacity:1;"
          offset=".3"
          id="stop3388" />
       <stop
-         style="stop-color:#08008f;stop-opacity:1;"
+         style="stop-color:#08006f;stop-opacity:1;"
          offset="1"
          id="stop3389" />
     </linearGradient>
@@ -39,10 +39,10 @@
        inkscape:collect="always"
        xlink:href="#linearGradient4682"
        id="linearGradient4684"
-       x1="35.219627"
-       y1="150.85843"
-       x2="35.23983"
-       y2="96.163956"
+       x1="35.418064"
+       y1="158.3329"
+       x2="35.219627"
+       y2="50.462322"
        gradientUnits="userSpaceOnUse" />
   </defs>
   <sodipodi:namedview
@@ -53,8 +53,8 @@
      inkscape:pageopacity="0.0"
      inkscape:pageshadow="2"
      inkscape:zoom="5.6568542"
-     inkscape:cx="-73.618652"
-     inkscape:cy="231.70074"
+     inkscape:cx="16.71424"
+     inkscape:cy="160.99006"
      inkscape:document-units="mm"
      inkscape:current-layer="layer1"
      showgrid="false"
@@ -114,7 +114,7 @@
          id="tspan134"
          x="60.744755"
          y="54.283745"
-         style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:3.88055563px;font-family:Calibri;-inkscape-font-specification:'Calibri Bold';stroke-width:0.26458332">ROULETTE LFO</tspan></text>
+         style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:3.88055563px;font-family:'Labtop Secundo Wide';-inkscape-font-specification:'Labtop Secundo Wide Bold';stroke-width:0.26458332">ROULETTE LFO</tspan></text>
     <text
        xml:space="preserve"
        style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:3.52777767px;line-height:1.25;font-family:Consolas;-inkscape-font-specification:'Consolas Bold';text-align:center;letter-spacing:0px;word-spacing:0px;text-anchor:middle;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.26458332"
@@ -125,7 +125,7 @@
          id="tspan297"
          x="39.833019"
          y="99.063805"
-         style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:2.82222223px;font-family:Calibri;-inkscape-font-specification:'Calibri Bold';stroke-width:0.26458332">Rx</tspan></text>
+         style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:2.82222223px;font-family:'Labtop Secundo Wide';-inkscape-font-specification:'Labtop Secundo Wide Bold';stroke-width:0.26458332">Rx</tspan></text>
     <text
        xml:space="preserve"
        style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:3.52777767px;line-height:1.25;font-family:Consolas;-inkscape-font-specification:'Consolas Bold';text-align:center;letter-spacing:0px;word-spacing:0px;text-anchor:middle;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.26458332"
@@ -136,7 +136,7 @@
          id="tspan301"
          x="61.13887"
          y="99.063805"
-         style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:2.82222223px;font-family:Calibri;-inkscape-font-specification:'Calibri Bold';stroke-width:0.26458332">r</tspan></text>
+         style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:2.82222223px;font-family:'Labtop Secundo Wide';-inkscape-font-specification:'Labtop Secundo Wide Bold';stroke-width:0.26458332">r</tspan></text>
     <text
        xml:space="preserve"
        style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:3.52777767px;line-height:1.25;font-family:Consolas;-inkscape-font-specification:'Consolas Bold';text-align:center;letter-spacing:0px;word-spacing:0px;text-anchor:middle;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.26458332"
@@ -147,7 +147,7 @@
          id="tspan305"
          x="70.335892"
          y="99.072159"
-         style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:2.82222223px;font-family:Calibri;-inkscape-font-specification:'Calibri Bold';stroke-width:0.26458332">D</tspan></text>
+         style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:2.82222223px;font-family:'Labtop Secundo Wide';-inkscape-font-specification:'Labtop Secundo Wide Bold';stroke-width:0.26458332">D</tspan></text>
     <text
        xml:space="preserve"
        style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:3.52777767px;line-height:1.25;font-family:Consolas;-inkscape-font-specification:'Consolas Bold';text-align:center;letter-spacing:0px;word-spacing:0px;text-anchor:middle;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.26458332"
@@ -158,7 +158,7 @@
          id="tspan297-5"
          x="81.646843"
          y="99.063805"
-         style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:2.82222223px;font-family:Calibri;-inkscape-font-specification:'Calibri Bold';stroke-width:0.26458332">F</tspan></text>
+         style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:2.82222223px;font-family:'Labtop Secundo Wide';-inkscape-font-specification:'Labtop Secundo Wide Bold';stroke-width:0.26458332">F</tspan></text>
     <text
        xml:space="preserve"
        style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:3.52777767px;line-height:1.25;font-family:Consolas;-inkscape-font-specification:'Consolas Bold';text-align:center;letter-spacing:0px;word-spacing:0px;text-anchor:middle;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.26458332"
@@ -169,7 +169,7 @@
          id="tspan363"
          x="44.935902"
          y="138.22034"
-         style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:3.52777767px;font-family:Calibri;-inkscape-font-specification:'Calibri Bold';stroke-width:0.26458332">X</tspan></text>
+         style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:3.52777767px;font-family:'Labtop Secundo Wide';-inkscape-font-specification:'Labtop Secundo Wide Bold';stroke-width:0.26458332">X</tspan></text>
     <text
        xml:space="preserve"
        style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:3.52777767px;line-height:1.25;font-family:Consolas;-inkscape-font-specification:'Consolas Bold';text-align:center;letter-spacing:0px;word-spacing:0px;text-anchor:middle;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.26458332"
@@ -180,7 +180,7 @@
          id="tspan367"
          x="62.06768"
          y="138.22034"
-         style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:3.52777767px;font-family:Calibri;-inkscape-font-specification:'Calibri Bold';stroke-width:0.26458332">Y</tspan></text>
+         style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:3.52777767px;font-family:'Labtop Secundo Wide';-inkscape-font-specification:'Labtop Secundo Wide Bold';stroke-width:0.26458332">Y</tspan></text>
     <text
        xml:space="preserve"
        style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:3.52777767px;line-height:1.25;font-family:Consolas;-inkscape-font-specification:'Consolas Bold';text-align:center;letter-spacing:0px;word-spacing:0px;text-anchor:middle;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.26458332"
@@ -303,7 +303,7 @@
          id="tspan6639"
          x="45.398911"
          y="128.67398"
-         style="font-size:2.82222223px;stroke-width:0.26458332">INSIDE</tspan></text>
+         style="font-size:2.82222223px;stroke-width:0.26458332;-inkscape-font-specification:'Labtop Secundo Wide Bold';font-family:'Labtop Secundo Wide';font-weight:bold;font-style:normal;font-stretch:normal;font-variant:normal">INSIDE</tspan></text>
     <text
        xml:space="preserve"
        style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:3.52777767px;line-height:1.25;font-family:Consolas;-inkscape-font-specification:'Consolas Bold';text-align:center;letter-spacing:0px;word-spacing:0px;text-anchor:middle;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.26458332"
@@ -314,7 +314,7 @@
          id="tspan6639-1"
          x="45.403732"
          y="119.67814"
-         style="font-size:2.82222223px;stroke-width:0.26458332">OUTSIDE</tspan></text>
+         style="font-size:2.82222223px;stroke-width:0.26458332;-inkscape-font-specification:'Labtop Secundo Wide Bold';font-family:'Labtop Secundo Wide';font-weight:bold;font-style:normal;font-stretch:normal;font-variant:normal">OUTSIDE</tspan></text>
     <text
        xml:space="preserve"
        style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:3.52777767px;line-height:1.25;font-family:Consolas;-inkscape-font-specification:'Consolas Bold';text-align:center;letter-spacing:0px;word-spacing:0px;text-anchor:middle;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.26458332"
@@ -325,7 +325,7 @@
          id="tspan6661"
          x="78.537987"
          y="119.70985"
-         style="font-size:2.82222223px;stroke-width:0.26458332">D=r</tspan></text>
+         style="font-size:2.82222223px;stroke-width:0.26458332;-inkscape-font-specification:'Labtop Secundo Wide Bold';font-family:'Labtop Secundo Wide';font-weight:bold;font-style:normal;font-stretch:normal;font-variant:normal">D=r</tspan></text>
     <text
        xml:space="preserve"
        style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:2.82222223px;line-height:1.25;font-family:Consolas;-inkscape-font-specification:'Consolas Bold';text-align:center;letter-spacing:0px;word-spacing:0px;text-anchor:middle;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.26458332"
@@ -336,7 +336,7 @@
          id="tspan6665"
          x="78.236313"
          y="128.70567"
-         style="stroke-width:0.26458332">D</tspan></text>
+         style="stroke-width:0.26458332;-inkscape-font-specification:'Labtop Secundo Wide Bold';font-family:'Labtop Secundo Wide';font-weight:bold;font-style:normal;font-stretch:normal;font-variant:normal">D</tspan></text>
     <text
        xml:space="preserve"
        style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:3.52777767px;line-height:1.25;font-family:Consolas;-inkscape-font-specification:'Consolas Bold';text-align:center;letter-spacing:0px;word-spacing:0px;text-anchor:middle;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.26458332"
@@ -347,7 +347,7 @@
          id="tspan6661-9"
          x="62.402531"
          y="119.39565"
-         style="font-size:2.82222223px;stroke-width:0.26458332">Ry=Rx</tspan></text>
+         style="font-size:2.82222223px;stroke-width:0.26458332;-inkscape-font-specification:'Labtop Secundo Wide Bold';font-family:'Labtop Secundo Wide';font-weight:bold;font-style:normal;font-stretch:normal;font-variant:normal">Ry=Rx</tspan></text>
     <text
        xml:space="preserve"
        style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:2.82222223px;line-height:1.25;font-family:Consolas;-inkscape-font-specification:'Consolas Bold';text-align:center;letter-spacing:0px;word-spacing:0px;text-anchor:middle;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.26458332"
@@ -358,7 +358,7 @@
          id="tspan6665-0"
          x="62.262909"
          y="128.39148"
-         style="stroke-width:0.26458332">Ry</tspan></text>
+         style="stroke-width:0.26458332;-inkscape-font-specification:'Labtop Secundo Wide Bold';font-family:'Labtop Secundo Wide';font-weight:bold;font-style:normal;font-stretch:normal;font-variant:normal">Ry</tspan></text>
     <text
        xml:space="preserve"
        style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:3.52777767px;line-height:1.25;font-family:Consolas;-inkscape-font-specification:'Consolas Bold';text-align:center;letter-spacing:0px;word-spacing:0px;text-anchor:middle;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.26458332"
@@ -369,7 +369,7 @@
          id="tspan367-9"
          x="78.161591"
          y="138.22034"
-         style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:3.52777767px;font-family:Calibri;-inkscape-font-specification:'Calibri Bold';stroke-width:0.26458332">X+Y</tspan></text>
+         style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:3.52777767px;font-family:'Labtop Secundo Wide';-inkscape-font-specification:'Labtop Secundo Wide Bold';stroke-width:0.26458332">X+Y</tspan></text>
     <text
        xml:space="preserve"
        style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:3.52777767px;line-height:1.25;font-family:Consolas;-inkscape-font-specification:'Consolas Bold';text-align:center;letter-spacing:0px;word-spacing:0px;text-anchor:middle;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.26458332"
@@ -380,6 +380,6 @@
          id="tspan297-8"
          x="49.101704"
          y="99.012352"
-         style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:2.82222223px;font-family:Calibri;-inkscape-font-specification:'Calibri Bold';stroke-width:0.26458332">Ry</tspan></text>
+         style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:2.82222223px;font-family:'Labtop Secundo Wide';-inkscape-font-specification:'Labtop Secundo Wide Bold';stroke-width:0.26458332">Ry</tspan></text>
   </g>
 </svg>

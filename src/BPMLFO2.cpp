@@ -469,9 +469,9 @@ struct BPMLFO2Widget : ModuleWidget {
 		}
 
 		addParam(createParam<RoundLargeFWSnapKnob>(Vec(22, 78), module, BPMLFO2::MULTIPLIER_PARAM));
-		addParam(createParam<RoundSmallFWKnob>(Vec(62, 109), module, BPMLFO2::MULTIPLIER_CV_ATTENUVERTER_PARAM));
+		addParam(createParam<RoundSmallFWKnob>(Vec(62, 108), module, BPMLFO2::MULTIPLIER_CV_ATTENUVERTER_PARAM));
 		addParam(createParam<RoundLargeFWSnapKnob>(Vec(140, 78), module, BPMLFO2::DIVISION_PARAM));
-		addParam(createParam<RoundSmallFWKnob>(Vec(181, 109), module, BPMLFO2::DIVISION_CV_ATTENUVERTER_PARAM));
+		addParam(createParam<RoundSmallFWKnob>(Vec(181, 108), module, BPMLFO2::DIVISION_CV_ATTENUVERTER_PARAM));
 		addParam(createParam<RoundFWKnob>(Vec(5, 144), module, BPMLFO2::WAVESLOPE_PARAM));
 		addParam(createParam<RoundSmallFWKnob>(Vec(7, 203), module, BPMLFO2::WAVESLOPE_CV_ATTENUVERTER_PARAM));
 		addParam(createParam<RoundFWKnob>(Vec(50, 144), module, BPMLFO2::SKEW_PARAM));

@@ -156,8 +156,8 @@ struct LissajousLFO : Module {
 		configParam(FREQX1_PARAM, -8.0, 3.0, 0.0,"X 1 Frequency", " Hz", 2, 1);
 		configParam(FREQY1_PARAM, -8.0, 3.0, 2.0,"Y 1 Frequency", " Hz", 2, 1);
 		configParam(PHASEX1_PARAM, 0.0, 0.9999, 0.0,"Phase X 1","°",0,360);
-		configParam(WAVESHAPEX1_PARAM, 0.0, 1.0, 0.0,"Wave Shape X 1","%",0,100);
-		configParam(WAVESHAPEY1_PARAM, 0.0, 1.0, 0.0,"Wave Shape Y 1","%",0,100);
+		configParam(WAVESHAPEX1_PARAM, 0.0, 1.0, 1.0,"Wave Shape X 1","%",0,100);
+		configParam(WAVESHAPEY1_PARAM, 0.0, 1.0, 1.0,"Wave Shape Y 1","%",0,100);
 		configParam(SKEWX1_PARAM, 0.0, 1.0, 0.5,"Skew X 1","%",0,100);
 		configParam(SKEWY1_PARAM, 0.0, 1.0, 0.5,"Skew Y 1","%",0,100);
 		
@@ -166,8 +166,8 @@ struct LissajousLFO : Module {
 		configParam(FREQX2_PARAM, -8.0, 3.0, 0.0,"X 2 Frequency", " Hz", 2, 1);
 		configParam(FREQY2_PARAM, -8.0, 3.0, 1.0,"Y 2 Frequency", " Hz", 2, 1);
 		configParam(PHASEX2_PARAM, 0.0, 0.9999, 0.0,"Phase X 2","°",0,360);
-		configParam(WAVESHAPEX2_PARAM, 0.0, 1.0, 0.0,"Wave Shape X 2","%",0,100);
-		configParam(WAVESHAPEY2_PARAM, 0.0, 1.0, 0.0,"Wave Shape Y 2","%",0,100);
+		configParam(WAVESHAPEX2_PARAM, 0.0, 1.0, 1.0,"Wave Shape X 2","%",0,100);
+		configParam(WAVESHAPEY2_PARAM, 0.0, 1.0, 1.0,"Wave Shape Y 2","%",0,100);
 		configParam(SKEWX2_PARAM, 0.0, 1.0, 0.5,"Skew X 2","%",0,100);
 		configParam(SKEWY2_PARAM, 0.0, 1.0, 0.5,"Skew Y 2","%",0,100);
 	}

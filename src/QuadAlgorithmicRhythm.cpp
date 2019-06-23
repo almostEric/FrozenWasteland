@@ -142,8 +142,8 @@ struct QuadAlgorithmicRhythm : Module {
 	int stepsCount[TRACK_COUNT];
 	int lastStepsCount[TRACK_COUNT];
 	double stepDuration[TRACK_COUNT];
-	float lastStepTime[TRACK_COUNT];	
-    float lastSwingDuration[TRACK_COUNT];
+	double lastStepTime[TRACK_COUNT];	
+    double lastSwingDuration[TRACK_COUNT];
 
 	float expanderOutputValue[TRACK_COUNT];
 	float expanderAccentValue[TRACK_COUNT];
@@ -154,8 +154,8 @@ struct QuadAlgorithmicRhythm : Module {
 	float expanderResetValue = 0;
 	float expanderMuteValue = 0;
 
-	float maxStepCount;
-	float masterStepCount;
+	double maxStepCount;
+	double masterStepCount;
 	bool slaveQARsPresent;
 	bool masterQARPresent;
 
@@ -1074,28 +1074,28 @@ struct QuadAlgorithmicRhythmWidget : ModuleWidget {
 		addInput(createInput<PJ301MPort>(Vec(217, 335), module, QuadAlgorithmicRhythm::ACCENTS_4_INPUT));
 		addInput(createInput<PJ301MPort>(Vec(256, 335), module, QuadAlgorithmicRhythm::ACCENT_ROTATE_4_INPUT));
 
-		addInput(createInput<PJ301MPort>(Vec(302, 343), module, QuadAlgorithmicRhythm::CLOCK_INPUT));
+		addInput(createInput<PJ301MPort>(Vec(299, 343), module, QuadAlgorithmicRhythm::CLOCK_INPUT));
 		addInput(createInput<PJ301MPort>(Vec(337, 343), module, QuadAlgorithmicRhythm::RESET_INPUT));
 		addInput(createInput<PJ301MPort>(Vec(385, 343), module, QuadAlgorithmicRhythm::MUTE_INPUT));
 
-		addInput(createInput<PJ301MPort>(Vec(367, 145), module, QuadAlgorithmicRhythm::START_1_INPUT));
-		addInput(createInput<PJ301MPort>(Vec(367, 175), module, QuadAlgorithmicRhythm::START_2_INPUT));
-		addInput(createInput<PJ301MPort>(Vec(367, 205), module, QuadAlgorithmicRhythm::START_3_INPUT));
-		addInput(createInput<PJ301MPort>(Vec(367, 235), module, QuadAlgorithmicRhythm::START_4_INPUT));
+		addInput(createInput<PJ301MPort>(Vec(367, 147), module, QuadAlgorithmicRhythm::START_1_INPUT));
+		addInput(createInput<PJ301MPort>(Vec(367, 177), module, QuadAlgorithmicRhythm::START_2_INPUT));
+		addInput(createInput<PJ301MPort>(Vec(367, 207), module, QuadAlgorithmicRhythm::START_3_INPUT));
+		addInput(createInput<PJ301MPort>(Vec(367, 237), module, QuadAlgorithmicRhythm::START_4_INPUT));
 
 
-		addOutput(createOutput<PJ301MPort>(Vec(303, 145), module, QuadAlgorithmicRhythm::OUTPUT_1));
-		addOutput(createOutput<PJ301MPort>(Vec(335, 145), module, QuadAlgorithmicRhythm::ACCENT_OUTPUT_1));
-		addOutput(createOutput<PJ301MPort>(Vec(399, 145), module, QuadAlgorithmicRhythm::EOC_OUTPUT_1));
-		addOutput(createOutput<PJ301MPort>(Vec(303, 175), module, QuadAlgorithmicRhythm::OUTPUT_2));
-		addOutput(createOutput<PJ301MPort>(Vec(335, 175), module, QuadAlgorithmicRhythm::ACCENT_OUTPUT_2));
-		addOutput(createOutput<PJ301MPort>(Vec(399, 175), module, QuadAlgorithmicRhythm::EOC_OUTPUT_2));
-		addOutput(createOutput<PJ301MPort>(Vec(303, 205), module, QuadAlgorithmicRhythm::OUTPUT_3));
-		addOutput(createOutput<PJ301MPort>(Vec(335, 205), module, QuadAlgorithmicRhythm::ACCENT_OUTPUT_3));
-		addOutput(createOutput<PJ301MPort>(Vec(399, 205), module, QuadAlgorithmicRhythm::EOC_OUTPUT_3));
-		addOutput(createOutput<PJ301MPort>(Vec(303, 235), module, QuadAlgorithmicRhythm::OUTPUT_4));
-		addOutput(createOutput<PJ301MPort>(Vec(335, 235), module, QuadAlgorithmicRhythm::ACCENT_OUTPUT_4));
-		addOutput(createOutput<PJ301MPort>(Vec(399, 235), module, QuadAlgorithmicRhythm::EOC_OUTPUT_4));
+		addOutput(createOutput<PJ301MPort>(Vec(303, 147), module, QuadAlgorithmicRhythm::OUTPUT_1));
+		addOutput(createOutput<PJ301MPort>(Vec(335, 147), module, QuadAlgorithmicRhythm::ACCENT_OUTPUT_1));
+		addOutput(createOutput<PJ301MPort>(Vec(399, 147), module, QuadAlgorithmicRhythm::EOC_OUTPUT_1));
+		addOutput(createOutput<PJ301MPort>(Vec(303, 177), module, QuadAlgorithmicRhythm::OUTPUT_2));
+		addOutput(createOutput<PJ301MPort>(Vec(335, 177), module, QuadAlgorithmicRhythm::ACCENT_OUTPUT_2));
+		addOutput(createOutput<PJ301MPort>(Vec(399, 177), module, QuadAlgorithmicRhythm::EOC_OUTPUT_2));
+		addOutput(createOutput<PJ301MPort>(Vec(303, 207), module, QuadAlgorithmicRhythm::OUTPUT_3));
+		addOutput(createOutput<PJ301MPort>(Vec(335, 207), module, QuadAlgorithmicRhythm::ACCENT_OUTPUT_3));
+		addOutput(createOutput<PJ301MPort>(Vec(399, 207), module, QuadAlgorithmicRhythm::EOC_OUTPUT_3));
+		addOutput(createOutput<PJ301MPort>(Vec(303, 237), module, QuadAlgorithmicRhythm::OUTPUT_4));
+		addOutput(createOutput<PJ301MPort>(Vec(335, 237), module, QuadAlgorithmicRhythm::ACCENT_OUTPUT_4));
+		addOutput(createOutput<PJ301MPort>(Vec(399, 237), module, QuadAlgorithmicRhythm::EOC_OUTPUT_4));
 
         addChild(createLight<MediumLight<RedGreenBlueLight>>(Vec(31, 144), module, QuadAlgorithmicRhythm::ALGORITHM_1_LIGHT));
         addChild(createLight<MediumLight<RedGreenBlueLight>>(Vec(31, 201), module, QuadAlgorithmicRhythm::ALGORITHM_2_LIGHT));
