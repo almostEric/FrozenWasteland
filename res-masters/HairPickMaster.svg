@@ -23,15 +23,15 @@
        inkscape:collect="always"
        id="linearGradient4682">
       <stop
-         style="stop-color:#000002;stop-opacity:1;"
+         style="stop-color:#202022;stop-opacity:1;"
          offset="0"
          id="stop3387" />
       <stop
-         style="stop-color:#000005;stop-opacity:1;"
+         style="stop-color:#202025;stop-opacity:1;"
          offset=".3"
          id="stop3388" />
       <stop
-         style="stop-color:#08008f;stop-opacity:1;"
+         style="stop-color:#08006f;stop-opacity:1;"
          offset="1"
          id="stop3389" />
     </linearGradient>
@@ -42,7 +42,7 @@
        x1="35.219627"
        y1="150.85843"
        x2="35.23983"
-       y2="96.163956"
+       y2="50.163956"
        gradientUnits="userSpaceOnUse"
        gradientTransform="matrix(1.0745659,0,0,1,-2.6261843,0)" />
   </defs>
@@ -53,10 +53,10 @@
      borderopacity="1.0"
      inkscape:pageopacity="0.0"
      inkscape:pageshadow="2"
-     inkscape:zoom="2.8284271"
-     inkscape:cx="-344.91766"
+     inkscape:zoom="4"
+     inkscape:cx="15.67505"
      inkscape:cy="217.55861"
-     inkscape:document-units="mm"
+     inkscape:document-units="px"
      inkscape:current-layer="layer1"
      showgrid="false"
      fit-margin-top="0"
@@ -77,7 +77,7 @@
         <dc:format>image/svg+xml</dc:format>
         <dc:type
            rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
-        <dc:title />
+        <dc:title></dc:title>
       </cc:Work>
     </rdf:RDF>
   </metadata>
@@ -107,26 +107,26 @@
          style="stroke-width:0.26458332" /></text>
     <text
        xml:space="preserve"
-       style="font-style:normal;font-weight:normal;font-size:3.52777767px;line-height:1.25;font-family:sans-serif;text-align:center;letter-spacing:0px;word-spacing:0px;text-anchor:middle;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.26458332"
+       style="font-style:normal;font-weight:bold;font-size:3.52777767px;line-height:1.25;font-family:Homenaje;text-align:center;letter-spacing:0px;word-spacing:0px;text-anchor:middle;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.26458332;-inkscape-font-specification:'Homenaje Bold';font-stretch:normal;font-variant:normal;"
        x="62.861427"
        y="54.283745"
        id="text136"><tspan
          sodipodi:role="line"
          x="62.861427"
          y="54.283745"
-         style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:3.88055563px;font-family:Calibri;-inkscape-font-specification:'Calibri Bold';stroke-width:0.26458332"
+         style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:3.88055563px;font-family:Homenaje;-inkscape-font-specification:'Homenaje Bold';stroke-width:0.26458332;"
          id="tspan1059">HAIR PICK</tspan></text>
     <text
        xml:space="preserve"
-       style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:3.52777767px;line-height:1.25;font-family:Consolas;-inkscape-font-specification:'Consolas Bold';text-align:center;letter-spacing:0px;word-spacing:0px;text-anchor:middle;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.26458332"
-       x="46.069782"
+       style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:3.52777767px;line-height:1.25;font-family:Homenaje;-inkscape-font-specification:'Homenaje Bold';text-align:center;letter-spacing:0px;word-spacing:0px;text-anchor:middle;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.26458332;"
+       x="44.578819"
        y="124.70341"
        id="text299"><tspan
          sodipodi:role="line"
          id="tspan297"
-         x="46.069782"
+         x="44.578819"
          y="124.70341"
-         style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:2.82222223px;font-family:Calibri;-inkscape-font-specification:'Calibri Bold';stroke-width:0.26458332">FEEDBACK TYPE</tspan></text>
+         style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:2.82222223px;font-family:Homenaje;-inkscape-font-specification:'Homenaje Bold';stroke-width:0.26458332;">FEEDBACK TYPE</tspan></text>
     <text
        xml:space="preserve"
        style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:3.52777767px;line-height:1.25;font-family:Consolas;-inkscape-font-specification:'Consolas Bold';text-align:center;letter-spacing:0px;word-spacing:0px;text-anchor:middle;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.26458332"
@@ -182,7 +182,7 @@
            y="28.037596" /></flowRegion><flowPara
          id="flowPara1057" /></flowRoot>    <text
        xml:space="preserve"
-       style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:3.52777767px;line-height:1.25;font-family:Consolas;-inkscape-font-specification:'Consolas Bold';text-align:center;letter-spacing:0px;word-spacing:0px;text-anchor:middle;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.26458332"
+       style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:3.52777767px;line-height:1.25;font-family:Homenaje;-inkscape-font-specification:'Homenaje Bold';text-align:center;letter-spacing:0px;word-spacing:0px;text-anchor:middle;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.26458332;"
        x="71.10775"
        y="138.97736"
        id="text307-7"><tspan
@@ -190,29 +190,29 @@
          id="tspan305-4"
          x="71.10775"
          y="138.97736"
-         style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:2.82222223px;font-family:Calibri;-inkscape-font-specification:'Calibri Bold';stroke-width:0.26458332">OUT</tspan></text>
+         style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:2.82222223px;font-family:Homenaje;-inkscape-font-specification:'Homenaje Bold';stroke-width:0.26458332;">OUT</tspan></text>
     <text
        xml:space="preserve"
-       style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:3.52777767px;line-height:1.25;font-family:Consolas;-inkscape-font-specification:'Consolas Bold';text-align:center;letter-spacing:0px;word-spacing:0px;text-anchor:middle;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.26458332"
-       x="53.41626"
+       style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:3.52777767px;line-height:1.25;font-family:Homenaje;-inkscape-font-specification:'Homenaje Bold';text-align:center;letter-spacing:0px;word-spacing:0px;text-anchor:middle;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.26458332;"
+       x="54.431416"
        y="138.93414"
        id="text307-7-9"><tspan
          sodipodi:role="line"
          id="tspan305-4-3"
-         x="53.41626"
+         x="54.431416"
          y="138.93414"
-         style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:2.82222223px;font-family:Calibri;-inkscape-font-specification:'Calibri Bold';stroke-width:0.26458332">IN</tspan></text>
+         style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:2.82222223px;font-family:Homenaje;-inkscape-font-specification:'Homenaje Bold';stroke-width:0.26458332;">IN</tspan></text>
     <text
        xml:space="preserve"
-       style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:3.52777767px;line-height:1.25;font-family:Consolas;-inkscape-font-specification:'Consolas Bold';text-align:start;letter-spacing:0px;word-spacing:0px;text-anchor:start;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.26458332"
-       x="37.261505"
-       y="102.48026"
+       style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:3.52777767px;line-height:1.25;font-family:Homenaje;-inkscape-font-specification:'Homenaje Bold';text-align:start;letter-spacing:0px;word-spacing:0px;text-anchor:start;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.26458332;"
+       x="38.160446"
+       y="102.94928"
        id="text299-5"><tspan
          sodipodi:role="line"
          id="tspan297-8"
-         x="37.261505"
-         y="102.48026"
-         style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:2.82222223px;font-family:Calibri;-inkscape-font-specification:'Calibri Bold';text-align:start;text-anchor:start;stroke-width:0.26458332">EDGE LEVEL</tspan></text>
+         x="38.160446"
+         y="102.94928"
+         style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:2.82222223px;font-family:Homenaje;-inkscape-font-specification:'Homenaje Bold';text-align:start;text-anchor:start;stroke-width:0.26458332;">EDGE LEVEL</tspan></text>
     <flowRoot
        xml:space="preserve"
        id="flowRoot1227"
@@ -223,21 +223,7 @@
            height="30.405592"
            x="-114.5513"
            y="110.59232" /></flowRegion><flowPara
-         id="flowPara1233" /></flowRoot>    <rect
-       style="opacity:0.981;fill:#000000;fill-opacity:1;stroke:none;stroke-width:1.01655829;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
-       id="rect1673"
-       width="16.089626"
-       height="8.3254461"
-       x="57.951801"
-       y="59.532349" />
-    <rect
-       style="opacity:0.981;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.57885456;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
-       id="rect1673-6"
-       width="20.637501"
-       height="6.3610001"
-       x="51.406525"
-       y="82.134377" />
-    <flowRoot
+         id="flowPara1233" /></flowRoot>    <flowRoot
        xml:space="preserve"
        id="flowRoot5298"
        style="fill:black;fill-opacity:1;stroke:none;font-family:Consolas;font-style:normal;font-weight:bold;font-size:13.33333333px;line-height:1.25;letter-spacing:0px;word-spacing:0px;text-anchor:middle;text-align:center;-inkscape-font-specification:'Consolas Bold';font-stretch:normal;font-variant:normal"><flowRegion
@@ -249,26 +235,26 @@
            y="19.729092" /></flowRegion><flowPara
          id="flowPara5304" /></flowRoot>    <text
        xml:space="preserve"
-       style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:3.52777767px;line-height:1.25;font-family:Consolas;-inkscape-font-specification:'Consolas Bold';text-align:start;letter-spacing:0px;word-spacing:0px;text-anchor:start;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.26458332"
-       x="55.559212"
-       y="102.38499"
+       style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:3.52777767px;line-height:1.25;font-family:Homenaje;-inkscape-font-specification:'Homenaje Bold';text-align:start;letter-spacing:0px;word-spacing:0px;text-anchor:start;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.26458332;"
+       x="56.802635"
+       y="102.854"
        id="text299-5-6"><tspan
          sodipodi:role="line"
          id="tspan297-8-0"
-         x="55.559212"
-         y="102.38499"
-         style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:2.82222223px;font-family:Calibri;-inkscape-font-specification:'Calibri Bold';text-align:start;text-anchor:start;stroke-width:0.26458332">TENT LEVEL</tspan></text>
+         x="56.802635"
+         y="102.854"
+         style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:2.82222223px;font-family:Homenaje;-inkscape-font-specification:'Homenaje Bold';text-align:start;text-anchor:start;stroke-width:0.26458332;">TENT LEVEL</tspan></text>
     <text
        xml:space="preserve"
-       style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:3.52777767px;line-height:1.25;font-family:Consolas;-inkscape-font-specification:'Consolas Bold';text-align:start;letter-spacing:0px;word-spacing:0px;text-anchor:start;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.26458332"
-       x="75.353195"
-       y="102.57207"
+       style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:3.52777767px;line-height:1.25;font-family:Homenaje;-inkscape-font-specification:'Homenaje Bold';text-align:start;letter-spacing:0px;word-spacing:0px;text-anchor:start;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.26458332;"
+       x="76.381798"
+       y="103.04108"
        id="text299-5-6-7"><tspan
          sodipodi:role="line"
          id="tspan297-8-0-8"
-         x="75.353195"
-         y="102.57207"
-         style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:2.82222223px;font-family:Calibri;-inkscape-font-specification:'Calibri Bold';text-align:start;text-anchor:start;stroke-width:0.26458332">TENT TAP</tspan></text>
+         x="76.381798"
+         y="103.04108"
+         style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:2.82222223px;font-family:Homenaje;-inkscape-font-specification:'Homenaje Bold';text-align:start;text-anchor:start;stroke-width:0.26458332;">TENT TAP</tspan></text>
     <flowRoot
        xml:space="preserve"
        id="flowRoot1643"
@@ -281,105 +267,147 @@
            y="147.36186" /></flowRegion><flowPara
          id="flowPara1649" /></flowRoot>    <text
        xml:space="preserve"
-       style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:3.52777767px;line-height:1.25;font-family:Consolas;-inkscape-font-specification:'Consolas Bold';text-align:center;letter-spacing:0px;word-spacing:0px;text-anchor:middle;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.26458332"
-       x="76.372002"
+       style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:3.52777767px;line-height:1.25;font-family:Homenaje;-inkscape-font-specification:'Homenaje Bold';text-align:center;letter-spacing:0px;word-spacing:0px;text-anchor:middle;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.26458332;"
+       x="77.742683"
        y="124.67791"
        id="text299-8"><tspan
          sodipodi:role="line"
          id="tspan297-2"
-         x="76.372002"
+         x="77.742683"
          y="124.67791"
-         style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:2.82222223px;font-family:Calibri;-inkscape-font-specification:'Calibri Bold';stroke-width:0.26458332">FEEDBACK AMOUNT</tspan></text>
+         style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:2.82222223px;font-family:Homenaje;-inkscape-font-specification:'Homenaje Bold';stroke-width:0.26458332;">FEEDBACK AMOUNT</tspan></text>
     <text
        xml:space="preserve"
-       style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:3.52777767px;line-height:1.25;font-family:Consolas;-inkscape-font-specification:'Consolas Bold';text-align:center;letter-spacing:0px;word-spacing:0px;text-anchor:middle;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.26458332"
-       x="46.957829"
+       style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:3.52777767px;line-height:1.25;font-family:Homenaje;-inkscape-font-specification:'Homenaje Bold';text-align:center;letter-spacing:0px;word-spacing:0px;text-anchor:middle;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.26458332;"
+       x="45.229649"
        y="80.318687"
        id="text299-0"><tspan
          sodipodi:role="line"
          id="tspan297-3"
-         x="46.957829"
+         x="45.229649"
          y="80.318687"
-         style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:2.82222223px;font-family:Calibri;-inkscape-font-specification:'Calibri Bold';stroke-width:0.26458332">COMB PATTERN</tspan></text>
+         style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:2.82222223px;font-family:Homenaje;-inkscape-font-specification:'Homenaje Bold';stroke-width:0.26458332;">COMB PATTERN</tspan></text>
     <text
        xml:space="preserve"
-       style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:3.52777767px;line-height:1.25;font-family:Consolas;-inkscape-font-specification:'Consolas Bold';text-align:center;letter-spacing:0px;word-spacing:0px;text-anchor:middle;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.26458332"
-       x="79.719093"
+       style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:3.52777767px;line-height:1.25;font-family:Homenaje;-inkscape-font-specification:'Homenaje Bold';text-align:center;letter-spacing:0px;word-spacing:0px;text-anchor:middle;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.26458332;"
+       x="81.381325"
        y="80.062744"
        id="text299-0-0"><tspan
          sodipodi:role="line"
          id="tspan297-3-0"
-         x="79.719093"
+         x="81.381325"
          y="80.062744"
-         style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:2.82222223px;font-family:Calibri;-inkscape-font-specification:'Calibri Bold';stroke-width:0.26458332">TAP COUNT</tspan></text>
+         style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:2.82222223px;font-family:Homenaje;-inkscape-font-specification:'Homenaje Bold';stroke-width:0.26458332;">TAP COUNT</tspan></text>
     <text
        xml:space="preserve"
-       style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:3.52777767px;line-height:1.25;font-family:Consolas;-inkscape-font-specification:'Consolas Bold';text-align:center;letter-spacing:0px;word-spacing:0px;text-anchor:middle;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.26458332"
-       x="53.070896"
+       style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:3.52777767px;line-height:1.25;font-family:Homenaje;-inkscape-font-specification:'Homenaje Bold';text-align:center;letter-spacing:0px;word-spacing:0px;text-anchor:middle;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.26458332;"
+       x="51.61272"
        y="58.055984"
        id="text299-0-8"><tspan
          sodipodi:role="line"
          id="tspan297-3-03"
-         x="53.070896"
+         x="51.61272"
          y="58.055984"
-         style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:2.82222223px;font-family:Calibri;-inkscape-font-specification:'Calibri Bold';stroke-width:0.26458332">DIVISION</tspan></text>
+         style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:2.82222223px;font-family:Homenaje;-inkscape-font-specification:'Homenaje Bold';stroke-width:0.26458332;">DIVISION</tspan></text>
     <text
        xml:space="preserve"
-       style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:3.52777767px;line-height:1.25;font-family:Consolas;-inkscape-font-specification:'Consolas Bold';text-align:center;letter-spacing:0px;word-spacing:0px;text-anchor:middle;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.26458332"
-       x="77.93206"
-       y="58.187134"
+       style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:3.52777767px;line-height:1.25;font-family:Homenaje;-inkscape-font-specification:'Homenaje Bold';text-align:center;letter-spacing:0px;word-spacing:0px;text-anchor:middle;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.26458332;"
+       x="80.580078"
+       y="58.056011"
        id="text299-0-8-9"><tspan
          sodipodi:role="line"
          id="tspan297-3-03-8"
-         x="77.93206"
-         y="58.187134"
-         style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:2.82222223px;font-family:Calibri;-inkscape-font-specification:'Calibri Bold';stroke-width:0.26458332">SIZE</tspan></text>
+         x="80.580078"
+         y="58.056011"
+         style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:2.82222223px;font-family:Homenaje;-inkscape-font-specification:'Homenaje Bold';stroke-width:0.26458332;">SIZE</tspan></text>
     <text
        xml:space="preserve"
-       style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:3.52777767px;line-height:1.25;font-family:Consolas;-inkscape-font-specification:'Consolas Bold';text-align:center;letter-spacing:0px;word-spacing:0px;text-anchor:middle;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.26458332"
-       x="40.851826"
+       style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:3.52777767px;line-height:1.25;font-family:Homenaje;-inkscape-font-specification:'Homenaje Bold';text-align:center;letter-spacing:0px;word-spacing:0px;text-anchor:middle;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.26458332;"
+       x="41.255386"
        y="58.055889"
        id="text299-0-8-2"><tspan
          sodipodi:role="line"
          id="tspan297-3-03-83"
-         x="40.851826"
+         x="41.255386"
          y="58.055889"
-         style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:2.82222223px;font-family:Calibri;-inkscape-font-specification:'Calibri Bold';stroke-width:0.26458332">CLOCK</tspan></text>
+         style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:2.82222223px;font-family:Homenaje;-inkscape-font-specification:'Homenaje Bold';stroke-width:0.26458332;">CLOCK</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:3.52777767px;line-height:1.25;font-family:Consolas;-inkscape-font-specification:'Consolas Bold';text-align:center;letter-spacing:0px;word-spacing:0px;text-anchor:middle;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.26458332"
+       x="41.415394"
+       y="69.141899"
+       id="text299-0-8-2-0"><tspan
+         sodipodi:role="line"
+         id="tspan297-3-03-83-2"
+         x="41.415394"
+         y="69.141899"
+         style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:2.82222223px;font-family:Homenaje;-inkscape-font-specification:'Homenaje Bold';stroke-width:0.26458332">V/OCT</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:3.52777767px;line-height:1.25;font-family:Homenaje;-inkscape-font-specification:'Homenaje Bold';text-align:center;letter-spacing:0px;word-spacing:0px;text-anchor:middle;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.26458332;"
+       x="63.952667"
+       y="74.344948"
+       id="text299-0-8-2-0-5"><tspan
+         sodipodi:role="line"
+         id="tspan297-3-03-83-2-6"
+         x="63.952667"
+         y="74.344948"
+         style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:2.82222223px;font-family:Homenaje;-inkscape-font-specification:'Homenaje Bold';stroke-width:0.26458332;">SIZE OUT</tspan></text>
     <rect
-       style="opacity:0.981;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.57138515;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
-       id="rect1673-6-0"
-       width="20.108334"
+       style="opacity:0.981;fill:#b1b1b1;fill-opacity:1;stroke:none;stroke-width:1.11632049;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       id="rect1673-4"
+       width="17.197916"
+       height="9.3927088"
+       x="57.371311"
+       y="58.987965" />
+    <rect
+       style="opacity:0.981;fill:#000000;fill-opacity:1;stroke:none;stroke-width:1.01655829;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       id="rect1673"
+       width="16.089626"
+       height="8.3254461"
+       x="57.951801"
+       y="59.532349" />
+    <rect
+       style="opacity:0.981;fill:#b1b1b1;fill-opacity:1;stroke:none;stroke-width:0.64051104;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       id="rect1673-6-2"
+       width="21.695833"
+       height="7.4083333"
+       x="50.889019"
+       y="81.609848" />
+    <rect
+       style="opacity:0.981;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.57885456;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       id="rect1673-6"
+       width="20.637501"
        height="6.3610001"
-       x="50.279415"
-       y="126.18449" />
+       x="51.406525"
+       y="82.134377" />
+    <rect
+       style="opacity:0.981;fill:#b1b1b1;fill-opacity:1;stroke:none;stroke-width:0.72133392;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       id="rect1673-6-4-6"
+       width="27.516666"
+       height="7.4083333"
+       x="49.169228"
+       y="92.193169" />
     <rect
        style="opacity:0.981;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.6554237;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
        id="rect1673-6-4"
        width="26.458334"
        height="6.3610001"
        x="49.698395"
-       y="93.451347" />
-    <text
-       xml:space="preserve"
-       style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:3.52777767px;line-height:1.25;font-family:Consolas;-inkscape-font-specification:'Consolas Bold';text-align:center;letter-spacing:0px;word-spacing:0px;text-anchor:middle;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.26458332"
-       x="41.072796"
-       y="69.141899"
-       id="text299-0-8-2-0"><tspan
-         sodipodi:role="line"
-         id="tspan297-3-03-83-2"
-         x="41.072796"
-         y="69.141899"
-         style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:2.82222223px;font-family:Calibri;-inkscape-font-specification:'Calibri Bold';stroke-width:0.26458332">V/OCT</tspan></text>
-    <text
-       xml:space="preserve"
-       style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:3.52777767px;line-height:1.25;font-family:Consolas;-inkscape-font-specification:'Consolas Bold';text-align:center;letter-spacing:0px;word-spacing:0px;text-anchor:middle;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.26458332"
-       x="63.632111"
-       y="74.344948"
-       id="text299-0-8-2-0-5"><tspan
-         sodipodi:role="line"
-         id="tspan297-3-03-83-2-6"
-         x="63.632111"
-         y="74.344948"
-         style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:2.82222223px;font-family:Calibri;-inkscape-font-specification:'Calibri Bold';stroke-width:0.26458332">SIZE OUT</tspan></text>
+       y="92.789886" />
+    <rect
+       style="opacity:0.981;fill:#b1b1b1;fill-opacity:1;stroke:none;stroke-width:0.63265175;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       id="rect1673-6-0-5"
+       width="21.166666"
+       height="7.4083333"
+       x="50.227562"
+       y="126.32442" />
+    <rect
+       style="opacity:0.981;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.57138515;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       id="rect1673-6-0"
+       width="20.108334"
+       height="6.3610001"
+       x="50.808582"
+       y="126.84595" />
   </g>
 </svg>

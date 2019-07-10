@@ -1,3 +1,15 @@
+### 1.3.0
+- UI Improvements
+- Portland Weather can actually run on most machines
+- Hair Pick works properly again
+- Roulette LFO now models an ellipse rolling in an ellipse. Improved contols. Added Attenuverters
+- Added fuzzy logic comparator modes to PLL
+- Added reset button SS LFO
+- Fixed bug with SS LFO (time was 2x too fast)
+- QAR follows clocks better, will no longer keep going if clock stops
+- BPM LFO and BPM LFO2 follow clocks better
+- Added Expander module for Vox Inhumana, allows Q and slope control
+
 ### 1.2.1 (2019-06-22)
 - Fixed bug with QAR startup/reset. Improved clock accuracy 
 

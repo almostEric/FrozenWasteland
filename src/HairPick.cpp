@@ -1,4 +1,6 @@
 #include "FrozenWasteland.hpp"
+#include <time.h>
+#include "frame.h"
 #include "ringbuffer.hpp"
 #include "samplerate.h"
 #include <iostream>
@@ -92,9 +94,10 @@ struct HairPick : Module {
 	float divisions[DIVISIONS] = {1/256.0,1/192.0,1/128.0,1/96.0,1/64.0,1/48.0,1/32.0,1/24.0,1/16.0,1/13.0,1/12.0,1/11.0,1/8.0,1/7.0,1/6.0,1/5.0,1/4.0,1/3.0,1/2.0,1/1.5,1};
 	const char* divisionNames[DIVISIONS] = {"/256","/192","/128","/96","/64","/48","/32","/24","/16","/13","/12","/11","/8","/7","/6","/5","/4","/3","/2","/1.5","x 1"};
 	int division;
-	float time = 0.0;
+	float timeElapsed= 0.0;
 	float duration = 0;
 	float baseDelay;
+	bool firstClockReceived = false;
 	bool secondClockReceived = false;
 
 
@@ -102,11 +105,11 @@ struct HairPick : Module {
 	float combLevel[NUM_TAPS];
 
 
-	FrozenWasteland::MultiTapDoubleRingBuffer<float, HISTORY_SIZE,NUM_TAPS> historyBuffer[CHANNELS];
-	FrozenWasteland::DoubleRingBuffer<float, 16> outBuffer[NUM_TAPS][CHANNELS]; 
+	FrozenWasteland::MultiTapDoubleRingBuffer<FloatFrame, HISTORY_SIZE,NUM_TAPS+1> historyBuffer;
+	FrozenWasteland::DoubleRingBuffer<FloatFrame, 16> outBuffer[NUM_TAPS+1]; 
 	
-	SRC_STATE *src;
-	float lastFeedback[CHANNELS] = {0.0f,0.0f};
+	SRC_STATE *src[NUM_TAPS + 1];
+	FloatFrame lastFeedback = {0.0f,0.0f};
 
 	float lerp(float v0, float v1, float t) {
 	  return (1 - t) * v0 + t * v1;
@@ -119,7 +122,7 @@ struct HairPick : Module {
         {
             tapNumber += (tapIndex & (1 << levelIndex)) > 0 ? (1 << (5-levelIndex)) : 0;
         }
-        return 64-tapNumber;     
+        return NUM_TAPS-tapNumber;     
     }
 
 	float envelope(int tapNumber, float edgeLevel, float tentLevel, int tentNumber) {
@@ -153,89 +156,90 @@ struct HairPick : Module {
 
 		configParam(FEEDBACK_TYPE_PARAM, 0.0f, 3, 0.0f);
 		configParam(FEEDBACK_AMOUNT_PARAM, 0.0f, 1.0f, 0.0f);
+		for(int i=0;i<=NUM_TAPS; i++) {
+			src[i] = src_new(SRC_SINC_FASTEST, 2, NULL);	
+		}
 
-		//src = src_new(SRC_SINC_FASTEST, 1, NULL);	
+		srand(time(NULL));
 		//src = src_new(SRC_LINEAR, 1, NULL);		
-		src = src_new(SRC_ZERO_ORDER_HOLD, 1, NULL);
+		//src = src_new(SRC_ZERO_ORDER_HOLD, 1, NULL);
 	}
 
 	
 
 
 
-	void process(const ProcessArgs &args) override;
-};
+	void process(const ProcessArgs &args) override {
+
+		combPattern = (int)clamp(params[PATTERN_TYPE_PARAM].getValue() + (inputs[PATTERN_TYPE_CV_INPUT].getVoltage() * 1.5f),0.0f,15.0);
+		feedbackType = (int)clamp(params[FEEDBACK_TYPE_PARAM].getValue() + (inputs[FEEDBACK_TYPE_CV_INPUT].getVoltage() / 10.0f),0.0f,3.0);
+
+		int tapCount = (int)clamp(params[NUMBER_TAPS_PARAM].getValue() + (inputs[NUMBER_TAPS_CV_INPUT].getVoltage() * 6.4f),1.0f,64.0);
 
 
-void HairPick::process(const ProcessArgs &args) {
+		edgeLevel = clamp(params[EDGE_LEVEL_PARAM].getValue() + (inputs[EDGE_LEVEL_CV_INPUT].getVoltage() / 10.0f),0.0f,1.0);
+		tentLevel = clamp(params[TENT_LEVEL_PARAM].getValue() + (inputs[TENT_LEVEL_CV_INPUT].getVoltage() / 10.0f),0.0f,1.0);
 
-	combPattern = (int)clamp(params[PATTERN_TYPE_PARAM].getValue() + (inputs[PATTERN_TYPE_CV_INPUT].getVoltage() * 1.5f),0.0f,15.0);
-	feedbackType = (int)clamp(params[FEEDBACK_TYPE_PARAM].getValue() + (inputs[FEEDBACK_TYPE_CV_INPUT].getVoltage() / 10.0f),0.0f,3.0);
-
-	int tapCount = (int)clamp(params[NUMBER_TAPS_PARAM].getValue() + (inputs[NUMBER_TAPS_CV_INPUT].getVoltage() * 6.4f),1.0f,64.0);
+		tentTap = (int)clamp(params[TENT_TAP_PARAM].getValue() + (inputs[TENT_TAP_CV_INPUT].getVoltage() * 6.3f),1.0f,63.0f);
 
 
-	edgeLevel = clamp(params[EDGE_LEVEL_PARAM].getValue() + (inputs[EDGE_LEVEL_CV_INPUT].getVoltage() / 10.0f),0.0f,1.0);
-	tentLevel = clamp(params[TENT_LEVEL_PARAM].getValue() + (inputs[TENT_LEVEL_CV_INPUT].getVoltage() / 10.0f),0.0f,1.0);
-
-	tentTap = (int)clamp(params[TENT_TAP_PARAM].getValue() + (inputs[TENT_TAP_CV_INPUT].getVoltage() * 6.3f),1.0f,63.0f);
-
-
-	//Initialize muting - set all active first
-	for(int tapNumber = 0;tapNumber<NUM_TAPS;tapNumber++) {
-		combActive[tapNumber] = true;	
-	}
-	//Turn off as needed
-	for(int tapIndex = NUM_TAPS-1;tapIndex >= tapCount;tapIndex--) {
-		int tapNumber = muteTap(tapIndex);
-		combActive[tapNumber] = false;
-	}
-
-	float divisionf = params[CLOCK_DIV_PARAM].getValue();
-	if(inputs[CLOCK_DIVISION_CV_INPUT].isConnected()) {
-		divisionf +=(inputs[CLOCK_DIVISION_CV_INPUT].getVoltage() * (DIVISIONS / 10.0));
-	}
-	divisionf = clamp(divisionf,0.0f,20.0f);
-	division = (DIVISIONS-1) - int(divisionf); //TODO: Reverse Division Order
-
-	time += 1.0 / args.sampleRate;
-	if(inputs[CLOCK_INPUT].isConnected()) {
-		if(clockTrigger.process(inputs[CLOCK_INPUT].getVoltage())) {
-			if(secondClockReceived) {
-				duration = time;
-			}
-			time = 0;
-			//secondClockReceived = true;			
-			secondClockReceived = !secondClockReceived;			
+		//Initialize muting - set all active first
+		for(int tapNumber = 0;tapNumber<NUM_TAPS;tapNumber++) {
+			combActive[tapNumber] = true;	
 		}
-		//lights[CLOCK_LIGHT].value = time > (duration/2.0);
-	}
-	
-	if(inputs[CLOCK_INPUT].isConnected()) {
-		baseDelay = duration / divisions[division];
-	} else {
-		baseDelay = clamp(params[SIZE_PARAM].getValue(), 0.001f, 10.0f);			
-	}
-	float pitchShift = powf(2.0f,inputs[VOLT_OCTAVE_INPUT].getVoltage());
-	baseDelay = baseDelay / pitchShift;
-	outputs[DELAY_LENGTH_OUTPUT].setVoltage(baseDelay);  
-	
-	for(int channel = 0;channel < CHANNELS;channel++) {
-		// Get input to delay block
-		float in = 0.0f;
-		if(channel == 0) {
-			in = inputs[IN_L_INPUT].getVoltage();
+		//Turn off as needed
+		for(int tapIndex = NUM_TAPS-1;tapIndex >= tapCount;tapIndex--) {
+			int tapNumber = muteTap(tapIndex);
+			combActive[tapNumber] = false;
+		}
+
+		float divisionf = params[CLOCK_DIV_PARAM].getValue();
+		if(inputs[CLOCK_DIVISION_CV_INPUT].isConnected()) {
+			divisionf +=(inputs[CLOCK_DIVISION_CV_INPUT].getVoltage() * (DIVISIONS / 10.0));
+		}
+		divisionf = clamp(divisionf,0.0f,20.0f);
+		division = (DIVISIONS-1) - int(divisionf); //TODO: Reverse Division Order
+
+		timeElapsed+= 1.0 / args.sampleRate;
+		if(inputs[CLOCK_INPUT].isConnected()) {
+			if(clockTrigger.process(inputs[CLOCK_INPUT].getVoltage())) {
+				if(firstClockReceived) {
+					duration = timeElapsed;
+					secondClockReceived = true;
+				}
+				timeElapsed= 0;
+				firstClockReceived = true;								
+			} else if(secondClockReceived && timeElapsed > duration) {  //allow absense of second clock to affect duration
+				duration = timeElapsed;				
+			}	
+			baseDelay = clamp(duration / divisions[division],0.001f,10.0f);		
 		} else {
-			in = inputs[IN_R_INPUT].isConnected() ? inputs[IN_R_INPUT].getVoltage() : inputs[IN_L_INPUT].getVoltage();			
+			baseDelay = clamp(params[SIZE_PARAM].getValue(), 0.001f, 10.0f);
+			duration = 0.0f;
+			firstClockReceived = false;		
+			secondClockReceived = false;	
 		}
-		float feedbackAmount = clamp(params[FEEDBACK_AMOUNT_PARAM].getValue() + (inputs[FEEDBACK_CV_INPUT].getVoltage() / 10.0f), 0.0f, 1.0f);
-		float feedbackInput = lastFeedback[channel];
 
-		float dry = in + feedbackInput * feedbackAmount;
+		float pitchShift = powf(2.0f,inputs[VOLT_OCTAVE_INPUT].getVoltage());
+		baseDelay = baseDelay / pitchShift;
+		outputs[DELAY_LENGTH_OUTPUT].setVoltage(baseDelay);  
+		
+		FloatFrame dryFrame;
+		float feedbackAmount = clamp(params[FEEDBACK_AMOUNT_PARAM].getValue() + (inputs[FEEDBACK_CV_INPUT].getVoltage() / 10.0f), 0.0f, 1.0f);
+		float in = 0.0f;				
+		for(int channel = 0;channel < CHANNELS;channel++) {	
+			if(channel == 0) {
+				in = inputs[IN_L_INPUT].getVoltage();	
+				dryFrame.l = in + lastFeedback.l * feedbackAmount;
+			} else {
+				in = inputs[IN_R_INPUT].isConnected() ? inputs[IN_R_INPUT].getVoltage() : inputs[IN_L_INPUT].getVoltage();	
+				dryFrame.r = in + lastFeedback.r * feedbackAmount;
+			}	
+		}
 
 		// Push dry sample into history buffer
-		if (!historyBuffer[channel].full(NUM_TAPS-1)) {
-			historyBuffer[channel].push(dry);
+		if (!historyBuffer.full(NUM_TAPS-1)) {
+			historyBuffer.push(dryFrame);
 		}
 
 		float delayNonlinearity = 1.0f;
@@ -243,27 +247,30 @@ void HairPick::process(const ProcessArgs &args) {
 		//Apply non-linearity
 		if(feedbackType == FEEDBACK_SITAR) {
 			if(in > 0) {
-				delayNonlinearity = 1 + (in/(10.0f * 100.0f)*percentChange); //Test sitar will change length by 1%
+				delayNonlinearity = 1 + ((in/10.0f) * (percentChange/100.0f)); //Test sitar will change length by up tp 10%
 			}
 		}
 
 
-		float wet = 0.0f; // This is the mix of delays and input that is outputed
-		float feedbackValue = 0.0f; // This is the output of a tap that gets sent back to input
-		for(int tap = 0; tap < NUM_TAPS;tap++) { 
-		
+		FloatFrame wet = {0.0f, 0.0f}; // This is the mix of delays and input that is outputed
+		FloatFrame feedbackValue = {0.0f,0.0f}; // This is the output of a tap that gets sent back to input
+		for(int tap = 0; tap <= NUM_TAPS;tap++) { 
 			
+			float delay	= 0.0f;
 			// Compute delay time in seconds
-			float delay = baseDelay * delayNonlinearity * combPatterns[combPattern][tap] / NUM_TAPS; 
+			if(tap <NUM_TAPS) {
+				delay = baseDelay * combPatterns[combPattern][tap] / NUM_TAPS; 
+			} else { // delay tap
+				delay = baseDelay * delayNonlinearity;
+			}
 			// Number of delay samples
 			float index = delay * args.sampleRate;
 
-
 			// How many samples do we need consume to catch up?
-			float consume = index - historyBuffer[channel].size(tap);
+			float consume = index - historyBuffer.size(tap);
 			if(index > 0)
 			{
-				if (outBuffer[tap][channel].empty()) {
+				if (outBuffer[tap].empty()) {
 								
 					double ratio = 1.f;
 					if (std::fabs(consume) >= 16.f) {
@@ -271,62 +278,71 @@ void HairPick::process(const ProcessArgs &args) {
 					}
 
 					SRC_DATA srcData;
-					srcData.data_in = (const float*) historyBuffer[channel].startData(tap);
-					srcData.data_out = (float*) outBuffer[tap][channel].endData();
-					srcData.input_frames = std::min((int) historyBuffer[channel].size(tap), 16);
-					srcData.output_frames = outBuffer[tap][channel].capacity();
+					srcData.data_in = (const float*) historyBuffer.startData(tap);
+					srcData.data_out = (float*) outBuffer[tap].endData();
+					srcData.input_frames = std::min((int) historyBuffer.size(tap), 16);
+					srcData.output_frames = outBuffer[tap].capacity();
 					srcData.end_of_input = false;
 					srcData.src_ratio = ratio;
-					src_process(src, &srcData);
-					historyBuffer[channel].startIncr(tap,srcData.input_frames_used);
-					outBuffer[tap][channel].endIncr(srcData.output_frames_gen);
+					src_process(src[tap], &srcData);
+					historyBuffer.startIncr(tap,srcData.input_frames_used);
+					outBuffer[tap].endIncr(srcData.output_frames_gen);
 				}			
 			}
 
-			float wetTap = 0.0f;
-			if (!outBuffer[tap][channel].empty()) {
-				wetTap = outBuffer[tap][channel].shift();
-				if(tap == NUM_TAPS-1) {
-					feedbackValue = wetTap;
-				}
-				if(!combActive[tap]) {
-					wetTap = 0.0f;
+			FloatFrame wetTap = {0.0f, 0.0f};
+			if (!outBuffer[tap].empty()) {
+				if(tap == NUM_TAPS) {
+					feedbackValue = outBuffer[tap].shift();
 				} else {
-					wetTap = wetTap * envelope(tap,edgeLevel,tentLevel,tentTap);
+					wetTap = outBuffer[tap].shift();
+					if(!combActive[tap]) {
+						wetTap = {0.0f, 0.0f};
+					} else {
+						wetTap.l = wetTap.l * envelope(tap,edgeLevel,tentLevel,tentTap);
+						wetTap.r = wetTap.r * envelope(tap,edgeLevel,tentLevel,tentTap);
+					}
 				}
 			}
 
-			wet += wetTap;
+			wet.l += wetTap.l;
+			wet.r += wetTap.r;
 		}
 
-		wet = wet / ((float)tapCount) * sqrt((float)tapCount);
+		wet.l = wet.l / ((float)tapCount) * sqrt((float)tapCount);
+		wet.r = wet.r / ((float)tapCount) * sqrt((float)tapCount);
 
 		float feedbackWeight = 0.5;
 		switch(feedbackType) {
 			case FEEDBACK_GUITAR :
-				feedbackValue = (feedbackWeight * feedbackValue) + ((1-feedbackWeight) * lastFeedback[channel]);
+				feedbackValue.l = (feedbackWeight * feedbackValue.l) + ((1-feedbackWeight) * lastFeedback.l);
+				feedbackValue.r = (feedbackWeight * feedbackValue.r) + ((1-feedbackWeight) * lastFeedback.r);
 				break;
 			case FEEDBACK_SITAR :
-				feedbackValue = (feedbackWeight * feedbackValue) + ((1-feedbackWeight) * lastFeedback[channel]);
+				feedbackValue.l = (feedbackWeight * feedbackValue.l) + ((1-feedbackWeight) * lastFeedback.l);
+				feedbackValue.r = (feedbackWeight * feedbackValue.r) + ((1-feedbackWeight) * lastFeedback.r);
 				break;
 			case FEEDBACK_CLARINET :
-				feedbackValue = (feedbackWeight * feedbackValue) + ((1-feedbackWeight) * lastFeedback[channel]);
+				feedbackValue.l = (feedbackWeight * feedbackValue.l) + ((1-feedbackWeight) * lastFeedback.l);
+				feedbackValue.r = (feedbackWeight * feedbackValue.r) + ((1-feedbackWeight) * lastFeedback.r);
 				break;
 			case FEEDBACK_RAW :
-				//feedbackValue = wet;
 				break;
 		}
 		
 		//feedbackValue = clamp(feedbackValue,-10.0f,10.0f);
 
 
-		lastFeedback[channel] = feedbackValue;
+		lastFeedback = feedbackValue;
 
-		float out = wet; 
+		FloatFrame out = wet; 
 		
-		outputs[OUT_L_OUTPUT + channel].setVoltage(out);
+		outputs[OUT_L_OUTPUT].setVoltage(out.l);
+		outputs[OUT_R_OUTPUT].setVoltage(out.r);
+
 	}
-}
+};
+
 
 struct HPStatusDisplay : TransparentWidget {
 	HairPick *module;
@@ -407,8 +423,8 @@ struct HPStatusDisplay : TransparentWidget {
 		drawDivision(args, Vec(91,60), module->division);
 		drawDelayTime(args, Vec(350,65), module->baseDelay);
 		drawPatternType(args, Vec(64,135), module->combPattern);
-		drawEnvelope(args,Vec(55,166),module->edgeLevel,module->tentLevel,module->tentTap);
-		drawFeedbackType(args, Vec(60,303), module->feedbackType);
+		drawEnvelope(args,Vec(55,163),module->edgeLevel,module->tentLevel,module->tentTap);
+		drawFeedbackType(args, Vec(62,305), module->feedbackType);
 	}
 };
 

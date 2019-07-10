@@ -93,22 +93,41 @@ struct VoltageControlledOscillator {
 struct PhaseComparator {
 	bool clock = false;
 	bool data = false;
+	float clockInput = 0.0f;
+	float dataInput = 0.0f;
+	
 	bool nandGate1 = false;
 	bool nandGate2 = false;
 	bool nandGate3 = false;
 	bool nandGate4 = false;
 
 
-	void setClock(float clockInput)  {
-		clock = clockInput >= 0;
+	void setClock(float ci)  {
+		clockInput = ci;
+		clock = ci >= 0;
 	}
 
-	void setData(float dataInput)  {
-		data = dataInput >= 0;
+	void setData(float di)  {
+		dataInput = di;
+		data = di >= 0;
 	}
 
 	float XORoutput()  {
 		return (clock ^ data) ? 5.0 : -5.0;
+	}
+
+	float FuzzyXORoutput() {
+		float aAndB = std::min(clockInput, dataInput);
+	    float aOrB = std::max(clockInput, dataInput);
+    	float aXorB = aOrB - aAndB;
+		return aXorB;
+	}
+
+	float FuzzyHXORoutput() {
+		float aAndB = clockInput * dataInput * 0.1F;
+    	float aOrB = clockInput + dataInput - aAndB;
+    	float aXorB = aOrB - aAndB;
+		return aXorB;
 	}
 
 	float FlipFlopOutput()  {
@@ -197,11 +216,16 @@ struct PhasedLockedLoop : Module {
 		PHASE_LOCKED_LIGHT,
 		XOR_COMPARATOR_LIGHT,
 		FLIP_FLOP_COMPARATOR_LIGHT,
+		FUZZY_XOR_COMPARATOR_LIGHT,
+		FUZZY_HYPERBOLIC_XOR_COMPARATOR_LIGHT,
 		NUM_LIGHTS
 	};
 	enum ComparatorTypes {
 		XOR_COMPARATOR,
-		FLIP_FLOP_COMARATOR
+		FLIP_FLOP_COMARATOR,
+		FUZZY_XOR_COMPARATOR,
+		FUZZY_HYPERBOLIC_XOR_COMPARATOR,
+		NUM_COMPARATORS
 	};
 
 	VoltageControlledOscillator<16,16> oscillator;
@@ -249,10 +273,12 @@ struct PhasedLockedLoop : Module {
 void PhasedLockedLoop::process(const ProcessArgs &args) {
 	// Modes
 	if (modeTrigger.process(params[COMPARATOR_TYPE_PARAM].getValue())) {
-		currentComparatorType = (currentComparatorType + 1) % 2; //only 2...for now!!!
+		currentComparatorType = (currentComparatorType + 1) % NUM_COMPARATORS; //only 4...for now!!!
 	}
 	lights[XOR_COMPARATOR_LIGHT].value = currentComparatorType == XOR_COMPARATOR ? 1.0 : 0.0;
 	lights[FLIP_FLOP_COMPARATOR_LIGHT].value = currentComparatorType == FLIP_FLOP_COMARATOR ? 1.0 : 0.0;
+	lights[FUZZY_XOR_COMPARATOR_LIGHT].value = currentComparatorType == FUZZY_XOR_COMPARATOR ? 1.0 : 0.0;
+	lights[FUZZY_HYPERBOLIC_XOR_COMPARATOR_LIGHT].value = currentComparatorType == FUZZY_HYPERBOLIC_XOR_COMPARATOR ? 1.0 : 0.0;
 
 	float pitchCv;
 	if (inputs[VCO_CV_INPUT].isConnected()) {
@@ -297,6 +323,12 @@ void PhasedLockedLoop::process(const ProcessArgs &args) {
 		case FLIP_FLOP_COMARATOR :
 			comparatorOutput = comparator.FlipFlopOutput();
 			break;
+		case FUZZY_XOR_COMPARATOR :
+			comparatorOutput = comparator.FuzzyXORoutput();
+			break;
+		case FUZZY_HYPERBOLIC_XOR_COMPARATOR :
+			comparatorOutput = comparator.FuzzyHXORoutput();
+			break;
 		default:
 			comparatorOutput = comparator.XORoutput();
 			break;
@@ -340,9 +372,9 @@ struct PhasedLockedLoopWidget : ModuleWidget {
 		addChild(createWidget<ScrewSilver>(Vec(box.size.x - 2 * RACK_GRID_WIDTH + 12, RACK_GRID_HEIGHT - RACK_GRID_WIDTH)));
 
 		addParam(createParam<RoundSmallFWKnob>(Vec(100, 46), module, PhasedLockedLoop::VCO_FREQ_PARAM));
-		addParam(createParam<RoundSmallFWKnob>(Vec(85, 79), module, PhasedLockedLoop::VCO_PW_PARAM));
-		addParam(createParam<RoundSmallFWKnob>(Vec(118, 79), module, PhasedLockedLoop::VCO_PWCV_PARAM));
-		addParam(createParam<RoundFWKnob>(Vec(97, 307), module, PhasedLockedLoop::LPF_FREQ_PARAM));
+		addParam(createParam<RoundSmallFWKnob>(Vec(85, 80), module, PhasedLockedLoop::VCO_PW_PARAM));
+		addParam(createParam<RoundSmallFWKnob>(Vec(118, 80), module, PhasedLockedLoop::VCO_PWCV_PARAM));
+		addParam(createParam<RoundFWKnob>(Vec(97, 308), module, PhasedLockedLoop::LPF_FREQ_PARAM));
 		addParam(createParam<CKD6>(Vec(18, 202), module, PhasedLockedLoop::COMPARATOR_TYPE_PARAM));
 
 		addInput(createInput<PJ301MPort>(Vec(8, 30), module, PhasedLockedLoop::VCO_CV_INPUT));
@@ -355,9 +387,11 @@ struct PhasedLockedLoopWidget : ModuleWidget {
 		addOutput(createOutput<PJ301MPort>(Vec(8, 239), module, PhasedLockedLoop::COMPARATOR_OUTPUT));
 		addOutput(createOutput<PJ301MPort>(Vec(8, 319), module, PhasedLockedLoop::LPF_OUTPUT));
 
-		addChild(createLight<LargeLight<BlueLight>>(Vec(112, 155), module, PhasedLockedLoop::PHASE_LOCKED_LIGHT));
-		addChild(createLight<SmallLight<BlueLight>>(Vec(62, 201), module, PhasedLockedLoop::XOR_COMPARATOR_LIGHT));
-		addChild(createLight<SmallLight<BlueLight>>(Vec(62, 217), module, PhasedLockedLoop::FLIP_FLOP_COMPARATOR_LIGHT));
+		addChild(createLight<LargeLight<BlueLight>>(Vec(62, 155), module, PhasedLockedLoop::PHASE_LOCKED_LIGHT));
+		addChild(createLight<SmallLight<BlueLight>>(Vec(55, 204), module, PhasedLockedLoop::XOR_COMPARATOR_LIGHT));
+		addChild(createLight<SmallLight<BlueLight>>(Vec(55, 214), module, PhasedLockedLoop::FLIP_FLOP_COMPARATOR_LIGHT));
+		addChild(createLight<SmallLight<BlueLight>>(Vec(55, 224), module, PhasedLockedLoop::FUZZY_XOR_COMPARATOR_LIGHT));
+		addChild(createLight<SmallLight<BlueLight>>(Vec(55, 234), module, PhasedLockedLoop::FUZZY_HYPERBOLIC_XOR_COMPARATOR_LIGHT));
 	}
 };
 

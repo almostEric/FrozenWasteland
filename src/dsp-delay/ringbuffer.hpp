@@ -159,7 +159,7 @@ struct ReverseRingBuffer {
 	}
 
 	T shift() {		
-		float value = data[mask(start--)];
+		T value = data[mask(start--)];
 		if((start > end && start-end >= delaySize) || (end-start >=delaySize)) {
 			start = end;	
 		}

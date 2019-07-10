@@ -4,13 +4,12 @@ RACK_DIR ?= ../..
 FLAGS += \
 	-Idep/include \
 	-I./src/ui \
-	-I./eurorack \
 	-I./src/dsp-delay \
 	-I./src/dsp-filter/utils -I./src/dsp-filter/filters -I./src/dsp-filter/third-party/falco	
 
 
 # Add .cpp and .c files to the build
-SOURCES += $(wildcard src/*.cpp src/filters/*.cpp src/dsp-noise/*.cpp src/dsp-filter/*.cpp rc/dsp-delay/*.hpp src/stmlib/*.cc)
+SOURCES += $(wildcard src/*.cpp src/filters/*.cpp src/dsp-noise/*.cpp src/dsp-filter/*.cpp  src/stmlib/*.cc)
 
 # Add files to the ZIP package when running `make dist`
 # The compiled plugin is automatically added.

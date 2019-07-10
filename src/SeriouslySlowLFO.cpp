@@ -2,6 +2,10 @@
 #include "ui/knobs.hpp"
 
 
+//Not sure why this is necessary, but SSLFO is running twice as fast as sample rate says it should
+#define SampleRateCompensation 2
+
+
 
 struct SeriouslySlowLFO : Module {
 	enum ParamIds {
@@ -12,6 +16,7 @@ struct SeriouslySlowLFO : Module {
 		PHASE_CV_ATTENUVERTER_PARAM,
 		QUANTIZE_PHASE_PARAM,
 		OFFSET_PARAM,
+		RESET_PARAM,
 		NUM_PARAMS
 	};
 	enum InputIds {
@@ -38,19 +43,19 @@ struct SeriouslySlowLFO : Module {
 	};
 
 struct LowFrequencyOscillator {
-	float basePhase = 0.0;
+	double basePhase = 0.0;
 	double phase = 0.0;
 	float pw = 0.5;
-	float freq = 1.0;
+	double freq = 1.0;
 	bool offset = false;
 	bool invert = false;
-	dsp::SchmittTrigger resetTrigger;
+	
 	LowFrequencyOscillator() {}
-	void setPitch(float pitch) {
+	void setPitch(double pitch) {
 		pitch = fminf(pitch, 8.0);
 		freq = powf(2.0, pitch);
 	}
-	void setFrequency(float frequency) {
+	void setFrequency(double frequency) {
 		freq = frequency;
 	}
 	void setPulseWidth(float pw_) {
@@ -68,11 +73,7 @@ struct LowFrequencyOscillator {
 		basePhase = initialPhase;
 	}	
 
-	void setReset(float reset) {
-		if (resetTrigger.process(reset)) {
-			phase = basePhase;
-		}
-	}
+	
 	void hardReset()
 	{
 		phase = basePhase;
@@ -113,7 +114,7 @@ struct LowFrequencyOscillator {
 		float sqr = (phase < pw) ^ invert ? 1.0 : -1.0;
 		return offset ? sqr + 1.0 : sqr;
 	}
-	float progress() {
+	double progress() {
 		return phase;
 	}
 };
@@ -122,12 +123,13 @@ struct LowFrequencyOscillator {
 
 
 	LowFrequencyOscillator oscillator;
-	dsp::SchmittTrigger sumTrigger, quantizePhaseTrigger;
+	dsp::SchmittTrigger sumTrigger, quantizePhaseTrigger, resetTrigger;
 	
-	float duration = 0.0;
-	float initialPhase = 0.0;
+	double duration = 0.0;
+	double initialPhase = 0.0;
 	int timeBase = 0;
 	bool phase_quantized = false;
+	
 
 	SeriouslySlowLFO() {
 		config(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS, NUM_LIGHTS);
@@ -139,9 +141,81 @@ struct LowFrequencyOscillator {
 		configParam(PHASE_CV_ATTENUVERTER_PARAM, -1.0, 1.0, 0.0,"Phase CV Attenuation","%",0,100);
 		configParam(QUANTIZE_PHASE_PARAM, 0.0, 1.0, 0.0);
 		configParam(OFFSET_PARAM, 0.0, 1.0, 1.0);
+		configParam(RESET_PARAM, 0.0, 1.0, 0.0);
 	}
 
-	void process(const ProcessArgs &args) override;
+	void process(const ProcessArgs &args) override {
+
+		if (sumTrigger.process(params[TIME_BASE_PARAM].getValue())) {
+			timeBase = (timeBase + 1) % 5;
+			oscillator.hardReset();
+		}
+
+		if(resetTrigger.process(params[RESET_PARAM].getValue() + inputs[RESET_INPUT].getVoltage())) {
+			oscillator.hardReset();
+		}
+
+		double numberOfSeconds = 0;
+		switch(timeBase) {
+			case 0 :
+				numberOfSeconds = 60; // Minutes
+				break;
+			case 1 :
+				numberOfSeconds = 3600; // Hours
+				break;
+			case 2 :
+				numberOfSeconds = 86400; // Days
+				break;
+			case 3 :
+				numberOfSeconds = 604800; // Weeks
+				break;
+			case 4 :
+				numberOfSeconds = 259200; // Months
+				break;
+		}
+
+		duration = params[DURATION_PARAM].getValue();
+		if(inputs[FM_INPUT].isConnected()) {
+			duration +=inputs[FM_INPUT].getVoltage() * params[FM_CV_ATTENUVERTER_PARAM].getValue();
+		}
+		duration = clamp(duration,1.0f,100.0f);
+
+		oscillator.setFrequency(1.0 / (duration * SampleRateCompensation * numberOfSeconds));
+
+		if (quantizePhaseTrigger.process(params[QUANTIZE_PHASE_PARAM].getValue())) {
+			phase_quantized = !phase_quantized;
+		}
+		lights[QUANTIZE_PHASE_LIGHT].value = phase_quantized;
+
+		initialPhase = params[PHASE_PARAM].getValue();
+		if(inputs[PHASE_INPUT].isConnected()) {
+			initialPhase += (inputs[PHASE_INPUT].getVoltage() / 10 * params[PHASE_CV_ATTENUVERTER_PARAM].getValue());
+		}
+		if (initialPhase >= 1.0)
+			initialPhase -= 1.0;
+		else if (initialPhase < 0)
+			initialPhase += 1.0;	
+		if(phase_quantized) // Limit to 90 degree increments
+			initialPhase = std::round(initialPhase * 4.0f) / 4.0f;
+		
+		oscillator.offset = (params[OFFSET_PARAM].getValue() > 0.0);
+		oscillator.setBasePhase(initialPhase);
+
+		//sr= args.sampleRate / 1000; // Test Code
+		oscillator.step(1.0 / args.sampleRate);
+
+
+		outputs[SIN_OUTPUT].setVoltage(5.0 * oscillator.sin());
+		outputs[TRI_OUTPUT].setVoltage(5.0 * oscillator.tri());
+		outputs[SAW_OUTPUT].setVoltage(5.0 * oscillator.saw());
+		outputs[SQR_OUTPUT].setVoltage( 5.0 * oscillator.sqr());
+
+		for(int lightIndex = 0;lightIndex<5;lightIndex++)
+		{
+			lights[lightIndex].value = lightIndex != timeBase ? 0.0 : 1.0;
+		}
+	}
+
 
 	json_t *dataToJson() override {
 		json_t *rootJ = json_object();
@@ -164,78 +238,6 @@ struct LowFrequencyOscillator {
 	// - onSampleRateChange: event triggered by a change of sample rate
 	// - onReset, onRandomize, onCreate, onDelete: implements special behavior when user clicks these from the context menu
 };
-
-
-void SeriouslySlowLFO::process(const ProcessArgs &args) {
-
-	if (sumTrigger.process(params[TIME_BASE_PARAM].getValue())) {
-		timeBase = (timeBase + 1) % 5;
-		oscillator.hardReset();
-	}
-
-	float numberOfSeconds = 0;
-	switch(timeBase) {
-		case 0 :
-			numberOfSeconds = 60; // Minutes
-			break;
-		case 1 :
-			numberOfSeconds = 3600; // Hours
-			break;
-		case 2 :
-			numberOfSeconds = 86400; // Days
-			break;
-		case 3 :
-			numberOfSeconds = 604800; // Weeks
-			break;
-		case 4 :
-			numberOfSeconds = 259200; // Months
-			break;
-	}
-
-	duration = params[DURATION_PARAM].getValue();
-	if(inputs[FM_INPUT].isConnected()) {
-		duration +=inputs[FM_INPUT].getVoltage() * params[FM_CV_ATTENUVERTER_PARAM].getValue();
-	}
-	duration = clamp(duration,1.0f,100.0f);
-
-	oscillator.setFrequency(1.0 / (duration * numberOfSeconds));
-
-	if (quantizePhaseTrigger.process(params[QUANTIZE_PHASE_PARAM].getValue())) {
-		phase_quantized = !phase_quantized;
-	}
-	lights[QUANTIZE_PHASE_LIGHT].value = phase_quantized;
-
-	initialPhase = params[PHASE_PARAM].getValue();
-	if(inputs[PHASE_INPUT].isConnected()) {
-		initialPhase += (inputs[PHASE_INPUT].getVoltage() / 10 * params[PHASE_CV_ATTENUVERTER_PARAM].getValue());
-	}
-	if (initialPhase >= 1.0)
-		initialPhase -= 1.0;
-	else if (initialPhase < 0)
-		initialPhase += 1.0;	
-	if(phase_quantized) // Limit to 90 degree increments
-		initialPhase = std::round(initialPhase * 4.0f) / 4.0f;
-	
-	oscillator.offset = (params[OFFSET_PARAM].getValue() > 0.0);
-	oscillator.setBasePhase(initialPhase);
-
-
-	oscillator.step(1.0 / args.sampleRate);
-	if(inputs[RESET_INPUT].isConnected()) {
-		oscillator.setReset(inputs[RESET_INPUT].getVoltage());
-	}
-
-
-	outputs[SIN_OUTPUT].setVoltage(5.0 * oscillator.sin());
-	outputs[TRI_OUTPUT].setVoltage(5.0 * oscillator.tri());
-	outputs[SAW_OUTPUT].setVoltage(5.0 * oscillator.saw());
-	outputs[SQR_OUTPUT].setVoltage( 5.0 * oscillator.sqr());
-
-	for(int lightIndex = 0;lightIndex<5;lightIndex++)
-	{
-		lights[lightIndex].value = lightIndex != timeBase ? 0.0 : 1.0;
-	}
-}
 
 struct SSLFOProgressDisplay : TransparentWidget {
 	SeriouslySlowLFO *module;
@@ -283,6 +285,7 @@ struct SSLFOProgressDisplay : TransparentWidget {
 			return;
 		drawProgress(args,module->oscillator.progress());
 		drawDuration(args, Vec(0, box.size.y - 155), module->duration);
+		
 	}
 };
 
@@ -315,6 +318,7 @@ struct SeriouslySlowLFOWidget : ModuleWidget {
 		addParam(createParam<LEDButton>(Vec(58, 184), module, SeriouslySlowLFO::QUANTIZE_PHASE_PARAM));
 		
 		addParam(createParam<CKSS>(Vec(48, 266), module, SeriouslySlowLFO::OFFSET_PARAM));
+		addParam(createParam<TL1105>(Vec(106, 276), module, SeriouslySlowLFO::RESET_PARAM));
 		
 		addInput(createInput<PJ301MPort>(Vec(98, 83), module, SeriouslySlowLFO::FM_INPUT));
 		addInput(createInput<PJ301MPort>(Vec(74, 195), module, SeriouslySlowLFO::PHASE_INPUT));

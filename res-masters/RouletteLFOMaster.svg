@@ -43,7 +43,8 @@
        y1="158.3329"
        x2="35.219627"
        y2="50.462322"
-       gradientUnits="userSpaceOnUse" />
+       gradientUnits="userSpaceOnUse"
+       gradientTransform="matrix(1.0030818,0,0,1.0014499,-0.18185533,-0.14648782)" />
   </defs>
   <sodipodi:namedview
      id="base"
@@ -53,9 +54,9 @@
      inkscape:pageopacity="0.0"
      inkscape:pageshadow="2"
      inkscape:zoom="5.6568542"
-     inkscape:cx="16.71424"
-     inkscape:cy="160.99006"
-     inkscape:document-units="mm"
+     inkscape:cx="68.509811"
+     inkscape:cy="168.06113"
+     inkscape:document-units="px"
      inkscape:current-layer="layer1"
      showgrid="false"
      fit-margin-top="0"
@@ -76,7 +77,7 @@
         <dc:format>image/svg+xml</dc:format>
         <dc:type
            rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
-        <dc:title />
+        <dc:title></dc:title>
       </cc:Work>
     </rdf:RDF>
   </metadata>
@@ -88,8 +89,8 @@
     <path
        inkscape:connector-curvature="0"
        id="path33493"
-       d="M 35.219628,50.462323 H 86.654867 V 150.85843 H 35.219628 Z m 0,0"
-       style="fill:url(#linearGradient4684);fill-opacity:1;fill-rule:nonzero;stroke:none;stroke-width:0.3145712"
+       d="M 35.146312,50.389001 H 86.740063 V 150.93067 H 35.146312 Z m 0,0"
+       style="fill:url(#linearGradient4684);fill-opacity:1;fill-rule:nonzero;stroke:none;stroke-width:0.31528386"
        inkscape:export-filename="/home/vortico/pics/tmp/LFOs.png"
        inkscape:export-xdpi="150.22649"
        inkscape:export-ydpi="150.22649" />
@@ -106,7 +107,7 @@
          style="stroke-width:0.26458332" /></text>
     <text
        xml:space="preserve"
-       style="font-style:normal;font-weight:normal;font-size:3.52777767px;line-height:1.25;font-family:sans-serif;text-align:center;letter-spacing:0px;word-spacing:0px;text-anchor:middle;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.26458332"
+       style="font-style:normal;font-weight:bold;font-size:3.52777767px;line-height:1.25;font-family:Homenaje;text-align:center;letter-spacing:0px;word-spacing:0px;text-anchor:middle;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.26458332;-inkscape-font-specification:'Homenaje Bold';font-stretch:normal;font-variant:normal;"
        x="60.744755"
        y="54.283745"
        id="text136"><tspan
@@ -114,43 +115,43 @@
          id="tspan134"
          x="60.744755"
          y="54.283745"
-         style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:3.88055563px;font-family:'Labtop Secundo Wide';-inkscape-font-specification:'Labtop Secundo Wide Bold';stroke-width:0.26458332">ROULETTE LFO</tspan></text>
+         style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:3.88055563px;font-family:Homenaje;-inkscape-font-specification:'Homenaje Bold';stroke-width:0.26458332;">ROULETTE LFO</tspan></text>
     <text
        xml:space="preserve"
-       style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:3.52777767px;line-height:1.25;font-family:Consolas;-inkscape-font-specification:'Consolas Bold';text-align:center;letter-spacing:0px;word-spacing:0px;text-anchor:middle;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.26458332"
-       x="39.833019"
+       style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:3.52777767px;line-height:1.25;font-family:Homenaje;-inkscape-font-specification:'Homenaje Bold';text-align:center;letter-spacing:0px;word-spacing:0px;text-anchor:middle;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.26458332"
+       x="41.565899"
        y="99.063805"
        id="text299"><tspan
          sodipodi:role="line"
          id="tspan297"
-         x="39.833019"
+         x="41.565899"
          y="99.063805"
-         style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:2.82222223px;font-family:'Labtop Secundo Wide';-inkscape-font-specification:'Labtop Secundo Wide Bold';stroke-width:0.26458332">Rx</tspan></text>
+         style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:2.82222223px;font-family:Homenaje;-inkscape-font-specification:'Homenaje Bold';stroke-width:0.26458332">Ratio</tspan></text>
     <text
        xml:space="preserve"
-       style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:3.52777767px;line-height:1.25;font-family:Consolas;-inkscape-font-specification:'Consolas Bold';text-align:center;letter-spacing:0px;word-spacing:0px;text-anchor:middle;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.26458332"
-       x="61.13887"
+       style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:3.52777767px;line-height:1.25;font-family:Homenaje;-inkscape-font-specification:'Homenaje Bold';text-align:center;letter-spacing:0px;word-spacing:0px;text-anchor:middle;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.26458332"
+       x="51.674347"
        y="99.063805"
        id="text303"><tspan
          sodipodi:role="line"
          id="tspan301"
-         x="61.13887"
+         x="51.674347"
          y="99.063805"
-         style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:2.82222223px;font-family:'Labtop Secundo Wide';-inkscape-font-specification:'Labtop Secundo Wide Bold';stroke-width:0.26458332">r</tspan></text>
+         style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:2.82222223px;font-family:Homenaje;-inkscape-font-specification:'Homenaje Bold';stroke-width:0.26458332">eF</tspan></text>
     <text
        xml:space="preserve"
-       style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:3.52777767px;line-height:1.25;font-family:Consolas;-inkscape-font-specification:'Consolas Bold';text-align:center;letter-spacing:0px;word-spacing:0px;text-anchor:middle;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.26458332"
-       x="70.335892"
+       style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:3.52777767px;line-height:1.25;font-family:Homenaje;-inkscape-font-specification:'Homenaje Bold';text-align:center;letter-spacing:0px;word-spacing:0px;text-anchor:middle;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.26458332"
+       x="71.869026"
        y="99.072159"
        id="text307"><tspan
          sodipodi:role="line"
          id="tspan305"
-         x="70.335892"
+         x="71.869026"
          y="99.072159"
-         style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:2.82222223px;font-family:'Labtop Secundo Wide';-inkscape-font-specification:'Labtop Secundo Wide Bold';stroke-width:0.26458332">D</tspan></text>
+         style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:2.82222223px;font-family:Homenaje;-inkscape-font-specification:'Homenaje Bold';stroke-width:0.26458332">D</tspan></text>
     <text
        xml:space="preserve"
-       style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:3.52777767px;line-height:1.25;font-family:Consolas;-inkscape-font-specification:'Consolas Bold';text-align:center;letter-spacing:0px;word-spacing:0px;text-anchor:middle;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.26458332"
+       style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:3.52777767px;line-height:1.25;font-family:Homenaje;-inkscape-font-specification:'Homenaje Bold';text-align:center;letter-spacing:0px;word-spacing:0px;text-anchor:middle;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.26458332;"
        x="81.646843"
        y="99.063805"
        id="text299-1"><tspan
@@ -158,29 +159,29 @@
          id="tspan297-5"
          x="81.646843"
          y="99.063805"
-         style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:2.82222223px;font-family:'Labtop Secundo Wide';-inkscape-font-specification:'Labtop Secundo Wide Bold';stroke-width:0.26458332">F</tspan></text>
+         style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:2.82222223px;font-family:Homenaje;-inkscape-font-specification:'Homenaje Bold';stroke-width:0.26458332;">F</tspan></text>
     <text
        xml:space="preserve"
-       style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:3.52777767px;line-height:1.25;font-family:Consolas;-inkscape-font-specification:'Consolas Bold';text-align:center;letter-spacing:0px;word-spacing:0px;text-anchor:middle;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.26458332"
-       x="44.935902"
-       y="138.22034"
+       style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:3.52777767px;line-height:1.25;font-family:Homenaje;-inkscape-font-specification:'Homenaje Bold';text-align:center;letter-spacing:0px;word-spacing:0px;text-anchor:middle;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.26458332"
+       x="67.481369"
+       y="136.64317"
        id="text365"><tspan
          sodipodi:role="line"
          id="tspan363"
-         x="44.935902"
-         y="138.22034"
-         style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:3.52777767px;font-family:'Labtop Secundo Wide';-inkscape-font-specification:'Labtop Secundo Wide Bold';stroke-width:0.26458332">X</tspan></text>
+         x="67.481369"
+         y="136.64317"
+         style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:2.82222223px;font-family:Homenaje;-inkscape-font-specification:'Homenaje Bold';stroke-width:0.26458332">X</tspan></text>
     <text
        xml:space="preserve"
-       style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:3.52777767px;line-height:1.25;font-family:Consolas;-inkscape-font-specification:'Consolas Bold';text-align:center;letter-spacing:0px;word-spacing:0px;text-anchor:middle;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.26458332"
-       x="62.06768"
-       y="138.22034"
+       style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:3.52777767px;line-height:1.25;font-family:Homenaje;-inkscape-font-specification:'Homenaje Bold';text-align:center;letter-spacing:0px;word-spacing:0px;text-anchor:middle;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.26458332"
+       x="78.001007"
+       y="136.64317"
        id="text369"><tspan
          sodipodi:role="line"
          id="tspan367"
-         x="62.06768"
-         y="138.22034"
-         style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:3.52777767px;font-family:'Labtop Secundo Wide';-inkscape-font-specification:'Labtop Secundo Wide Bold';stroke-width:0.26458332">Y</tspan></text>
+         x="78.001007"
+         y="136.64317"
+         style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:2.82222223px;font-family:Homenaje;-inkscape-font-specification:'Homenaje Bold';stroke-width:0.26458332">Y</tspan></text>
     <text
        xml:space="preserve"
        style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:3.52777767px;line-height:1.25;font-family:Consolas;-inkscape-font-specification:'Consolas Bold';text-align:center;letter-spacing:0px;word-spacing:0px;text-anchor:middle;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.26458332"
@@ -192,20 +193,6 @@
          x="66.102577"
          y="149.59126"
          style="font-size:2.11666656px;stroke-width:0.26458332" /></text>
-    <rect
-       style="fill:#cce6f1;fill-opacity:1;stroke-width:0.26458332"
-       id="rect5490"
-       width="15.10741"
-       height="6.2674704"
-       x="35.193085"
-       y="60.660389" />
-    <rect
-       style="fill:#cce6f1;fill-opacity:1;stroke-width:0.26458332"
-       id="rect264"
-       width="39.382164"
-       height="18.475006"
-       x="35.239857"
-       y="59.210449" />
     <flowRoot
        xml:space="preserve"
        id="flowRoot250"
@@ -219,58 +206,58 @@
          id="flowPara256" /></flowRoot>    <path
        inkscape:connector-curvature="0"
        id="path38411"
-       d="M 86.911315,96.163954 H 35.23983 V 59.205875 h 51.671485 z m 0,0"
-       style="fill:#1e282b;fill-opacity:1;fill-rule:nonzero;stroke:none;stroke-width:0.27602378" />
+       d="M 86.911315,95.897339 H 35.23983 V 61.10463 h 51.671485 z m 0,0"
+       style="fill:#1e282b;fill-opacity:1;fill-rule:nonzero;stroke:none;stroke-width:0.26781562" />
     <path
        inkscape:connector-curvature="0"
        id="path5509"
-       d="M 35.239857,63.118735 H 86.911288"
+       d="M 35.239857,61.369213 H 86.911288"
        style="clip-rule:nonzero;fill:none;stroke:#ffffff;stroke-width:0.26458332;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:10;stroke-dasharray:none;stroke-opacity:0.25098039" />
     <path
        inkscape:connector-curvature="0"
        id="path5503"
-       d="M 35.239857,70.402095 H 86.911288"
+       d="M 35.239857,69.968171 H 86.911288"
        style="clip-rule:nonzero;fill:none;stroke:#ffffff;stroke-width:0.26458332;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:10;stroke-dasharray:none;stroke-opacity:0.25098039" />
     <path
        inkscape:connector-curvature="0"
        id="path5497"
-       d="M 35.239857,84.967745 H 86.911288"
+       d="M 35.239857,87.166088 H 86.911288"
        style="clip-rule:nonzero;fill:none;stroke:#ffffff;stroke-width:0.26458332;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:10;stroke-dasharray:none;stroke-opacity:0.25098039" />
     <path
        inkscape:connector-curvature="0"
        id="path5491"
-       d="M 35.239857,92.251106 H 86.911288"
+       d="M 35.239857,95.765047 H 86.911288"
        style="clip-rule:nonzero;fill:none;stroke:#ffffff;stroke-width:0.26458332;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:10;stroke-dasharray:none;stroke-opacity:0.25098039" />
     <path
        inkscape:connector-curvature="0"
        id="path5305"
-       d="M 35.239857,77.685455 H 86.911288"
+       d="M 35.239857,78.56713 H 86.911288"
        style="clip-rule:nonzero;fill:none;stroke:#ffffff;stroke-width:0.26458332;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:10;stroke-dasharray:none;stroke-opacity:0.25098039" />
     <path
        inkscape:connector-curvature="0"
        id="path4803"
-       d="M 61.076128,63.118735 V 92.253254"
-       style="clip-rule:nonzero;fill:none;stroke:#ffffff;stroke-width:0.26458332;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:10;stroke-dasharray:none;stroke-opacity:0.25098039" />
+       d="M 61.075479,61.501505 V 95.897339"
+       style="clip-rule:nonzero;fill:none;stroke:#ffffff;stroke-width:0.28748253;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:10;stroke-dasharray:none;stroke-opacity:0.25098039" />
     <path
        inkscape:connector-curvature="0"
        id="path4797"
-       d="M 69.687839,63.118735 V 92.253254"
-       style="clip-rule:nonzero;fill:none;stroke:#ffffff;stroke-width:0.26458332;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:10;stroke-dasharray:none;stroke-opacity:0.25098039" />
+       d="M 69.674438,61.501505 V 95.897339"
+       style="clip-rule:nonzero;fill:none;stroke:#ffffff;stroke-width:0.28748253;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:10;stroke-dasharray:none;stroke-opacity:0.25098039" />
     <path
        inkscape:connector-curvature="0"
        id="path4791"
-       d="M 52.464364,63.118735 V 92.253254"
-       style="clip-rule:nonzero;fill:none;stroke:#ffffff;stroke-width:0.26458332;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:10;stroke-dasharray:none;stroke-opacity:0.25098039" />
+       d="M 52.476521,61.501505 V 95.897339"
+       style="clip-rule:nonzero;fill:none;stroke:#ffffff;stroke-width:0.28748253;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:10;stroke-dasharray:none;stroke-opacity:0.25098039" />
     <path
        inkscape:connector-curvature="0"
        id="path4785"
-       d="M 43.852653,63.118735 V 92.253254"
-       style="clip-rule:nonzero;fill:none;stroke:#ffffff;stroke-width:0.26458332;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:10;stroke-dasharray:none;stroke-opacity:0.25098039" />
+       d="M 43.877562,61.501505 V 95.897339"
+       style="clip-rule:nonzero;fill:none;stroke:#ffffff;stroke-width:0.28748253;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:10;stroke-dasharray:none;stroke-opacity:0.25098039" />
     <path
        inkscape:connector-curvature="0"
        id="path4779"
-       d="M 78.300635,63.118735 V 92.253254"
-       style="clip-rule:nonzero;fill:none;stroke:#ffffff;stroke-width:0.26458332;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:10;stroke-dasharray:none;stroke-opacity:0.25098039" />
+       d="M 78.273396,61.501505 V 95.897339"
+       style="clip-rule:nonzero;fill:none;stroke:#ffffff;stroke-width:0.28748253;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:10;stroke-dasharray:none;stroke-opacity:0.25098039" />
     <text
        xml:space="preserve"
        style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:3.52777767px;line-height:1.25;font-family:Consolas;-inkscape-font-specification:'Consolas Bold';text-align:start;letter-spacing:0px;word-spacing:0px;text-anchor:start;fill:#00a3f2;fill-opacity:1;stroke:none;stroke-width:0.26458332"
@@ -295,91 +282,58 @@
          style="stroke-width:0.26458332" /></text>
     <text
        xml:space="preserve"
-       style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:3.52777767px;line-height:1.25;font-family:Consolas;-inkscape-font-specification:'Consolas Bold';text-align:center;letter-spacing:0px;word-spacing:0px;text-anchor:middle;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.26458332"
+       style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:3.52777767px;line-height:1.25;font-family:Homenaje;-inkscape-font-specification:'Homenaje Bold';text-align:center;letter-spacing:0px;word-spacing:0px;text-anchor:middle;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.26458332"
        x="45.398911"
-       y="128.67398"
+       y="136.64317"
        id="text6641"><tspan
          sodipodi:role="line"
          id="tspan6639"
          x="45.398911"
-         y="128.67398"
-         style="font-size:2.82222223px;stroke-width:0.26458332;-inkscape-font-specification:'Labtop Secundo Wide Bold';font-family:'Labtop Secundo Wide';font-weight:bold;font-style:normal;font-stretch:normal;font-variant:normal">INSIDE</tspan></text>
+         y="136.64317"
+         style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:2.82222223px;font-family:Homenaje;-inkscape-font-specification:'Homenaje Bold';stroke-width:0.26458332">INSIDE</tspan></text>
     <text
        xml:space="preserve"
-       style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:3.52777767px;line-height:1.25;font-family:Consolas;-inkscape-font-specification:'Consolas Bold';text-align:center;letter-spacing:0px;word-spacing:0px;text-anchor:middle;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.26458332"
+       style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:3.52777767px;line-height:1.25;font-family:Homenaje;-inkscape-font-specification:'Homenaje Bold';text-align:center;letter-spacing:0px;word-spacing:0px;text-anchor:middle;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.26458332"
        x="45.403732"
-       y="119.67814"
+       y="127.64733"
        id="text6641-2"><tspan
          sodipodi:role="line"
          id="tspan6639-1"
          x="45.403732"
-         y="119.67814"
-         style="font-size:2.82222223px;stroke-width:0.26458332;-inkscape-font-specification:'Labtop Secundo Wide Bold';font-family:'Labtop Secundo Wide';font-weight:bold;font-style:normal;font-stretch:normal;font-variant:normal">OUTSIDE</tspan></text>
+         y="127.64733"
+         style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:2.82222223px;font-family:Homenaje;-inkscape-font-specification:'Homenaje Bold';stroke-width:0.26458332">OUTSIDE</tspan></text>
     <text
        xml:space="preserve"
-       style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:3.52777767px;line-height:1.25;font-family:Consolas;-inkscape-font-specification:'Consolas Bold';text-align:center;letter-spacing:0px;word-spacing:0px;text-anchor:middle;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.26458332"
-       x="78.537987"
-       y="119.70985"
-       id="text6663"><tspan
-         sodipodi:role="line"
-         id="tspan6661"
-         x="78.537987"
-         y="119.70985"
-         style="font-size:2.82222223px;stroke-width:0.26458332;-inkscape-font-specification:'Labtop Secundo Wide Bold';font-family:'Labtop Secundo Wide';font-weight:bold;font-style:normal;font-stretch:normal;font-variant:normal">D=r</tspan></text>
-    <text
-       xml:space="preserve"
-       style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:2.82222223px;line-height:1.25;font-family:Consolas;-inkscape-font-specification:'Consolas Bold';text-align:center;letter-spacing:0px;word-spacing:0px;text-anchor:middle;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.26458332"
-       x="78.236313"
-       y="128.70567"
-       id="text6667"><tspan
-         sodipodi:role="line"
-         id="tspan6665"
-         x="78.236313"
-         y="128.70567"
-         style="stroke-width:0.26458332;-inkscape-font-specification:'Labtop Secundo Wide Bold';font-family:'Labtop Secundo Wide';font-weight:bold;font-style:normal;font-stretch:normal;font-variant:normal">D</tspan></text>
-    <text
-       xml:space="preserve"
-       style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:3.52777767px;line-height:1.25;font-family:Consolas;-inkscape-font-specification:'Consolas Bold';text-align:center;letter-spacing:0px;word-spacing:0px;text-anchor:middle;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.26458332"
-       x="62.402531"
-       y="119.39565"
-       id="text6663-6"><tspan
-         sodipodi:role="line"
-         id="tspan6661-9"
-         x="62.402531"
-         y="119.39565"
-         style="font-size:2.82222223px;stroke-width:0.26458332;-inkscape-font-specification:'Labtop Secundo Wide Bold';font-family:'Labtop Secundo Wide';font-weight:bold;font-style:normal;font-stretch:normal;font-variant:normal">Ry=Rx</tspan></text>
-    <text
-       xml:space="preserve"
-       style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:2.82222223px;line-height:1.25;font-family:Consolas;-inkscape-font-specification:'Consolas Bold';text-align:center;letter-spacing:0px;word-spacing:0px;text-anchor:middle;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.26458332"
-       x="62.262909"
-       y="128.39148"
-       id="text6667-0"><tspan
-         sodipodi:role="line"
-         id="tspan6665-0"
-         x="62.262909"
-         y="128.39148"
-         style="stroke-width:0.26458332;-inkscape-font-specification:'Labtop Secundo Wide Bold';font-family:'Labtop Secundo Wide';font-weight:bold;font-style:normal;font-stretch:normal;font-variant:normal">Ry</tspan></text>
-    <text
-       xml:space="preserve"
-       style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:3.52777767px;line-height:1.25;font-family:Consolas;-inkscape-font-specification:'Consolas Bold';text-align:center;letter-spacing:0px;word-spacing:0px;text-anchor:middle;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.26458332"
-       x="78.161591"
-       y="138.22034"
-       id="text369-2"><tspan
-         sodipodi:role="line"
-         id="tspan367-9"
-         x="78.161591"
-         y="138.22034"
-         style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:3.52777767px;font-family:'Labtop Secundo Wide';-inkscape-font-specification:'Labtop Secundo Wide Bold';stroke-width:0.26458332">X+Y</tspan></text>
-    <text
-       xml:space="preserve"
-       style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:3.52777767px;line-height:1.25;font-family:Consolas;-inkscape-font-specification:'Consolas Bold';text-align:center;letter-spacing:0px;word-spacing:0px;text-anchor:middle;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.26458332"
-       x="49.101704"
+       style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:3.52777767px;line-height:1.25;font-family:Homenaje;-inkscape-font-specification:'Homenaje Bold';text-align:center;letter-spacing:0px;word-spacing:0px;text-anchor:middle;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.26458332"
+       x="61.698196"
        y="99.012352"
        id="text299-6"><tspan
          sodipodi:role="line"
          id="tspan297-8"
-         x="49.101704"
+         x="61.698196"
          y="99.012352"
-         style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:2.82222223px;font-family:'Labtop Secundo Wide';-inkscape-font-specification:'Labtop Secundo Wide Bold';stroke-width:0.26458332">Ry</tspan></text>
+         style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:2.82222223px;font-family:Homenaje;-inkscape-font-specification:'Homenaje Bold';stroke-width:0.26458332">eG</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:3.52777767px;line-height:1.25;font-family:Homenaje;-inkscape-font-specification:'Homenaje Bold';text-align:center;letter-spacing:0px;word-spacing:0px;text-anchor:middle;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.26458332"
+       x="57.479534"
+       y="127.89216"
+       id="text6641-2-6"><tspan
+         sodipodi:role="line"
+         id="tspan6639-1-1"
+         x="57.479534"
+         y="127.89216"
+         style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:2.82222247px;font-family:Homenaje;-inkscape-font-specification:'Homenaje Bold';stroke-width:0.26458332">UNI</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:3.52777767px;line-height:1.25;font-family:Homenaje;-inkscape-font-specification:'Homenaje Bold';text-align:center;letter-spacing:0px;word-spacing:0px;text-anchor:middle;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.26458332"
+       x="57.4995"
+       y="136.64317"
+       id="text6641-2-6-2"><tspan
+         sodipodi:role="line"
+         id="tspan6639-1-1-9"
+         x="57.4995"
+         y="136.64317"
+         style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:2.82222247px;font-family:Homenaje;-inkscape-font-specification:'Homenaje Bold';stroke-width:0.26458332">BI</tspan></text>
   </g>
 </svg>

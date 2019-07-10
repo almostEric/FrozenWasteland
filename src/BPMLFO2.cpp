@@ -147,13 +147,14 @@ struct BPMLFO2 : Module {
 	dsp::SchmittTrigger clockTrigger,resetTrigger,holdTrigger;
 	float multiplier = 1;
 	float division = 1;
-	float time = 0.0;
+	float timeElapsed = 0.0;
 	float duration = 0;
 	float waveshape = 0;
 	float waveSlope = 0.0;
 	float skew = 0.5;
 	float initialPhase = 0.0;
 	bool holding = false;
+	bool firstClockReceived = false;
 	bool secondClockReceived = false;
 	bool phase_quantized = false;
 	float lfoOutputValue = 0.0;
@@ -199,16 +200,24 @@ struct BPMLFO2 : Module {
 
 void BPMLFO2::process(const ProcessArgs &args) {
 
-    time += 1.0 / args.sampleRate;
+    timeElapsed += 1.0 / args.sampleRate;
 	if(inputs[CLOCK_INPUT].isConnected()) {
 		if(clockTrigger.process(inputs[CLOCK_INPUT].getVoltage())) {
-			if(secondClockReceived) {
-				duration = time;
+			if(firstClockReceived) {
+				duration = timeElapsed;
+				secondClockReceived = true;
 			}
-			time = 0;
-			secondClockReceived = true;			
+			timeElapsed = 0;
+			firstClockReceived = true;			
+		} else if(secondClockReceived && timeElapsed > duration) {  //allow absense of second clock to affect duration
+			duration = timeElapsed;				
 		}	
+	} else {
+		duration = 0.0f;
+		firstClockReceived = false;
+		secondClockReceived = false;
 	}
+	
 	
 	
 	multiplier = params[MULTIPLIER_PARAM].getValue();

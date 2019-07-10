@@ -71,17 +71,19 @@ struct VoxInhumana : Module {
 		NUM_LIGHTS
 	};
 	
-	StateVariableFilterState<T> filterStates[BANDS];
-    StateVariableFilterParams<T> filterParams[BANDS];
+	StateVariableFilterState<T> filterStates[BANDS * 2];
+    StateVariableFilterParams<T> filterParams[BANDS * 2];
 	
 	float freq[BANDS] = {0};
 	float lastFreq[BANDS] = {0};
 
 	float Q[BANDS] = {0};
+	float expanderQ[BANDS] = {0};
 	float lastQ[BANDS] = {0};
 
 	float peak[BANDS] = {0};
 
+	bool twelveDbSlope[BANDS] = {false};
 
 	int vowel1 = 0;
 	int vowel2 = 0;
@@ -107,7 +109,7 @@ struct VoxInhumana : Module {
 			{{400,10,0},{750,9,-11},{2400,24,-21},{2600,22,-20},{2900,24,-40}}, //o
 			{{350,9,0},{600,8,-20},{2400,24,-32},{2675,22,-28},{2950,25,-36}}, //u
 		},
-		//Tenor - in progress
+		//Tenor 
 		{
 			{{650,8,0},{1080,12,-6},{2650,22,-7},{2900,22,-8},{3250,23,-22}}, //a
 			{{400,6,0},{1700,21,-14},{2600,26,-12},{3200,27,-14},{3580,30,-20}}, //e
@@ -115,7 +117,7 @@ struct VoxInhumana : Module {
 			{{400,10,0},{800,10,-10},{2600,26,-12},{2800,23,-12},{3000,25,-26}}, //o
 			{{350,9,0},{600,10,-20},{2700,27,-17},{2900,24,-14},{3300,28,-26}}, //u
 		},
-		//Counter-Tenor - in progress
+		//Counter-Tenor 
 		{
 			{{660,8,0},{1120,12,-6},{2750,23,-23},{3000,23,-24},{3350,24,-38}}, //a
 			{{440,6,0},{1800,22,-14},{2700,27,-18},{3000,25,-20},{3300,28,-20}}, //e
@@ -178,7 +180,7 @@ struct VoxInhumana : Module {
 		configParam(AMP_5_CV_ATTENUVERTER_PARAM, -1.0, 1.0, 0,"Formant 5 Amplitude CV Attenuation","%",0,100);
 			
 
-		for (int i = 0; i < BANDS; ++i) {
+		for (int i = 0; i < BANDS * 2; ++i) {
 			filterParams[i].setMode(StateVariableFilterParams<T>::Mode::BandPass);
 			filterParams[i].setQ(5); 	
 	        filterParams[i].setFreq(T(.1));
@@ -210,6 +212,20 @@ struct VoxInhumana : Module {
 
 		lights[VOWEL_1_LIGHT].value = 1.0-vowelBalance;
 		lights[VOWEL_2_LIGHT].value = vowelBalance;
+
+		//Get Expander Info
+		if(rightExpander.module && rightExpander.module->model == modelVoxInhumanaExpander) {			
+			float *message = (float*) rightExpander.module->leftExpander.consumerMessage;
+			for(int i = 0; i < BANDS; i++) {
+				expanderQ[i] = message[i * 2];
+				twelveDbSlope[i] = message[i * 2 + 1];					
+			}			
+		} else {
+			for(int i = 0; i < BANDS; i++) {
+				expanderQ[i] = 0;
+				twelveDbSlope[i] =false;					
+			}			
+		}
 		
 		for (int i=0; i<BANDS;i++) {
 			float cutoffExp = params[FREQ_1_CUTOFF_PARAM+i].getValue() + inputs[FREQ_1_CUTOFF_INPUT+i].getVoltage() * params[FREQ_1_CV_ATTENUVERTER_PARAM+i].getValue(); 
@@ -219,29 +235,39 @@ struct VoxInhumana : Module {
 			freq[i] = freq[i] + (freq[i] / 2 * cutoffExp); //Formant CV can alter formant by +/- 50%
 			//Apply global Fc shift
 			freq[i] = freq[i] * fcShift; //Global can double or really lower freq
-			
+			 
 			Q[i] = lerp(formantParameters[voiceType][vowel1][i][1],formantParameters[voiceType][vowel2][i][1],vowelBalance);
 			peak[i] = lerp(formantParameters[voiceType][vowel1][i][2],formantParameters[voiceType][vowel2][i][2],vowelBalance);		
 
 
-			if(freq[i] != lastFreq[i]) {
+			if(freq[i] != lastFreq[i]) {	
 				float Fc = freq[i] / args.sampleRate;
 				filterParams[i].setFreq(T(Fc));
+				filterParams[BANDS + i].setFreq(T(Fc));
 				lastFreq[i] = freq[i];
 			}
-			if(Q[i] != lastQ[i]) {
-				filterParams[i].setQ(Q[i]); 
-				lastQ[i] = Q[i];
+			float newQ = Q[i] + expanderQ[i];
+			if(newQ != lastQ[i]) {
+				filterParams[i].setQ(newQ); 
+				filterParams[BANDS + i].setQ(newQ); 
+				lastQ[i] = newQ;
 			}		
 		}
 
 		float out = 0.0f;	
 		for(int i=0;i<BANDS;i++) {
-			float filterOut = StateVariableFilter<T>::run(signalIn, filterStates[i], filterParams[i]);;
+			float lastFilterOut;
+			float firstFilterOut = StateVariableFilter<T>::run(signalIn, filterStates[i], filterParams[i]);
+			if(twelveDbSlope[i]) { //Engage second filter
+				lastFilterOut = StateVariableFilter<T>::run(firstFilterOut, filterStates[BANDS + i], filterParams[BANDS + i]);
+			} else {
+				lastFilterOut = firstFilterOut;
+			} 
+
 			float attenuation = powf(10,peak[i] / 20.0f);
 			float manualAttenuation = params[AMP_1_PARAM+i].getValue() + inputs[AMP_1_INPUT+i].getVoltage() * params[AMP_1_CV_ATTENUVERTER_PARAM+i].getValue(); 
 			attenuation = clamp(attenuation * manualAttenuation, 0.0f, 1.0f);
-			out += filterOut * attenuation * 5.0f;
+			out += lastFilterOut * attenuation * 5.0f;
 		}
 
 

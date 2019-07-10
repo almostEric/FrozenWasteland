@@ -123,10 +123,11 @@ struct BPMLFO : Module {
 	
 	float multiplier = 1;
 	float division = 1;
-	float time = 0.0;
+	float timeElapsed = 0.0;
 	float duration = 0;
 	float initialPhase = 0.0;
 	bool holding = false;
+	bool firstClockReceived = false;
 	bool secondClockReceived = false;
 	bool phase_quantized = false;
 
@@ -154,16 +155,22 @@ struct BPMLFO : Module {
 
 	void process(const ProcessArgs &args) override {
 
-		time += 1.0 / args.sampleRate;
+		timeElapsed += 1.0 / args.sampleRate;
 		if(inputs[CLOCK_INPUT].isConnected()) {
 			if(clockTrigger.process(inputs[CLOCK_INPUT].getVoltage())) {
-				if(secondClockReceived) {
-					duration = time;
+				if(firstClockReceived) {
+					duration = timeElapsed;
+					secondClockReceived = true;
 				}
-				time = 0;
-				secondClockReceived = true;			
-				//secondClockReceived = !secondClockReceived;			
-			}			
+				timeElapsed = 0;
+				firstClockReceived = true;			
+			} else if(secondClockReceived && timeElapsed > duration) {  //allow absense of second clock to affect duration
+				duration = timeElapsed;				
+			}		
+		} else {
+			duration = 0.0f;
+			firstClockReceived = false;
+			secondClockReceived = false;
 		}
 		
 		
@@ -356,10 +363,10 @@ struct BPMLFOWidget : ModuleWidget {
 		addInput(createInput<PJ301MPort>(Vec(62, 275), module, BPMLFO::RESET_INPUT));
 		addInput(createInput<PJ301MPort>(Vec(94, 275), module, BPMLFO::HOLD_INPUT));
 
-		addOutput(createOutput<PJ301MPort>(Vec(11, 323), module, BPMLFO::SIN_OUTPUT));
-		addOutput(createOutput<PJ301MPort>(Vec(45, 323), module, BPMLFO::TRI_OUTPUT));
-		addOutput(createOutput<PJ301MPort>(Vec(80, 323), module, BPMLFO::SAW_OUTPUT));
-		addOutput(createOutput<PJ301MPort>(Vec(114, 323), module, BPMLFO::SQR_OUTPUT));
+		addOutput(createOutput<PJ301MPort>(Vec(11, 330), module, BPMLFO::SIN_OUTPUT));
+		addOutput(createOutput<PJ301MPort>(Vec(45, 330), module, BPMLFO::TRI_OUTPUT));
+		addOutput(createOutput<PJ301MPort>(Vec(80, 330), module, BPMLFO::SAW_OUTPUT));
+		addOutput(createOutput<PJ301MPort>(Vec(114, 330), module, BPMLFO::SQR_OUTPUT));
 
 		addChild(createLight<MediumLight<BlueLight>>(Vec(17, 156), module, BPMLFO::QUANTIZE_PHASE_LIGHT));		
 		addChild(createLight<LargeLight<RedLight>>(Vec(122, 279), module, BPMLFO::HOLD_LIGHT));

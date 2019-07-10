@@ -186,7 +186,7 @@ struct DamianLillardWidget : ModuleWidget {
 		addInput(createInput<PJ301MPort>(Vec(71, 117), module, DamianLillard::FREQ_2_CUTOFF_INPUT));
 		addInput(createInput<PJ301MPort>(Vec(122, 117), module, DamianLillard::FREQ_3_CUTOFF_INPUT));
 
-		addInput(createInput<PJ301MPort>(Vec(10, 317), module, DamianLillard::SIGNAL_IN));
+		addInput(createInput<PJ301MPort>(Vec(30, 330), module, DamianLillard::SIGNAL_IN));
 
 
 		addInput(createInput<PJ301MPort>(Vec(10, 255), module, DamianLillard::BAND_1_RETURN_INPUT));
@@ -199,7 +199,7 @@ struct DamianLillardWidget : ModuleWidget {
 		addOutput(createOutput<PJ301MPort>(Vec(90, 215), module, DamianLillard::BAND_3_OUTPUT));
 		addOutput(createOutput<PJ301MPort>(Vec(130, 215), module, DamianLillard::BAND_4_OUTPUT));
 
-		addOutput(createOutput<PJ301MPort>(Vec(89, 317), module, DamianLillard::MIX_OUTPUT));
+		addOutput(createOutput<PJ301MPort>(Vec(109, 330), module, DamianLillard::MIX_OUTPUT));
 
 		addChild(createWidget<ScrewSilver>(Vec(RACK_GRID_WIDTH-12, 0)));
 		addChild(createWidget<ScrewSilver>(Vec(box.size.x - 2 * RACK_GRID_WIDTH + 12, 0)));

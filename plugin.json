@@ -1,7 +1,7 @@
 {
 	"slug": "FrozenWasteland",
 	"name": "Frozen Wasteland",
-	"version": "1.2.1",
+	"version": "1.3.0",
 	"author": "almostEric",
 	"license": "CC0-1.0",
 	"authorEmail": "almostEric@frozenwastelandmodules.com",
@@ -113,6 +113,12 @@
 			"name": "Vox Inhumana",
 			"description": "Formant/Vowel Filter",
 			"tags": ["VCF"]
+		}		,
+		{
+			"slug": "VoxInhumanaExpander",
+			"name": "Vox Inhumana Expander",
+			"description": "Resonance and Slope Control",
+			"tags": ["VCF","Expander"]
 		}
 	]
 }

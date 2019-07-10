@@ -31,6 +31,7 @@ void init(rack::Plugin *p) {
 	p->addModel(modelRouletteLFO);
 	p->addModel(modelSeriouslySlowLFO);
 	p->addModel(modelVoxInhumana);
+	p->addModel(modelVoxInhumanaExpander);
 	p->addModel(modelCDCSeriouslySlowLFO);
 
 

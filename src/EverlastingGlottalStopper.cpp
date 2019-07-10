@@ -152,7 +152,7 @@ struct EverlastingGlottalStopperWidget : ModuleWidget {
 		addInput(createInput<PJ301MPort>(Vec(70, 247), module, EverlastingGlottalStopper::TIME_CLOSED_INPUT));
 		addInput(createInput<PJ301MPort>(Vec(123, 247), module, EverlastingGlottalStopper::BREATHINESS_INPUT));
 
-		addOutput(createOutput<PJ301MPort>(Vec(71, 325), module, EverlastingGlottalStopper::VOICE_OUTPUT));
+		addOutput(createOutput<PJ301MPort>(Vec(71, 330), module, EverlastingGlottalStopper::VOICE_OUTPUT));
 
 		addChild(createWidget<ScrewSilver>(Vec(RACK_GRID_WIDTH-12, 0)));
 		addChild(createWidget<ScrewSilver>(Vec(box.size.x - 2 * RACK_GRID_WIDTH + 12, 0)));

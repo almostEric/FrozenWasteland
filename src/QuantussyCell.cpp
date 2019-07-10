@@ -144,7 +144,7 @@ void QuantussyCell::process(const ProcessArgs &args) {
 		}
 		else {
 			_value2 = 0; //Maybe at some point add a default noise source, but not for now
-		}
+		}	
 	}
 
 
@@ -163,14 +163,14 @@ struct QuantussyCellWidget : ModuleWidget {
 		addChild(createWidget<ScrewSilver>(Vec(RACK_GRID_WIDTH - 12, RACK_GRID_HEIGHT - RACK_GRID_WIDTH)));
 		addChild(createWidget<ScrewSilver>(Vec(box.size.x - 2 * RACK_GRID_WIDTH + 12, RACK_GRID_HEIGHT - RACK_GRID_WIDTH)));
 
-		addParam(createParam<RoundLargeFWKnob>(Vec(28, 64), module, QuantussyCell::FREQ_PARAM));
-		addParam(createParam<RoundFWKnob>(Vec(13, 182), module, QuantussyCell::CV_ATTENUVERTER_PARAM));
+		addParam(createParam<RoundLargeFWKnob>(Vec(28, 54), module, QuantussyCell::FREQ_PARAM));
+		addParam(createParam<RoundFWKnob>(Vec(13, 180), module, QuantussyCell::CV_ATTENUVERTER_PARAM));
 
-		addInput(createInput<PJ301MPort>(Vec(35, 113), module, QuantussyCell::CASTLE_INPUT));
-		addInput(createInput<PJ301MPort>(Vec(50, 205), module, QuantussyCell::CV_INPUT));
-		addInput(createInput<PJ301MPort>(Vec(15, 213), module, QuantussyCell::CV_AMOUNT_INPUT));
+		addInput(createInput<PJ301MPort>(Vec(35, 109), module, QuantussyCell::CASTLE_INPUT));
+		addInput(createInput<PJ301MPort>(Vec(50, 203), module, QuantussyCell::CV_INPUT));
+		addInput(createInput<PJ301MPort>(Vec(15, 212), module, QuantussyCell::CV_AMOUNT_INPUT));
 
-		addOutput(createOutput<PJ301MPort>(Vec(35, 160), module, QuantussyCell::CASTLE_OUTPUT));
+		addOutput(createOutput<PJ301MPort>(Vec(35, 155), module, QuantussyCell::CASTLE_OUTPUT));
 
 		addOutput(createOutput<PJ301MPort>(Vec(15, 255), module, QuantussyCell::SIN_OUTPUT));
 		addOutput(createOutput<PJ301MPort>(Vec(50, 255), module, QuantussyCell::TRI_OUTPUT));
@@ -178,8 +178,7 @@ struct QuantussyCellWidget : ModuleWidget {
 		addOutput(createOutput<PJ301MPort>(Vec(50, 301), module, QuantussyCell::SAW_OUTPUT));
 
 
-
-		addChild(createLight<LargeLight<BlueLight>>(Vec(68, 70), module, QuantussyCell::BLINK_LIGHT));
+		addChild(createLight<LargeLight<BlueLight>>(Vec(67,67), module, QuantussyCell::BLINK_LIGHT));
 	}
 };
 

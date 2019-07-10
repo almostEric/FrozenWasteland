@@ -119,7 +119,7 @@ A collection of unusual plugins that will add a certain coolness to your patches
 - Low **LPF FREQ** settings create a warbling effect, high = craziness
 - **EXTERNAL IN** overrides interal VCO
 - The **LPF OUT** is normalled to the **VCO CV**, try patching something in between the two
-- Two comparator modes: XOR and D type Flip Flop
+- Four comparator modes: XOR, D type Flip Flop use different boolean logic. Fuzzy XOR and Fuzzy Hyperbolic XOR use logic operators based on work by Lofti Zadeh and hyperbolic parabolas respectively
 - Does not make pretty sounds, but can be a lot of fun.
 
 ## Portland Weather
@@ -225,11 +225,11 @@ When they are connected this way, the Clock, Mute and Reset signals, and Eoc out
 ![Roulette LFO](./doc/rlfo.png)
 
 - Based on the concept of a couple different types of Roulettes: https://en.wikipedia.org/wiki/Roulette_(curve)
-- A circle rolling either inside a bigger circle (Hypotrochoid) or circle rolling outside a bigger circle/ellipse (Epitrochoid)
-- Rx and Ry control the radii of the x and y dimensions of outer shape. If they are the same, or Ry=Rx switch is on, shape is a circle
-- The ratio of the Big Rs to small r can create interesting patterns
-- d is the distance of the 'pen' from the center of small circle.
-- if d = r the shapes become a special form of the shapes - either a Hypocycloid or Epicycloid
+- A circle/ellipse rolling either inside a bigger circle/ellipse (Hypotrochoid) or circle/ellipse rolling outside a bigger circle/ellipse (Epitrochoid)
+- Ratio controls the size of the big fixed shape in relation to the generating (rolling) shape
+- eF and eG control the eccentricity of the fixed shape and generating (rolling) shape respectively. An eccentricity of 1 = circle
+- d is the distance of the 'pen' from the center of the generating circle.
+- if d = 1 the shapes become a special form of the shapes - either a Hypocycloid or Epicycloid
 
 ## Seriously Slow LFO
 
@@ -251,6 +251,7 @@ When they are connected this way, the Clock, Mute and Reset signals, and Eoc out
 - The CV of a formant allows a +/- 50% change of base vowel frequency
 - The CV of amplitude allows the base level of the vowel/voice to be modified by about 2x.
 - Changing the Fc of formants 1 & 2 can make the vowel sound more long or short
+- The expander allows CV control of the Q (resonance) of each foramnt, and to choose 12db/oct slope for the filters
 
 ## Contributing
 
