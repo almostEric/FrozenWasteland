@@ -60,7 +60,7 @@ struct RouletteLFO : Module {
 
 	RouletteLFO() {
 		config(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS, NUM_LIGHTS);
-		configParam(RADIUS_RATIO_PARAM, 1, 20.0, 2,"Radius Ration");
+		configParam(RADIUS_RATIO_PARAM, 1, 10.0, 2,"Radius Ration");
 		configParam(GENERATOR_ECCENTRICITY_PARAM, 1.0f, 10.0f, 1.0,"Generator Eccentricty");
 		configParam(FIXED_ECCENTRICITY_PARAM, 1.0f, 10.0f, 1.0f,"Fixed Eccentricity");
 		configParam(DISTANCE_PARAM, 0.1, 10.0, 1.0,"Pole Distance");
@@ -92,7 +92,7 @@ void RouletteLFO::process(const ProcessArgs &args) {
 	float eF = clamp(params[FIXED_ECCENTRICITY_PARAM].getValue() + inputs[FIXED_ECCENTRICITY_INPUT].getVoltage() * params[FIXED_ECCENTRICITY_CV_ATTENUVERTER_PARAM].getValue(),1.0f,10.0f);
 	float d = clamp(params[DISTANCE_PARAM].getValue() + inputs[DISTANCE_INPUT].getVoltage() * params[DISTANCE_CV_ATTENUVERTER_PARAM].getValue(),0.1,10.0f);
 
-	displayScaling = fmaxf(eF + eG/2.0 + d,1.0f);
+	displayScaling = fmaxf(eF + eG/2.0 + d*0.5,1.0f);
 
 	float freq = powf(2.0, pitch);
 	float deltaTime = 1.0 / args.sampleRate;
@@ -130,7 +130,7 @@ void RouletteLFO::process(const ProcessArgs &args) {
 // (ax,ay) vector representing the major axis
 // (bx,by) vector representing the minor axis
 
-	float scaling = ratio + eF;
+	//float scaling = eF + eg/2.0;
 
 
 	if(params[INSIDE_OUTSIDE_PARAM].getValue() == INSIDE_ROULETTE) {
@@ -140,8 +140,8 @@ void RouletteLFO::process(const ProcessArgs &args) {
 		x1 = (fixedX + generatorX) / ratio ;
 		y1 = (fixedY + generatorY) / ratio ;
 	}
-	scaling += d > 1 ? d - 1 : 0;
-	scaling = 5.0f / scaling;
+	//scaling += d > 1 ? d - 1 : 0;
+	float scaling = 10.0f / (displayScaling + (eF + eG + d / 2.0f - 2));
 
 
 	//Update scope.

@@ -294,7 +294,11 @@ struct PortlandWeather : Module {
 		json_object_set_new(rootJ, "pingPong", json_integer((int) pingPong));
 
 		json_object_set_new(rootJ, "reverse", json_integer((int) reverse));
-		
+
+		json_object_set_new(rootJ, "grainCount", json_integer((int) grainCount));
+
+		json_object_set_new(rootJ, "grainSize", json_real((float) grainSize));
+
 		for(int i=0;i<NUM_TAPS;i++) {
 			//This is so stupid!!! why did he not use strings?
 			char buf[100];
@@ -319,6 +323,16 @@ struct PortlandWeather : Module {
 		json_t *sumR = json_object_get(rootJ, "reverse");
 		if (sumR) {
 			reverse = json_integer_value(sumR);			
+		}
+
+		json_t *sumGc = json_object_get(rootJ, "grainCount");
+		if (sumGc) {
+			grainCount = json_integer_value(sumGc);			
+		}
+
+		json_t *sumGs = json_object_get(rootJ, "grainSize");
+		if (sumGs) {
+			grainSize = json_real_value(sumGs);			
 		}
 		
 		char buf[100];			
