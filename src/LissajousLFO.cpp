@@ -427,8 +427,8 @@ struct LissajousLFOWidget : ModuleWidget {
 		addInput(createInput<PJ301MPort>(Vec(124, 298), module, LissajousLFO::PHASEX2_INPUT));
 		addInput(createInput<PJ301MPort>(Vec(159, 298), module, LissajousLFO::WAVESHAPEX2_INPUT));
 		addInput(createInput<PJ301MPort>(Vec(194, 298), module, LissajousLFO::WAVESHAPEY2_INPUT));
-		addInput(createInput<PJ301MPort>(Vec(229, 298), module, LissajousLFO::SKEWX1_INPUT));
-		addInput(createInput<PJ301MPort>(Vec(264, 298), module, LissajousLFO::SKEWY1_INPUT));
+		addInput(createInput<PJ301MPort>(Vec(229, 298), module, LissajousLFO::SKEWX2_INPUT));
+		addInput(createInput<PJ301MPort>(Vec(264, 298), module, LissajousLFO::SKEWY2_INPUT));
 
 		addOutput(createOutput<PJ301MPort>(Vec(22, 338), module, LissajousLFO::OUTPUT_1));
 		addOutput(createOutput<PJ301MPort>(Vec(53, 338), module, LissajousLFO::OUTPUT_2));
