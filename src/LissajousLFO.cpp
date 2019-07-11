@@ -435,7 +435,6 @@ struct LissajousLFOWidget : ModuleWidget {
 		addOutput(createOutput<PJ301MPort>(Vec(86, 338), module, LissajousLFO::OUTPUT_3));
 		addOutput(createOutput<PJ301MPort>(Vec(126, 338), module, LissajousLFO::OUTPUT_4));
 		addOutput(createOutput<PJ301MPort>(Vec(158, 338), module, LissajousLFO::OUTPUT_5));	
-		addOutput(createOutput<PJ301MPort>(Vec(158, 338), module, LissajousLFO::OUTPUT_5));	
 		addOutput(createOutput<PJ301MPort>(Vec(190, 338), module, LissajousLFO::OUTPUT_6));	
 		addOutput(createOutput<PJ301MPort>(Vec(222, 338), module, LissajousLFO::OUTPUT_7));	
 		addOutput(createOutput<PJ301MPort>(Vec(254, 338), module, LissajousLFO::OUTPUT_8));	
