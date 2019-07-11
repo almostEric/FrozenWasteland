@@ -251,7 +251,7 @@ When they are connected this way, the Clock, Mute and Reset signals, and Eoc out
 - The CV of a formant allows a +/- 50% change of base vowel frequency
 - The CV of amplitude allows the base level of the vowel/voice to be modified by about 2x.
 - Changing the Fc of formants 1 & 2 can make the vowel sound more long or short
-- The expander allows CV control of the Q (resonance) of each foramnt, and to choose 12db/oct slope for the filters
+- The expander allows CV control of the Q (resonance) of each formant, and to choose 12db/oct slope for the filters
 
 ## Contributing
 
