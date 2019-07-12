@@ -1,6 +1,7 @@
 #include <string.h>
 #include "FrozenWasteland.hpp"
 #include "ui/knobs.hpp"
+#include "ui/ports.hpp"
 
 
 #define BUFFER_SIZE 512
@@ -17,16 +18,28 @@ struct RouletteLFO : Module {
 		DISTANCE_CV_ATTENUVERTER_PARAM,
 		FREQUENCY_PARAM,
 		FREQUENCY_CV_ATTENUVERTER_PARAM,
-		INSIDE_OUTSIDE_PARAM,
+		GENERATOR_PHASE_PARAM,
+		GENERATOR_PHASE_CV_ATTENUVERTER_PARAM,
+		FIXED_PHASE_PARAM,
+		FIXED_PHASE_CV_ATTENUVERTER_PARAM,
+		X_GAIN_PARAM,
+		X_GAIN_CV_ATTENUVERTER_PARAM,
+		Y_GAIN_PARAM,
+		Y_GAIN_CV_ATTENUVERTER_PARAM,
+		INSIDE_OUTSIDE_PARAM,	
 		OFFSET_PARAM,	
 		NUM_PARAMS
 	};
 	enum InputIds {
 		RADIUS_RATIO_INPUT,
 		GENERATOR_ECCENTRICITY_INPUT,
+		GENERATOR_PHASE_INPUT,
 		FIXED_ECCENTRICITY_INPUT,
+		FIXED_PHASE_INPUT,
 		DISTANCE_INPUT,
 		FREQUENCY_INPUT,
+		X_GAIN_INPUT,
+		Y_GAIN_INPUT,
 		NUM_INPUTS
 	};
 	enum OutputIds {
@@ -62,20 +75,145 @@ struct RouletteLFO : Module {
 		config(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS, NUM_LIGHTS);
 		configParam(RADIUS_RATIO_PARAM, 1, 10.0, 2,"Radius Ration");
 		configParam(GENERATOR_ECCENTRICITY_PARAM, 1.0f, 10.0f, 1.0,"Generator Eccentricty");
+		configParam(GENERATOR_PHASE_PARAM, 0.0, 0.9999, 0.0,"Generator Phase","°",0,360);
 		configParam(FIXED_ECCENTRICITY_PARAM, 1.0f, 10.0f, 1.0f,"Fixed Eccentricity");
+		configParam(FIXED_PHASE_PARAM, 0.0, 0.9999, 0.0,"Fixed Phase","°",0,360);
 		configParam(DISTANCE_PARAM, 0.1, 10.0, 1.0,"Pole Distance");
 		configParam(FREQUENCY_PARAM, -8.0, 4.0, 0.0,"Frequency", " Hz", 2, 1);
+		configParam(X_GAIN_PARAM, 0.0, 2.0, 1.0,"X Amp");
+		configParam(Y_GAIN_PARAM, 0.0, 2.0, 1.0,"Y Amp");
 
 		configParam(RADIUS_RATIO_CV_ATTENUVERTER_PARAM, -1.0, 1.0, 0.0,"Radius Ratio CV Attenuation","%",0,100);
 		configParam(GENERATOR_ECCENTRICITY_CV_ATTENUVERTER_PARAM, -1.0, 1.0, 0.0,"Genertor Eccentricity CV Attenuation","%",0,100);
-		configParam(FIXED_ECCENTRICITY_CV_ATTENUVERTER_PARAM, -1.0, 1.0, 0.0,"Fixed Eccentricity CV Attenuation","%",0,100);
+		configParam(GENERATOR_PHASE_CV_ATTENUVERTER_PARAM, -1.0, 1.0, 0.0,"Genertor Phase CV Attenuation","%",0,100);
+		configParam(FIXED_ECCENTRICITY_CV_ATTENUVERTER_PARAM, -1.0, 1.0, 0.0,"Fixed Phase CV Attenuation","%",0,100);
+		configParam(FIXED_PHASE_CV_ATTENUVERTER_PARAM, -1.0, 1.0, 0.0,"Fixed Eccentricity CV Attenuation","%",0,100);
 		configParam(DISTANCE_CV_ATTENUVERTER_PARAM, -1.0, 1.0, 0.0,"Pole Distance CV Attenuation","%",0,100);
 		configParam(FREQUENCY_CV_ATTENUVERTER_PARAM, -1.0, 1.0, 0.0,"Frequeny CV Attenuation","%",0,100);
+		configParam(X_GAIN_CV_ATTENUVERTER_PARAM, -1.0, 1.0, 0.0,"X Gain CV Attenuation","%",0,100);
+		configParam(Y_GAIN_CV_ATTENUVERTER_PARAM, -1.0, 1.0, 0.0,"Y Gain CV Attenuation","%",0,100);
+
 
 		configParam(INSIDE_OUTSIDE_PARAM, 0.0, 1.0, 0.0);		
 		configParam(OFFSET_PARAM, 0.0, 1.0, 1.0);	
 	}
-	void process(const ProcessArgs &args) override;
+	void process(const ProcessArgs &args) override {
+
+
+		float xAmplitude = clamp(params[X_GAIN_PARAM].getValue() + (inputs[X_GAIN_INPUT].getVoltage() / 5.0f * params[X_GAIN_CV_ATTENUVERTER_PARAM].getValue()),0.0f,2.0f);
+		float yAmplitude = clamp(params[Y_GAIN_PARAM].getValue() + (inputs[Y_GAIN_INPUT].getVoltage() / 5.0f * params[Y_GAIN_CV_ATTENUVERTER_PARAM].getValue()),0.0f,2.0f);
+
+		float fixedInitialPhase = params[FIXED_PHASE_PARAM].getValue();
+		if(inputs[FIXED_PHASE_INPUT].isConnected()) {
+			fixedInitialPhase += (inputs[FIXED_PHASE_INPUT].getVoltage() / 10 * params[FIXED_PHASE_CV_ATTENUVERTER_PARAM].getValue());
+		}
+		if (fixedInitialPhase >= 1.0)
+			fixedInitialPhase -= 1.0;
+		else if (fixedInitialPhase < 0)
+			fixedInitialPhase += 1.0;
+
+		float generatorInitialPhase = params[GENERATOR_PHASE_PARAM].getValue();
+		if(inputs[GENERATOR_PHASE_INPUT].isConnected()) {
+			generatorInitialPhase += (inputs[GENERATOR_PHASE_INPUT].getVoltage() / 10 * params[GENERATOR_PHASE_CV_ATTENUVERTER_PARAM].getValue());
+		}
+		if (generatorInitialPhase >= 1.0)
+			generatorInitialPhase -= 1.0;
+		else if (generatorInitialPhase < 0)
+			generatorInitialPhase += 1.0;
+
+
+		float pitch = fminf(params[FREQUENCY_PARAM].getValue() + inputs[FREQUENCY_INPUT].getVoltage() * params[FREQUENCY_CV_ATTENUVERTER_PARAM].getValue(), 8.0);
+		float ratio = clamp(params[RADIUS_RATIO_PARAM].getValue() + inputs[RADIUS_RATIO_INPUT].getVoltage() * 2.0f * params[RADIUS_RATIO_CV_ATTENUVERTER_PARAM].getValue(),1.0,20.0);
+		float eG = clamp(params[GENERATOR_ECCENTRICITY_PARAM].getValue() + inputs[GENERATOR_ECCENTRICITY_INPUT].getVoltage() * params[GENERATOR_ECCENTRICITY_CV_ATTENUVERTER_PARAM].getValue(),1.0f,10.0f);
+		float eF = clamp(params[FIXED_ECCENTRICITY_PARAM].getValue() + inputs[FIXED_ECCENTRICITY_INPUT].getVoltage() * params[FIXED_ECCENTRICITY_CV_ATTENUVERTER_PARAM].getValue(),1.0f,10.0f);
+		float d = clamp(params[DISTANCE_PARAM].getValue() + inputs[DISTANCE_INPUT].getVoltage() * params[DISTANCE_CV_ATTENUVERTER_PARAM].getValue(),0.1,10.0f);
+
+		displayScaling = fmaxf(eF + eG/2.0 + d*0.5,1.0f);
+
+		float freq = powf(2.0, pitch);
+		float deltaTime = 1.0 / args.sampleRate;
+		float deltaPhase = fminf(freq * deltaTime, 0.5);
+		
+		generatorPhase += deltaPhase * ratio;
+		if (generatorPhase >= 1.0)
+			generatorPhase -= 1.0;
+
+		fixedPhase += deltaPhase; //Fixed shape rolls in opposite direction
+		if (fixedPhase >= 1.0)
+			fixedPhase -= 1.0;
+
+		float generatorTheta = (generatorInitialPhase + generatorPhase) * 2 * M_PI;
+		float fixedTheta = (fixedInitialPhase + fixedPhase) * 2 * M_PI;
+
+		//Fixed object is always horizontal, so major and minor axis vectors are constant
+		float fixedX = ratio * (eF*sinf(fixedTheta));
+		float fixedY = ratio * (cosf(fixedTheta));
+
+		float a0 = 0.0f;
+		float b0 = 0.0f;
+		float ax = eG * cosf(generatorTheta);
+		float ay = eG * sinf(generatorTheta);
+		float bx = cosf(generatorTheta - M_PI / 2);
+		float by = sinf(generatorTheta - M_PI / 2);
+
+		float generatorX = a0 + d * (ax*sinf(generatorTheta) + bx*cosf(generatorTheta));
+		float generatorY = b0 + d * (ay*sinf(generatorTheta) + by*cosf(generatorTheta));
+
+	// x(theta) = a0 + ax*sin(theta) + bx*cos(theta)
+	// y(theta) = b0 + ay*sin(theta) + by*cos(theta)
+
+	// (a0,b0) is the center of the ellipse
+	// (ax,ay) vector representing the major axis
+	// (bx,by) vector representing the minor axis
+
+		//float scaling = eF + eg/2.0;
+
+
+		if(params[INSIDE_OUTSIDE_PARAM].getValue() == INSIDE_ROULETTE) {
+			x1 = (fixedX - generatorX) / ratio * xAmplitude;
+			y1 = (fixedY - generatorY) / ratio * yAmplitude;
+		} else {
+			x1 = (fixedX + generatorX) / ratio * xAmplitude;
+			y1 = (fixedY + generatorY) / ratio * yAmplitude;
+		}
+		//scaling += d > 1 ? d - 1 : 0;
+		float scaling = 10.0f / (displayScaling + (eF + eG + d / 2.0f - 2));
+
+
+		//Update scope.
+		int frameCount = (int)ceilf(scopeDeltaTime * args.sampleRate);
+
+		// Add frame to buffers
+		if (bufferIndex < BUFFER_SIZE) {
+			if (++frameIndex > frameCount) {
+				frameIndex = 0;
+				bufferX1[bufferIndex] = x1;
+				bufferY1[bufferIndex] = y1;
+				bufferIndex++;
+			}
+		}
+
+		// Are we waiting on the next trigger?
+		if (bufferIndex >= BUFFER_SIZE) {
+			bufferIndex = 0;
+			frameIndex = 0;
+		}
+
+		x1 = x1 * scaling;
+		y1 = y1 * scaling;
+
+		if(params[OFFSET_PARAM].getValue() == 1) {
+			x1 = x1 + 5;
+			y1 = y1 + 5;
+		}
+		
+
+
+		
+		outputs[OUTPUT_X].setVoltage(x1);
+		outputs[OUTPUT_Y].setVoltage(y1);	
+	}
+
 
 	// For more advanced Module features, read Rack's engine.hpp header file
 	// - dataToJson, dataFromJson: serialization of internal data
@@ -83,138 +221,6 @@ struct RouletteLFO : Module {
 	// - onReset, onRandomize, onCreate, onDelete: implements special behavior when user clicks these from the context menu
 };
 
-
-void RouletteLFO::process(const ProcessArgs &args) {
-
-	float pitch = fminf(params[FREQUENCY_PARAM].getValue() + inputs[FREQUENCY_INPUT].getVoltage() * params[FREQUENCY_CV_ATTENUVERTER_PARAM].getValue(), 8.0);
-	float ratio = clamp(params[RADIUS_RATIO_PARAM].getValue() + inputs[RADIUS_RATIO_INPUT].getVoltage() * 2.0f * params[RADIUS_RATIO_CV_ATTENUVERTER_PARAM].getValue(),1.0,20.0);
-	float eG = clamp(params[GENERATOR_ECCENTRICITY_PARAM].getValue() + inputs[GENERATOR_ECCENTRICITY_INPUT].getVoltage() * params[GENERATOR_ECCENTRICITY_CV_ATTENUVERTER_PARAM].getValue(),1.0f,10.0f);
-	float eF = clamp(params[FIXED_ECCENTRICITY_PARAM].getValue() + inputs[FIXED_ECCENTRICITY_INPUT].getVoltage() * params[FIXED_ECCENTRICITY_CV_ATTENUVERTER_PARAM].getValue(),1.0f,10.0f);
-	float d = clamp(params[DISTANCE_PARAM].getValue() + inputs[DISTANCE_INPUT].getVoltage() * params[DISTANCE_CV_ATTENUVERTER_PARAM].getValue(),0.1,10.0f);
-
-	displayScaling = fmaxf(eF + eG/2.0 + d*0.5,1.0f);
-
-	float freq = powf(2.0, pitch);
-	float deltaTime = 1.0 / args.sampleRate;
-	float deltaPhase = fminf(freq * deltaTime, 0.5);
-	
-	generatorPhase += deltaPhase * ratio;
-	if (generatorPhase >= 1.0)
-		generatorPhase -= 1.0;
-
-	fixedPhase += deltaPhase; //Fixed shape rolls in opposite direction
-	if (fixedPhase >= 1.0)
-		fixedPhase -= 1.0;
-
-	float generatorTheta = generatorPhase * 2 * M_PI;
-	float fixedTheta = fixedPhase * 2 * M_PI;
-
-	//Fixed object is always horizontal, so major and minor axis vectors are constant
-	float fixedX = ratio * (eF*sinf(fixedTheta));
-	float fixedY = ratio * (cosf(fixedTheta));
-
-	float a0 = 0.0f;
-	float b0 = 0.0f;
-	float ax = eG * cosf(generatorTheta);
-	float ay = eG * sinf(generatorTheta);
-	float bx = cosf(generatorTheta - M_PI / 2);
-	float by = sinf(generatorTheta - M_PI / 2);
-
-	float generatorX = a0 + d * (ax*sinf(generatorTheta) + bx*cosf(generatorTheta));
-	float generatorY = b0 + d * (ay*sinf(generatorTheta) + by*cosf(generatorTheta));
-
-// x(theta) = a0 + ax*sin(theta) + bx*cos(theta)
-// y(theta) = b0 + ay*sin(theta) + by*cos(theta)
-
-// (a0,b0) is the center of the ellipse
-// (ax,ay) vector representing the major axis
-// (bx,by) vector representing the minor axis
-
-	//float scaling = eF + eg/2.0;
-
-
-	if(params[INSIDE_OUTSIDE_PARAM].getValue() == INSIDE_ROULETTE) {
-		x1 = (fixedX - generatorX) / ratio ;
-		y1 = (fixedY - generatorY) / ratio ;
-	} else {
-		x1 = (fixedX + generatorX) / ratio ;
-		y1 = (fixedY + generatorY) / ratio ;
-	}
-	//scaling += d > 1 ? d - 1 : 0;
-	float scaling = 10.0f / (displayScaling + (eF + eG + d / 2.0f - 2));
-
-
-	//Update scope.
-	int frameCount = (int)ceilf(scopeDeltaTime * args.sampleRate);
-
-	// Add frame to buffers
-	if (bufferIndex < BUFFER_SIZE) {
-		if (++frameIndex > frameCount) {
-			frameIndex = 0;
-			bufferX1[bufferIndex] = x1;
-			bufferY1[bufferIndex] = y1;
-			bufferIndex++;
-		}
-	}
-
-	// Are we waiting on the next trigger?
-	if (bufferIndex >= BUFFER_SIZE) {
-		bufferIndex = 0;
-		frameIndex = 0;
-	}
-
-	x1 = x1 * scaling;
-	y1 = y1 * scaling;
-
-	if(params[OFFSET_PARAM].getValue() == 1) {
-		x1 = x1 + 5;
-		y1 = y1 + 5;
-	}
-	
-
-
-	// if(params[EPI_HYPO_PARAM].getValue() == HYPOTROCHOID_ROULETTE) {
-	// 	float r = clamp(params[ROTATING_RADIUS_PARAM].getValue() + inputs[ROATATING_RADIUS_INPUT].getVoltage(),1.0,10.0);
-	// 	float Rx = clamp(params[FIXED_RADIUS_X_PARAM].getValue() +inputs[FIXED_RADIUS_X_INPUT].getVoltage(),r,20.0);
-	// 	float Ry = clamp(params[FIXED_RADIUS_Y_PARAM].getValue() +inputs[FIXED_RADIUS_Y_INPUT].getVoltage(),r,20.0);
-	// 	float d = clamp(params[DISTANCE_PARAM].getValue() + inputs[DISTANCE_INPUT].getVoltage(),1.0,10.0);
-	// 	if(params[FIXED_D_PARAM].getValue()) {
-	// 		d=r;
-	// 	}
-	// 	if(params[FIXED_RY_PARAM].getValue()) {
-	// 		Ry=Rx;
-	// 	}
-
-	// 	//float R = std::max(Rx,Ry);
-	// 	float R =(Rx + Ry) / 2.0f;
-	// 	float amplitudeScaling = 5.0 / (R-r+d);
-
-	// 	float theta = phase * 2 * M_PI;
-	// 	x1 = amplitudeScaling * (((Rx-r) * cosf(theta)) + (d * cosf((Rx-r)/r * theta)));
-	// 	y1 = amplitudeScaling * (((Ry-r) * sinf(theta)) - (d * sinf((Ry-r)/r * theta)));
-	// } else {
-	// 	float r = clamp(params[ROTATING_RADIUS_PARAM].getValue() + inputs[ROATATING_RADIUS_INPUT].getVoltage(),1.0,10.0);
-	// 	float Rx = clamp(params[FIXED_RADIUS_X_PARAM].getValue() +inputs[FIXED_RADIUS_X_INPUT].getVoltage(),r,20.0);
-	// 	float Ry = clamp(params[FIXED_RADIUS_Y_PARAM].getValue() +inputs[FIXED_RADIUS_Y_INPUT].getVoltage(),r,20.0);
-	// 	float d = clamp(params[DISTANCE_PARAM].getValue() + inputs[DISTANCE_INPUT].getVoltage(),1.0,20.0);
-	// 	if(params[FIXED_D_PARAM].getValue()) {
-	// 		d=r;
-	// 	}
-	// 	if(params[FIXED_RY_PARAM].getValue()) {
-	// 		Ry=Rx;
-	// 	}
-	// 	//float R = std::max(Rx,Ry);
-	// 	float R =(Rx + Ry) / 2.0f;
-	// 	float amplitudeScaling = 5.0 / (R+r+d);
-
-	// 	float theta = phase * 2 * M_PI;
-		// x1 = amplitudeScaling * (((R+r) * cosf(theta)) - (d * cosf((R+r)/r * theta)));
-		// y1 = amplitudeScaling * (((R+r) * sinf(theta)) - (d * sinf((R+r)/r * theta)));
-
-	// }
-	outputs[OUTPUT_X].setVoltage(x1);
-	outputs[OUTPUT_Y].setVoltage(y1);	
-}
 
 
 
@@ -294,33 +300,55 @@ struct RouletteLFOWidget : ModuleWidget {
 		{
 			RouletteScopeDisplay *display = new RouletteScopeDisplay();
 			display->module = module;
-			display->box.pos = Vec(0, 41);
+			display->box.pos = Vec(0, 21);
 			display->box.size = Vec(box.size.x, 131);
 			addChild(display);
 		}
 
-		addParam(createParam<RoundFWKnob>(Vec(10, 187), module, RouletteLFO::RADIUS_RATIO_PARAM));
-		addParam(createParam<RoundSmallFWKnob>(Vec(13, 250), module, RouletteLFO::RADIUS_RATIO_CV_ATTENUVERTER_PARAM));
-		addParam(createParam<RoundFWKnob>(Vec(48, 187), module, RouletteLFO::FIXED_ECCENTRICITY_PARAM));
-		addParam(createParam<RoundSmallFWKnob>(Vec(51, 250), module, RouletteLFO::FIXED_ECCENTRICITY_CV_ATTENUVERTER_PARAM));
-		addParam(createParam<RoundFWKnob>(Vec(86, 187), module, RouletteLFO::GENERATOR_ECCENTRICITY_PARAM));
-		addParam(createParam<RoundSmallFWKnob>(Vec(89, 250), module, RouletteLFO::GENERATOR_ECCENTRICITY_CV_ATTENUVERTER_PARAM));
-		addParam(createParam<RoundFWKnob>(Vec(124, 187), module, RouletteLFO::DISTANCE_PARAM));
-		addParam(createParam<RoundSmallFWKnob>(Vec(127, 250), module, RouletteLFO::DISTANCE_CV_ATTENUVERTER_PARAM));
-		addParam(createParam<RoundFWKnob>(Vec(160, 187), module, RouletteLFO::FREQUENCY_PARAM));
-		addParam(createParam<RoundSmallFWKnob>(Vec(163, 250), module, RouletteLFO::FREQUENCY_CV_ATTENUVERTER_PARAM));
-		addParam(createParam<CKSS>(Vec(32, 295), module, RouletteLFO::INSIDE_OUTSIDE_PARAM));
-		addParam(createParam<CKSS>(Vec(77, 295), module, RouletteLFO::OFFSET_PARAM));
+		addParam(createParam<RoundSmallFWKnob>(Vec(10, 167), module, RouletteLFO::RADIUS_RATIO_PARAM));
+		addParam(createParam<RoundReallySmallFWKnob>(Vec(12, 212), module, RouletteLFO::RADIUS_RATIO_CV_ATTENUVERTER_PARAM));
+
+		addParam(createParam<RoundSmallFWKnob>(Vec(48, 167), module, RouletteLFO::FIXED_ECCENTRICITY_PARAM));
+		addParam(createParam<RoundReallySmallFWKnob>(Vec(50, 212), module, RouletteLFO::FIXED_ECCENTRICITY_CV_ATTENUVERTER_PARAM));
+		addParam(createParam<RoundSmallFWKnob>(Vec(48, 247), module, RouletteLFO::FIXED_PHASE_PARAM));
+		addParam(createParam<RoundReallySmallFWKnob>(Vec(50, 292), module, RouletteLFO::FIXED_PHASE_CV_ATTENUVERTER_PARAM));
+
+
+		addParam(createParam<RoundSmallFWKnob>(Vec(86, 167), module, RouletteLFO::GENERATOR_ECCENTRICITY_PARAM));
+		addParam(createParam<RoundReallySmallFWKnob>(Vec(88, 212), module, RouletteLFO::GENERATOR_ECCENTRICITY_CV_ATTENUVERTER_PARAM));
+		addParam(createParam<RoundSmallFWKnob>(Vec(86, 247), module, RouletteLFO::GENERATOR_PHASE_PARAM));
+		addParam(createParam<RoundReallySmallFWKnob>(Vec(88, 292), module, RouletteLFO::GENERATOR_PHASE_CV_ATTENUVERTER_PARAM));
+
+
+		addParam(createParam<RoundSmallFWKnob>(Vec(124, 167), module, RouletteLFO::DISTANCE_PARAM));
+		addParam(createParam<RoundReallySmallFWKnob>(Vec(126, 212), module, RouletteLFO::DISTANCE_CV_ATTENUVERTER_PARAM));
+		addParam(createParam<RoundSmallFWKnob>(Vec(160, 167), module, RouletteLFO::FREQUENCY_PARAM));
+		addParam(createParam<RoundReallySmallFWKnob>(Vec(162, 212), module, RouletteLFO::FREQUENCY_CV_ATTENUVERTER_PARAM));
+
+
+		addParam(createParam<RoundSmallFWKnob>(Vec(124, 247), module, RouletteLFO::X_GAIN_PARAM));
+		addParam(createParam<RoundReallySmallFWKnob>(Vec(126, 292), module, RouletteLFO::X_GAIN_CV_ATTENUVERTER_PARAM));
+
+		addParam(createParam<RoundSmallFWKnob>(Vec(160, 247), module, RouletteLFO::Y_GAIN_PARAM));
+		addParam(createParam<RoundReallySmallFWKnob>(Vec(162, 292), module, RouletteLFO::Y_GAIN_CV_ATTENUVERTER_PARAM));
+
+
+		addParam(createParam<CKSS>(Vec(18, 327), module, RouletteLFO::INSIDE_OUTSIDE_PARAM));
+		addParam(createParam<CKSS>(Vec(63, 327), module, RouletteLFO::OFFSET_PARAM));
 		
 
-		addInput(createInput<PJ301MPort>(Vec(13, 220), module, RouletteLFO::RADIUS_RATIO_INPUT));
-		addInput(createInput<PJ301MPort>(Vec(51, 220), module, RouletteLFO::FIXED_ECCENTRICITY_INPUT));
-		addInput(createInput<PJ301MPort>(Vec(89, 220), module, RouletteLFO::GENERATOR_ECCENTRICITY_INPUT));
-		addInput(createInput<PJ301MPort>(Vec(127, 220), module, RouletteLFO::DISTANCE_INPUT));
-		addInput(createInput<PJ301MPort>(Vec(163, 220), module, RouletteLFO::FREQUENCY_INPUT));
+		addInput(createInput<FWPortInSmall>(Vec(13, 193), module, RouletteLFO::RADIUS_RATIO_INPUT));
+		addInput(createInput<FWPortInSmall>(Vec(51, 193), module, RouletteLFO::FIXED_ECCENTRICITY_INPUT));
+		addInput(createInput<FWPortInSmall>(Vec(51, 273), module, RouletteLFO::FIXED_PHASE_INPUT));
+		addInput(createInput<FWPortInSmall>(Vec(89, 193), module, RouletteLFO::GENERATOR_ECCENTRICITY_INPUT));
+		addInput(createInput<FWPortInSmall>(Vec(89, 273), module, RouletteLFO::GENERATOR_PHASE_INPUT));
+		addInput(createInput<FWPortInSmall>(Vec(127, 193), module, RouletteLFO::DISTANCE_INPUT));
+		addInput(createInput<FWPortInSmall>(Vec(163, 193), module, RouletteLFO::FREQUENCY_INPUT));
+		addInput(createInput<FWPortInSmall>(Vec(127, 273), module, RouletteLFO::X_GAIN_INPUT));
+		addInput(createInput<FWPortInSmall>(Vec(163, 273), module, RouletteLFO::Y_GAIN_INPUT));
 
-		addOutput(createOutput<PJ301MPort>(Vec(110, 330), module, RouletteLFO::OUTPUT_X));
-		addOutput(createOutput<PJ301MPort>(Vec(150, 330), module, RouletteLFO::OUTPUT_Y));
+		addOutput(createOutput<PJ301MPort>(Vec(110, 338), module, RouletteLFO::OUTPUT_X));
+		addOutput(createOutput<PJ301MPort>(Vec(150, 338), module, RouletteLFO::OUTPUT_Y));
 
 	}
 };

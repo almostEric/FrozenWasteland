@@ -300,23 +300,16 @@ struct ScopeDisplay : TransparentWidget {
 		if (!valuesX)
 			return;
 		nvgSave(args.vg);
-		Rect b = Rect(Vec(0, 15), box.size.minus(Vec(0, 15*2)));
-		nvgScissor(args.vg, b.pos.x, b.pos.y, b.size.x, b.size.y);
+		nvgScissor(args.vg, box.pos.x, box.pos.y, box.size.x, box.size.y);
 		nvgBeginPath(args.vg);
 		// Draw maximum display left to right
 		for (int i = 0; i < BUFFER_SIZE; i++) {
-			float x, y;
-			if (valuesY) {
-				x = valuesX[i] / 2.0 + 0.5;
-				y = valuesY[i] / 2.0 + 0.5;
-			}
-			else {
-				x = (float)i / (BUFFER_SIZE - 1);
-				y = valuesX[i] / 2.0 + 0.5;
-			}
+			Vec v;
+			v.x = valuesX[i] / 2.0 + 0.5;
+			v.y = valuesY[i] / 2.0 + 0.5;
 			Vec p;
-			p.x = b.pos.x + b.size.x * x;
-			p.y = b.pos.y + b.size.y * (1.0 - y);
+			p.x = rescale(v.x, 0.f, 1.f, 0, box.size.x);
+			p.y = rescale(v.y, 0.f, 1.f, box.size.y, 0);
 			if (i == 0)
 				nvgMoveTo(args.vg, p.x, p.y);
 			else
@@ -388,47 +381,47 @@ struct LissajousLFOWidget : ModuleWidget {
 		{
 			ScopeDisplay *display = new ScopeDisplay();
 			display->module = module;
-			display->box.pos = Vec(0, 35);
+			display->box.pos = Vec(0, 11);
 			display->box.size = Vec(box.size.x, 140);
 			addChild(display);
 		}
 
-		addParam(createParam<RoundFWKnob>(Vec(20, 186), module, LissajousLFO::AMPLITUDE1_PARAM));
-		addParam(createParam<RoundFWKnob>(Vec(52, 186), module, LissajousLFO::FREQX1_PARAM));
-		addParam(createParam<RoundFWKnob>(Vec(87, 186), module, LissajousLFO::FREQY1_PARAM));
-		addParam(createParam<RoundFWKnob>(Vec(122, 186), module, LissajousLFO::PHASEX1_PARAM));
-		addParam(createParam<RoundFWKnob>(Vec(157, 186), module, LissajousLFO::WAVESHAPEX1_PARAM));
-		addParam(createParam<RoundFWKnob>(Vec(192, 186), module, LissajousLFO::WAVESHAPEY1_PARAM));
-		addParam(createParam<RoundFWKnob>(Vec(227, 186), module, LissajousLFO::SKEWX1_PARAM));
-		addParam(createParam<RoundFWKnob>(Vec(262, 186), module, LissajousLFO::SKEWY1_PARAM));
+		addParam(createParam<RoundFWKnob>(Vec(20, 167), module, LissajousLFO::AMPLITUDE1_PARAM));
+		addParam(createParam<RoundFWKnob>(Vec(52, 167), module, LissajousLFO::FREQX1_PARAM));
+		addParam(createParam<RoundFWKnob>(Vec(87, 167), module, LissajousLFO::FREQY1_PARAM));
+		addParam(createParam<RoundFWKnob>(Vec(122, 167), module, LissajousLFO::PHASEX1_PARAM));
+		addParam(createParam<RoundFWKnob>(Vec(157, 167), module, LissajousLFO::WAVESHAPEX1_PARAM));
+		addParam(createParam<RoundFWKnob>(Vec(192, 167), module, LissajousLFO::WAVESHAPEY1_PARAM));
+		addParam(createParam<RoundFWKnob>(Vec(227, 167), module, LissajousLFO::SKEWX1_PARAM));
+		addParam(createParam<RoundFWKnob>(Vec(262, 167), module, LissajousLFO::SKEWY1_PARAM));
 		
 
-		addParam(createParam<RoundFWKnob>(Vec(20, 265), module, LissajousLFO::AMPLITUDE2_PARAM));
-		addParam(createParam<RoundFWKnob>(Vec(52, 265), module, LissajousLFO::FREQX2_PARAM));
-		addParam(createParam<RoundFWKnob>(Vec(87, 265), module, LissajousLFO::FREQY2_PARAM));
-		addParam(createParam<RoundFWKnob>(Vec(122, 265), module, LissajousLFO::PHASEX2_PARAM));
-		addParam(createParam<RoundFWKnob>(Vec(157, 265), module, LissajousLFO::WAVESHAPEX2_PARAM));
-		addParam(createParam<RoundFWKnob>(Vec(192, 265), module, LissajousLFO::WAVESHAPEY2_PARAM));
-		addParam(createParam<RoundFWKnob>(Vec(227, 265), module, LissajousLFO::SKEWX2_PARAM));
-		addParam(createParam<RoundFWKnob>(Vec(262, 265), module, LissajousLFO::SKEWY2_PARAM));
+		addParam(createParam<RoundFWKnob>(Vec(20, 246), module, LissajousLFO::AMPLITUDE2_PARAM));
+		addParam(createParam<RoundFWKnob>(Vec(52, 246), module, LissajousLFO::FREQX2_PARAM));
+		addParam(createParam<RoundFWKnob>(Vec(87, 246), module, LissajousLFO::FREQY2_PARAM));
+		addParam(createParam<RoundFWKnob>(Vec(122, 246), module, LissajousLFO::PHASEX2_PARAM));
+		addParam(createParam<RoundFWKnob>(Vec(157, 246), module, LissajousLFO::WAVESHAPEX2_PARAM));
+		addParam(createParam<RoundFWKnob>(Vec(192, 246), module, LissajousLFO::WAVESHAPEY2_PARAM));
+		addParam(createParam<RoundFWKnob>(Vec(227, 246), module, LissajousLFO::SKEWX2_PARAM));
+		addParam(createParam<RoundFWKnob>(Vec(262, 246), module, LissajousLFO::SKEWY2_PARAM));
 
-		addInput(createInput<PJ301MPort>(Vec(22, 219), module, LissajousLFO::AMPLITUDE1_INPUT));
-		addInput(createInput<PJ301MPort>(Vec(54, 219), module, LissajousLFO::FREQX1_INPUT));
-		addInput(createInput<PJ301MPort>(Vec(89, 219), module, LissajousLFO::FREQY1_INPUT));
-		addInput(createInput<PJ301MPort>(Vec(124, 219), module, LissajousLFO::PHASEX1_INPUT));
-		addInput(createInput<PJ301MPort>(Vec(159, 219), module, LissajousLFO::WAVESHAPEX1_INPUT));
-		addInput(createInput<PJ301MPort>(Vec(194, 219), module, LissajousLFO::WAVESHAPEY1_INPUT));
-		addInput(createInput<PJ301MPort>(Vec(229, 219), module, LissajousLFO::SKEWX1_INPUT));
-		addInput(createInput<PJ301MPort>(Vec(264, 219), module, LissajousLFO::SKEWY1_INPUT));
+		addInput(createInput<PJ301MPort>(Vec(22, 200), module, LissajousLFO::AMPLITUDE1_INPUT));
+		addInput(createInput<PJ301MPort>(Vec(54, 200), module, LissajousLFO::FREQX1_INPUT));
+		addInput(createInput<PJ301MPort>(Vec(89, 200), module, LissajousLFO::FREQY1_INPUT));
+		addInput(createInput<PJ301MPort>(Vec(124, 200), module, LissajousLFO::PHASEX1_INPUT));
+		addInput(createInput<PJ301MPort>(Vec(159, 200), module, LissajousLFO::WAVESHAPEX1_INPUT));
+		addInput(createInput<PJ301MPort>(Vec(194, 200), module, LissajousLFO::WAVESHAPEY1_INPUT));
+		addInput(createInput<PJ301MPort>(Vec(229, 200), module, LissajousLFO::SKEWX1_INPUT));
+		addInput(createInput<PJ301MPort>(Vec(264, 200), module, LissajousLFO::SKEWY1_INPUT));
 		
-		addInput(createInput<PJ301MPort>(Vec(22, 298), module, LissajousLFO::AMPLITUDE2_INPUT));
-		addInput(createInput<PJ301MPort>(Vec(54, 298), module, LissajousLFO::FREQX2_INPUT));
-		addInput(createInput<PJ301MPort>(Vec(89, 298), module, LissajousLFO::FREQY2_INPUT));
-		addInput(createInput<PJ301MPort>(Vec(124, 298), module, LissajousLFO::PHASEX2_INPUT));
-		addInput(createInput<PJ301MPort>(Vec(159, 298), module, LissajousLFO::WAVESHAPEX2_INPUT));
-		addInput(createInput<PJ301MPort>(Vec(194, 298), module, LissajousLFO::WAVESHAPEY2_INPUT));
-		addInput(createInput<PJ301MPort>(Vec(229, 298), module, LissajousLFO::SKEWX2_INPUT));
-		addInput(createInput<PJ301MPort>(Vec(264, 298), module, LissajousLFO::SKEWY2_INPUT));
+		addInput(createInput<PJ301MPort>(Vec(22, 279), module, LissajousLFO::AMPLITUDE2_INPUT));
+		addInput(createInput<PJ301MPort>(Vec(54, 279), module, LissajousLFO::FREQX2_INPUT));
+		addInput(createInput<PJ301MPort>(Vec(89, 279), module, LissajousLFO::FREQY2_INPUT));
+		addInput(createInput<PJ301MPort>(Vec(124, 279), module, LissajousLFO::PHASEX2_INPUT));
+		addInput(createInput<PJ301MPort>(Vec(159, 279), module, LissajousLFO::WAVESHAPEX2_INPUT));
+		addInput(createInput<PJ301MPort>(Vec(194, 279), module, LissajousLFO::WAVESHAPEY2_INPUT));
+		addInput(createInput<PJ301MPort>(Vec(229, 279), module, LissajousLFO::SKEWX2_INPUT));
+		addInput(createInput<PJ301MPort>(Vec(264, 279), module, LissajousLFO::SKEWY2_INPUT));
 
 		addOutput(createOutput<PJ301MPort>(Vec(22, 338), module, LissajousLFO::OUTPUT_1));
 		addOutput(createOutput<PJ301MPort>(Vec(53, 338), module, LissajousLFO::OUTPUT_2));

@@ -230,6 +230,7 @@ When they are connected this way, the Clock, Mute and Reset signals, and Eoc out
 - eF and eG control the eccentricity of the fixed shape and generating (rolling) shape respectively. An eccentricity of 1 = circle
 - d is the distance of the 'pen' from the center of the generating circle.
 - if d = 1 the shapes become a special form of the shapes - either a Hypocycloid or Epicycloid
+- θF and θG allow control of the phase of the Fixed and Generating shape respectively
 
 ## Seriously Slow LFO
 

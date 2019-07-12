@@ -38,6 +38,13 @@ struct RoundSmallFWKnob : RoundKnob {
 	}
 };
 
+struct RoundReallySmallFWKnob : RoundKnob {
+	RoundReallySmallFWKnob() {
+		setSvg(APP->window->loadSvg(asset::plugin(pluginInstance,"res/ComponentLibrary/RoundReallySmallFWKnob.svg")));
+	}
+};
+
+
 struct RoundSmallFWSnapKnob : RoundKnob {
 	RoundSmallFWSnapKnob() {
 		setSvg(APP->window->loadSvg(asset::plugin(pluginInstance,"res/ComponentLibrary/RoundSmallFWKnob.svg")));
