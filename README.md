@@ -139,10 +139,10 @@ A collection of unusual plugins that will add a certain coolness to your patches
 - The feedback slip controls allow the feedback to be ahead/behind the tap time for dragging effects, etc.
 - If feedback tap is set to All, the mix of all 16 taps is fed back (use cautiously)
 - If feedback tap is set to Ext, the feedback time input is used. Useful for sycing with say, the Hair Pick
-- The Grain Number and Grain Size control how the all the pitch shifters work. "RAW" is uses one grain sample but without the a triangle window
 - Reverse mode reverses direction of input buffer - time is based on feedback time
 - Ping Pong feeds the L feedback into the right channel and vise versa
 - FB Send and Returns allow you to insert FX into the feedback loop
+- In Context Menu, the Grain Number and Grain Size control how the all the pitch shifters work. "RAW" is uses one grain sample but without the a triangle window
 
 
 ## Quad Algorithmic Rhythm
