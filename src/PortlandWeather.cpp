@@ -918,7 +918,7 @@ struct PWStatusDisplay : TransparentWidget {
 		for(int i=0;i<NUM_TAPS;i++) {
 			char text[128];
 			snprintf(text, sizeof(text), "%s", module->filterNames[filterType[i]]);
-			nvgText(args.vg, pos.x + i*55, pos.y, text, NULL);
+			nvgText(args.vg, pos.x + i*30, pos.y, text, NULL);
 		}
 	}
 
@@ -931,7 +931,7 @@ struct PWStatusDisplay : TransparentWidget {
 		for(int i=0;i<NUM_TAPS;i++) {
 			char text[128];
 			snprintf(text, sizeof(text), "%-2.0f", pitchShift[i]);
-			nvgText(args.vg, pos.x + i*55, pos.y, text, NULL);
+			nvgText(args.vg, pos.x + i*30, pos.y, text, NULL);
 		}
 	}
 
@@ -944,7 +944,7 @@ struct PWStatusDisplay : TransparentWidget {
 		for(int i=0;i<NUM_TAPS;i++) {
 			char text[128];
 			snprintf(text, sizeof(text), "%-3.0f", detune[i]);
-			nvgText(args.vg, pos.x + i*55, pos.y, text, NULL);
+			nvgText(args.vg, pos.x + i*30, pos.y, text, NULL);
 		}
 	}
 
@@ -963,9 +963,9 @@ struct PWStatusDisplay : TransparentWidget {
 		drawFeedbackPitch(args, Vec(292,254), module->feedbackPitch);
 		drawFeedbackDetune(args, Vec(292,295), module->feedbackDetune);
 		
-		drawFilterTypes(args, Vec(513,195), module->lastFilterType);
-		drawTapPitchShift(args, Vec(513,320), module->tapPitchShift);
-		drawTapDetune(args, Vec(513,360), module->tapDetune);
+		drawFilterTypes(args, Vec(490,210), module->lastFilterType);
+		//drawTapPitchShift(args, Vec(513,320), module->tapPitchShift);
+		//drawTapDetune(args, Vec(513,360), module->tapDetune);
 	}
 };
 
@@ -1025,29 +1025,29 @@ struct PortlandWeatherWidget : ModuleWidget {
 
 		//last tap isn't stacked
 		for (int i = 0; i< NUM_TAPS-1; i++) {
-			addParam(createParam<LEDButton>(Vec(440 + 52 + 55*i,37), module, PortlandWeather::TAP_STACKED_PARAM + i));
-			addChild(createLight<MediumLight<BlueLight>>(Vec(440 + 56 + 55*i, 41), module, PortlandWeather::TAP_STACKED_LIGHT+i));
-			addInput(createInput<FWPortInSmall>(Vec(440 + 76+ 55*i, 37), module, PortlandWeather::TAP_STACK_CV_INPUT+i));
+			addParam(createParam<LEDButton>(Vec(437 + 52 + 30*i,17), module, PortlandWeather::TAP_STACKED_PARAM + i));
+			addChild(createLight<MediumLight<BlueLight>>(Vec(437 + 56 + 30*i, 21), module, PortlandWeather::TAP_STACKED_LIGHT+i));
+			addInput(createInput<FWPortInSmall>(Vec(437 + 52+ 30*i, 37), module, PortlandWeather::TAP_STACK_CV_INPUT+i));
 		}
 
 		for (int i = 0; i < NUM_TAPS; i++) {
-			addParam( createParam<LEDButton>(Vec(440 + 52 + 55*i,63), module, PortlandWeather::TAP_MUTE_PARAM + i));
-			addChild(createLight<MediumLight<RedLight>>(Vec(440 + 56 + 55*i, 67), module, PortlandWeather::TAP_MUTED_LIGHT+i));
-			addInput(createInput<FWPortInSmall>(Vec(440 + 76+ 55*i, 64), module, PortlandWeather::TAP_MUTE_CV_INPUT+i));
+			addParam( createParam<LEDButton>(Vec(437 + 52 + 30*i,57), module, PortlandWeather::TAP_MUTE_PARAM + i));
+			addChild(createLight<MediumLight<RedLight>>(Vec(437 + 56 + 30*i, 61), module, PortlandWeather::TAP_MUTED_LIGHT+i));
+			addInput(createInput<FWPortInSmall>(Vec(437 + 52+ 30*i, 77), module, PortlandWeather::TAP_MUTE_CV_INPUT+i));
 
-			addParam( createParam<RoundSmallFWKnob>(Vec(440 + 48 + 55*i, 90), module, PortlandWeather::TAP_MIX_PARAM + i));
-			addInput(createInput<FWPortInSmall>(Vec(440 + 76 + 55*i, 92), module, PortlandWeather::TAP_MIX_CV_INPUT+i));
-			addParam( createParam<RoundSmallFWKnob>(Vec(440 + 48 + 55*i, 130), module, PortlandWeather::TAP_PAN_PARAM + i));
-			addInput(createInput<FWPortInSmall>(Vec(440 + 76 + 55*i, 132), module, PortlandWeather::TAP_PAN_CV_INPUT+i));
-			addParam( createParam<RoundSmallFWSnapKnob>(Vec(440 + 48 + 55*i, 170), module, PortlandWeather::TAP_FILTER_TYPE_PARAM + i));
-			addParam( createParam<RoundSmallFWKnob>(Vec(440 + 48 + 55*i, 210), module, PortlandWeather::TAP_FC_PARAM + i));
-			addInput(createInput<FWPortInSmall>(Vec(440 + 76 + 55*i, 212), module, PortlandWeather::TAP_FC_CV_INPUT+i));
-			addParam( createParam<RoundSmallFWKnob>(Vec(440 + 48 + 55*i, 250), module, PortlandWeather::TAP_Q_PARAM + i));
-			addInput(createInput<FWPortInSmall>(Vec(440 + 76 + 55*i, 252), module, PortlandWeather::TAP_Q_CV_INPUT+i));
-			addParam( createParam<RoundSmallFWSnapKnob>(Vec(440 + 48 + 55*i, 290), module, PortlandWeather::TAP_PITCH_SHIFT_PARAM + i));
-			addInput(createInput<FWPortInSmall>(Vec(440 + 76 + 55*i, 292), module, PortlandWeather::TAP_PITCH_SHIFT_CV_INPUT+i));
-			addParam( createParam<RoundSmallFWKnob>(Vec(440 + 48 + 55*i, 330), module, PortlandWeather::TAP_DETUNE_PARAM + i));
-			addInput(createInput<FWPortInSmall>(Vec(440 + 76 + 55*i, 332), module, PortlandWeather::TAP_DETUNE_CV_INPUT+i));
+			addParam( createParam<RoundReallySmallFWKnob>(Vec(437 + 50 + 30*i, 98), module, PortlandWeather::TAP_MIX_PARAM + i));
+			addInput(createInput<FWPortInSmall>(Vec(437 + 52 + 30*i, 119), module, PortlandWeather::TAP_MIX_CV_INPUT+i));
+			addParam( createParam<RoundReallySmallFWKnob>(Vec(437 + 50 + 30*i, 140), module, PortlandWeather::TAP_PAN_PARAM + i));
+			addInput(createInput<FWPortInSmall>(Vec(437 + 52 + 30*i, 161), module, PortlandWeather::TAP_PAN_CV_INPUT+i));
+			addParam( createParam<RoundReallySmallFWSnapKnob>(Vec(437 + 50 + 30*i, 182), module, PortlandWeather::TAP_FILTER_TYPE_PARAM + i));
+			addParam( createParam<RoundReallySmallFWKnob>(Vec(437 + 50 + 30*i, 213), module, PortlandWeather::TAP_FC_PARAM + i));
+			addInput(createInput<FWPortInSmall>(Vec(437 + 52 + 30*i, 234), module, PortlandWeather::TAP_FC_CV_INPUT+i));
+			addParam( createParam<RoundReallySmallFWKnob>(Vec(437 + 50 + 30*i, 255), module, PortlandWeather::TAP_Q_PARAM + i));
+			addInput(createInput<FWPortInSmall>(Vec(437 + 52 + 30*i, 276), module, PortlandWeather::TAP_Q_CV_INPUT+i));
+			addParam( createParam<RoundReallySmallFWSnapKnob>(Vec(437 + 50 + 30*i, 297), module, PortlandWeather::TAP_PITCH_SHIFT_PARAM + i));
+			addInput(createInput<FWPortInSmall>(Vec(437 + 52 + 30*i, 318), module, PortlandWeather::TAP_PITCH_SHIFT_CV_INPUT+i));
+			addParam( createParam<RoundReallySmallFWKnob>(Vec(437 + 50 + 30*i, 339), module, PortlandWeather::TAP_DETUNE_PARAM + i));
+			addInput(createInput<FWPortInSmall>(Vec(437 + 52 + 30*i, 360), module, PortlandWeather::TAP_DETUNE_CV_INPUT+i));
 		}
 
 

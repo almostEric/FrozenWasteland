@@ -38,19 +38,27 @@ struct RoundSmallFWKnob : RoundKnob {
 	}
 };
 
-struct RoundReallySmallFWKnob : RoundKnob {
-	RoundReallySmallFWKnob() {
-		setSvg(APP->window->loadSvg(asset::plugin(pluginInstance,"res/ComponentLibrary/RoundReallySmallFWKnob.svg")));
-	}
-};
-
-
 struct RoundSmallFWSnapKnob : RoundKnob {
 	RoundSmallFWSnapKnob() {
 		setSvg(APP->window->loadSvg(asset::plugin(pluginInstance,"res/ComponentLibrary/RoundSmallFWKnob.svg")));
 		snap = true;
 	}
 };
+
+struct RoundReallySmallFWKnob : RoundKnob {
+	RoundReallySmallFWKnob() {
+		setSvg(APP->window->loadSvg(asset::plugin(pluginInstance,"res/ComponentLibrary/RoundReallySmallFWKnob.svg")));
+	}
+};
+
+struct RoundReallySmallFWSnapKnob : RoundKnob {
+	RoundReallySmallFWSnapKnob() {
+		setSvg(APP->window->loadSvg(asset::plugin(pluginInstance,"res/ComponentLibrary/RoundReallySmallFWKnob.svg")));
+		snap = true;
+	}
+};
+
+
 
 
 struct RoundLargeFWKnob : RoundKnob {
