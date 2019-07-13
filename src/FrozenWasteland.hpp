@@ -18,6 +18,7 @@ extern Model *modelTheOneRingModulator;
 extern Model *modelPhasedLockedLoop;
 extern Model *modelPortlandWeather;
 extern Model *modelQuadAlgorithmicRhythm;
+extern Model *modelQuadGrooveExpander;
 extern Model *modelQuadRhythmExpander;
 extern Model *modelQuantussyCell;
 extern Model *modelRouletteLFO;

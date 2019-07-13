@@ -1,3 +1,7 @@
+## 1.5.0 (2019-??)
+= Quad Groove Expander added
+- QAR CV Input bug fix
+
 ### 1.4.0 (2019-07-12)
 - Portland Weather and Mr. Blue Sky now take significantly less space
 - Added Phase and Amplitude Controls to Roulette LFO

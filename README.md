@@ -129,7 +129,7 @@ A collection of unusual plugins that will add a certain coolness to your patches
 ### This is a crazy deep module and is best just to play with. 
 ### Since it is a "rhythmic" delay, short duration or percussive sounds generally work best
 
-- Best bet is to refer to this: https://intellijel.com/wp-content/uploads/2016/01/rainmaker_manual-v109.pdf
+- Best bet is to refer to this: https://intellijel.com/downloads/manuals/cylonix-rainmaker_manual.pdf
 - Delay time is either based on Clock & Division or Size Parameter - patching a clock in disables Size knob
 - There are 16 delay groove patterns. The groove amount balances the delay time between the groove or straight time
 - Stacking a tap makes the tap use the delay time of its neighbor to right. If multiple taps are stacked the right most tap controls time
@@ -190,7 +190,7 @@ When they are connected this way, the Clock, Mute and Reset signals, and Eoc out
 
 ![Quad Rhythm Expander](./doc/qre.png)
 
-- Expander Modue for Quad Algorithmic Rhythm
+- Expander Module for Quad Algorithmic Rhythm
 - Allows controlling probability and swing for tracks/beats.
 - Probability and Swing can be enabled/disabled track by track
 - Beats to be affected can be selected by buttons on bottom
@@ -200,6 +200,17 @@ When they are connected this way, the Clock, Mute and Reset signals, and Eoc out
 - Expanders can be chained with each one controlling its own subsets of tracks and steps
 - Left expander has priority over expander(s) on right
 - Left expander sets STEP/DIV mode for all expanders 
+
+## Quad Groove Expander
+
+![Quad Groove Expander](./doc/qge.png)
+
+- Expander Module for Quad Algorithmic Rhythm
+- Allows creating patterns that move steps before and after the beat.
+- Each track can have its own pattern.
+- Amount interpolates between straignt time and the selected pattern
+- Pattern and amount can be CV controlled
+- Expanders can be chained, so putting a QRE before QGE can add probability and overriding the pattern on a step by step basis 
 
 
 

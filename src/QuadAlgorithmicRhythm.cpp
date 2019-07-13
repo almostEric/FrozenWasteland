@@ -277,7 +277,7 @@ struct QuadAlgorithmicRhythm : Module {
 		}
 		//See if a slave is passing through an expander
 		bool slavedQARPresent = false;
-		bool rightExpanderPresent = (rightExpander.module && (rightExpander.module->model == modelQuadRhythmExpander || rightExpander.module->model == modelQuadAlgorithmicRhythm));
+		bool rightExpanderPresent = (rightExpander.module && (rightExpander.module->model == modelQuadRhythmExpander || rightExpander.module->model == modelQuadAlgorithmicRhythm || rightExpander.module->model == modelQuadGrooveExpander));
 		if(rightExpanderPresent)
 		{			
 			float *message = (float*) rightExpander.module->leftExpander.consumerMessage;
@@ -303,7 +303,7 @@ struct QuadAlgorithmicRhythm : Module {
 
 		//See if a master is passing through an expander
 		bool masterQARPresent = false;
-		bool leftExpanderPresent = (leftExpander.module && (leftExpander.module->model == modelQuadRhythmExpander || leftExpander.module->model == modelQuadAlgorithmicRhythm));
+		bool leftExpanderPresent = (leftExpander.module && (leftExpander.module->model == modelQuadRhythmExpander || leftExpander.module->model == modelQuadAlgorithmicRhythm || leftExpander.module->model == modelQuadGrooveExpander));
 		if(leftExpanderPresent)
 		{			
 			float *consumerMessage = (float*)leftExpander.consumerMessage;
@@ -371,7 +371,7 @@ struct QuadAlgorithmicRhythm : Module {
             if(algorithmButtonTrigger[trackNumber].process(params[(ALGORITHM_1_PARAM + trackNumber * 7)].getValue())) {
                 algorithnMatrix[trackNumber] = (algorithnMatrix[trackNumber] + 1) % (trackNumber < 2 ? NUM_ALGORITHMS -1 : NUM_ALGORITHMS); //Only tracks 3 and 4 get logic
             }
-            if(algorithmInputTrigger[trackNumber].process(inputs[(ALGORITHM_1_INPUT + trackNumber * 9)].getVoltage())) {
+            if(algorithmInputTrigger[trackNumber].process(inputs[(ALGORITHM_1_INPUT + trackNumber * 8)].getVoltage())) {
                 algorithnMatrix[trackNumber] = (algorithnMatrix[trackNumber] + 1) % (trackNumber < 2 ? NUM_ALGORITHMS -1 : NUM_ALGORITHMS); //Only tracks 3 and 4 get logic
             }
 
@@ -403,8 +403,8 @@ struct QuadAlgorithmicRhythm : Module {
 			}
 
 			float stepsCountf = std::floor(params[(trackNumber * 7) + STEPS_1_PARAM].getValue());			
-			if(inputs[trackNumber * 9].isConnected()) {
-				stepsCountf += inputs[trackNumber * 9 + STEPS_1_INPUT].getVoltage() * 1.8;
+			if(inputs[trackNumber * 8].isConnected()) {
+				stepsCountf += inputs[trackNumber * 8 + STEPS_1_INPUT].getVoltage() * 1.8;
 			}
 			stepsCountf = clamp(stepsCountf,0.0f,18.0f);
 			if(algorithnMatrix[trackNumber] == BOOLEAN_LOGIC_ALGO) { // Boolean Tracks can't exceed length of the tracks they are based (-1 and -2)
@@ -412,20 +412,20 @@ struct QuadAlgorithmicRhythm : Module {
 			}
 
 			float divisionf = std::floor(params[(trackNumber * 7) + DIVISIONS_1_PARAM].getValue());
-			if(inputs[(trackNumber * 9) + DIVISIONS_1_INPUT].isConnected()) {
-				divisionf += inputs[(trackNumber * 9) + DIVISIONS_1_INPUT].getVoltage() * 1.7;
+			if(inputs[(trackNumber * 8) + DIVISIONS_1_INPUT].isConnected()) {
+				divisionf += inputs[(trackNumber * 8) + DIVISIONS_1_INPUT].getVoltage() * 1.7;
 			}		
 			divisionf = clamp(divisionf,1.0f,stepsCountf);
 
 			float offsetf = std::floor(params[(trackNumber * 7) + OFFSET_1_PARAM].getValue());
-			if(inputs[(trackNumber * 9) + OFFSET_1_INPUT].isConnected()) {
-				offsetf += inputs[(trackNumber * 9) + OFFSET_1_INPUT].getVoltage() * 1.7;
+			if(inputs[(trackNumber * 8) + OFFSET_1_INPUT].isConnected()) {
+				offsetf += inputs[(trackNumber * 8) + OFFSET_1_INPUT].getVoltage() * 1.7;
 			}	
 			offsetf = clamp(offsetf,0.0f,17.0f);
 
 			float padf = std::floor(params[trackNumber * 7 + PAD_1_PARAM].getValue());
-			if(inputs[(trackNumber * 9) + PAD_1_INPUT].isConnected()) {
-				padf += inputs[trackNumber * 9 + PAD_1_INPUT].getVoltage() * 1.7;
+			if(inputs[(trackNumber * 8) + PAD_1_INPUT].isConnected()) {
+				padf += inputs[trackNumber * 8 + PAD_1_INPUT].getVoltage() * 1.7;
 			}
 			padf = clamp(padf,0.0f,stepsCountf -1);
 			// Reclamp
@@ -440,14 +440,14 @@ struct QuadAlgorithmicRhythm : Module {
 			}		
 
 			float accentDivisionf = std::floor(params[(trackNumber * 7) + ACCENTS_1_PARAM].getValue() * divisionScale);
-			if(inputs[(trackNumber * 9) + ACCENTS_1_INPUT].isConnected()) {
-				accentDivisionf += inputs[(trackNumber * 9) + ACCENTS_1_INPUT].getVoltage() * divisionScale;
+			if(inputs[(trackNumber * 8) + ACCENTS_1_INPUT].isConnected()) {
+				accentDivisionf += inputs[(trackNumber * 8) + ACCENTS_1_INPUT].getVoltage() * divisionScale;
 			}
 			accentDivisionf = clamp(accentDivisionf,0.0f,divisionf);
 
 			float accentRotationf = std::floor(params[(trackNumber * 7) + ACCENT_ROTATE_1_PARAM].getValue() * divisionScale);
-			if(inputs[(trackNumber * 9) + ACCENT_ROTATE_1_INPUT].isConnected()) {
-				accentRotationf += inputs[(trackNumber * 9) + ACCENT_ROTATE_1_INPUT].getVoltage() * divisionScale;
+			if(inputs[(trackNumber * 8) + ACCENT_ROTATE_1_INPUT].isConnected()) {
+				accentRotationf += inputs[(trackNumber * 8) + ACCENT_ROTATE_1_INPUT].getVoltage() * divisionScale;
 			}
 			if(divisionf > 0) {
 				accentRotationf = clamp(accentRotationf,0.0f,divisionf-1);			
@@ -598,7 +598,7 @@ struct QuadAlgorithmicRhythm : Module {
 		
 
 		//Get Expander Info
-		bool QREExpanderPresent = (rightExpander.module && rightExpander.module->model == modelQuadRhythmExpander);
+		bool QREExpanderPresent = (rightExpander.module && (rightExpander.module->model == modelQuadRhythmExpander || rightExpander.module->model == modelQuadGrooveExpander));
 		
 		if(QREExpanderPresent)
 		{			
@@ -667,15 +667,15 @@ struct QuadAlgorithmicRhythm : Module {
 		//See if need to start up
 		for(int trackNumber=0;trackNumber < TRACK_COUNT;trackNumber++) {
 			float startInput = 0;
-			if(inputs[START_1_INPUT + (trackNumber * 9)].isConnected()) {
-				startInput = inputs[START_1_INPUT + (trackNumber * 9)].getVoltage();
+			if(inputs[START_1_INPUT + (trackNumber * 8)].isConnected()) {
+				startInput = inputs[START_1_INPUT + (trackNumber * 8)].getVoltage();
 			} else if(masterQARPresent) {
 				startInput = expanderEocValue[trackNumber];
 			} else if(rightExpanderPresent) {
 				startInput = lastExpanderEocValue[trackNumber];
 			}
 			
-			if(chainMode != CHAIN_MODE_NONE && (inputs[(trackNumber * 9) + START_1_INPUT].isConnected() || masterQARPresent || slavedQARPresent) && !running[trackNumber]) {
+			if(chainMode != CHAIN_MODE_NONE && (inputs[(trackNumber * 8) + START_1_INPUT].isConnected() || masterQARPresent || slavedQARPresent) && !running[trackNumber]) {
 				if(startTrigger[trackNumber].process(startInput)) {
 					running[trackNumber] = true;
 					beatIndex[trackNumber] = -1;
