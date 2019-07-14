@@ -1,6 +1,7 @@
 ## 1.5.0 (2019-??)
-= Quad Groove Expander added
+- Quad Groove Expander added
 - QAR CV Input bug fix
+- improved display of pulse wave on BPM LFO2 
 
 ### 1.4.0 (2019-07-12)
 - Portland Weather and Mr. Blue Sky now take significantly less space

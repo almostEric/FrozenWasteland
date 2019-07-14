@@ -4,7 +4,7 @@
 #define TRACK_COUNT 4
 #define MAX_STEPS 18
 #define NUM_TAPS 16
-#define NUM_GROOVES 16
+#define NUM_GROOVES 14
 #define PASSTHROUGH_LEFT_VARIABLE_COUNT 13
 #define PASSTHROUGH_RIGHT_VARIABLE_COUNT 8
 #define PASSTHROUGH_OFFSET MAX_STEPS * TRACK_COUNT * 2 + 1
@@ -63,25 +63,7 @@ struct QuadGrooveExpander : Module {
 
 
 	const char* stepNames[MAX_STEPS] {"1","2","3","4","5","6","7","8","9","10","11","12","13","14","15","16","17","18"};
-    const char* grooveNames[NUM_GROOVES] = {"Straight","Swing","Hard Swing","Reverse Swing","Alternate Swing","Accelerando","Ritardando","Waltz Time","Half Swing","Roller Coaster","Quintuple","Random 1","Random 2","Random 3","Early Reflection","Late Reflection"};
-	const float tapGroovePatterns[NUM_GROOVES][NUM_TAPS] = {
-		{1.0f,2.0f,3.0,4.0,5.0,6.0,7.0,8.0,9.0,10.0,11.0,12.0,13.0,14.0,15.0,16.0f}, // Straight time
-		{1.25,2.0,3.25,4.0,5.25,6.0,7.25,8.0,9.25,10.0,11.25,12.0,13.25,14.0,15.25,16.0}, // Swing
-		{1.75,2.0,3.75,4.0,5.75,6.0,7.75,8.0,9.75,10.0,11.75,12.0,13.75,14.0,15.75,16.0}, // Hard Swing
-		{0.75,2.0,2.75,4.0,4.75,6.0,6.75,8.0,8.75,10.0,10.75,12.0,12.75,14.0,14.75,16.0}, // Reverse Swing
-		{1.25,2.0,3.0,4.0,5.25,6.0,7.0,8.0,9.25,10.0,11.0,12.0,13.25,14.0,15.0,16.0}, // Alternate Swing
-		{3.0,5.0,7.0,9.0,10.0,11.0,12.0,13.0,13.5,14.0,14.5,15.0,15.25,15.5,15.75,16.0}, // Accelerando
-		{0.25,0.5,0.75,1.0,1.5,2.0,2.5,3.0,4.0,5.0,6.0,7.0,9.0,11.0,13.0,16.0}, // Ritardando
-		{1.25,2.75,3.25,4.0,5.25,6.75,7.25,8.0,9.25,10.75,11.25,12.0,13.25,14.75,15.25,16.0}, // Waltz Time
-		{1.5,2.0,3.5,4.0,5.0,6.0,7.0,8.0,9.5,10.0,11.5,12.0,13.0,14.0,15.0,16.0}, // Half Swing
-		{1.0,2.0,4.0,5.0,6.0,8.0,10.0,12.0,12.5,13.0,13.5,14.0,14.5,15.0,15.5,16.0}, // Roller Coaster
-		{1.75,2.5,3.25,4.0,4.75,6.5,7.25,8.0,9.75,10.5,11.25,12.0,12.75,14.5,15.25,16.0}, // Quintuple
-		{0.25,0.75,1.0,1.25,4.0,5.5,7.25,7.5,8.0,8.25,10.0,11.0,13.5,15.0,15.75,16.0}, // Uniform Random 1
-		{0.25,4.75,5.25,5.5,7.0,8.0,8.5,8.75,9.0,9.25,11.75,12.75,13.0,13.25,14.75,15.5}, // Uniform Random 2
-		{0.75,2.0,2.25,5.75,7.25,7.5,7.75,8.5,8.75,12.5,12.75,13.0,13.75,14.0,14.5,16.0}, // Uniform Random 3
-		{0.25,0.5,1.0,1.25,1.75,2.0,2.5,3.5,4.25,4.5,4.75,5,6.25,8.25,11.0,16.0}, // Early Reflection
-		{7.0,7.25,9.0,9.25,10.25,12.5,13.0,13.75,14.0,15.0,15.25,15.5,15.75,16.0,16.0,16.0} // Late Reflection
-	};
+    const char* grooveNames[NUM_GROOVES] = {"Straight","Swing","Hard Swing","Reverse Swing","Alternate Swing","Accelerando","Ritardando","Waltz Time","Half Swing","Roller Coaster","Quintuple","Random 1","Random 2","Random 3"};
 
 	const float stepGroovePatterns[NUM_GROOVES][NUM_TAPS] = {
 		{0.0f,0.0f,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0f}, // Straight time
@@ -93,13 +75,11 @@ struct QuadGrooveExpander : Module {
 		{0.0,0.03125,0.0625,0.09375,0.125,0.15625,0.1875,0.21875,0.25,0.28125,0.3125,0.34375,0.375,0.40625,0.4375,0.46875}, // Ritardando
 		{0.25,0.75,0.25,0.0,0.25,0.75,0.25,0.0,0.25,0.75,0.25,0.0,0.25,0.75,0.25,0.0}, // Waltz Time
 		{0.5,0.0,0.5,0.0,0.0,0.0,0.0,0.0,0.5,0.0,0.5,0.0,0.0,0.0,0.0,0.0}, // Half Swing
-		{1.0,2.0,4.0,5.0,6.0,8.0,10.0,12.0,12.5,13.0,13.5,14.0,14.5,15.0,15.5,16.0}, // Roller Coaster
-		{1.75,2.5,3.25,4.0,4.75,6.5,7.25,8.0,9.75,10.5,11.25,12.0,12.75,14.5,15.25,16.0}, // Quintuple
-		{0.25,0.75,1.0,1.25,4.0,5.5,7.25,7.5,8.0,8.25,10.0,11.0,13.5,15.0,15.75,16.0}, // Uniform Random 1
-		{0.25,4.75,5.25,5.5,7.0,8.0,8.5,8.75,9.0,9.25,11.75,12.75,13.0,13.25,14.75,15.5}, // Uniform Random 2
-		{0.75,2.0,2.25,5.75,7.25,7.5,7.75,8.5,8.75,12.5,12.75,13.0,13.75,14.0,14.5,16.0}, // Uniform Random 3
-		{0.25,0.5,1.0,1.25,1.75,2.0,2.5,3.5,4.25,4.5,4.75,5,6.25,8.25,11.0,16.0}, // Early Reflection
-		{7.0,7.25,9.0,9.25,10.25,12.5,13.0,13.75,14.0,15.0,15.25,15.5,15.75,16.0,16.0,16.0} // Late Reflection
+		{0.0,0.0,0.5,0.0,0.0,0.5,0.5,0.5,0,0.0,0.5,-0.5,0.5,-0.5,0.5,-0.5}, // Roller Coaster
+		{0.75,0.5,0.25,0.0,0.75,0.5,0.25,0.0,0.75,0.5,0.25,0.0,0.75,0.5,0.25,0.0}, // Quintuple
+		{0.25,0.75,0.0,0.25,0.0,0.5,0.25,0.5,0.0,0.25,0.0,0.0,0.5,0.0,0.75,0.0}, // Uniform Random 1
+		{0.25,0.75,0.25,0.5,0.0,0.0,0.5,0.75,0.0,0.25,0.75,0.75,0.0,0.25,0.75,0.5}, // Uniform Random 2
+		{0.75,0.0,0.25,0.75,0.25,0.5,0.75,0.5,0.75,0.5,0.75,0.0,0.75,0.0,0.5,0.0}, // Uniform Random 3
 	};
 
 	// Expander
@@ -121,7 +101,7 @@ struct QuadGrooveExpander : Module {
 		config(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS, NUM_LIGHTS);
 		
         for (int i = 0; i < TRACK_COUNT; i++) {
-            configParam(GROOVE_TYPE_1_PARAM + i, 0.0f, 15.0f, 0.0f,"Track "  + std::to_string(i+1) + " Groove Type");
+            configParam(GROOVE_TYPE_1_PARAM + i, 0.0f, 13.0f, 0.0f,"Track "  + std::to_string(i+1) + " Groove Type");
             configParam(GROOVE_TYPE_ATTEN_1_PARAM + i, -1.0, 1.0, 0.0,"Track " +  std::to_string(i+1) + " Groove Type CV Attenuation","%",0,100);
 
             configParam(GROOVE_AMOUNT_1_PARAM + i, 0.0f, 1.0f, 1.0f,"Track " +  std::to_string(i+1) +" Groove Amount","%",0,100);
@@ -169,7 +149,7 @@ struct QuadGrooveExpander : Module {
 			}
 			lights[TRACK_1_GROOVE_ENABELED_LIGHT+i].value = trackGrooveSelected[i];
 
-            stepGrooveType[i] = (int)clamp(params[GROOVE_TYPE_1_PARAM + i].getValue() + (inputs[GROOVE_TYPE_1_INPUT + i].isConnected() ?  inputs[GROOVE_TYPE_1_INPUT + i].getVoltage() * 1.5f * params[GROOVE_TYPE_ATTEN_1_PARAM + i].getValue() : 0.0f),0.0f,15.0);
+            stepGrooveType[i] = (int)clamp(params[GROOVE_TYPE_1_PARAM + i].getValue() + (inputs[GROOVE_TYPE_1_INPUT + i].isConnected() ?  inputs[GROOVE_TYPE_1_INPUT + i].getVoltage() * 1.3f * params[GROOVE_TYPE_ATTEN_1_PARAM + i].getValue() : 0.0f),0.0f,13.0);
             grooveAmount[i] = clamp(params[GROOVE_AMOUNT_1_PARAM + i].getValue() + (inputs[GROOVE_AMOUNT_1_INPUT + i].isConnected() ? inputs[GROOVE_AMOUNT_1_INPUT + i].getVoltage() / 10.0f * params[GROOVE_AMOUNT_ATTEN_1_PARAM + i].getValue() : 0.0f),0.0f,1.0f);        
 		}
 
@@ -199,7 +179,7 @@ struct QuadGrooveExpander : Module {
 			{			
 				float *message = (float*) rightExpander.module->leftExpander.consumerMessage;	
 
-				if(rightExpander.module->model == modelQuadGrooveExpander) { // Get QRE values							
+				if(rightExpander.module->model == modelQuadGrooveExpander || rightExpander.module->model == modelQuadRhythmExpander) { // Get QRE values							
 					for(int i = 0; i < TRACK_COUNT; i++) {
 						for(int j = 0; j < MAX_STEPS; j++) { // Assign probabilites and swing
 							producerMessage[1 + i * MAX_STEPS + j] = message[1 + i * MAX_STEPS + j];

@@ -337,17 +337,8 @@ struct BPMLFO2ProgressDisplay : TransparentWidget {
 
 	void drawProgress(const DrawArgs &args, int waveshape, float skew, float waveslope, float phase) 
 	{
-		// float inverseSkew = 1 - skew;
-		// float y;
-        // if (skew == 0 && phase == 0) //Avoid /0 error
-        //     y = 72.0;
-        // if (phase <= skew)
-        //     y = 72.0 * (1- (-1 / skew * phase + 1));
-        // else
-        //     y = 72.0 * (1-(1 / inverseSkew * (phase - skew)));
-
+		
 		// Draw indicator
-		//nvgFillColor(args.vg, nvgRGBA(0xff, 0xff, 0x20, 0xff));
 		nvgStrokeColor(args.vg, nvgRGBA(0xff, 0xff, 0x20, 0xff));	
 		nvgStrokeWidth(args.vg, 1.5);
 
@@ -355,42 +346,11 @@ struct BPMLFO2ProgressDisplay : TransparentWidget {
 		//nvgMoveTo(args.vg,140,177 - module->waveValues[0]);
 		for(int i=0;i<phase * DISPLAY_SIZE;i++) {
 			nvgMoveTo(args.vg,140 + i,177 - module->waveValues[i]);
-			nvgLineTo(args.vg,140 + i, module->waveValues[i] > 0 ? 211 : 211 );
+			nvgLineTo(args.vg,140 + i, module->waveValues[i] > 0 ? 212 : 212 );
 			
 		}
-		//nvgLineTo(args.vg,140 + phase * 68,177 - module->waveValues[0]);
-		//nvgClosePath(args.vg);
 		nvgStroke(args.vg);		
-		//nvgFill(args.vg);
-
-		// if(waveshape == BPMLFO2::SKEWSAW_WAV)
-		// {
-		// 	nvgBeginPath(args.vg);
-		// 	nvgMoveTo(args.vg,140,213);
-		// 	if(phase > skew) {
-		// 		nvgLineTo(args.vg,140 + (skew * 68),141);
-		// 	}
-		// 	nvgLineTo(args.vg,140 + (phase * 68),213-y);
-		// 	nvgLineTo(args.vg,140 + (phase * 68),213);
-		// 	nvgClosePath(args.vg);
-		// 	nvgFill(args.vg);
-		// } else 
-		// {
-		// 	float endpoint = fminf(phase,skew);
-		// 	nvgBeginPath(args.vg);
-		// 	nvgMoveTo(args.vg,140,177);
-		// 	nvgRect(args.vg,140,177,endpoint*68,36.0);
-		// 	nvgClosePath(args.vg);
-		// 	nvgFill(args.vg);
-		// 	if(phase > skew) {
-		// 		nvgBeginPath(args.vg);
-		// 		nvgMoveTo(args.vg,140 + (skew * 68),141);
-		// 		nvgRect(args.vg,140 + (skew * 68),141,(phase-skew)*68,36.0);
-		// 		nvgClosePath(args.vg);
-		// 		nvgFill(args.vg);
-		// 	}
-
-		// }
+		
 	}
 
 	void drawWaveShape(const DrawArgs &args, int waveshape, float skew, float waveslope) 
@@ -400,28 +360,11 @@ struct BPMLFO2ProgressDisplay : TransparentWidget {
 		nvgStrokeWidth(args.vg, 2.0);
 
 		nvgBeginPath(args.vg);
-		nvgMoveTo(args.vg,140,177 - module->waveValues[0]);
+		nvgMoveTo(args.vg,140,176 - module->waveValues[0]);
 		for(int i=1;i<DISPLAY_SIZE;i++) {
-			nvgLineTo(args.vg,140 + i,177 - module->waveValues[i]);
+			nvgLineTo(args.vg,140 + i,176 - module->waveValues[i]);
 		}
-		//nvgLineTo(args.vg,208,213);
-		//nvgClosePath(args.vg);	
-
-		// if(waveshape == BPMLFO2::SKEWSAW_WAV) {						
-		// 	nvgBeginPath(args.vg);
-		// 	nvgMoveTo(args.vg,140,213);
-		// 	nvgLineTo(args.vg,140 + (skew * 68),141);
-		// 	nvgLineTo(args.vg,208,213);
-		// 	nvgClosePath(args.vg);			
-		// } else 
-		// {
-		// 	nvgBeginPath(args.vg);
-		// 	nvgMoveTo(args.vg,140,213);
-		// 	nvgLineTo(args.vg,140 + (skew * 68),213);
-		// 	nvgLineTo(args.vg,140 + (skew * 68),141);
-		// 	nvgLineTo(args.vg,208,141);
-		// 	//nvgClosePath(args.vg);			
-		// }
+		
 		nvgStroke(args.vg);		
 	}
 

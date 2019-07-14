@@ -235,7 +235,7 @@ struct QuadRhythmExpander : Module {
 			{			
 				float *message = (float*) rightExpander.module->leftExpander.consumerMessage;	
 
-				if(rightExpander.module->model == modelQuadRhythmExpander) { // Get QRE values							
+				if(rightExpander.module->model == modelQuadRhythmExpander || rightExpander.module->model == modelQuadGrooveExpander ) { // Get QRE values							
 					for(int i = 0; i < TRACK_COUNT; i++) {
 						for(int j = 0; j < MAX_STEPS; j++) { // Assign probabilites and swing
 							producerMessage[1 + i * MAX_STEPS + j] = message[1 + i * MAX_STEPS + j];
