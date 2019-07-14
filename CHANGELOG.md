@@ -1,4 +1,4 @@
-## 1.5.0 (2019-??)
+## 1.5.0 (2019-07-14)
 - Quad Groove Expander added
 - QAR CV Input bug fix
 - improved display of pulse wave on BPM LFO2 
