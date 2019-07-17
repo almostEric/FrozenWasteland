@@ -88,3 +88,16 @@ struct RoundHugeFWSnapKnob : RoundKnob {
 		snap = true;
 	}
 };
+
+
+////////////////////
+// OK, Switches too
+////////////////////
+
+
+struct HCKSS : SvgSwitch {
+	HCKSS() {
+		addFrame(APP->window->loadSvg(asset::plugin(pluginInstance,"res/ComponentLibrary/HCKSS_0.svg")));
+		addFrame(APP->window->loadSvg(asset::plugin(pluginInstance,"res/ComponentLibrary/HCKSS_1.svg")));
+	}
+};

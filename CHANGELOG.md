@@ -1,3 +1,7 @@
+## 1.5.1 (2019-07-18)
+- Added Gate/Trigger modes to Portland Weather
+- Fixed BPM LFO UI issue
+
 ## 1.5.0 (2019-07-14)
 - Quad Groove Expander added
 - QAR CV Input bug fix

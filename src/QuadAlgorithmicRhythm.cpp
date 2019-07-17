@@ -138,6 +138,8 @@ struct QuadAlgorithmicRhythm : Module {
 	bool accentMatrix[TRACK_COUNT][MAX_STEPS];
 	float probabilityMatrix[TRACK_COUNT][MAX_STEPS];
 	float swingMatrix[TRACK_COUNT][MAX_STEPS];
+	float workingProbabilityMatrix[TRACK_COUNT][MAX_STEPS];
+	float workingSwingMatrix[TRACK_COUNT][MAX_STEPS];
 	int beatIndex[TRACK_COUNT];
 	int stepsCount[TRACK_COUNT];
 	int lastStepsCount[TRACK_COUNT];
@@ -609,8 +611,8 @@ struct QuadAlgorithmicRhythm : Module {
 			bool useDivs = message[0] == 0; //0 is divs
 			for(int i = 0; i < TRACK_COUNT; i++) {
 				for(int j = 0; j < MAX_STEPS; j++) { //reset all probabilities
-					probabilityMatrix[i][j] = 1;
-					swingMatrix[i][j] = 0.0;
+					workingProbabilityMatrix[i][j] = 1;
+					workingSwingMatrix[i][j] = 0.0;
 				}
 				for(int j = 0; j < MAX_STEPS; j++) { // Assign probabilites and swing
 					int stepIndex = j;
@@ -633,8 +635,8 @@ struct QuadAlgorithmicRhythm : Module {
 					if(stepFound) {
 						float probability = message[1 + i * EXPANDER_MAX_STEPS + j];
 						float swing = message[1 + (i + TRACK_COUNT) * EXPANDER_MAX_STEPS  + j];
-						probabilityMatrix[i][stepIndex] = probability;
-						swingMatrix[i][stepIndex] = swing;						
+						workingProbabilityMatrix[i][stepIndex] = probability;
+						workingSwingMatrix[i][stepIndex] = swing;						
 					} 
 				}
 			}
@@ -644,13 +646,22 @@ struct QuadAlgorithmicRhythm : Module {
 			if(QREDisconnectReset) { //If QRE gets disconnected, reset probability and swing
 				for(int i = 0; i < TRACK_COUNT; i++) {
 					for(int j = 0; j < MAX_STEPS; j++) { //reset all probabilities
-						probabilityMatrix[i][j] = 1;
-						swingMatrix[i][j] = 0;
+						workingProbabilityMatrix[i][j] = 1;
+						workingSwingMatrix[i][j] = 0;
 					}
 				}
 				QREDisconnectReset = false;
 			}
 		}
+
+		//set calculated probability and swing
+		for(int i = 0; i < TRACK_COUNT; i++) {
+			for(int j = 0; j < MAX_STEPS; j++) { 
+				probabilityMatrix[i][j] = workingProbabilityMatrix[i][j];
+				swingMatrix[i][j] =workingSwingMatrix[i][j];
+			}
+		}
+
 
 		
 		float muteInput = inputs[MUTE_INPUT].getVoltage();

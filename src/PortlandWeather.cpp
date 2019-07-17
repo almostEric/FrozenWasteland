@@ -48,6 +48,10 @@ struct PortlandWeather : Module {
 		TAP_PITCH_SHIFT_PARAM = TAP_Q_PARAM+NUM_TAPS,
 		TAP_DETUNE_PARAM = TAP_PITCH_SHIFT_PARAM+NUM_TAPS,
 		CLEAR_BUFFER_PARAM = TAP_DETUNE_PARAM+NUM_TAPS,
+		REVERSE_TRIGGER_MODE_PARAM,
+		PING_PONG_TRIGGER_MODE_PARAM,
+		STACK_TRIGGER_MODE_PARAM,
+		MUTE_TRIGGER_MODE_PARAM,
 		NUM_PARAMS
 	};
 	enum InputIds {
@@ -106,6 +110,10 @@ struct PortlandWeather : Module {
 		FILTER_HIGHPASS,
 		FILTER_BANDPASS,
 		FILTER_NOTCH
+	};
+	enum TriggerModes {
+		TRIGGER_TRIGGER_MODE,
+		GATE_TRIGGE_MODE
 	};
 
 
@@ -255,6 +263,11 @@ struct PortlandWeather : Module {
 		}
 
 		configParam(MIX_PARAM, 0.0f, 1.0f, 0.5f,"Mix","%",0,100);
+
+		configParam(REVERSE_TRIGGER_MODE_PARAM, 0.0f, 1.0f, 0.0f);
+		configParam(PING_PONG_TRIGGER_MODE_PARAM, 0.0f, 1.0f, 0.0f);
+		configParam(STACK_TRIGGER_MODE_PARAM, 0.0f, 1.0f, 0.0f);
+		configParam(MUTE_TRIGGER_MODE_PARAM, 0.0f, 1.0f, 0.0f);
 
 		
 		float sampleRate = APP->engine->getSampleRate();
@@ -406,20 +419,30 @@ struct PortlandWeather : Module {
 			delayMod = (0.001f * inputs[TIME_CV_INPUT].getVoltage()); 
 		}
 
-		if (pingPongTrigger.process(params[PING_PONG_PARAM].getValue() + inputs[PING_PONG_INPUT].getVoltage())) {
+
+		// Ping Pong
+		if(params[PING_PONG_TRIGGER_MODE_PARAM].getValue() == GATE_TRIGGE_MODE && inputs[PING_PONG_INPUT].isConnected()) {
+			pingPong = inputs[PING_PONG_INPUT].getVoltage() > 0.0f;
+		}
+		//Button (or trigger) can override input	
+		if (pingPongTrigger.process(params[PING_PONG_PARAM].getValue() + (inputs[PING_PONG_INPUT].isConnected() && params[PING_PONG_TRIGGER_MODE_PARAM].getValue() == TRIGGER_TRIGGER_MODE ? inputs[PING_PONG_INPUT].getVoltage() : 0))) {
 			pingPong = !pingPong;
 		}
 		lights[PING_PONG_LIGHT].value = pingPong;
 
-		if (reverseTrigger.process(params[REVERSE_PARAM].getValue() + inputs[REVERSE_INPUT].getVoltage())) {
+		// Reverse
+		bool reversePrevious = reverse;
+		if(params[REVERSE_TRIGGER_MODE_PARAM].getValue() == GATE_TRIGGE_MODE && inputs[REVERSE_INPUT].isConnected()) {
+			reverse = inputs[REVERSE_INPUT].getVoltage() > 0.0f;
+		}		
+		if (reverseTrigger.process(params[REVERSE_PARAM].getValue() + (inputs[REVERSE_INPUT].isConnected() && params[REVERSE_TRIGGER_MODE_PARAM].getValue() == TRIGGER_TRIGGER_MODE ? inputs[REVERSE_INPUT].getVoltage() : 0))) {
 			reverse = !reverse;
-			if(reverse) {
-				reverseHistoryBuffer[0].clear();
-				reverseHistoryBuffer[1].clear();
-				
-			}
 		}
 		lights[REVERSE_LIGHT].value = reverse;
+		if(reverse && reverse != reversePrevious) {
+			reverseHistoryBuffer[0].clear();
+			reverseHistoryBuffer[1].clear();		
+		}
 
 		
 
@@ -473,7 +496,11 @@ struct PortlandWeather : Module {
 		for(int tap = 0; tap < NUM_TAPS;tap++) { 
 
 			// Stacking
-			if (tap < NUM_TAPS -1 && stackingTrigger[tap].process(params[TAP_STACKED_PARAM+tap].getValue() + inputs[TAP_STACK_CV_INPUT+tap].getVoltage())) {
+			if(params[STACK_TRIGGER_MODE_PARAM].getValue() == GATE_TRIGGE_MODE && inputs[TAP_STACK_CV_INPUT+tap].isConnected()) {
+				tapStacked[tap] = inputs[TAP_STACK_CV_INPUT+tap].getVoltage() > 0.0f;
+			}
+			//Button (or trigger) can override input
+			if (tap < NUM_TAPS -1 && stackingTrigger[tap].process(params[TAP_STACKED_PARAM+tap].getValue() + (params[STACK_TRIGGER_MODE_PARAM].getValue() == TRIGGER_TRIGGER_MODE ? inputs[TAP_STACK_CV_INPUT+tap].getVoltage() : 0.0f))) {
 				tapStacked[tap] = !tapStacked[tap];
 			}
 
@@ -559,11 +586,15 @@ struct PortlandWeather : Module {
 					
 
 			// Muting
-			if (mutingTrigger[tap].process(params[TAP_MUTE_PARAM+tap].getValue() + (inputs[TAP_MUTE_CV_INPUT+tap].isConnected() ? inputs[TAP_MUTE_CV_INPUT+tap].getVoltage() : 0))) {
+			if(params[MUTE_TRIGGER_MODE_PARAM].getValue() == GATE_TRIGGE_MODE && inputs[TAP_MUTE_CV_INPUT+tap].isConnected()) {
+				tapMuted[tap] = inputs[TAP_MUTE_CV_INPUT+tap].getVoltage() > 0.0f;
+			}
+			//Button (or trigger) can override input
+			if (mutingTrigger[tap].process(params[TAP_MUTE_PARAM+tap].getValue() + (inputs[TAP_MUTE_CV_INPUT+tap].isConnected() && params[MUTE_TRIGGER_MODE_PARAM].getValue() == TRIGGER_TRIGGER_MODE ? inputs[TAP_MUTE_CV_INPUT+tap].getVoltage() : 0))) {
 				tapMuted[tap] = !tapMuted[tap];
-				if(!tapMuted[tap]) {
-					activeTapCount +=1.0f;
-				}
+				// if(!tapMuted[tap]) {
+				// 	activeTapCount +=1.0f;
+				// }
 			}			
 
 			//Each tap - channel has its own filter
@@ -1049,6 +1080,13 @@ struct PortlandWeatherWidget : ModuleWidget {
 			addParam( createParam<RoundReallySmallFWKnob>(Vec(437 + 50 + 30*i, 339), module, PortlandWeather::TAP_DETUNE_PARAM + i));
 			addInput(createInput<FWPortInSmall>(Vec(437 + 52 + 30*i, 360), module, PortlandWeather::TAP_DETUNE_CV_INPUT+i));
 		}
+
+		addParam( createParam<CKSS>(Vec(290, 114), module, PortlandWeather::REVERSE_TRIGGER_MODE_PARAM));
+		addParam( createParam<CKSS>(Vec(353, 114), module, PortlandWeather::PING_PONG_TRIGGER_MODE_PARAM));
+		addParam( createParam<HCKSS>(Vec(437 + 14, 37), module, PortlandWeather::STACK_TRIGGER_MODE_PARAM));
+		addParam( createParam<HCKSS>(Vec(437 + 14, 77), module, PortlandWeather::MUTE_TRIGGER_MODE_PARAM));
+
+		
 
 
 		addInput(createInput<PJ301MPort>(Vec(55, 45), module, PortlandWeather::CLOCK_DIVISION_CV_INPUT));

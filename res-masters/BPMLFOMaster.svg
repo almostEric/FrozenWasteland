@@ -53,7 +53,7 @@
      inkscape:pageopacity="0.0"
      inkscape:pageshadow="2"
      inkscape:zoom="4.8368421"
-     inkscape:cx="14.743282"
+     inkscape:cx="-36.736587"
      inkscape:cy="218.9445"
      inkscape:document-units="px"
      inkscape:current-layer="layer1"
@@ -76,7 +76,7 @@
         <dc:format>image/svg+xml</dc:format>
         <dc:type
            rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
-        <dc:title></dc:title>
+        <dc:title />
       </cc:Work>
     </rdf:RDF>
   </metadata>
@@ -269,48 +269,48 @@
          style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:2.11666656px;font-family:Homenaje;-inkscape-font-specification:Homenaje;stroke-width:0.26458332">GATE</tspan></text>
     <text
        xml:space="preserve"
-       style="font-style:normal;font-weight:normal;font-size:3.52777767px;line-height:1.25;font-family:Homenaje;letter-spacing:0px;word-spacing:0px;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.26458332;-inkscape-font-specification:Homenaje;font-stretch:normal;font-variant:normal;"
-       x="39.523575"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:3.52777767px;line-height:1.25;font-family:Homenaje;-inkscape-font-specification:Homenaje;letter-spacing:0px;word-spacing:0px;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.26458332"
+       x="39.489712"
        y="117.32859"
        id="text5443-0-6-4"><tspan
          sodipodi:role="line"
          id="tspan5441-5-5"
-         x="39.523575"
+         x="39.489712"
          y="117.32859"
-         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:2.11666656px;font-family:Homenaje;-inkscape-font-specification:Homenaje;stroke-width:0.26458332;">BI</tspan></text>
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:2.11666656px;font-family:Homenaje;-inkscape-font-specification:Homenaje;stroke-width:0.26458332">BI</tspan></text>
     <text
        xml:space="preserve"
        style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:3.52777767px;line-height:1.25;font-family:Homenaje;-inkscape-font-specification:Homenaje;letter-spacing:0px;word-spacing:0px;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.26458332"
-       x="38.75946"
+       x="38.891754"
        y="109.10957"
        id="text5443-0-4-9-0"><tspan
          sodipodi:role="line"
          id="tspan5441-5-0-0"
-         x="38.75946"
+         x="38.891754"
          y="109.10957"
          style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:2.11666656px;font-family:Homenaje;-inkscape-font-specification:Homenaje;stroke-width:0.26458332">UNI</tspan></text>
     <text
        xml:space="preserve"
        style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:3.52777767px;line-height:1.25;font-family:Homenaje;-inkscape-font-specification:Homenaje;letter-spacing:0px;word-spacing:0px;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.26458332"
-       x="52.983463"
+       x="53.248047"
        y="109.10957"
        id="text5443-0-4-7-3"><tspan
          sodipodi:role="line"
          id="tspan5441-5-0-02"
-         x="52.983463"
+         x="53.248047"
          y="109.10957"
          style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:2.11666656px;font-family:Homenaje;-inkscape-font-specification:Homenaje;stroke-width:0.26458332">PAUSE</tspan></text>
     <text
        xml:space="preserve"
-       style="font-style:normal;font-weight:normal;font-size:3.52777767px;line-height:1.25;font-family:Homenaje;letter-spacing:0px;word-spacing:0px;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.26458332;-inkscape-font-specification:Homenaje;font-stretch:normal;font-variant:normal;"
-       x="53.830036"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:3.52777767px;line-height:1.25;font-family:Homenaje;-inkscape-font-specification:Homenaje;letter-spacing:0px;word-spacing:0px;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.26458332"
+       x="53.777214"
        y="117.32859"
        id="text5443-0-4-0-8"><tspan
          sodipodi:role="line"
          id="tspan5441-5-0-3"
-         x="53.830036"
+         x="53.777214"
          y="117.32859"
-         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:2.11666656px;font-family:Homenaje;-inkscape-font-specification:Homenaje;stroke-width:0.26458332;">FREE</tspan></text>
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:2.11666656px;font-family:Homenaje;-inkscape-font-specification:Homenaje;stroke-width:0.26458332">FREE</tspan></text>
     <text
        xml:space="preserve"
        style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:3.52777767px;line-height:1.25;font-family:Homenaje;-inkscape-font-specification:Homenaje;letter-spacing:0px;word-spacing:0px;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.26458332"
