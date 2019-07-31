@@ -187,7 +187,7 @@ When they are connected this way, the Clock, Mute and Reset signals, and Eoc out
 
 ## QAR Groove Expander
 
-![QAR Groove Expander](./doc/qarg.png)
+![QAR Groove Expander](./doc/QARG.png)
 
 - Expander Module for Quad Algorithmic Rhythm
 - Allows creating patterns that move steps before and after the beat.
@@ -204,7 +204,7 @@ When they are connected this way, the Clock, Mute and Reset signals, and Eoc out
 
 ## QAR Probability Expander
 
-![QAR Probability Expander](./doc/qarp.png)
+![QAR Probability Expander](./doc/QARP.png)
 
 - Expander Module for Quad Algorithmic Rhythm
 - Allows controlling probability on a step by step basis.
