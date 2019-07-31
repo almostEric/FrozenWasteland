@@ -185,34 +185,33 @@ When they are connected this way, the Clock, Mute and Reset signals, and Eoc out
 -- 6 = NXOR
 - Operators repeat if Division is past 6
 
+## QAR Groove Expander
 
-## Quad Rhythm Expander
-
-![Quad Rhythm Expander](./doc/qre.png)
-
-- Expander Module for Quad Algorithmic Rhythm
-- Allows controlling probability and swing for tracks/beats.
-- Probability and Swing can be enabled/disabled track by track
-- Beats to be affected can be selected by buttons on bottom
-- If Steps/Divs is in Steps mode, the step selected has its probability/swing changed whethere there is a beat or not (and if there is no beat, this means no effect)
-- If Steps/Divs is in Divs mode, then the button select the first beat, second beat, etc. no matter which step the beat is on
-- CV Control of Probability and Swing for each track allows multiple steps/beats to be controlled at once
-- Expanders can be chained with each one controlling its own subsets of tracks and steps
-- Left expander has priority over expander(s) on right
-- Left expander sets STEP/DIV mode for all expanders 
-
-## Quad Groove Expander
-
-![Quad Groove Expander](./doc/qge.png)
+![QAR Groove Expander](./doc/qarg.png)
 
 - Expander Module for Quad Algorithmic Rhythm
 - Allows creating patterns that move steps before and after the beat.
-- Each track can have its own pattern.
+- Each step can be shifted -50% to +50% of beat
 - Amount interpolates between straignt time and the selected pattern
-- Pattern and amount can be CV controlled
-- Expanders can be chained, so putting a QRE before QGE can add probability and overriding the pattern on a step by step basis 
+- Length sets the length of the pattern. It will repeat independently of the length of the track(s) it is applied to
+- L=T sets the length of the groove to match the track(s) it is applied to
+- Normally pattern is set on a step by step basis. Turning DIV on will make pattern follow the beats it is applied to.
+- Random allows the beat to shift up to -50% to +50%.
+- Random will work in conjunction with groove patterns
+- Gaussian mode uses a distribution pattern so that most beats are close to the original
+- Expanders can be chained, so putting another Groove Expander before can allow each track to have its own groove 
+- Can also be chained with QAR Probability
 
+## QAR Probability Expander
 
+![QAR Probability Expander](./doc/qarp.png)
+
+- Expander Module for Quad Algorithmic Rhythm
+- Allows controlling probability on a step by step basis.
+- If DIVS mode is on, then the probabilities will change the 1st beat, 2nd beat, etc no matter which step they fall on
+- Expanders can be chained so tracks can have their own probability patterns
+- Left expander has priority over expander(s) on right
+- Can also be chained with QAR Groove
 
 ## Quantussy Cell
 

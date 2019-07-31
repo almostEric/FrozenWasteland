@@ -1,6 +1,11 @@
+## 1.6.0 (2019-07-31)
+- Added QAR Groove Expander and QAR Probability Expander
+- Retired Quad Rhythm and and Quad Groove
+
 ## 1.5.1 (2019-07-18)
 - Added Gate/Trigger modes to Portland Weather
 - Fixed BPM LFO UI issue
+- Fixed QAR Flickering Issue
 
 ## 1.5.0 (2019-07-14)
 - Quad Groove Expander added

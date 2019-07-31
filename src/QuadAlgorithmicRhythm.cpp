@@ -3,6 +3,7 @@
 #include <time.h>
 #include "FrozenWasteland.hpp"
 #include "ui/knobs.hpp"
+#include "dsp-noise/noise.hpp"
 
 #define TRACK_COUNT 4
 #define MAX_STEPS 18
@@ -12,8 +13,10 @@
 #define MAX_DIVISIONS 6
 #define PASSTHROUGH_LEFT_VARIABLE_COUNT 13
 #define PASSTHROUGH_RIGHT_VARIABLE_COUNT 8
-#define PASSTHROUGH_OFFSET MAX_STEPS * TRACK_COUNT * 2 + 1
+#define TRACK_LEVEL_PARAM_COUNT TRACK_COUNT * 6
+#define PASSTHROUGH_OFFSET MAX_STEPS * TRACK_COUNT * 2 + TRACK_LEVEL_PARAM_COUNT
 
+using namespace frozenwasteland::dsp;
 
 struct QuadAlgorithmicRhythm : Module {
 	enum ParamIds {
@@ -136,16 +139,28 @@ struct QuadAlgorithmicRhythm : Module {
     int algorithnMatrix[TRACK_COUNT];
 	bool beatMatrix[TRACK_COUNT][MAX_STEPS];
 	bool accentMatrix[TRACK_COUNT][MAX_STEPS];
+
 	float probabilityMatrix[TRACK_COUNT][MAX_STEPS];
 	float swingMatrix[TRACK_COUNT][MAX_STEPS];
 	float workingProbabilityMatrix[TRACK_COUNT][MAX_STEPS];
 	float workingSwingMatrix[TRACK_COUNT][MAX_STEPS];
+
 	int beatIndex[TRACK_COUNT];
 	int stepsCount[TRACK_COUNT];
 	int lastStepsCount[TRACK_COUNT];
 	double stepDuration[TRACK_COUNT];
 	double lastStepTime[TRACK_COUNT];	
     double lastSwingDuration[TRACK_COUNT];
+
+	float swingRandomness[TRACK_COUNT];
+	bool useGaussianDistribution[TRACK_COUNT] = {false};
+	double calculatedSwingRandomness[TRACK_COUNT] = {0.0f};
+	bool trackSwingUsingDivs[TRACK_COUNT] = {false};
+	int subBeatLength[TRACK_COUNT];
+	int subBeatIndex[TRACK_COUNT];
+
+
+
 
 	float expanderOutputValue[TRACK_COUNT];
 	float expanderAccentValue[TRACK_COUNT];
@@ -182,7 +197,7 @@ struct QuadAlgorithmicRhythm : Module {
 	bool muted = false;
 	bool constantTime = false;
 	int masterTrack = 0;
-	bool QREDisconnectReset = true;
+	bool QARExpanderDisconnectReset = true;
 
 	double timeElapsed = 0.0;
 	double duration = 0.0;
@@ -190,6 +205,8 @@ struct QuadAlgorithmicRhythm : Module {
 
 	dsp::SchmittTrigger clockTrigger,resetTrigger,chainModeTrigger,constantTimeTrigger,muteTrigger,algorithmButtonTrigger[TRACK_COUNT],algorithmInputTrigger[TRACK_COUNT],startTrigger[TRACK_COUNT];
 	dsp::PulseGenerator beatPulse[TRACK_COUNT],accentPulse[TRACK_COUNT],eocPulse[TRACK_COUNT];
+
+	GaussianNoiseGenerator _gauss;
 
 
 
@@ -249,6 +266,12 @@ struct QuadAlgorithmicRhythm : Module {
 			lastStepTime[i] = 0.0;
 			stepDuration[i] = 0.0;
             lastSwingDuration[i] = 0.0;
+			subBeatIndex[i] = -1;
+			swingRandomness[i] = 0.0f;
+			useGaussianDistribution[i] = false;	
+
+
+
 
 			expanderOutputValue[i] = 0.0;
 			expanderAccentValue[i] = 0.0;
@@ -279,7 +302,8 @@ struct QuadAlgorithmicRhythm : Module {
 		}
 		//See if a slave is passing through an expander
 		bool slavedQARPresent = false;
-		bool rightExpanderPresent = (rightExpander.module && (rightExpander.module->model == modelQuadRhythmExpander || rightExpander.module->model == modelQuadAlgorithmicRhythm || rightExpander.module->model == modelQuadGrooveExpander));
+		bool rightExpanderPresent = (rightExpander.module 
+		&& (rightExpander.module->model == modelQuadAlgorithmicRhythm || rightExpander.module->model == modelQARProbabilityExpander || rightExpander.module->model == modelQARGrooveExpander));
 		if(rightExpanderPresent)
 		{			
 			float *message = (float*) rightExpander.module->leftExpander.consumerMessage;
@@ -305,7 +329,8 @@ struct QuadAlgorithmicRhythm : Module {
 
 		//See if a master is passing through an expander
 		bool masterQARPresent = false;
-		bool leftExpanderPresent = (leftExpander.module && (leftExpander.module->model == modelQuadRhythmExpander || leftExpander.module->model == modelQuadAlgorithmicRhythm || leftExpander.module->model == modelQuadGrooveExpander));
+		bool leftExpanderPresent = (leftExpander.module && (leftExpander.module->model == modelQuadAlgorithmicRhythm
+		 || leftExpander.module->model == modelQARProbabilityExpander || leftExpander.module->model == modelQARGrooveExpander));
 		if(leftExpanderPresent)
 		{			
 			float *consumerMessage = (float*)leftExpander.consumerMessage;
@@ -590,6 +615,9 @@ struct QuadAlgorithmicRhythm : Module {
 				lastSwingDuration[trackNumber] = 0; // Not sure about this
 				expanderEocValue[trackNumber] = 0; 
 				lastExpanderEocValue[trackNumber] = 0;		
+				subBeatIndex[trackNumber] = -1;
+				swingRandomness[trackNumber] = 0.0f;
+				useGaussianDistribution[trackNumber] = false;	
 			}
 			timeElapsed = 0;
 			firstClockReceived = false;
@@ -600,59 +628,134 @@ struct QuadAlgorithmicRhythm : Module {
 		
 
 		//Get Expander Info
-		bool QREExpanderPresent = (rightExpander.module && (rightExpander.module->model == modelQuadRhythmExpander || rightExpander.module->model == modelQuadGrooveExpander));
-		
-		if(QREExpanderPresent)
+		if(rightExpander.module && (rightExpander.module->model == modelQARProbabilityExpander || rightExpander.module->model == modelQARGrooveExpander))
 		{			
-			QREDisconnectReset = true;
+			QARExpanderDisconnectReset = true;
 			float *message = (float*) rightExpander.module->leftExpander.consumerMessage;
 
-			//Process Rhythm Expander Stuff						
-			bool useDivs = message[0] == 0; //0 is divs
+			//Process Probability Expander Stuff						
 			for(int i = 0; i < TRACK_COUNT; i++) {
 				for(int j = 0; j < MAX_STEPS; j++) { //reset all probabilities
 					workingProbabilityMatrix[i][j] = 1;
-					workingSwingMatrix[i][j] = 0.0;
 				}
-				for(int j = 0; j < MAX_STEPS; j++) { // Assign probabilites and swing
-					int stepIndex = j;
-					bool stepFound = true;
-					if(useDivs) { //Use j as a count to the div # we are looking for
-						int divIndex = -1;
-						stepFound = false;
-						for(int k = 0; k< MAX_STEPS; k++) {
-							if (beatMatrix[i][k]) {
-								divIndex ++;
-								if(divIndex == j) {
-									stepIndex = k;
-									stepFound = true;	
-									break;								
+
+				if(message[i] > 0) { // 0 is track not selected
+					bool useDivs = message[i] == 2; //2 is divs
+					for(int j = 0; j < MAX_STEPS; j++) { // Assign probabilites and swing
+						int stepIndex = j;
+						bool stepFound = true;
+						if(useDivs) { //Use j as a count to the div # we are looking for
+							int divIndex = -1;
+							stepFound = false;
+							for(int k = 0; k< MAX_STEPS; k++) {
+								if (beatMatrix[i][k]) {
+									divIndex ++;
+									if(divIndex == j) {
+										stepIndex = k;
+										stepFound = true;	
+										break;								
+									}
 								}
 							}
 						}
+						
+						if(stepFound) {
+							float probability = message[TRACK_LEVEL_PARAM_COUNT + (i * EXPANDER_MAX_STEPS) + j];
+							workingProbabilityMatrix[i][stepIndex] = probability;
+						} 
+					}
+				}
+			}
+
+			//Process Groove Expander Stuff									
+			for(int i = 0; i < TRACK_COUNT; i++) {
+				for(int j = 0; j < MAX_STEPS; j++) { //reset all probabilities
+					workingSwingMatrix[i][j] = 0.0;
+				}
+
+				if(message[TRACK_COUNT + i] > 0) { // 0 is track not selected
+					bool useDivs = message[TRACK_COUNT + i] == 2; //2 is divs
+					trackSwingUsingDivs[i] = useDivs;
+
+					int grooveLength = (int)(message[TRACK_COUNT * 2 + i]);
+					bool useTrackLength = message[TRACK_COUNT * 3 + i];
+
+					swingRandomness[i] = message[TRACK_COUNT * 4 + i];
+					useGaussianDistribution[i] = message[TRACK_COUNT * 5 + i];
+
+					if(useTrackLength) {
+						grooveLength = stepsCount[i];
+					}
+					subBeatLength[i] = grooveLength;
+					if(subBeatIndex[i] >= grooveLength) { //Reset if necessary
+						subBeatIndex[i] = 0;
 					}
 					
-					if(stepFound) {
-						float probability = message[1 + i * EXPANDER_MAX_STEPS + j];
-						float swing = message[1 + (i + TRACK_COUNT) * EXPANDER_MAX_STEPS  + j];
-						workingProbabilityMatrix[i][stepIndex] = probability;
-						workingSwingMatrix[i][stepIndex] = swing;						
-					} 
+
+					int workingBeatIndex;
+					if(!useDivs) {
+						workingBeatIndex = (subBeatIndex[i] - beatIndex[i]) % grooveLength; 
+						if(workingBeatIndex <0) {
+							workingBeatIndex +=grooveLength;
+						}
+					} else {
+						int divCount = -1;
+						for(int k = 0; k<= beatIndex[i]; k++) {
+							if (beatMatrix[i][k]) {
+								divCount++;
+							}
+						}
+						int actualSubBeatIndex = std::max(subBeatIndex[i],0);
+						workingBeatIndex = (subBeatIndex[i] - divCount) % grooveLength; 
+						if(workingBeatIndex <0) {
+							workingBeatIndex +=grooveLength;
+						}
+					}
+
+					for(int j = 0; j < MAX_STEPS; j++) { // Assign probabilites and swing
+						int stepIndex = j;
+						bool stepFound = true;
+						if(useDivs) { //Use j as a count to the div # we are looking for
+							int divIndex = -1;
+							stepFound = false;
+							for(int k = 0; k< MAX_STEPS; k++) {
+								if (beatMatrix[i][k]) {
+									divIndex ++;
+									if(divIndex == j) {
+										stepIndex = k;
+										stepFound = true;	
+										break;								
+									}
+								}
+							}
+						}
+						
+						if(stepFound) {
+							float swing = message[TRACK_LEVEL_PARAM_COUNT + (EXPANDER_MAX_STEPS * TRACK_COUNT) + (i * EXPANDER_MAX_STEPS) + workingBeatIndex];
+							workingSwingMatrix[i][stepIndex] = swing;						
+						} 
+						workingBeatIndex +=1;
+						if(workingBeatIndex >= grooveLength) {
+							workingBeatIndex = 0;
+						}
+					}
 				}
 			}
 			
 			
 		} else {
-			if(QREDisconnectReset) { //If QRE gets disconnected, reset probability and swing
+			if(QARExpanderDisconnectReset) { //If QRE gets disconnected, reset probability and swing
 				for(int i = 0; i < TRACK_COUNT; i++) {
+					subBeatIndex[i] = 0;
 					for(int j = 0; j < MAX_STEPS; j++) { //reset all probabilities
 						workingProbabilityMatrix[i][j] = 1;
 						workingSwingMatrix[i][j] = 0;
 					}
 				}
-				QREDisconnectReset = false;
+				QARExpanderDisconnectReset = false;
 			}
 		}
+
 
 		//set calculated probability and swing
 		for(int i = 0; i < TRACK_COUNT; i++) {
@@ -724,13 +827,13 @@ struct QuadAlgorithmicRhythm : Module {
 				}
 				else
 					stepDuration[trackNumber] = duration; //Otherwise Clock based
+				
 
                 //swing is affected by next beat
                 int nextBeat = beatIndex[trackNumber] + 1;
                 if(nextBeat >= stepsCount[trackNumber])
                     nextBeat = 0;
-                double swingDuration = swingMatrix[trackNumber][nextBeat] * stepDuration[trackNumber];
-        
+                double swingDuration = (calculatedSwingRandomness[trackNumber] + swingMatrix[trackNumber][nextBeat]) * stepDuration[trackNumber];
             
 				if(running[trackNumber]) {
 					lastStepTime[trackNumber] +=timeAdvance;
@@ -852,7 +955,6 @@ struct QuadAlgorithmicRhythm : Module {
        
 		beatIndex[trackNumber]++;
 		lastStepTime[trackNumber] = 0.0;
-
     
 		//End of Cycle
 		if(beatIndex[trackNumber] >= stepsCount[trackNumber]) {
@@ -863,18 +965,38 @@ struct QuadAlgorithmicRhythm : Module {
 			}
 		}
 
+		if(!trackSwingUsingDivs[trackNumber]) {
+			subBeatIndex[trackNumber]++;
+			if(subBeatIndex[trackNumber] >= subBeatLength[trackNumber]) { 
+				subBeatIndex[trackNumber] = 0;
+			}
+		} else if(trackSwingUsingDivs[trackNumber] && beatMatrix[trackNumber][beatIndex[trackNumber]] == true) {
+			subBeatIndex[trackNumber]++;
+			if(subBeatIndex[trackNumber] >= subBeatLength[trackNumber]) { 
+				subBeatIndex[trackNumber] = 0;
+			}
+		}
+
+
         bool probabilityResult = (float) rand()/RAND_MAX < probabilityMatrix[trackNumber][beatIndex[trackNumber]];	
         
 
         //Create Beat Trigger    
         if(beatMatrix[trackNumber][beatIndex[trackNumber]] == true && probabilityResult && running[trackNumber] && !muted) {
-            beatPulse[trackNumber].trigger(1e-3);
+            beatPulse[trackNumber].trigger(1e-3);		
         }
 
         //Create Accent Trigger
         if(accentMatrix[trackNumber][beatIndex[trackNumber]] == true && probabilityResult && running[trackNumber] && !muted) {
             accentPulse[trackNumber].trigger(1e-3);
-        }			
+        }
+
+		if(useGaussianDistribution[trackNumber]) {
+			float gaussian = _gauss.next(); 
+			calculatedSwingRandomness[trackNumber] = 1.0 - clamp(gaussian / 2 * swingRandomness[trackNumber],-0.5f * swingRandomness[trackNumber],0.5f * swingRandomness[trackNumber]);
+		} else {
+			calculatedSwingRandomness[trackNumber] = 1.0 - (((double) rand()/RAND_MAX - 0.5f) * swingRandomness[trackNumber]);
+		}
 	}
 	// For more advanced Module features, read Rack's engine.hpp header file
 	// - onSampleRateChange: event triggered by a change of sample rate
@@ -891,7 +1013,10 @@ struct QuadAlgorithmicRhythm : Module {
 			expanderAccentValue[i] = 0.0;
 			expanderOutputValue[i] = 0.0;
 			expanderEocValue[i] = 0; 
-			lastExpanderEocValue[i] = 0;	
+			lastExpanderEocValue[i] = 0;
+			swingRandomness[i] = 0.0f;
+			useGaussianDistribution[i] = false;	
+			subBeatIndex[i] = -1;
 			running[i] = true;
 			for(int j = 0; j < MAX_STEPS; j++) {
 				probabilityMatrix[i][j] = 1.0;
@@ -913,7 +1038,7 @@ struct QARBeatDisplay : TransparentWidget {
 		font = APP->window->loadFont(asset::plugin(pluginInstance, "res/fonts/01 Digit.ttf"));
 	}
 
-	void drawBox(const DrawArgs &args, float stepNumber, float trackNumber,int algorithm, bool isBeat,bool isAccent,bool isCurrent, float probability, float swing) {
+	void drawBox(const DrawArgs &args, float stepNumber, float trackNumber,int algorithm, bool isBeat,bool isAccent,bool isCurrent, float probability, float swing, float swingRandomness) {
 		
 		//nvgSave(args.vg);
 		//Rect b = Rect(Vec(0, 0), box.size);
@@ -945,6 +1070,8 @@ struct QARBeatDisplay : TransparentWidget {
 			fillColor = nvgRGBA(0x2f,0xf0,0,opacity);			
 		}
 
+		NVGcolor randomFillColor = nvgRGBA(0xff,0x00,0,0x40);			
+
 
 		nvgStrokeColor(args.vg, strokeColor);
 		nvgStrokeWidth(args.vg, 1.0);
@@ -958,6 +1085,18 @@ struct QARBeatDisplay : TransparentWidget {
             nvgFillColor(args.vg, fillColor);
 			nvgFill(args.vg);
 			nvgStroke(args.vg);
+
+			//Draw swing randomness
+			if(swingRandomness > 0.0f) {
+				nvgBeginPath(args.vg);
+				nvgStrokeWidth(args.vg, 0.0);
+				nvgRect(args.vg,boxX + 10.5f,boxY+(21*(1-probability)),(5.5*swingRandomness),21*probability);
+				nvgRect(args.vg,boxX + 10.5f-(5.5*swingRandomness),boxY+(21*(1-probability)),(5.5*swingRandomness),21*probability);
+				nvgFillColor(args.vg, randomFillColor);
+				nvgFill(args.vg);
+				nvgStroke(args.vg);
+			}
+
 		}
 
 
@@ -969,7 +1108,7 @@ struct QARBeatDisplay : TransparentWidget {
 	void drawMasterTrack(const DrawArgs &args, Vec pos, int track) {
 		nvgFontSize(args.vg, 20);
 		nvgFontFaceId(args.vg, font->handle);
-		nvgTextLetterSpacing(args.vg, -2);
+		nvgTextLetterSpacing(args.vg, -1);
 
 		nvgFillColor(args.vg, nvgRGBA(0x00, 0xff, 0x00, 0xff));
 		char text[128];
@@ -989,12 +1128,14 @@ struct QARBeatDisplay : TransparentWidget {
 				bool isCurrent = module->beatIndex[trackNumber] == stepNumber && module->running[trackNumber];		
 				float probability = module->probabilityMatrix[trackNumber][stepNumber];
 				float swing = module->swingMatrix[trackNumber][stepNumber];				
-				drawBox(args, float(stepNumber), float(trackNumber),algorithn,isBeat,isAccent,isCurrent,probability,swing);
+				float swingRandomness = module->swingRandomness[trackNumber];
+				drawBox(args, float(stepNumber), float(trackNumber),algorithn,isBeat,isAccent,isCurrent,probability,swing,swingRandomness);
 			}
 		}
 
 		if(module->constantTime)
 			drawMasterTrack(args, Vec(box.size.x - 21, box.size.y - 80), module->masterTrack);
+			//drawMasterTrack(args, Vec(box.size.x - 21, box.size.y - 80), module->calculatedSwingRandomness[1]);
 	}
 };
 
