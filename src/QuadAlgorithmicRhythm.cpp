@@ -705,7 +705,7 @@ struct QuadAlgorithmicRhythm : Module {
 								divCount++;
 							}
 						}
-						int actualSubBeatIndex = std::max(subBeatIndex[i],0);
+
 						workingBeatIndex = (subBeatIndex[i] - divCount) % grooveLength; 
 						if(workingBeatIndex <0) {
 							workingBeatIndex +=grooveLength;
@@ -992,8 +992,13 @@ struct QuadAlgorithmicRhythm : Module {
         }
 
 		if(useGaussianDistribution[trackNumber]) {
-			float gaussian = _gauss.next(); 
-			calculatedSwingRandomness[trackNumber] = 1.0 - clamp(gaussian / 2 * swingRandomness[trackNumber],-0.5f * swingRandomness[trackNumber],0.5f * swingRandomness[trackNumber]);
+			bool gaussOk = false; // don't want values that are beyond our mean
+			float gaussian;
+			do {
+				gaussian= _gauss.next();
+				gaussOk = gaussian >= -1 && gaussian <= 1;
+			} while (!gaussOk);
+			calculatedSwingRandomness[trackNumber] = 1.0 - gaussian / 2 * swingRandomness[trackNumber];
 		} else {
 			calculatedSwingRandomness[trackNumber] = 1.0 - (((double) rand()/RAND_MAX - 0.5f) * swingRandomness[trackNumber]);
 		}
