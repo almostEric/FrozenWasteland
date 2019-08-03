@@ -1,3 +1,6 @@
+## 1.7.0 (2019-07-31)
+- Added Seeds of Change Random Number Generator
+
 ## 1.6.0 (2019-07-31)
 - Added QAR Groove Expander and QAR Probability Expander
 - Retired Quad Rhythm and and Quad Groove

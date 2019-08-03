@@ -21,6 +21,7 @@ extern Model *modelQuadAlgorithmicRhythm;
 extern Model *modelQARGrooveExpander;
 extern Model *modelQARProbabilityExpander;
 extern Model *modelQuantussyCell;
+extern Model *modelSeedsOfChange;
 extern Model *modelRouletteLFO;
 extern Model *modelSeriouslySlowLFO;
 extern Model *modelVoxInhumana;

@@ -29,6 +29,7 @@ void init(rack::Plugin *p) {
 	p->addModel(modelQARGrooveExpander);
 	p->addModel(modelQARProbabilityExpander);
 	p->addModel(modelQuantussyCell);
+	p->addModel(modelSeedsOfChange);
 	p->addModel(modelRouletteLFO);
 	p->addModel(modelSeriouslySlowLFO);
 	p->addModel(modelVoxInhumana);
