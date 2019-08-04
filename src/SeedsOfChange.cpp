@@ -19,6 +19,8 @@
 
 struct SeedsOfChange : Module {
 	enum ParamIds {
+		SEED_PARAM,
+		RESET_PARAM,
 		DISTRIBUTION_PARAM,
 		MULTIPLY_1_PARAM,
 		OFFSET_1_PARAM = MULTIPLY_1_PARAM + NBOUT,
@@ -54,6 +56,8 @@ struct SeedsOfChange : Module {
 	SeedsOfChange() {
 		// Configure the module
 		config(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS, NUM_LIGHTS);
+		configParam(SeedsOfChange::SEED_PARAM, 0.0, 99.0, 0.0,"Seed");
+		configParam(SeedsOfChange::RESET_PARAM, 0.0, 1.0, 0.0);
 		configParam(SeedsOfChange::DISTRIBUTION_PARAM, 0.0, 1.0, 0.0,"Distribution");
 		for (int i=0; i<NBOUT; i++) {
 			configParam(SeedsOfChange::MULTIPLY_1_PARAM + i, 0.0f, 10.0f, 10.0f, "Multiply");			
@@ -75,17 +79,18 @@ struct SeedsOfChange : Module {
 			gaussianMode = !gaussianMode;
 		}
 
-		if (inputs[DISTRIBUTION_INPUT].active) {
-			gaussianMode= inputs[DISTRIBUTION_INPUT].value  > 5.0;  
+		if (inputs[DISTRIBUTION_INPUT].isConnected()) {
+			gaussianMode = inputs[DISTRIBUTION_INPUT].getVoltage()  > 5.0;  
 		}
 		
 		lights[DISTRIBUTION_GAUSSIAN_LIGHT].value = gaussianMode;
 		
-		if( inputs[RESET_INPUT].active ) {
-			if (resetTrigger.process(inputs[RESET_INPUT].value) ) {
-				init_genrand((unsigned long)(inputs[SEED_INPUT].value*9.9));
-			} 
-		}
+        float resetInput = inputs[RESET_INPUT].getVoltage();
+		resetInput += params[RESET_PARAM].getValue(); 		
+
+        if (resetTrigger.process(resetInput) ) {
+            init_genrand((unsigned long)(inputs[SEED_INPUT].isConnected() ? inputs[SEED_INPUT].getVoltage()*9.9 : params[SEED_PARAM].getValue()));
+        } 
 
 		if( inputs[CLOCK_INPUT].active ) {
 			if (clockTrigger.process(inputs[CLOCK_INPUT].value) ) {
@@ -254,7 +259,7 @@ struct SeedsOfChangeWidget : ModuleWidget {
 		{
 			SeedsOfChangeSeedDisplay *display = new SeedsOfChangeSeedDisplay();
 			display->module = module;
-			display->box.pos = Vec(27, 46);
+			display->box.pos = Vec(57, 46);
 			display->box.size = Vec(box.size.x-31, 51);
 			addChild(display);
 		}
@@ -266,15 +271,20 @@ struct SeedsOfChangeWidget : ModuleWidget {
 
 
 
+
+
+        addParam(createParam<RoundReallySmallFWKnob>(Vec(28,31), module, SeedsOfChange::SEED_PARAM));			
+		addInput(createInput<FWPortInSmall>(Vec(4, 33), module, SeedsOfChange::SEED_INPUT));
+
+		addInput(createInput<FWPortInSmall>(Vec(4, 63), module, SeedsOfChange::CLOCK_INPUT));
+
+        addParam(createParam<TL1105>(Vec(100, 94), module, SeedsOfChange::RESET_PARAM));
+		addInput(createInput<FWPortInSmall>(Vec(80, 93), module, SeedsOfChange::RESET_INPUT));
+
 		addParam(createParam<LEDButton>(Vec(25, 92), module, SeedsOfChange::DISTRIBUTION_PARAM));
 		addChild(createLight<LargeLight<BlueLight>>(Vec(26.5, 93.5), module, SeedsOfChange::DISTRIBUTION_GAUSSIAN_LIGHT));
 		addInput(createInput<FWPortInSmall>(Vec(4, 93), module, SeedsOfChange::DISTRIBUTION_INPUT));
 
-
-		addInput(createInput<FWPortInSmall>(Vec(4, 33), module, SeedsOfChange::SEED_INPUT));
-		addInput(createInput<FWPortInSmall>(Vec(4, 63), module, SeedsOfChange::CLOCK_INPUT));
-
-		addInput(createInput<FWPortInSmall>(Vec(84, 93), module, SeedsOfChange::RESET_INPUT));
 
 		for (int i=0; i<NBOUT; i++) {
 			addParam(createParam<RoundReallySmallFWKnob>(Vec(4,125 + i * 30), module, SeedsOfChange::MULTIPLY_1_PARAM + i));			

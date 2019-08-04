@@ -606,7 +606,7 @@ struct QuadAlgorithmicRhythm : Module {
 		if(!inputs[RESET_INPUT].isConnected() && masterQARPresent) {
 			resetInput = expanderResetValue;
 		}
-		resetInput +=+ params[RESET_PARAM].getValue(); //RESET BUTTON ALWAYS WORKS		
+		resetInput += params[RESET_PARAM].getValue(); //RESET BUTTON ALWAYS WORKS		
 		if(resetTrigger.process(resetInput)) {
 			for(int trackNumber=0;trackNumber<4;trackNumber++)
 			{
