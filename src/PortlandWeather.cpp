@@ -1046,24 +1046,24 @@ struct PortlandWeatherWidget : ModuleWidget {
 
 		
 		addParam( createParam<LEDButton>(Vec(236,116), module, PortlandWeather::REVERSE_PARAM));
-		addChild(createLight<MediumLight<BlueLight>>(Vec(240, 120), module, PortlandWeather::REVERSE_LIGHT));
+		addChild(createLight<LargeLight<BlueLight>>(Vec(237.5, 117.5), module, PortlandWeather::REVERSE_LIGHT));
 		addInput(createInput<PJ301MPort>(Vec(260, 112), module, PortlandWeather::REVERSE_INPUT));
 
 		addParam( createParam<LEDButton>(Vec(371,116), module, PortlandWeather::PING_PONG_PARAM));
-		addChild(createLight<MediumLight<BlueLight>>(Vec(375, 120), module, PortlandWeather::PING_PONG_LIGHT));
+		addChild(createLight<LargeLight<BlueLight>>(Vec(372.5, 117.5), module, PortlandWeather::PING_PONG_LIGHT));
 		addInput(createInput<PJ301MPort>(Vec(395, 112), module, PortlandWeather::PING_PONG_INPUT));
 
 
 		//last tap isn't stacked
 		for (int i = 0; i< NUM_TAPS-1; i++) {
 			addParam(createParam<LEDButton>(Vec(437 + 52 + 30*i,17), module, PortlandWeather::TAP_STACKED_PARAM + i));
-			addChild(createLight<MediumLight<BlueLight>>(Vec(437 + 56 + 30*i, 21), module, PortlandWeather::TAP_STACKED_LIGHT+i));
+			addChild(createLight<LargeLight<BlueLight>>(Vec(437 + 53.5 + 30*i, 18.5), module, PortlandWeather::TAP_STACKED_LIGHT+i));
 			addInput(createInput<FWPortInSmall>(Vec(437 + 52+ 30*i, 37), module, PortlandWeather::TAP_STACK_CV_INPUT+i));
 		}
 
 		for (int i = 0; i < NUM_TAPS; i++) {
 			addParam( createParam<LEDButton>(Vec(437 + 52 + 30*i,57), module, PortlandWeather::TAP_MUTE_PARAM + i));
-			addChild(createLight<MediumLight<RedLight>>(Vec(437 + 56 + 30*i, 61), module, PortlandWeather::TAP_MUTED_LIGHT+i));
+			addChild(createLight<LargeLight<RedLight>>(Vec(437 + 53.5 + 30*i, 58.5), module, PortlandWeather::TAP_MUTED_LIGHT+i));
 			addInput(createInput<FWPortInSmall>(Vec(437 + 52+ 30*i, 77), module, PortlandWeather::TAP_MUTE_CV_INPUT+i));
 
 			addParam( createParam<RoundReallySmallFWKnob>(Vec(437 + 50 + 30*i, 98), module, PortlandWeather::TAP_MIX_PARAM + i));

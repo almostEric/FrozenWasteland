@@ -192,11 +192,11 @@ struct VoxInhumanaExpanderWidget : ModuleWidget {
 		addInput(createInput<PJ301MPort>(Vec(45, 267), module, VoxInhumanaExpander::Q_4_INPUT));
 		addInput(createInput<PJ301MPort>(Vec(45, 302), module, VoxInhumanaExpander::Q_5_INPUT));
 
-		addChild(createLight<MediumLight<BlueLight>>(Vec(52, 44), module, VoxInhumanaExpander::FORMANT_1_SLOPE_LIGHT));		
-		addChild(createLight<MediumLight<BlueLight>>(Vec(52, 64), module, VoxInhumanaExpander::FORMANT_2_SLOPE_LIGHT));		
-		addChild(createLight<MediumLight<BlueLight>>(Vec(52, 84), module, VoxInhumanaExpander::FORMANT_3_SLOPE_LIGHT));		
-		addChild(createLight<MediumLight<BlueLight>>(Vec(52, 104), module, VoxInhumanaExpander::FORMANT_4_SLOPE_LIGHT));		
-		addChild(createLight<MediumLight<BlueLight>>(Vec(52, 124), module, VoxInhumanaExpander::FORMANT_5_SLOPE_LIGHT));		
+		addChild(createLight<LargeLight<BlueLight>>(Vec(49.5, 41.5), module, VoxInhumanaExpander::FORMANT_1_SLOPE_LIGHT));		
+		addChild(createLight<LargeLight<BlueLight>>(Vec(49.5, 61.5), module, VoxInhumanaExpander::FORMANT_2_SLOPE_LIGHT));		
+		addChild(createLight<LargeLight<BlueLight>>(Vec(49.5, 81.5), module, VoxInhumanaExpander::FORMANT_3_SLOPE_LIGHT));		
+		addChild(createLight<LargeLight<BlueLight>>(Vec(49.5, 101.5), module, VoxInhumanaExpander::FORMANT_4_SLOPE_LIGHT));		
+		addChild(createLight<LargeLight<BlueLight>>(Vec(49.5, 121.5), module, VoxInhumanaExpander::FORMANT_5_SLOPE_LIGHT));		
 	
 	}
 };

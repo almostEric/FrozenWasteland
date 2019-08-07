@@ -1,5 +1,7 @@
-## 1.7.0 (2019-07-31)
+## 1.7.0 (2019-08-07)
 - Added Seeds of Change Random Number Generator
+- Reduced size of BPM LFO and BPM LFO 2
+- Increased sizes of LED lights throughout
 
 ## 1.6.0 (2019-07-31)
 - Added QAR Groove Expander and QAR Probability Expander

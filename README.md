@@ -242,6 +242,14 @@ When they are connected this way, the Clock, Mute and Reset signals, and Eoc out
 - if d = 1 the shapes become a special form of the shapes - either a Hypocycloid or Epicycloid
 - θF and θG allow control of the phase of the Fixed and Generating shape respectively
 
+## Seeds of Change
+
+![Seeds of Change](./doc/soc.png)
+
+- Generates 4 psuedo-Random values and 4 psuedo-Random Gates..
+- Since initial random seed can be specified by knob or CV, sequences are repeatable
+- ![Full Documentation](./doc/SeedsOfChange.pdf) 
+
 ## Seriously Slow LFO
 
 ![Seriously Slow LFO](./doc/sslfo.png)

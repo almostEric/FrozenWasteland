@@ -294,7 +294,7 @@ struct QARGrooveExpanderWidget : ModuleWidget {
 
          for(int i=0;i<TRACK_COUNT; i++) {
 			addParam(createParam<LEDButton>(Vec(76 + i*24, 298), module, QARGrooveExpander::TRACK_1_GROOVE_ENABLED_PARAM + i));
-			addChild(createLight<MediumLight<BlueLight>>(Vec(80 + i*24, 302), module, QARGrooveExpander::TRACK_1_GROOVE_ENABELED_LIGHT + i));
+			addChild(createLight<LargeLight<BlueLight>>(Vec(77.5 + i*24, 299.5), module, QARGrooveExpander::TRACK_1_GROOVE_ENABELED_LIGHT + i));
 
 		}
 
@@ -320,9 +320,9 @@ struct QARGrooveExpanderWidget : ModuleWidget {
         addInput(createInput<FWPortInSmall>(Vec(195, 319), module, QARGrooveExpander::SWING_RANDOMNESS_INPUT));
 
 
-        addChild(createLight<MediumLight<BlueLight>>(Vec(16, 316), module, QARGrooveExpander::USING_DIVS_LIGHT));
-        addChild(createLight<MediumLight<GreenLight>>(Vec(30, 345), module, QARGrooveExpander::GROOVE_IS_TRACK_LENGTH_LIGHT));
-        addChild(createLight<MediumLight<GreenLight>>(Vec(179, 355), module, QARGrooveExpander::GAUSSIAN_DISTRIBUTION_LIGHT));
+        addChild(createLight<LargeLight<BlueLight>>(Vec(13.5, 313.5), module, QARGrooveExpander::USING_DIVS_LIGHT));
+        addChild(createLight<LargeLight<GreenLight>>(Vec(27.5, 342.5), module, QARGrooveExpander::GROOVE_IS_TRACK_LENGTH_LIGHT));
+        addChild(createLight<LargeLight<GreenLight>>(Vec(176.5, 352.5), module, QARGrooveExpander::GAUSSIAN_DISTRIBUTION_LIGHT));
 
         
 

@@ -1,9 +1,8 @@
 //#include <string.h>
 #include "FrozenWasteland.hpp"
 #include "ui/knobs.hpp"
+#include "ui/ports.hpp"
 
-
-#define DIVISIONS 27
 
 
 struct BPMLFO : Module {
@@ -46,16 +45,16 @@ struct BPMLFO : Module {
 
 	struct LowFrequencyOscillator {
 		float basePhase = 0.0;
-		float phase = 0.0;
+		double phase = 0.0;
 		float pw = 0.5;
-		float freq = 1.0;
+		double freq = 1.0;
 		bool offset = false;
 
 		void setPitch(float pitch) {
 			pitch = fminf(pitch, 8.0);
 			freq = powf(2.0, pitch);
 		}
-		void setFrequency(float frequency) {
+		void setFrequency(double frequency) {
 			freq = frequency;
 		}
 		void setPulseWidth(float pw_) {
@@ -78,8 +77,8 @@ struct BPMLFO : Module {
 			phase = basePhase;
 		}
 
-		void step(float dt) {
-			float deltaPhase = fminf(freq * dt, 0.5);
+		void step(double dt) {
+			double deltaPhase = fmin(freq * dt, 0.5);
 			phase += deltaPhase;
 			if (phase >= 1.0)
 				phase -= 1.0;
@@ -124,7 +123,7 @@ struct BPMLFO : Module {
 	float multiplier = 1;
 	float division = 1;
 	float timeElapsed = 0.0;
-	float duration = 0;
+	double duration = 0;
 	float initialPhase = 0.0;
 	bool holding = false;
 	bool firstClockReceived = false;
@@ -283,33 +282,33 @@ struct BPMLFOProgressDisplay : TransparentWidget {
 		nvgFillColor(args.vg, nvgRGBA(0xff, 0xff, 0x20, 0xff));
 		{
 			nvgBeginPath(args.vg);
-			nvgArc(args.vg,100.8,170,35,startArc,endArc,NVG_CW);
-			nvgLineTo(args.vg,100.8,170);
+			nvgArc(args.vg,60,124,25,startArc,endArc,NVG_CW);
+			nvgLineTo(args.vg,60,124);
 			nvgClosePath(args.vg);
 		}
 		nvgFill(args.vg);
 	}
 
 	void drawMultiplier(const DrawArgs &args, Vec pos, float multiplier) {
-		nvgFontSize(args.vg, 28);
+		nvgFontSize(args.vg, 14);
 		nvgFontFaceId(args.vg, font->handle);
-		nvgTextLetterSpacing(args.vg, -2);
+		nvgTextLetterSpacing(args.vg, -1);
 
 		nvgFillColor(args.vg, nvgRGBA(0x00, 0xff, 0x00, 0xff));
 		char text[128];
 		snprintf(text, sizeof(text), " % 3.0f", multiplier);
-		nvgText(args.vg, pos.x - 5, pos.y, text, NULL);
+		nvgText(args.vg, pos.x, pos.y, text, NULL);
 	}
 
 	void drawDivision(const DrawArgs &args, Vec pos, float division) {
-		nvgFontSize(args.vg, 28);
+		nvgFontSize(args.vg, 14);
 		nvgFontFaceId(args.vg, font->handle);
-		nvgTextLetterSpacing(args.vg, -2);
+		nvgTextLetterSpacing(args.vg, -1);
 
 		nvgFillColor(args.vg, nvgRGBA(0x00, 0xff, 0x00, 0xff));
 		char text[128];
 		snprintf(text, sizeof(text), " % 3.0f", division);
-		nvgText(args.vg, pos.x + 72, pos.y, text, NULL);
+		nvgText(args.vg, pos.x, pos.y, text, NULL);
 	}
 
 	void draw(const DrawArgs &args) override {
@@ -317,8 +316,8 @@ struct BPMLFOProgressDisplay : TransparentWidget {
 			return;
 
 		drawProgress(args,module->oscillator.progress());
-		drawMultiplier(args, Vec(0, box.size.y - 153), module->multiplier);
-		drawDivision(args, Vec(0, box.size.y - 153), module->division);
+		drawMultiplier(args, Vec(2, 48), module->multiplier);
+		drawDivision(args, Vec(68, 48), module->division);
 	}
 };
 
@@ -330,9 +329,9 @@ struct BPMLFOWidget : ModuleWidget {
 		setPanel(APP->window->loadSvg(asset::plugin(pluginInstance, "res/BPMLFO.svg")));
 
 		addChild(createWidget<ScrewSilver>(Vec(RACK_GRID_WIDTH - 12, 0)));
-		addChild(createWidget<ScrewSilver>(Vec(box.size.x - 2 * RACK_GRID_WIDTH + 12, 0)));
+		//addChild(createWidget<ScrewSilver>(Vec(box.size.x - 2 * RACK_GRID_WIDTH + 12, 0)));
 		addChild(createWidget<ScrewSilver>(Vec(RACK_GRID_WIDTH - 12, RACK_GRID_HEIGHT - RACK_GRID_WIDTH)));
-		addChild(createWidget<ScrewSilver>(Vec(box.size.x - 2 * RACK_GRID_WIDTH + 12, RACK_GRID_HEIGHT - RACK_GRID_WIDTH)));
+		//addChild(createWidget<ScrewSilver>(Vec(box.size.x - 2 * RACK_GRID_WIDTH + 12, RACK_GRID_HEIGHT - RACK_GRID_WIDTH)));
 
 		{
 			BPMLFOProgressDisplay *display = new BPMLFOProgressDisplay();
@@ -342,34 +341,39 @@ struct BPMLFOWidget : ModuleWidget {
 			addChild(display);
 		}
 
-		addParam(createParam<RoundLargeFWSnapKnob>(Vec(7, 78), module, BPMLFO::MULTIPLIER_PARAM));
-		addParam(createParam<RoundSmallFWKnob>(Vec(47, 109), module, BPMLFO::MULTIPLIER_CV_ATTENUVERTER_PARAM));
 
-		addParam(createParam<RoundLargeFWSnapKnob>(Vec(83, 78), module, BPMLFO::DIVISION_PARAM));
-		addParam(createParam<RoundSmallFWKnob>(Vec(123, 109), module, BPMLFO::DIVISION_CV_ATTENUVERTER_PARAM));
+		addParam(createParam<RoundSmallFWSnapKnob>(Vec(4, 52), module, BPMLFO::MULTIPLIER_PARAM));
+		addParam(createParam<RoundReallySmallFWKnob>(Vec(29, 74), module, BPMLFO::MULTIPLIER_CV_ATTENUVERTER_PARAM));
+
+		addParam(createParam<RoundSmallFWSnapKnob>(Vec(67, 52), module, BPMLFO::DIVISION_PARAM));
+		addParam(createParam<RoundReallySmallFWKnob>(Vec(92, 74), module, BPMLFO::DIVISION_CV_ATTENUVERTER_PARAM));
 		
-		addParam(createParam<RoundFWKnob>(Vec(27, 132), module, BPMLFO::PHASE_PARAM));
-		addParam(createParam<RoundSmallFWKnob>(Vec(30, 191), module, BPMLFO::PHASE_CV_ATTENUVERTER_PARAM));
-		addParam(createParam<LEDButton>(Vec(13, 152), module, BPMLFO::QUANTIZE_PHASE_PARAM));
+		
+		addParam(createParam<RoundSmallFWKnob>(Vec(47, 171), module, BPMLFO::PHASE_PARAM));
+		addParam(createParam<RoundReallySmallFWKnob>(Vec(48, 222), module, BPMLFO::PHASE_CV_ATTENUVERTER_PARAM));
+		addParam(createParam<LEDButton>(Vec(31, 192), module, BPMLFO::QUANTIZE_PHASE_PARAM));
 
-		addParam(createParam<CKSS>(Vec(12, 224), module, BPMLFO::OFFSET_PARAM));
-		addParam(createParam<CKSS>(Vec(70, 224), module, BPMLFO::HOLD_CLOCK_BEHAVIOR_PARAM));
-		addParam(createParam<CKSS>(Vec(125, 224), module, BPMLFO::HOLD_MODE_PARAM));
+		addParam(createParam<CKSS>(Vec(10, 262), module, BPMLFO::OFFSET_PARAM));
+		addParam(createParam<CKSS>(Vec(50, 262), module, BPMLFO::HOLD_CLOCK_BEHAVIOR_PARAM));
+		addParam(createParam<CKSS>(Vec(90, 262), module, BPMLFO::HOLD_MODE_PARAM));
 
-		addInput(createInput<PJ301MPort>(Vec(47, 81), module, BPMLFO::MULTIPLIER_INPUT));
-		addInput(createInput<PJ301MPort>(Vec(123, 81), module, BPMLFO::DIVISION_INPUT));
-		addInput(createInput<PJ301MPort>(Vec(29, 163), module, BPMLFO::PHASE_INPUT));
-		addInput(createInput<PJ301MPort>(Vec(17, 275), module, BPMLFO::CLOCK_INPUT));
-		addInput(createInput<PJ301MPort>(Vec(62, 275), module, BPMLFO::RESET_INPUT));
-		addInput(createInput<PJ301MPort>(Vec(94, 275), module, BPMLFO::HOLD_INPUT));
+		addInput(createInput<FWPortInSmall>(Vec(30, 54), module, BPMLFO::MULTIPLIER_INPUT));
+		addInput(createInput<FWPortInSmall>(Vec(93, 54), module, BPMLFO::DIVISION_INPUT));
 
-		addOutput(createOutput<PJ301MPort>(Vec(11, 330), module, BPMLFO::SIN_OUTPUT));
-		addOutput(createOutput<PJ301MPort>(Vec(45, 330), module, BPMLFO::TRI_OUTPUT));
-		addOutput(createOutput<PJ301MPort>(Vec(80, 330), module, BPMLFO::SAW_OUTPUT));
-		addOutput(createOutput<PJ301MPort>(Vec(114, 330), module, BPMLFO::SQR_OUTPUT));
+		
+		addInput(createInput<FWPortInSmall>(Vec(49, 202), module, BPMLFO::PHASE_INPUT));
 
-		addChild(createLight<MediumLight<BlueLight>>(Vec(17, 156), module, BPMLFO::QUANTIZE_PHASE_LIGHT));		
-		addChild(createLight<LargeLight<RedLight>>(Vec(122, 279), module, BPMLFO::HOLD_LIGHT));
+		addInput(createInput<FWPortInSmall>(Vec(7, 312), module, BPMLFO::CLOCK_INPUT));
+		addInput(createInput<FWPortInSmall>(Vec(48, 312), module, BPMLFO::RESET_INPUT));
+		addInput(createInput<FWPortInSmall>(Vec(80, 312), module, BPMLFO::HOLD_INPUT));
+
+		addOutput(createOutput<FWPortOutSmall>(Vec(5, 345), module, BPMLFO::SIN_OUTPUT));
+		addOutput(createOutput<FWPortOutSmall>(Vec(35, 345), module, BPMLFO::TRI_OUTPUT));
+		addOutput(createOutput<FWPortOutSmall>(Vec(65, 345), module, BPMLFO::SAW_OUTPUT));
+		addOutput(createOutput<FWPortOutSmall>(Vec(95, 345), module, BPMLFO::SQR_OUTPUT));
+
+		addChild(createLight<LargeLight<BlueLight>>(Vec(32.5, 193.5), module, BPMLFO::QUANTIZE_PHASE_LIGHT));		
+		addChild(createLight<LargeLight<RedLight>>(Vec(100, 312), module, BPMLFO::HOLD_LIGHT));
 	}
 
 };

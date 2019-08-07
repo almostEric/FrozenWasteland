@@ -238,11 +238,11 @@ struct QARProbabilityExpanderWidget : ModuleWidget {
 
 		//addChild(createLight<LargeLight<GreenLight>>(Vec(190, 284), module, QuadRhythmExpander::CONNECTED_LIGHT));
 
-        addChild(createLight<MediumLight<BlueLight>>(Vec(16, 328), module, QARProbabilityExpander::USING_DIVS_LIGHT));
+        addChild(createLight<LargeLight<BlueLight>>(Vec(13.5, 325.5), module, QARProbabilityExpander::USING_DIVS_LIGHT));
 
 		for(int i=0;i<TRACK_COUNT; i++) {
 			addParam(createParam<LEDButton>(Vec(76 + i*24, 320), module, QARProbabilityExpander::TRACK_1_PROBABILITY_ENABLED_PARAM + i));
-			addChild(createLight<MediumLight<BlueLight>>(Vec(80 + i*24, 324), module, QARProbabilityExpander::TRACK_1_PROBABILITY_ENABELED_LIGHT + i));
+			addChild(createLight<LargeLight<BlueLight>>(Vec(77.5 + i*24, 321.5), module, QARProbabilityExpander::TRACK_1_PROBABILITY_ENABELED_LIGHT + i));
 
 		}
 

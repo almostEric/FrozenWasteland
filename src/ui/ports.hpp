@@ -8,3 +8,11 @@ struct FWPortInSmall : SvgPort
         setSvg( APP->window->loadSvg(asset::plugin(pluginInstance, "res/ComponentLibrary/SmallInPort.svg")));   		   
     }
 };
+
+struct FWPortOutSmall : SvgPort 
+{
+    FWPortOutSmall() 
+    {
+        setSvg( APP->window->loadSvg(asset::plugin(pluginInstance, "res/ComponentLibrary/SmallInPort.svg"))); //Use different svg in future	   
+    }
+};
