@@ -1260,10 +1260,10 @@ struct QuadAlgorithmicRhythmWidget : ModuleWidget {
 		addOutput(createOutput<PJ301MPort>(Vec(333, 238), module, QuadAlgorithmicRhythm::ACCENT_OUTPUT_4));
 		addOutput(createOutput<PJ301MPort>(Vec(397, 238), module, QuadAlgorithmicRhythm::EOC_OUTPUT_4));
 
-        addChild(createLight<MediumLight<RedGreenBlueLight>>(Vec(30, 144), module, QuadAlgorithmicRhythm::ALGORITHM_1_LIGHT));
-        addChild(createLight<MediumLight<RedGreenBlueLight>>(Vec(30, 201), module, QuadAlgorithmicRhythm::ALGORITHM_2_LIGHT));
-        addChild(createLight<MediumLight<RedGreenBlueLight>>(Vec(30, 258), module, QuadAlgorithmicRhythm::ALGORITHM_3_LIGHT));
-        addChild(createLight<MediumLight<RedGreenBlueLight>>(Vec(30, 315), module, QuadAlgorithmicRhythm::ALGORITHM_4_LIGHT));
+        addChild(createLight<LargeLight<RedGreenBlueLight>>(Vec(27.5, 141.5), module, QuadAlgorithmicRhythm::ALGORITHM_1_LIGHT));
+        addChild(createLight<LargeLight<RedGreenBlueLight>>(Vec(27.5, 198.5), module, QuadAlgorithmicRhythm::ALGORITHM_2_LIGHT));
+        addChild(createLight<LargeLight<RedGreenBlueLight>>(Vec(27.5, 255.5), module, QuadAlgorithmicRhythm::ALGORITHM_3_LIGHT));
+        addChild(createLight<LargeLight<RedGreenBlueLight>>(Vec(27.5, 312.5), module, QuadAlgorithmicRhythm::ALGORITHM_4_LIGHT));
 		
 		addChild(createLight<SmallLight<BlueLight>>(Vec(332, 285), module, QuadAlgorithmicRhythm::CHAIN_MODE_NONE_LIGHT));
 		addChild(createLight<SmallLight<GreenLight>>(Vec(332, 300), module, QuadAlgorithmicRhythm::CHAIN_MODE_BOSS_LIGHT));

@@ -248,7 +248,7 @@ When they are connected this way, the Clock, Mute and Reset signals, and Eoc out
 
 - Generates 4 psuedo-Random values and 4 psuedo-Random Gates..
 - Since initial random seed can be specified by knob or CV, sequences are repeatable
-- ![Full Documentation](./doc/SeedsOfChange.pdf) 
+- ![Full Documentation](./doc/SeedsofChange.pdf) 
 
 ## Seriously Slow LFO
 
