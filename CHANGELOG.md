@@ -1,6 +1,7 @@
-## 1.7.0 (2019-08-07)
+## 1.7.0 (2019-08-08)
 - Added Seeds of Change Random Number Generator
-- Reduced size of BPM LFO and BPM LFO 2
+- Reduced size of BPM LFO and BPM LFO 2, fixed sine wave interpolation
+- Reduced size of Lissajous LFO and added CV Attenuverters, fixed sine wave interpolation
 - Increased sizes of LED lights throughout
 
 ## 1.6.0 (2019-07-31)

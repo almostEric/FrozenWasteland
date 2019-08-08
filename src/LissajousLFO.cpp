@@ -1,6 +1,7 @@
 #include <string.h>
 #include "FrozenWasteland.hpp"
 #include "ui/knobs.hpp"
+#include "ui/ports.hpp"
 
 #define BUFFER_SIZE 512
 
@@ -22,6 +23,22 @@ struct LissajousLFO : Module {
 		WAVESHAPEY2_PARAM,
 		SKEWX2_PARAM,
 		SKEWY2_PARAM,
+		AMPLITUDE1_CV_ATTENUVERTER_PARAM,
+		AMPLITUDE2_CV_ATTENUVERTER_PARAM,
+		FREQX1_CV_ATTENUVERTER_PARAM,
+		FREQY1_CV_ATTENUVERTER_PARAM,
+		PHASEX1_CV_ATTENUVERTER_PARAM,		
+		WAVESHAPEX1_CV_ATTENUVERTER_PARAM,
+		WAVESHAPEY1_CV_ATTENUVERTER_PARAM,
+		SKEWX1_CV_ATTENUVERTER_PARAM,
+		SKEWY1_CV_ATTENUVERTER_PARAM,
+		FREQX2_CV_ATTENUVERTER_PARAM,
+		FREQY2_CV_ATTENUVERTER_PARAM,
+		PHASEX2_CV_ATTENUVERTER_PARAM,
+		WAVESHAPEX2_CV_ATTENUVERTER_PARAM,
+		WAVESHAPEY2_CV_ATTENUVERTER_PARAM,
+		SKEWX2_CV_ATTENUVERTER_PARAM,
+		SKEWY2_CV_ATTENUVERTER_PARAM,
 		NUM_PARAMS
 	};
 	enum InputIds {
@@ -120,10 +137,10 @@ struct LissajousLFO : Module {
 		}
 
 		float sin() {
-			if (offset)
-				return 1.0 - cosf(2*M_PI * phase) ;
+			if (offset) // Sin wave is 90 degrees out of phase with other waves
+				return 1.0 - cosf(2*M_PI * (phase - 0.25)) ;
 			else
-				return sinf(2*M_PI * phase) ;
+				return sinf(2*M_PI * (phase - 0.25)) ;
 		}
 
 	};
@@ -155,13 +172,21 @@ struct LissajousLFO : Module {
 		configParam(AMPLITUDE1_PARAM, 0.0, 5.0, 2.5,"Amplitude 1","%",0,25);
 		configParam(FREQX1_PARAM, -8.0, 3.0, 0.0,"X 1 Frequency", " Hz", 2, 1);
 		configParam(FREQY1_PARAM, -8.0, 3.0, 2.0,"Y 1 Frequency", " Hz", 2, 1);
-		configParam(PHASEX1_PARAM, 0.0, 0.9999, 0.0,"Phase X 1","°",0,360);
-		configParam(WAVESHAPEX1_PARAM, 0.0, 1.0, 1.0,"Wave Shape X 1","%",0,100);
-		configParam(WAVESHAPEY1_PARAM, 0.0, 1.0, 1.0,"Wave Shape Y 1","%",0,100);
-		configParam(SKEWX1_PARAM, 0.0, 1.0, 0.5,"Skew X 1","%",0,100);
-		configParam(SKEWY1_PARAM, 0.0, 1.0, 0.5,"Skew Y 1","%",0,100);
-		
+		configParam(PHASEX1_PARAM, 0.0, 0.9999, 0.0,"X 1 Phase","°",0,360);
+		configParam(WAVESHAPEX1_PARAM, 0.0, 1.0, 1.0,"X 1 Wave Shape","%",0,100);
+		configParam(WAVESHAPEY1_PARAM, 0.0, 1.0, 1.0,"Y 1 Wave Shape ","%",0,100);
+		configParam(SKEWX1_PARAM, 0.0, 1.0, 0.5,"X 1 Skew","%",0,100);
+		configParam(SKEWY1_PARAM, 0.0, 1.0, 0.5,"Y 1 Skew","%",0,100);
 
+		configParam(AMPLITUDE1_CV_ATTENUVERTER_PARAM, -1.0, 1.0, 0.0,"Amplitude 1 CV Attenuation","%",0,100);
+		configParam(FREQX1_CV_ATTENUVERTER_PARAM, -1.0, 1.0, 0.0,"X 1 Frequency CV Attenuation","%",0,100);
+		configParam(FREQY1_CV_ATTENUVERTER_PARAM, -1.0, 1.0, 0.0,"Y 1 Frequency CV Attenuation","%",0,100);
+		configParam(PHASEX1_CV_ATTENUVERTER_PARAM, -1.0, 1.0, 0.0,"X 1 Phase CV Attenuation","%",0,100);
+		configParam(WAVESHAPEX1_CV_ATTENUVERTER_PARAM, -1.0, 1.0, 0.0,"X 1 Wave Shape CV Attenuation","%",0,100);
+		configParam(WAVESHAPEY1_CV_ATTENUVERTER_PARAM, -1.0, 1.0, 0.0,"Y 1 Wave Shape CV Attenuation","%",0,100);
+		configParam(SKEWX1_CV_ATTENUVERTER_PARAM, -1.0, 1.0, 0.0,"X 1 Skew CV Attenuation","%",0,100);
+		configParam(SKEWY1_CV_ATTENUVERTER_PARAM, -1.0, 1.0, 0.0,"Y 1 Skew CV Attenuation","%",0,100);
+		
 		configParam(AMPLITUDE2_PARAM, 0.0, 5.0, 2.5,"Amplitude 1","%",0,25);
 		configParam(FREQX2_PARAM, -8.0, 3.0, 0.0,"X 2 Frequency", " Hz", 2, 1);
 		configParam(FREQY2_PARAM, -8.0, 3.0, 1.0,"Y 2 Frequency", " Hz", 2, 1);
@@ -170,6 +195,15 @@ struct LissajousLFO : Module {
 		configParam(WAVESHAPEY2_PARAM, 0.0, 1.0, 1.0,"Wave Shape Y 2","%",0,100);
 		configParam(SKEWX2_PARAM, 0.0, 1.0, 0.5,"Skew X 2","%",0,100);
 		configParam(SKEWY2_PARAM, 0.0, 1.0, 0.5,"Skew Y 2","%",0,100);
+
+		configParam(AMPLITUDE2_CV_ATTENUVERTER_PARAM, -1.0, 1.0, 0.0,"Amplitude 2 CV Attenuation","%",0,100);
+		configParam(FREQX2_CV_ATTENUVERTER_PARAM, -1.0, 1.0, 0.0,"X 2 Frequency CV Attenuation","%",0,100);
+		configParam(FREQY2_CV_ATTENUVERTER_PARAM, -1.0, 1.0, 0.0,"Y 2 Frequency CV Attenuation","%",0,100);
+		configParam(PHASEX2_CV_ATTENUVERTER_PARAM, -1.0, 1.0, 0.0,"X 2 Phase CV Attenuation","%",0,100);
+		configParam(WAVESHAPEX2_CV_ATTENUVERTER_PARAM, -1.0, 1.0, 0.0,"X 2 Wave Shape CV Attenuation","%",0,100);
+		configParam(WAVESHAPEY2_CV_ATTENUVERTER_PARAM, -1.0, 1.0, 0.0,"Y 2 Wave Shape CV Attenuation","%",0,100);
+		configParam(SKEWX2_CV_ATTENUVERTER_PARAM, -1.0, 1.0, 0.0,"X 2 Skew CV Attenuation","%",0,100);
+		configParam(SKEWY2_CV_ATTENUVERTER_PARAM, -1.0, 1.0, 0.0,"Y 2 Skew CV Attenuation","%",0,100);		
 	}
 	void process(const ProcessArgs &args) override;
 
@@ -178,44 +212,43 @@ struct LissajousLFO : Module {
 	// - onSampleRateChange: event triggered by a change of sample rate
 	// - onReset, onRandomize, onCreate, onDelete: implements special behavior when user clicks these from the context menu
 };
-
+ 
 
 void LissajousLFO::process(const ProcessArgs &args) {
 
 	float initialPhase;
 
-	float amplitude1 = clamp(params[AMPLITUDE1_PARAM].getValue() + (inputs[AMPLITUDE1_INPUT].getVoltage() / 2.0f),0.0f,5.0f);
-	float amplitude2 = clamp(params[AMPLITUDE2_PARAM].getValue() + (inputs[AMPLITUDE2_INPUT].getVoltage() / 2.0f),0.0f,5.0f);
-
+	float amplitude1 = clamp(params[AMPLITUDE1_PARAM].getValue() + (inputs[AMPLITUDE1_INPUT].getVoltage() * params[AMPLITUDE1_CV_ATTENUVERTER_PARAM].getValue() / 2.0f),0.0f,5.0f);
+	float amplitude2 = clamp(params[AMPLITUDE2_PARAM].getValue() + (inputs[AMPLITUDE2_INPUT].getVoltage() * params[AMPLITUDE2_CV_ATTENUVERTER_PARAM].getValue() / 2.0f),0.0f,5.0f);
 
 	// Implement 4 oscillators
-	oscillatorX1.setPitch(params[FREQX1_PARAM].getValue() + inputs[FREQX1_INPUT].getVoltage());
-	initialPhase = params[PHASEX1_PARAM].getValue() + inputs[PHASEX1_INPUT].getVoltage();
+	oscillatorX1.setPitch(params[FREQX1_PARAM].getValue() + (inputs[FREQX1_INPUT].getVoltage() * params[FREQX1_CV_ATTENUVERTER_PARAM].getValue()));
+	initialPhase = params[PHASEX1_PARAM].getValue() + (inputs[PHASEX1_INPUT].getVoltage() * params[PHASEX1_CV_ATTENUVERTER_PARAM].getValue() / 10.0);
 	if (initialPhase >= 1.0)
 		initialPhase -= 1.0;
 	else if (initialPhase < 0)
 		initialPhase += 1.0;
 	oscillatorX1.setBasePhase(initialPhase);
-	oscillatorX1.waveSlope = clamp(params[WAVESHAPEX1_PARAM].getValue() + inputs[WAVESHAPEX1_INPUT].getVoltage(),0.0f,1.0f);
-	oscillatorX1.skew = clamp(params[SKEWX1_PARAM].getValue() + inputs[SKEWX1_INPUT].getVoltage(),0.0f,1.0f);
+	oscillatorX1.waveSlope = clamp(params[WAVESHAPEX1_PARAM].getValue() + (inputs[WAVESHAPEX1_INPUT].getVoltage() * params[WAVESHAPEX1_CV_ATTENUVERTER_PARAM].getValue() / 10.0),0.0f,1.0f);
+	oscillatorX1.skew = clamp(params[SKEWX1_PARAM].getValue() + (inputs[SKEWX1_INPUT].getVoltage() * params[SKEWX1_CV_ATTENUVERTER_PARAM].getValue() / 10.0 ),0.0f,1.0f);
 	
-	oscillatorY1.setPitch(params[FREQY1_PARAM].getValue() + inputs[FREQY1_INPUT].getVoltage());
-	oscillatorY1.waveSlope = clamp(params[WAVESHAPEY1_PARAM].getValue() + inputs[WAVESHAPEY1_INPUT].getVoltage(),0.0f,1.0f);
-	oscillatorY1.skew = clamp(params[SKEWY1_PARAM].getValue() + inputs[SKEWY1_INPUT].getVoltage(),0.0f,1.0f);
+	oscillatorY1.setPitch(params[FREQY1_PARAM].getValue() + (inputs[FREQY1_INPUT].getVoltage() * params[FREQY1_CV_ATTENUVERTER_PARAM].getValue()));
+	oscillatorY1.waveSlope = clamp(params[WAVESHAPEY1_PARAM].getValue() + (inputs[WAVESHAPEY1_INPUT].getVoltage() * params[WAVESHAPEY1_CV_ATTENUVERTER_PARAM].getValue() / 10.0),0.0f,1.0f);
+	oscillatorY1.skew = clamp(params[SKEWY1_PARAM].getValue() + (inputs[SKEWY1_INPUT].getVoltage() * params[SKEWY1_CV_ATTENUVERTER_PARAM].getValue() / 10.0),0.0f,1.0f);
 	
-	oscillatorX2.setPitch(params[FREQX2_PARAM].getValue() + inputs[FREQX2_INPUT].getVoltage());
-	initialPhase = params[PHASEX2_PARAM].getValue() + inputs[PHASEX2_INPUT].getVoltage();
+	oscillatorX2.setPitch(params[FREQX2_PARAM].getValue() + (inputs[FREQX2_INPUT].getVoltage() * params[FREQX2_CV_ATTENUVERTER_PARAM].getValue()));
+	initialPhase = params[PHASEX2_PARAM].getValue() + (inputs[PHASEX2_INPUT].getVoltage() * params[PHASEX2_CV_ATTENUVERTER_PARAM].getValue() / 10.0);
 	if (initialPhase >= 1.0)
 		initialPhase -= 1.0;
 	else if (initialPhase < 0)
 		initialPhase += 1.0;
 	oscillatorX2.setBasePhase(initialPhase);
-	oscillatorX2.waveSlope = clamp(params[WAVESHAPEX2_PARAM].getValue() + inputs[WAVESHAPEX2_INPUT].getVoltage(),0.0f,1.0f);
-	oscillatorX2.skew = clamp(params[SKEWX2_PARAM].getValue() + inputs[SKEWX2_INPUT].getVoltage(),0.0f,1.0f);
+	oscillatorX2.waveSlope = clamp(params[WAVESHAPEX2_PARAM].getValue() + (inputs[WAVESHAPEX2_INPUT].getVoltage() * params[WAVESHAPEX2_CV_ATTENUVERTER_PARAM].getValue() / 10.0),0.0f,1.0f);
+	oscillatorX2.skew = clamp(params[SKEWX2_PARAM].getValue() + (inputs[SKEWX2_INPUT].getVoltage() * params[SKEWX2_CV_ATTENUVERTER_PARAM].getValue() / 10.0),0.0f,1.0f);
 	
-	oscillatorY2.setPitch(params[FREQY2_PARAM].getValue() + inputs[FREQY2_INPUT].getVoltage());
-	oscillatorY2.waveSlope = clamp(params[WAVESHAPEY2_PARAM].getValue() + inputs[WAVESHAPEY2_INPUT].getVoltage(),0.0f,1.0f);
-	oscillatorY2.skew = clamp(params[SKEWY2_PARAM].getValue() + inputs[SKEWY2_INPUT].getVoltage(),0.0f,1.0f);
+	oscillatorY2.setPitch(params[FREQY2_PARAM].getValue() + (inputs[FREQY2_INPUT].getVoltage() * params[FREQY2_CV_ATTENUVERTER_PARAM].getValue()));
+	oscillatorY2.waveSlope = clamp(params[WAVESHAPEY2_PARAM].getValue() + (inputs[WAVESHAPEY2_INPUT].getVoltage() * params[WAVESHAPEY2_CV_ATTENUVERTER_PARAM].getValue() / 10.0),0.0f,1.0f);
+	oscillatorY2.skew = clamp(params[SKEWY2_PARAM].getValue() + (inputs[SKEWY2_INPUT].getVoltage() * params[SKEWY2_CV_ATTENUVERTER_PARAM].getValue() / 10.0),0.0f,1.0f);
 
 
 	oscillatorX1.step(1.0 / args.sampleRate);
@@ -386,51 +419,70 @@ struct LissajousLFOWidget : ModuleWidget {
 			addChild(display);
 		}
 
-		addParam(createParam<RoundFWKnob>(Vec(20, 167), module, LissajousLFO::AMPLITUDE1_PARAM));
-		addParam(createParam<RoundFWKnob>(Vec(52, 167), module, LissajousLFO::FREQX1_PARAM));
-		addParam(createParam<RoundFWKnob>(Vec(87, 167), module, LissajousLFO::FREQY1_PARAM));
-		addParam(createParam<RoundFWKnob>(Vec(122, 167), module, LissajousLFO::PHASEX1_PARAM));
-		addParam(createParam<RoundFWKnob>(Vec(157, 167), module, LissajousLFO::WAVESHAPEX1_PARAM));
-		addParam(createParam<RoundFWKnob>(Vec(192, 167), module, LissajousLFO::WAVESHAPEY1_PARAM));
-		addParam(createParam<RoundFWKnob>(Vec(227, 167), module, LissajousLFO::SKEWX1_PARAM));
-		addParam(createParam<RoundFWKnob>(Vec(262, 167), module, LissajousLFO::SKEWY1_PARAM));
+		addParam(createParam<RoundSmallFWKnob>(Vec(20, 167), module, LissajousLFO::AMPLITUDE1_PARAM));
+		addParam(createParam<RoundSmallFWKnob>(Vec(49, 167), module, LissajousLFO::FREQX1_PARAM));
+		addParam(createParam<RoundSmallFWKnob>(Vec(78, 167), module, LissajousLFO::FREQY1_PARAM));
+		addParam(createParam<RoundSmallFWKnob>(Vec(107, 167), module, LissajousLFO::PHASEX1_PARAM));
+		addParam(createParam<RoundSmallFWKnob>(Vec(136, 167), module, LissajousLFO::WAVESHAPEX1_PARAM));
+		addParam(createParam<RoundSmallFWKnob>(Vec(165, 167), module, LissajousLFO::WAVESHAPEY1_PARAM));
+		addParam(createParam<RoundSmallFWKnob>(Vec(194, 167), module, LissajousLFO::SKEWX1_PARAM));
+		addParam(createParam<RoundSmallFWKnob>(Vec(223, 167), module, LissajousLFO::SKEWY1_PARAM));
+
+		addParam(createParam<RoundReallySmallFWKnob>(Vec(22, 216), module, LissajousLFO::AMPLITUDE1_CV_ATTENUVERTER_PARAM));
+		addParam(createParam<RoundReallySmallFWKnob>(Vec(51, 216), module, LissajousLFO::FREQX1_CV_ATTENUVERTER_PARAM));
+		addParam(createParam<RoundReallySmallFWKnob>(Vec(80, 216), module, LissajousLFO::FREQY1_CV_ATTENUVERTER_PARAM));
+		addParam(createParam<RoundReallySmallFWKnob>(Vec(109, 216), module, LissajousLFO::PHASEX1_CV_ATTENUVERTER_PARAM));
+		addParam(createParam<RoundReallySmallFWKnob>(Vec(138, 216), module, LissajousLFO::WAVESHAPEX1_CV_ATTENUVERTER_PARAM));
+		addParam(createParam<RoundReallySmallFWKnob>(Vec(167, 216), module, LissajousLFO::WAVESHAPEY1_CV_ATTENUVERTER_PARAM));
+		addParam(createParam<RoundReallySmallFWKnob>(Vec(196, 216), module, LissajousLFO::SKEWX1_CV_ATTENUVERTER_PARAM));
+		addParam(createParam<RoundReallySmallFWKnob>(Vec(225, 216), module, LissajousLFO::SKEWY1_CV_ATTENUVERTER_PARAM));
+
+
+		addParam(createParam<RoundSmallFWKnob>(Vec(20, 256), module, LissajousLFO::AMPLITUDE2_PARAM));
+		addParam(createParam<RoundSmallFWKnob>(Vec(49, 256), module, LissajousLFO::FREQX2_PARAM));
+		addParam(createParam<RoundSmallFWKnob>(Vec(78, 256), module, LissajousLFO::FREQY2_PARAM));
+		addParam(createParam<RoundSmallFWKnob>(Vec(107, 256), module, LissajousLFO::PHASEX2_PARAM));
+		addParam(createParam<RoundSmallFWKnob>(Vec(136, 256), module, LissajousLFO::WAVESHAPEX2_PARAM));
+		addParam(createParam<RoundSmallFWKnob>(Vec(165, 256), module, LissajousLFO::WAVESHAPEY2_PARAM));
+		addParam(createParam<RoundSmallFWKnob>(Vec(194, 256), module, LissajousLFO::SKEWX2_PARAM));
+		addParam(createParam<RoundSmallFWKnob>(Vec(223, 256), module, LissajousLFO::SKEWY2_PARAM));
+
+		addParam(createParam<RoundReallySmallFWKnob>(Vec(22, 305), module, LissajousLFO::AMPLITUDE2_CV_ATTENUVERTER_PARAM));
+		addParam(createParam<RoundReallySmallFWKnob>(Vec(51, 305), module, LissajousLFO::FREQX2_CV_ATTENUVERTER_PARAM));
+		addParam(createParam<RoundReallySmallFWKnob>(Vec(80, 305), module, LissajousLFO::FREQY2_CV_ATTENUVERTER_PARAM));
+		addParam(createParam<RoundReallySmallFWKnob>(Vec(109, 305), module, LissajousLFO::PHASEX2_CV_ATTENUVERTER_PARAM));
+		addParam(createParam<RoundReallySmallFWKnob>(Vec(138, 305), module, LissajousLFO::WAVESHAPEX2_CV_ATTENUVERTER_PARAM));
+		addParam(createParam<RoundReallySmallFWKnob>(Vec(167, 305), module, LissajousLFO::WAVESHAPEY2_CV_ATTENUVERTER_PARAM));
+		addParam(createParam<RoundReallySmallFWKnob>(Vec(196, 305), module, LissajousLFO::SKEWX2_CV_ATTENUVERTER_PARAM));
+		addParam(createParam<RoundReallySmallFWKnob>(Vec(225, 305), module, LissajousLFO::SKEWY2_CV_ATTENUVERTER_PARAM));
+
+
+		addInput(createInput<FWPortInSmall>(Vec(23, 196), module, LissajousLFO::AMPLITUDE1_INPUT));
+		addInput(createInput<FWPortInSmall>(Vec(52, 196), module, LissajousLFO::FREQX1_INPUT));
+		addInput(createInput<FWPortInSmall>(Vec(81, 196), module, LissajousLFO::FREQY1_INPUT));
+		addInput(createInput<FWPortInSmall>(Vec(110, 196), module, LissajousLFO::PHASEX1_INPUT));
+		addInput(createInput<FWPortInSmall>(Vec(139, 196), module, LissajousLFO::WAVESHAPEX1_INPUT));
+		addInput(createInput<FWPortInSmall>(Vec(168, 196), module, LissajousLFO::WAVESHAPEY1_INPUT));
+		addInput(createInput<FWPortInSmall>(Vec(197, 196), module, LissajousLFO::SKEWX1_INPUT));
+		addInput(createInput<FWPortInSmall>(Vec(226, 196), module, LissajousLFO::SKEWY1_INPUT));
 		
+		addInput(createInput<FWPortInSmall>(Vec(23, 285), module, LissajousLFO::AMPLITUDE2_INPUT));
+		addInput(createInput<FWPortInSmall>(Vec(52, 285), module, LissajousLFO::FREQX2_INPUT));
+		addInput(createInput<FWPortInSmall>(Vec(81, 285), module, LissajousLFO::FREQY2_INPUT));
+		addInput(createInput<FWPortInSmall>(Vec(110, 285), module, LissajousLFO::PHASEX2_INPUT));
+		addInput(createInput<FWPortInSmall>(Vec(139, 285), module, LissajousLFO::WAVESHAPEX2_INPUT));
+		addInput(createInput<FWPortInSmall>(Vec(168, 285), module, LissajousLFO::WAVESHAPEY2_INPUT));
+		addInput(createInput<FWPortInSmall>(Vec(197, 285), module, LissajousLFO::SKEWX2_INPUT));
+		addInput(createInput<FWPortInSmall>(Vec(226, 285), module, LissajousLFO::SKEWY2_INPUT));
 
-		addParam(createParam<RoundFWKnob>(Vec(20, 246), module, LissajousLFO::AMPLITUDE2_PARAM));
-		addParam(createParam<RoundFWKnob>(Vec(52, 246), module, LissajousLFO::FREQX2_PARAM));
-		addParam(createParam<RoundFWKnob>(Vec(87, 246), module, LissajousLFO::FREQY2_PARAM));
-		addParam(createParam<RoundFWKnob>(Vec(122, 246), module, LissajousLFO::PHASEX2_PARAM));
-		addParam(createParam<RoundFWKnob>(Vec(157, 246), module, LissajousLFO::WAVESHAPEX2_PARAM));
-		addParam(createParam<RoundFWKnob>(Vec(192, 246), module, LissajousLFO::WAVESHAPEY2_PARAM));
-		addParam(createParam<RoundFWKnob>(Vec(227, 246), module, LissajousLFO::SKEWX2_PARAM));
-		addParam(createParam<RoundFWKnob>(Vec(262, 246), module, LissajousLFO::SKEWY2_PARAM));
-
-		addInput(createInput<PJ301MPort>(Vec(22, 200), module, LissajousLFO::AMPLITUDE1_INPUT));
-		addInput(createInput<PJ301MPort>(Vec(54, 200), module, LissajousLFO::FREQX1_INPUT));
-		addInput(createInput<PJ301MPort>(Vec(89, 200), module, LissajousLFO::FREQY1_INPUT));
-		addInput(createInput<PJ301MPort>(Vec(124, 200), module, LissajousLFO::PHASEX1_INPUT));
-		addInput(createInput<PJ301MPort>(Vec(159, 200), module, LissajousLFO::WAVESHAPEX1_INPUT));
-		addInput(createInput<PJ301MPort>(Vec(194, 200), module, LissajousLFO::WAVESHAPEY1_INPUT));
-		addInput(createInput<PJ301MPort>(Vec(229, 200), module, LissajousLFO::SKEWX1_INPUT));
-		addInput(createInput<PJ301MPort>(Vec(264, 200), module, LissajousLFO::SKEWY1_INPUT));
-		
-		addInput(createInput<PJ301MPort>(Vec(22, 279), module, LissajousLFO::AMPLITUDE2_INPUT));
-		addInput(createInput<PJ301MPort>(Vec(54, 279), module, LissajousLFO::FREQX2_INPUT));
-		addInput(createInput<PJ301MPort>(Vec(89, 279), module, LissajousLFO::FREQY2_INPUT));
-		addInput(createInput<PJ301MPort>(Vec(124, 279), module, LissajousLFO::PHASEX2_INPUT));
-		addInput(createInput<PJ301MPort>(Vec(159, 279), module, LissajousLFO::WAVESHAPEX2_INPUT));
-		addInput(createInput<PJ301MPort>(Vec(194, 279), module, LissajousLFO::WAVESHAPEY2_INPUT));
-		addInput(createInput<PJ301MPort>(Vec(229, 279), module, LissajousLFO::SKEWX2_INPUT));
-		addInput(createInput<PJ301MPort>(Vec(264, 279), module, LissajousLFO::SKEWY2_INPUT));
-
-		addOutput(createOutput<PJ301MPort>(Vec(22, 338), module, LissajousLFO::OUTPUT_1));
-		addOutput(createOutput<PJ301MPort>(Vec(53, 338), module, LissajousLFO::OUTPUT_2));
-		addOutput(createOutput<PJ301MPort>(Vec(86, 338), module, LissajousLFO::OUTPUT_3));
-		addOutput(createOutput<PJ301MPort>(Vec(126, 338), module, LissajousLFO::OUTPUT_4));
-		addOutput(createOutput<PJ301MPort>(Vec(158, 338), module, LissajousLFO::OUTPUT_5));	
-		addOutput(createOutput<PJ301MPort>(Vec(190, 338), module, LissajousLFO::OUTPUT_6));	
-		addOutput(createOutput<PJ301MPort>(Vec(222, 338), module, LissajousLFO::OUTPUT_7));	
-		addOutput(createOutput<PJ301MPort>(Vec(254, 338), module, LissajousLFO::OUTPUT_8));	
+		addOutput(createOutput<FWPortOutSmall>(Vec(22, 343), module, LissajousLFO::OUTPUT_1));
+		addOutput(createOutput<FWPortOutSmall>(Vec(51, 343), module, LissajousLFO::OUTPUT_2));
+		addOutput(createOutput<FWPortOutSmall>(Vec(80, 343), module, LissajousLFO::OUTPUT_3));
+		addOutput(createOutput<FWPortOutSmall>(Vec(109, 343), module, LissajousLFO::OUTPUT_4));
+		addOutput(createOutput<FWPortOutSmall>(Vec(138, 343), module, LissajousLFO::OUTPUT_5));	
+		addOutput(createOutput<FWPortOutSmall>(Vec(167, 343), module, LissajousLFO::OUTPUT_6));	
+		addOutput(createOutput<FWPortOutSmall>(Vec(196, 343), module, LissajousLFO::OUTPUT_7));	
+		addOutput(createOutput<FWPortOutSmall>(Vec(225, 343), module, LissajousLFO::OUTPUT_8));	
 	}
 };
 

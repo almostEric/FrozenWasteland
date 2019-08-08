@@ -133,7 +133,7 @@ struct BPMLFO2 : Module {
 
 
 		float sin(double phaseOffset) {
-			double phaseToUse = phase + phaseOffset;
+			double phaseToUse = phase + phaseOffset - 0.25; //Sin is out of ohase of other waveforms
 			if (phaseToUse >= 1.0)
 				phaseToUse -= 1.0;
 
