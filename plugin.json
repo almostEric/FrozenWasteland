@@ -1,7 +1,7 @@
 {
 	"slug": "FrozenWasteland",
 	"name": "Frozen Wasteland",
-	"version": "1.7.0",
+	"version": "1.8.0",
 	"author": "almostEric",
 	"license": "CC0-1.0",
 	"authorEmail": "almostEric@frozenwastelandmodules.com",
@@ -50,7 +50,7 @@
 		},
 		{
 			"slug": "LissajousLFO",
-			"name": "Lissajous LFO",
+			"name":  "Lissajous LFO",
 			"description": "LFO based on interactions of 4 sine waves",
 			"tags": ["LFO"]
 		},
@@ -107,6 +107,12 @@
 			"name": "Seeds Of Change",
 			"description": "Repeatable Random Number Generator",
 			"tags": ["Random"]
+		},
+		{
+			"slug": "StringTheory",
+			"name": "String Theory",
+			"description": "Karpus-Strong String Synthesis",
+			"tags": ["VCO"]
 		},
 		{
 			"slug": "SeriouslySlowLFO",

@@ -165,8 +165,8 @@ struct BPMLFO2 : Module {
 	dsp::SchmittTrigger clockTrigger,resetTrigger,holdTrigger;
 	float multiplier = 1;
 	float division = 1;
-	float timeElapsed = 0.0;
-	float duration = 0;
+	double timeElapsed = 0.0;
+	double duration = 0;
 	float waveshape = 0;
 	float waveSlope = 0.0;
 	float skew = 0.5;

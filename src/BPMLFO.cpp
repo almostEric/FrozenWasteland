@@ -122,7 +122,7 @@ struct BPMLFO : Module {
 	
 	float multiplier = 1;
 	float division = 1;
-	float timeElapsed = 0.0;
+	double timeElapsed = 0.0;
 	double duration = 0;
 	float initialPhase = 0.0;
 	bool holding = false;
