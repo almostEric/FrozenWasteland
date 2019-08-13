@@ -181,6 +181,23 @@ struct StringTheory : Module {
 		if(windowFunctionTrigger.process(params[WINDOW_FUNCTION_PARAM].getValue())) {
 			windowFunction = (windowFunction + 1) % NUM_WINDOW_FUNCTIONS;
 		}	
+		switch (windowFunction) {
+			case NO_WINDOW_FUNCTION :
+				lights[WINDOW_FUNCTION_LIGHT].value = 0.0f;
+				lights[WINDOW_FUNCTION_LIGHT+1].value = 0.0f;
+				lights[WINDOW_FUNCTION_LIGHT+2].value = 0.0f;
+				break;
+			case HANNING_WINDOW_FUNCTION :
+				lights[WINDOW_FUNCTION_LIGHT].value = 0.0f;
+				lights[WINDOW_FUNCTION_LIGHT+1].value = 1.0f;
+				lights[WINDOW_FUNCTION_LIGHT+2].value = 0.0f;
+				break;
+			case BLACKMAN_WINDOW_FUNCTION :
+				lights[WINDOW_FUNCTION_LIGHT].value = 0.0f;
+				lights[WINDOW_FUNCTION_LIGHT+1].value = 0.0f;
+				lights[WINDOW_FUNCTION_LIGHT+2].value = 1.0f;
+				break;
+		}
 
 		int feedBackShift = clamp(params[FEEDBACK_SHIFT_PARAM].getValue() + inputs[FEEDBACK_SHIFT_INPUT].getVoltage() / 10.0f,0.0,(float)grainCount);
 		int ringModGrain = clamp(params[RING_MOD_GRAIN_PARAM].getValue() + inputs[RING_MOD_GRAIN_INPUT].getVoltage() / 10.0f,0.0,(float)grainCount);
@@ -245,24 +262,14 @@ struct StringTheory : Module {
 				}
 				switch (windowFunction) {
 					case NO_WINDOW_FUNCTION :
-						lights[WINDOW_FUNCTION_LIGHT].value = 0.0f;
-						lights[WINDOW_FUNCTION_LIGHT+1].value = 0.0f;
-						lights[WINDOW_FUNCTION_LIGHT+2].value = 0.0f;
 						break;
 					case HANNING_WINDOW_FUNCTION :
-						lights[WINDOW_FUNCTION_LIGHT].value = 0.0f;
-						lights[WINDOW_FUNCTION_LIGHT+1].value = 1.0f;
-						lights[WINDOW_FUNCTION_LIGHT+2].value = 0.0f;
 						in = in * HanningWindow(phase);
 						break;
 					case BLACKMAN_WINDOW_FUNCTION :
-						lights[WINDOW_FUNCTION_LIGHT].value = 0.0f;
-						lights[WINDOW_FUNCTION_LIGHT+1].value = 0.0f;
-						lights[WINDOW_FUNCTION_LIGHT+2].value = 1.0f;
 						in = in * BlackmanWindow(phase);
 						break;
 				}
-
 			}
 
 			float feedback = params[FEEDBACK_PARAM].getValue() + inputs[FEEDBACK_INPUT].getVoltage() / 10.f;

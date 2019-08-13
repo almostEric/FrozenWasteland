@@ -1,3 +1,7 @@
+## 1.8.0 (2019-08-13)
+- Added String Theory Karplus Strong/Granular VCO
+- Improved probability in Seeds of Change gate triggers
+
 ## 1.7.0 (2019-08-08)
 - Added Seeds of Change Random Number Generator
 - Reduced size of BPM LFO and BPM LFO 2, fixed sine wave interpolation

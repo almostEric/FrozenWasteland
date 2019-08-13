@@ -259,6 +259,20 @@ When they are connected this way, the Clock, Mute and Reset signals, and Eoc out
 - Phase Control allows LFOs to be offset (cv controllable). 90° button limits offset to 0, 90, 180, 270 degrees.
 - NOTE: Pretty sure my math is correct, but 100 month LFOs have not been unit tested
 
+## String Theory VCO
+
+![String Theory VCO](./doc/st.png)
+
+- Based on the Karplus-Strong plucked string algorithm.
+- Triggering "PlucK" causes either a burst of noise or external input to be fed into a short delay line
+- Source of noise is internal, but there are several noise types available (white, pink, Gaussian), unless external input is used
+- Controlling the length of the delay line will change perceived pitch - longer delays = lower pitches
+- Direct control of delay line length or using v/oct pitch control is possible
+- Feedback is internally processed through a low/higpass FILTER (12 o'clock in no filtering), but can be externally processed through FB send/return
+- Grains control allows multiple 'strings' to be plucked. Phase Offset delays each string, Spread allows each successive string to be detuned
+- The initial burst of noise or external input can go through a Windowing function. Green = Hanning, Blue = Blackman
+- Grains can be ring modulated either against the internal noise source or an external input. RM Grains controls # of grains that are ring modulated (starting with first)
+
 ## Vox Inhumana
 
 ![Vox Inhumana](./doc/voxinhumana.png)
