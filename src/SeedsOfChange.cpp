@@ -24,8 +24,8 @@ struct SeedsOfChange : Module {
 		DISTRIBUTION_PARAM,
 		MULTIPLY_1_PARAM,
 		OFFSET_1_PARAM = MULTIPLY_1_PARAM + NBOUT,
-		MODE_1_PARAM = OFFSET_1_PARAM + NBOUT,
-		NUM_PARAMS = MODE_1_PARAM + NBOUT
+		GATE_PROBABILITY_1_PARAM = OFFSET_1_PARAM + NBOUT,
+		NUM_PARAMS = GATE_PROBABILITY_1_PARAM + NBOUT
 	};
 	enum InputIds {
 		SEED_INPUT,
@@ -62,7 +62,7 @@ struct SeedsOfChange : Module {
 		for (int i=0; i<NBOUT; i++) {
 			configParam(SeedsOfChange::MULTIPLY_1_PARAM + i, 0.0f, 10.0f, 10.0f, "Multiply");			
 			configParam(SeedsOfChange::OFFSET_1_PARAM + i, -10.0f, 10.0f, 0.0f,"Offset");			
-			configParam(SeedsOfChange::MODE_1_PARAM + i, 0.0, 2.0, 1.0,"Occurences");
+			configParam(SeedsOfChange::GATE_PROBABILITY_1_PARAM + i, 0.0, 1.0, 0.0,"Gate Probability","%",0,100);
 		}
 	}
 	unsigned long mt[N]; /* the array for the state vector  */
@@ -113,10 +113,10 @@ struct SeedsOfChange : Module {
 
 					float prob = 1.0;
 					if (inputs[GATE_PROBABILITY_1_INPUT + i].active) {
-						prob = inputs[GATE_PROBABILITY_1_INPUT + i].value*.1;
+						prob = inputs[GATE_PROBABILITY_1_INPUT + i].value / 10.0f;
 						prob = prob > 1.0 ? 1.0 : (prob < 0.0 ? 0.0 : prob ); 
 					} else {
-						prob = .25 + .25 * params[MODE_1_PARAM + i].value;
+						prob = params[GATE_PROBABILITY_1_PARAM + i].value;
 					}
 					outbuffer[i+NBOUT] = genrand_real() < prob ? 10.0 : 0;
 				}
@@ -293,7 +293,7 @@ struct SeedsOfChangeWidget : ModuleWidget {
 			addInput(createInput<FWPortInSmall>(Vec(73, 126 + i * 30), module, SeedsOfChange::OFFSET_1_INPUT + i));
 			addOutput(createOutput<FWPortInSmall>(Vec(97, 126 + i * 30),  module, SeedsOfChange::CV_1_OUTPUT+i));
 
-			addParam(createParam<RoundReallySmallFWKnob>(Vec(4, 260 + i*25), module, SeedsOfChange::MODE_1_PARAM + i));
+			addParam(createParam<RoundReallySmallFWKnob>(Vec(4, 260 + i*25), module, SeedsOfChange::GATE_PROBABILITY_1_PARAM + i));
 			addInput(createInput<FWPortInSmall>(Vec(30, 260 + i*25), module, SeedsOfChange::GATE_PROBABILITY_1_INPUT + i));			
 			addOutput(createOutput<FWPortInSmall>(Vec(97, 260 + i*25),  module, SeedsOfChange::GATE_1_OUTPUT + i));
 		}

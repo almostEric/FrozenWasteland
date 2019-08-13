@@ -17,12 +17,15 @@ struct StringTheory : Module {
 		FINE_TIME_PARAM,
 		SAMPLE_TIME_PARAM,
 		FEEDBACK_PARAM,
+		FEEDBACK_SHIFT_PARAM,
 		COLOR_PARAM,
 		PLUCK_PARAM,
 		NOISE_TYPE_PARAM,
 		GRAIN_COUNT_PARAM,
 		PHASE_OFFSET_PARAM,
 		SPREAD_PARAM,
+		RING_MOD_GRAIN_PARAM,
+		RING_MOD_MIX_PARAM,
 		WINDOW_FUNCTION_PARAM,
 		NUM_PARAMS
 	};
@@ -32,12 +35,16 @@ struct StringTheory : Module {
 		SAMPLE_TIME_INPUT,
 		V_OCT_INPUT,
 		FEEDBACK_INPUT,
+		FEEDBACK_SHIFT_INPUT,
 		COLOR_INPUT,
 		IN_INPUT,
 		PLUCK_INPUT,
 		FB_RETURN_INPUT,
 		SPREAD_INPUT,
 		PHASE_OFFSET_INPUT,
+		RING_MOD_GRAIN_INPUT,
+		RING_MOD_MIX_INPUT,
+		EXTERNAL_RING_MOD_INPUT,
 		NUM_INPUTS
 	};
 	enum OutputIds {
@@ -48,7 +55,7 @@ struct StringTheory : Module {
 	enum LightIds {
         NOISE_TYPE_LIGHT,
 		WINDOW_FUNCTION_LIGHT = NOISE_TYPE_LIGHT + 3,
-		NUM_LIGHTS 
+		NUM_LIGHTS = WINDOW_FUNCTION_LIGHT + 3
 	};
 
 	enum NoiseTypes {
@@ -61,6 +68,7 @@ struct StringTheory : Module {
 	enum WindowFunctions {
 		NO_WINDOW_FUNCTION,
 		HANNING_WINDOW_FUNCTION,
+		BLACKMAN_WINDOW_FUNCTION,
 		NUM_WINDOW_FUNCTIONS
 	};
 
@@ -89,6 +97,16 @@ struct StringTheory : Module {
 		return 0.5f * (1 - cosf(2 * M_PI * phase));
 	}
 
+	float BlackmanWindow(float phase) {
+		float a0 = 0.42;
+		float a1 = 0.5;
+		float a2 = 0.08;
+		return a0 - (a1 * cosf(2 * M_PI * phase)) + (a2 * cosf(4 * M_PI * phase)) ;
+	}
+
+	float lerp(float v0, float v1, float t) {
+		return (1 - t) * v0 + t * v1;
+	}
 	
 
 	StringTheory() {
@@ -101,8 +119,11 @@ struct StringTheory : Module {
 		configParam(PHASE_OFFSET_PARAM, 0.0f, 1.f, 0.0f, "Phase Offset", "%", 0, 100);
 		configParam(SPREAD_PARAM, 0.0f, 1.f, 0.0f, "Spread", "%", 0, 100);
 		configParam(FEEDBACK_PARAM, 0.f, 1.f, 0.5f, "Feedback", "%", 0, 100);
+		configParam(FEEDBACK_SHIFT_PARAM, 0.f, MAX_GRAINS, 0.0f, "Feedback Shift");
 		configParam(COLOR_PARAM, 0.f, 1.f, 0.5f, "Color", "%", 0, 100);
 		configParam(PLUCK_PARAM, 0.f, 1.f, 0.0f);
+		configParam(RING_MOD_GRAIN_PARAM, 0.f, MAX_GRAINS, 0.0f, "Ring Mod Grain");
+		configParam(RING_MOD_MIX_PARAM, 0.f, 1.f, 0.0f, "Ring Mod Mix", "%", 0, 100);
 		configParam(NOISE_TYPE_PARAM, 0.f, 1.f, 0.0f);
 		configParam(WINDOW_FUNCTION_PARAM, 0.f, 1.f, 0.0f);
 
@@ -161,8 +182,37 @@ struct StringTheory : Module {
 			windowFunction = (windowFunction + 1) % NUM_WINDOW_FUNCTIONS;
 		}	
 
+		int feedBackShift = clamp(params[FEEDBACK_SHIFT_PARAM].getValue() + inputs[FEEDBACK_SHIFT_INPUT].getVoltage() / 10.0f,0.0,(float)grainCount);
+		int ringModGrain = clamp(params[RING_MOD_GRAIN_PARAM].getValue() + inputs[RING_MOD_GRAIN_INPUT].getVoltage() / 10.0f,0.0,(float)grainCount);
+		float ringModMix = clamp(params[RING_MOD_MIX_PARAM].getValue() + inputs[RING_MOD_MIX_INPUT].getVoltage() / 10.0f,0.0f,1.0f);
 
-		
+
+		float ringModIn = 0.0;
+		switch(noiseType) {
+			case WHITE_NOISE :
+				lights[NOISE_TYPE_LIGHT].value = 1;
+				lights[NOISE_TYPE_LIGHT + 1].value = 1;
+				lights[NOISE_TYPE_LIGHT + 2].value = 1;
+				ringModIn = _whiteNoise.next() * 5.0f;
+				break;
+			case PINK_NOISE :
+				lights[NOISE_TYPE_LIGHT].value = 1;
+				lights[NOISE_TYPE_LIGHT + 1].value = 0.1;
+				lights[NOISE_TYPE_LIGHT + 2].value = 0.1;
+				ringModIn = _pinkNoise.next() * 5.0f;
+				break;
+			case GAUSSIAN_NOISE :
+				lights[NOISE_TYPE_LIGHT].value = 0.2f;
+				lights[NOISE_TYPE_LIGHT + 1].value = 0.2f;
+				lights[NOISE_TYPE_LIGHT + 2].value = 0.2f;
+				ringModIn = _gaussianNoise.next() * 5.0f;
+				break;
+		}
+		if(inputs[EXTERNAL_RING_MOD_INPUT].isConnected()) {
+			ringModIn = inputs[EXTERNAL_RING_MOD_INPUT].getVoltage();
+		}
+
+	
 		for(int i=0; i<grainCount;i++) {
 			timeDelay[i] -= 1.0;
 			if(timeDelay[i] > 0)
@@ -183,33 +233,36 @@ struct StringTheory : Module {
 				} else {
 					switch(noiseType) {
 						case WHITE_NOISE :
-							lights[NOISE_TYPE_LIGHT].value = 1;
-							lights[NOISE_TYPE_LIGHT + 1].value = 1;
-							lights[NOISE_TYPE_LIGHT + 2].value = 1;
 							in = _whiteNoise.next() * 5.0f;
 							break;
 						case PINK_NOISE :
-							lights[NOISE_TYPE_LIGHT].value = 1;
-							lights[NOISE_TYPE_LIGHT + 1].value = 0.1;
-							lights[NOISE_TYPE_LIGHT + 2].value = 0.1;
 							in = _pinkNoise.next() * 5.0f;
 							break;
 						case GAUSSIAN_NOISE :
-							lights[NOISE_TYPE_LIGHT].value = 0.2f;
-							lights[NOISE_TYPE_LIGHT + 1].value = 0.2f;
-							lights[NOISE_TYPE_LIGHT + 2].value = 0.2f;
 							in = _gaussianNoise.next() * 5.0f;
 							break;
 					}
 				}
 				switch (windowFunction) {
 					case NO_WINDOW_FUNCTION :
+						lights[WINDOW_FUNCTION_LIGHT].value = 0.0f;
+						lights[WINDOW_FUNCTION_LIGHT+1].value = 0.0f;
+						lights[WINDOW_FUNCTION_LIGHT+2].value = 0.0f;
 						break;
 					case HANNING_WINDOW_FUNCTION :
+						lights[WINDOW_FUNCTION_LIGHT].value = 0.0f;
+						lights[WINDOW_FUNCTION_LIGHT+1].value = 1.0f;
+						lights[WINDOW_FUNCTION_LIGHT+2].value = 0.0f;
 						in = in * HanningWindow(phase);
+						break;
+					case BLACKMAN_WINDOW_FUNCTION :
+						lights[WINDOW_FUNCTION_LIGHT].value = 0.0f;
+						lights[WINDOW_FUNCTION_LIGHT+1].value = 0.0f;
+						lights[WINDOW_FUNCTION_LIGHT+2].value = 1.0f;
+						in = in * BlackmanWindow(phase);
+						break;
 				}
 
-				lights[WINDOW_FUNCTION_LIGHT].value = windowFunction > 0 ? 1.0f : 0.0f;
 			}
 
 			float feedback = params[FEEDBACK_PARAM].getValue() + inputs[FEEDBACK_INPUT].getVoltage() / 10.f;
@@ -251,35 +304,41 @@ struct StringTheory : Module {
 				individualWet[i] = outBuffer[i].shift();
 			}
 
+			// if(i < ringModGrain) {
+			// 	float ringModdedValue = ringModIn * individualWet[i] / 5.0f;
+			// 	individualWet[i] = lerp(individualWet[i], ringModdedValue, ringModMix);
+			// }
+
 			outputs[FB_SEND_OUTPUT].setVoltage(individualWet[i],i);
 
-			if(!inputs[FB_RETURN_INPUT].isConnected()) {
-				// Apply color to delay wet output
-				float color = params[COLOR_PARAM].getValue() + inputs[COLOR_INPUT].getVoltage() / 10.f;
-				color = clamp(color, 0.f, 1.f);
-				float colorFreq = std::pow(100.f, 2.f * color - 1.f);
-
-				float lowpassFreq = clamp(20000.f * colorFreq, 20.f, 20000.f);
-				lowpassFilter.setCutoffFreq(lowpassFreq / args.sampleRate);
-				lowpassFilter.process(individualWet[i]);
-				individualWet[i] = lowpassFilter.lowpass();
-
-				float highpassFreq = clamp(20.f * colorFreq, 20.f, 20000.f);
-				highpassFilter.setCutoff(highpassFreq / args.sampleRate);
-				highpassFilter.process(individualWet[i]);
-				individualWet[i] = highpassFilter.highpass();
-			} else {
-				//individualWet[i] = inputs[FB_INPUT].getVoltage(i);
-				individualWet[i] = inputs[FB_RETURN_INPUT].getPolyVoltage(i);
-
-				
+			if(inputs[FB_RETURN_INPUT].isConnected()) {
+				individualWet[i] = inputs[FB_RETURN_INPUT].getPolyVoltage(i);			
 			}
-			lastWet[i] = individualWet[i];
+
+			// Apply color to delay wet output
+			float color = params[COLOR_PARAM].getValue() + inputs[COLOR_INPUT].getVoltage() / 10.f;
+			color = clamp(color, 0.f, 1.f);
+			float colorFreq = std::pow(100.f, 2.f * color - 1.f);
+
+			float lowpassFreq = clamp(20000.f * colorFreq, 20.f, 20000.f);
+			lowpassFilter.setCutoffFreq(lowpassFreq / args.sampleRate);
+			lowpassFilter.process(individualWet[i]);
+			individualWet[i] = lowpassFilter.lowpass();
+
+			float highpassFreq = clamp(20.f * colorFreq, 20.f, 20000.f);
+			highpassFilter.setCutoff(highpassFreq / args.sampleRate);
+			highpassFilter.process(individualWet[i]);
+			individualWet[i] = highpassFilter.highpass();
+			
 		}
-		
-		//Windowing Function goes here
+
 		float wet = 0.f;
 		for(int i= 0; i<grainCount;i++) {
+			lastWet[i] = individualWet[(i + feedBackShift) % grainCount];
+			if(i < ringModGrain) {
+				float ringModdedValue = ringModIn * individualWet[i] / 5.0f;
+				individualWet[i] = lerp(individualWet[i], ringModdedValue, ringModMix);
+			}
 			wet += individualWet[i];
 		}
 		wet = wet / std::sqrt((float)grainCount); //RMS 
@@ -302,41 +361,49 @@ struct StringTheoryWidget : ModuleWidget {
 		addParam(createParam<RoundSmallFWKnob>(Vec(40, 40), module, StringTheory::FINE_TIME_PARAM));
 		addParam(createParam<RoundSmallFWKnob>(Vec(75, 40), module, StringTheory::SAMPLE_TIME_PARAM));
 
-		addParam(createParam<RoundSmallFWKnob>(Vec(14, 105), module, StringTheory::FEEDBACK_PARAM));
+		addParam(createParam<RoundSmallFWKnob>(Vec(5, 105), module, StringTheory::FEEDBACK_PARAM));
+		addParam(createParam<RoundSmallFWSnapKnob>(Vec(45, 105), module, StringTheory::FEEDBACK_SHIFT_PARAM));
 
 		addParam(createParam<RoundSmallFWSnapKnob>(Vec(5, 165), module, StringTheory::GRAIN_COUNT_PARAM));
 		addParam(createParam<RoundSmallFWKnob>(Vec(40, 165), module, StringTheory::PHASE_OFFSET_PARAM));
 		addParam(createParam<RoundSmallFWKnob>(Vec(75, 165), module, StringTheory::SPREAD_PARAM));
 
-		addParam(createParam<RoundSmallFWKnob>(Vec(14, 224), module, StringTheory::COLOR_PARAM));
+		addParam(createParam<RoundSmallFWKnob>(Vec(5, 222), module, StringTheory::COLOR_PARAM));
+		addParam(createParam<RoundSmallFWSnapKnob>(Vec(40, 222), module, StringTheory::RING_MOD_GRAIN_PARAM));
+		addParam(createParam<RoundSmallFWKnob>(Vec(75, 222), module, StringTheory::RING_MOD_MIX_PARAM));
 
-		addParam(createParam<TL1105>(Vec(40, 307), module, StringTheory::PLUCK_PARAM));
-		addParam(createParam<TL1105>(Vec(14, 270), module, StringTheory::NOISE_TYPE_PARAM));
-		addParam(createParam<TL1105>(Vec(60, 270), module, StringTheory::WINDOW_FUNCTION_PARAM));
+		addParam(createParam<TL1105>(Vec(30, 307), module, StringTheory::PLUCK_PARAM));
+		addParam(createParam<TL1105>(Vec(60, 280), module, StringTheory::NOISE_TYPE_PARAM));
+		addParam(createParam<TL1105>(Vec(60, 307), module, StringTheory::WINDOW_FUNCTION_PARAM));
 
-		addInput(createInput<FWPortInSmall>(Vec(7, 67), module, StringTheory::COARSE_TIME_INPUT));
+		addInput(createInput<FWPortInSmall>(Vec(8, 67), module, StringTheory::COARSE_TIME_INPUT));
 		addInput(createInput<FWPortInSmall>(Vec(42, 67), module, StringTheory::FINE_TIME_INPUT));
 		addInput(createInput<FWPortInSmall>(Vec(77, 67), module, StringTheory::SAMPLE_TIME_INPUT));
 
-		addInput(createInput<FWPortInSmall>(Vec(16, 132), module, StringTheory::FEEDBACK_INPUT));
-		addInput(createInput<FWPortInSmall>(Vec(80, 105), module, StringTheory::FB_RETURN_INPUT));
+		addInput(createInput<FWPortInSmall>(Vec(7, 133), module, StringTheory::FEEDBACK_INPUT));
+		addInput(createInput<FWPortInSmall>(Vec(48, 133), module, StringTheory::FEEDBACK_SHIFT_INPUT));
+		addInput(createInput<FWPortInSmall>(Vec(80, 133), module, StringTheory::FB_RETURN_INPUT));
 
 		addInput(createInput<FWPortInSmall>(Vec(42, 192), module, StringTheory::PHASE_OFFSET_INPUT));
 		addInput(createInput<FWPortInSmall>(Vec(77, 192), module, StringTheory::SPREAD_INPUT));
 		
 
-		addInput(createInput<FWPortInSmall>(Vec(42, 228), module, StringTheory::COLOR_INPUT));
+		addInput(createInput<FWPortInSmall>(Vec(7, 249), module, StringTheory::COLOR_INPUT));
+		addInput(createInput<FWPortInSmall>(Vec(42, 249), module, StringTheory::RING_MOD_GRAIN_INPUT));
+		addInput(createInput<FWPortInSmall>(Vec(77, 249), module, StringTheory::RING_MOD_MIX_INPUT));
 
-		addInput(createInput<FWPortInSmall>(Vec(14, 305), module, StringTheory::PLUCK_INPUT));
-		addInput(createInput<FWPortInSmall>(Vec(7, 340), module, StringTheory::V_OCT_INPUT));
-		addInput(createInput<FWPortInSmall>(Vec(42, 340), module, StringTheory::IN_INPUT));
+		addInput(createInput<FWPortInSmall>(Vec(7, 305), module, StringTheory::PLUCK_INPUT));
+		addInput(createInput<FWPortInSmall>(Vec(6, 340), module, StringTheory::V_OCT_INPUT));
+		addInput(createInput<FWPortInSmall>(Vec(32, 340), module, StringTheory::IN_INPUT));
+		addInput(createInput<FWPortInSmall>(Vec(58, 340), module, StringTheory::EXTERNAL_RING_MOD_INPUT));
 
 
-		addOutput(createOutput<FWPortOutSmall>(Vec(50, 105), module, StringTheory::FB_SEND_OUTPUT));
-		addOutput(createOutput<FWPortOutSmall>(Vec(77, 340), module, StringTheory::OUT_OUTPUT));
 
-		addChild(createLight<LargeLight<RedGreenBlueLight>>(Vec(35, 270), module, StringTheory::NOISE_TYPE_LIGHT));
-		addChild(createLight<LargeLight<GreenLight>>(Vec(81, 270), module, StringTheory::WINDOW_FUNCTION_LIGHT));
+		addOutput(createOutput<FWPortOutSmall>(Vec(80, 105), module, StringTheory::FB_SEND_OUTPUT));
+		addOutput(createOutput<FWPortOutSmall>(Vec(82, 340), module, StringTheory::OUT_OUTPUT));
+
+		addChild(createLight<LargeLight<RedGreenBlueLight>>(Vec(81, 280), module, StringTheory::NOISE_TYPE_LIGHT));
+		addChild(createLight<LargeLight<RedGreenBlueLight>>(Vec(81, 307), module, StringTheory::WINDOW_FUNCTION_LIGHT));
 
 	}
 };
