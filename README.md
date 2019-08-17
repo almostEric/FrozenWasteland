@@ -24,6 +24,14 @@ A collection of unusual plugins that will add a certain coolness to your patches
 - Phase Control allows LFOs to be offset (cv controllable). 90° button limits offset to 0, 90, 180, 270 degrees.
 - Can either be variable sawtooth/triangle or variable duty cycle square wave
 
+## BPM LFO PhaseX
+![BPM LFO PhaseX](./doc/bpx.png)
+
+- Expander for both BPM LFO and BPM LFO 2 offering multiple phase outputs.
+- Phase Division specifies the equal phase spacing of the outpus (CV Controllable)
+- Integer button forces dision to be integer value, turning it off allows smooth slewing between divisions
+
+
 ## Damian Lillard
 ![Damian Lillard](./doc/damianlillard.png)
 - Voltage Controlled Quad Crossover

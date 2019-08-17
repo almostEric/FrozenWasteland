@@ -6,6 +6,7 @@
 #include "ui/ports.hpp"
 
 #define DISPLAY_SIZE 50
+#define PASSTHROUGH_RIGHT_VARIABLE_COUNT 13
 
 struct BPMLFO2 : Module {
 	enum ParamIds {
@@ -160,6 +161,11 @@ struct BPMLFO2 : Module {
 		}
 	};
 
+	// Expander
+	float consumerMessage[PASSTHROUGH_RIGHT_VARIABLE_COUNT] = {};// this module must read from here
+	float producerMessage[PASSTHROUGH_RIGHT_VARIABLE_COUNT] = {};// mother will write into here
+
+
 
 	LowFrequencyOscillator oscillator,displayOscillator;
 	dsp::SchmittTrigger clockTrigger,resetTrigger,holdTrigger;
@@ -206,6 +212,9 @@ struct BPMLFO2 : Module {
 		configParam(WAVESHAPE_PARAM, 0.0, 1.0, 0.0);
 		configParam(HOLD_CLOCK_BEHAVIOR_PARAM, 0.0, 1.0, 1.0);
 		configParam(HOLD_MODE_PARAM, 0.0, 1.0, 1.0);
+
+		leftExpander.producerMessage = producerMessage;
+		leftExpander.consumerMessage = consumerMessage;
 	}
 	void process(const ProcessArgs &args) override;
 
@@ -355,6 +364,25 @@ void BPMLFO2::process(const ProcessArgs &args) {
 	outputs[LFO_45_OUTPUT].setVoltage(lfo45OutputValue);
 	outputs[LFO_90_OUTPUT].setVoltage(lfo90OutputValue);
 	outputs[LFO_180_OUTPUT].setVoltage(lfo180OutputValue);
+
+	bool rightExpanderPresent = (rightExpander.module && (rightExpander.module->model == modelBPMLFOPhaseExpander));
+	if(rightExpanderPresent) {
+		float *messageToSlave = (float*)(rightExpander.module->leftExpander.producerMessage);	
+		messageToSlave[0] = inputs[CLOCK_INPUT].isConnected(); 	
+		messageToSlave[1] = inputs[CLOCK_INPUT].getVoltage();
+		messageToSlave[2] = inputs[RESET_INPUT].getVoltage();
+		messageToSlave[3] = inputs[HOLD_INPUT].getVoltage();
+		messageToSlave[4] = multiplier;
+		messageToSlave[5] = division;
+		messageToSlave[6] = initialPhase;
+		messageToSlave[7] = params[OFFSET_PARAM].getValue();
+		messageToSlave[8] = params[HOLD_MODE_PARAM].getValue();
+		messageToSlave[9] = params[HOLD_CLOCK_BEHAVIOR_PARAM].getValue();
+		messageToSlave[10] = waveshape;
+		messageToSlave[11] = waveSlope;
+		messageToSlave[12] = skew;
+	}
+
 }
 
 struct BPMLFO2ProgressDisplay : TransparentWidget {

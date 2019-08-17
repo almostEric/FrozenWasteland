@@ -1,3 +1,6 @@
+## 1.8.1 (2019-08-18)
+- Added BPM LFO PhaseX expander
+
 ## 1.8.0 (2019-08-13)
 - Added String Theory Karplus Strong/Granular VCO
 - Improved probability in Seeds of Change gate triggers

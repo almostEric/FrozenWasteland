@@ -4,6 +4,7 @@
 #include "ui/ports.hpp"
 
 
+#define PASSTHROUGH_RIGHT_VARIABLE_COUNT 13
 
 struct BPMLFO : Module {
 	enum ParamIds {
@@ -84,10 +85,14 @@ struct BPMLFO : Module {
 				phase -= 1.0;
 		}
 		float sin() {
+			double phaseToUse = phase - 0.25; //Sin is out of ohase of other waveforms
+			if (phaseToUse >= 1.0)
+				phaseToUse -= 1.0;
+
 			if (offset)
-				return 1.0 - cosf(2*M_PI * phase);
+				return 1.0 - cosf(2*M_PI * phaseToUse);
 			else
-				return sinf(2*M_PI * phase);
+				return sinf(2*M_PI * phaseToUse);
 		}
 		float tri(float x) {
 			return 4.0 * fabsf(x - roundf(x));
@@ -115,6 +120,10 @@ struct BPMLFO : Module {
 			return phase;
 		}
 	};
+
+	// Expander
+	float consumerMessage[PASSTHROUGH_RIGHT_VARIABLE_COUNT] = {};// this module must read from here
+	float producerMessage[PASSTHROUGH_RIGHT_VARIABLE_COUNT] = {};// mother will write into here
 
 
 	LowFrequencyOscillator oscillator;
@@ -150,6 +159,9 @@ struct BPMLFO : Module {
 		configParam(OFFSET_PARAM, 0.0, 1.0, 1.0);
 		configParam(HOLD_CLOCK_BEHAVIOR_PARAM, 0.0, 1.0, 1.0);
 		configParam(HOLD_MODE_PARAM, 0.0, 1.0, 1.0);
+
+		leftExpander.producerMessage = producerMessage;
+		leftExpander.consumerMessage = consumerMessage;
 	}
 
 	void process(const ProcessArgs &args) override {
@@ -246,6 +258,24 @@ struct BPMLFO : Module {
 		outputs[TRI_OUTPUT].setVoltage(triOutputValue);
 		outputs[SAW_OUTPUT].setVoltage(sawOutputValue);
 		outputs[SQR_OUTPUT].setVoltage( sqrOutputValue);
+
+		bool rightExpanderPresent = (rightExpander.module && (rightExpander.module->model == modelBPMLFOPhaseExpander));
+		if(rightExpanderPresent) {
+			float *messageToSlave = (float*)(rightExpander.module->leftExpander.producerMessage);	
+			messageToSlave[0] = inputs[CLOCK_INPUT].isConnected(); 	
+			messageToSlave[1] = inputs[CLOCK_INPUT].getVoltage();
+			messageToSlave[2] = inputs[RESET_INPUT].getVoltage();
+			messageToSlave[3] = inputs[HOLD_INPUT].getVoltage();
+			messageToSlave[4] = multiplier;
+			messageToSlave[5] = division;
+			messageToSlave[6] = initialPhase;
+			messageToSlave[7] = params[OFFSET_PARAM].getValue();
+			messageToSlave[8] = params[HOLD_MODE_PARAM].getValue();
+			messageToSlave[9] = params[HOLD_CLOCK_BEHAVIOR_PARAM].getValue();
+			messageToSlave[10] = 0.0f	;
+			messageToSlave[11] = 1.0f;
+			messageToSlave[12] = 0.5f;
+		}
 			
 	}
 

@@ -16,6 +16,7 @@ void init(rack::Plugin *p) {
 	// For each module, specify the ModuleWidget subclass, manufacturer slug (for saving in patches), manufacturer human-readable name, module slug, and module name
 	p->addModel(modelBPMLFO);
 	p->addModel(modelBPMLFO2);
+	p->addModel(modelBPMLFOPhaseExpander);
 	p->addModel(modelDamianLillard);
 	p->addModel(modelEverlastingGlottalStopper);
 	p->addModel(modelHairPick);
@@ -29,6 +30,7 @@ void init(rack::Plugin *p) {
 	p->addModel(modelQARGrooveExpander);
 	p->addModel(modelQARProbabilityExpander);
 	p->addModel(modelQuantussyCell);
+	//p->addModel(modelRandomQuant);
 	p->addModel(modelSeedsOfChange);
 	p->addModel(modelStringTheory);
 	p->addModel(modelRouletteLFO);

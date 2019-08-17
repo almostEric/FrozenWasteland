@@ -8,6 +8,7 @@ extern Plugin *pluginInstance;
 
 extern Model *modelBPMLFO;
 extern Model *modelBPMLFO2;
+extern Model *modelBPMLFOPhaseExpander;
 extern Model *modelDamianLillard;
 extern Model *modelEverlastingGlottalStopper;
 extern Model *modelHairPick;
@@ -21,6 +22,7 @@ extern Model *modelQuadAlgorithmicRhythm;
 extern Model *modelQARGrooveExpander;
 extern Model *modelQARProbabilityExpander;
 extern Model *modelQuantussyCell;
+//extern Model *modelRandomQuant;
 extern Model *modelSeedsOfChange;
 extern Model *modelStringTheory;
 extern Model *modelRouletteLFO;
