@@ -95,8 +95,8 @@ struct SeedsOfChange : Module {
 		if( inputs[CLOCK_INPUT].active ) {
 			if (clockTrigger.process(inputs[CLOCK_INPUT].value) ) {
 				for (int i=0; i<NBOUT; i++) {
-					int mult=params[MULTIPLY_1_PARAM+i].value;
-					int off=params[OFFSET_1_PARAM+i].value;
+					float mult=params[MULTIPLY_1_PARAM+i].value;
+					float off=params[OFFSET_1_PARAM+i].value;
 					if (inputs[MULTIPLY_1_INPUT + i].active) {
 						mult = mult * inputs[MULTIPLY_1_INPUT + i].value / 10.0f;
 					}
@@ -107,7 +107,8 @@ struct SeedsOfChange : Module {
 					}
 
 					float initialRandomNumber = gaussianMode ? normal_number() : genrand_real();					
-					outbuffer[i] = clamp((float)(initialRandomNumber * mult + off - mult*.5),-10.0f, 10.0f);
+					//outbuffer[i] = clamp((float)(initialRandomNumber * mult + off - mult*.5),-10.0f, 10.0f);
+					outbuffer[i] = clamp((float)(initialRandomNumber * mult + off),-10.0f, 10.0f);
 
 					
 

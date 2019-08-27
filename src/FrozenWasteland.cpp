@@ -26,11 +26,11 @@ void init(rack::Plugin *p) {
 	p->addModel(modelTheOneRingModulator);
 	p->addModel(modelPhasedLockedLoop);
 	p->addModel(modelPortlandWeather);
+	p->addModel(modelProbablyNote);
 	p->addModel(modelQuadAlgorithmicRhythm);
 	p->addModel(modelQARGrooveExpander);
 	p->addModel(modelQARProbabilityExpander);
 	p->addModel(modelQuantussyCell);
-	//p->addModel(modelRandomQuant);
 	p->addModel(modelSeedsOfChange);
 	p->addModel(modelStringTheory);
 	p->addModel(modelRouletteLFO);
