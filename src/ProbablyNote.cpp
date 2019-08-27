@@ -176,6 +176,7 @@ struct ProbablyNote : Module {
                     noteValue +=MAX_NOTES;
                 noteActive[noteValue] = currentScaleNotes[i] > 0.0;
 				noteScaleProbability[noteValue] = currentScaleNotes[i];
+				params[NOTE_WEIGHT_PARAM+noteValue].setValue(noteScaleProbability[noteValue]);
             }
         }
 
@@ -225,7 +226,8 @@ struct ProbablyNote : Module {
 
 			float userProbability;
 			if(noteActive[i])
-	            userProbability = clamp(noteScaleProbability[i] + params[NOTE_WEIGHT_PARAM+i].getValue() + (inputs[NOTE_WEIGHT_INPUT].getVoltage() / 10.0f),0.0f,1.0f);    
+	            //userProbability = clamp(noteScaleProbability[i] + params[NOTE_WEIGHT_PARAM+i].getValue() + (inputs[NOTE_WEIGHT_INPUT].getVoltage() / 10.0f),0.0f,1.0f);    
+	            userProbability = clamp(params[NOTE_WEIGHT_PARAM+i].getValue() + (inputs[NOTE_WEIGHT_INPUT].getVoltage() / 10.0f),0.0f,1.0f);    
 			else 
 				userProbability = 0.0;
 
