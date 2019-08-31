@@ -152,6 +152,14 @@ A collection of unusual plugins that will add a certain coolness to your patches
 - FB Send and Returns allow you to insert FX into the feedback loop
 - In Context Menu, the Grain Number and Grain Size control how the all the pitch shifters work. "RAW" is uses one grain sample but without the a triangle window
 
+## Probably Not(e)
+
+![Probably Not(e)](./doc/pn.png)
+
+### This is based on the ideas of Dieter Stubler
+### Manual forthcoming
+
+--- This is a probablistic quantizer that will use weighted probabilities to quantize note to a scale
 
 ## Quad Algorithmic Rhythm
 
@@ -217,6 +225,9 @@ When they are connected this way, the Clock, Mute and Reset signals, and Eoc out
 - Expander Module for Quad Algorithmic Rhythm
 - Allows controlling probability on a step by step basis.
 - If DIVS mode is on, then the probabilities will change the 1st beat, 2nd beat, etc no matter which step they fall on
+- Buttons for each step control grouping. Each track's group is independent
+- Blue means that if the first step of group is triggered, then it will also be triggered (so probability does nothing) otherwise not
+- Purple means that if the first step of group does not trigger then it will not trigger, otherwise its own probability determines whether to trigger
 - Expanders can be chained so tracks can have their own probability patterns
 - Left expander has priority over expander(s) on right
 - Can also be chained with QAR Groove

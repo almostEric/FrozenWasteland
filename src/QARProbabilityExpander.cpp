@@ -7,7 +7,7 @@
 #define PASSTHROUGH_LEFT_VARIABLE_COUNT 13
 #define PASSTHROUGH_RIGHT_VARIABLE_COUNT 8
 #define TRACK_LEVEL_PARAM_COUNT TRACK_COUNT * 6
-#define PASSTHROUGH_OFFSET MAX_STEPS * TRACK_COUNT * 2 + TRACK_LEVEL_PARAM_COUNT
+#define PASSTHROUGH_OFFSET MAX_STEPS * TRACK_COUNT * 3 + TRACK_LEVEL_PARAM_COUNT
 
 struct QARProbabilityExpander : Module {
 	enum ParamIds {
@@ -17,7 +17,8 @@ struct QARProbabilityExpander : Module {
 		TRACK_4_PROBABILITY_ENABLED_PARAM,
 		PROBABILITY_1_PARAM,
 		PROBABILITY_ATTEN_1_PARAM = PROBABILITY_1_PARAM + MAX_STEPS,
-		STEP_OR_DIV_PARAM = PROBABILITY_ATTEN_1_PARAM + MAX_STEPS,
+		PROBABILITY_GROUP_MODE_1_PARAM = PROBABILITY_ATTEN_1_PARAM + MAX_STEPS, 
+		STEP_OR_DIV_PARAM = PROBABILITY_GROUP_MODE_1_PARAM + MAX_STEPS,
 		NUM_PARAMS
 	};
 	enum InputIds {
@@ -34,7 +35,13 @@ struct QARProbabilityExpander : Module {
 		TRACK_3_PROBABILITY_ENABELED_LIGHT,
 		TRACK_4_PROBABILITY_ENABELED_LIGHT,
         USING_DIVS_LIGHT,
-		NUM_LIGHTS
+		PROBABILITY_GROUP_MODE_1_LIGHT,
+		NUM_LIGHTS = PROBABILITY_GROUP_MODE_1_LIGHT + MAX_STEPS * 3
+	};
+	enum ProbabilityGroupTriggerModes {
+		NONE_PGTM,
+		FIRES_IF_FIRST_TRIGGERED_PGTM,
+		MAY_FIRE_IF_FIRST_TRIGGERED_PGTM
 	};
 
 
@@ -45,17 +52,14 @@ struct QARProbabilityExpander : Module {
 	float producerMessage[PASSTHROUGH_OFFSET + 1 + PASSTHROUGH_LEFT_VARIABLE_COUNT + PASSTHROUGH_RIGHT_VARIABLE_COUNT] = {};// mother will write into here
 
 	
-	dsp::SchmittTrigger stepDivTrigger,trackProbabilityTrigger[TRACK_COUNT];
+	dsp::SchmittTrigger stepDivTrigger,trackProbabilityTrigger[TRACK_COUNT],probabiltyGroupModeTrigger[MAX_STEPS];
 	bool stepsOrDivs;
 	bool trackProbabilitySelected[TRACK_COUNT];
+	int probabilityGroupMode[MAX_STEPS] = {0};
 
 	QARProbabilityExpander() {
 		config(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS, NUM_LIGHTS);
 		
-		// configParam(PROBABILITY_1_PARAM, 0.0, 1.0, 1.0,"Track 1 Probability","%",0,100);
-		// configParam(PROBABILITY_ATTEN_1_PARAM, -1.0, 1.0, 0.0,"Track 1 Probability CV Attenuation","%",0,100);
-
-
 		leftExpander.producerMessage = producerMessage;
 		leftExpander.consumerMessage = consumerMessage;
 
@@ -68,6 +72,7 @@ struct QARProbabilityExpander : Module {
         for (int i = 0; i < MAX_STEPS; i++) {
             configParam(PROBABILITY_1_PARAM + i, -0.0f, 1.0f, 1.0f,"Step "  + std::to_string(i+1) + " Probability","%",0,100);
 			configParam(PROBABILITY_ATTEN_1_PARAM + i, -1.0, 1.0, 0.0,"Step "  + std::to_string(i+1) + " Probability CV Attenuation","%",0,100);
+			configParam(PROBABILITY_GROUP_MODE_1_PARAM + i, 0, 1.0, 0.0);
 		}
 
 
@@ -87,6 +92,13 @@ struct QARProbabilityExpander : Module {
 			strcpy(buf, "trackProbabilityActive");
 			strcat(buf, stepNames[i]);
 			json_object_set_new(rootJ, buf, json_integer((int) trackProbabilitySelected[i]));			
+		}
+		for(int i=0;i<MAX_STEPS;i++) {
+			//This is so stupid!!! why did he not use strings?
+			char buf[100];
+			strcpy(buf, "groupProbabilityMode");
+			strcat(buf, stepNames[i]);
+			json_object_set_new(rootJ, buf, json_integer((int) probabilityGroupMode[i]));			
 		}
 		
 		return rootJ;
@@ -108,6 +120,16 @@ struct QARProbabilityExpander : Module {
 				trackProbabilitySelected[i] = json_integer_value(sumJ);			
 			}
 		}	
+		for(int i=0;i<MAX_STEPS;i++) {
+			char buf[100];
+			strcpy(buf, "groupProbabilityMode");
+			strcat(buf, stepNames[i]);
+
+			json_t *sumJ = json_object_get(rootJ, buf);
+			if (sumJ) {
+				probabilityGroupMode[i] = json_integer_value(sumJ);			
+			}
+		}	
 
 	}
 
@@ -122,6 +144,15 @@ struct QARProbabilityExpander : Module {
             stepsOrDivs = !stepsOrDivs;
         }
         lights[USING_DIVS_LIGHT].value = stepsOrDivs;
+
+		for(int i=0; i< MAX_STEPS; i++) {
+			if (probabiltyGroupModeTrigger[i].process(params[PROBABILITY_GROUP_MODE_1_PARAM+i].getValue())) {
+				probabilityGroupMode[i] = (probabilityGroupMode[i] + 1) % 3;
+			}
+			lights[PROBABILITY_GROUP_MODE_1_LIGHT + i*3].value = probabilityGroupMode[i] == 2;
+			lights[PROBABILITY_GROUP_MODE_1_LIGHT + i*3 + 1].value = 0;
+			lights[PROBABILITY_GROUP_MODE_1_LIGHT + i*3 + 2].value = probabilityGroupMode[i] > 0;
+		}
 		
 
 		bool motherPresent = (leftExpander.module && (leftExpander.module->model == modelQuadAlgorithmicRhythm || leftExpander.module->model == modelQARProbabilityExpander || leftExpander.module->model == modelQARGrooveExpander));
@@ -165,6 +196,8 @@ struct QARProbabilityExpander : Module {
                     producerMessage[i] = stepsOrDivs ? 2 : 1;
     				for (int j = 0; j < MAX_STEPS; j++) {
 						producerMessage[TRACK_LEVEL_PARAM_COUNT + i * MAX_STEPS + j] = clamp(params[PROBABILITY_1_PARAM+j].getValue() + (inputs[PROBABILITY_1_INPUT + j].isConnected() ? inputs[PROBABILITY_1_INPUT + j].getVoltage() / 10 * params[PROBABILITY_ATTEN_1_PARAM + j].getValue() : 0.0f),0.0,1.0f);
+						producerMessage[TRACK_LEVEL_PARAM_COUNT + (MAX_STEPS * TRACK_COUNT) + i * MAX_STEPS + j] = probabilityGroupMode[j];
+						//producerMessage[TRACK_LEVEL_PARAM_COUNT + (MAX_STEPS * TRACK_COUNT * 2) + i * MAX_STEPS + j] = probabilityGroupNumber;
 					} 					 
 				} 
 			}			
@@ -233,6 +266,13 @@ struct QARProbabilityExpanderWidget : ModuleWidget {
     		addInput(createInput<FWPortInSmall>(Vec(100, 33 + i*46), module, QARProbabilityExpander::PROBABILITY_1_INPUT + i + (MAX_STEPS / 3)));
     		addInput(createInput<FWPortInSmall>(Vec(162, 33 + i*46), module, QARProbabilityExpander::PROBABILITY_1_INPUT + i + (MAX_STEPS * 2 / 3)));
 
+			addParam(createParam<LEDButton>(Vec(12, 65 + i*46), module, QARProbabilityExpander::PROBABILITY_GROUP_MODE_1_PARAM + i));
+		    addParam(createParam<LEDButton>(Vec(74, 65 + i*46), module, QARProbabilityExpander::PROBABILITY_GROUP_MODE_1_PARAM + i + (MAX_STEPS / 3)));
+		    addParam(createParam<LEDButton>(Vec(136, 65 + i*46), module, QARProbabilityExpander::PROBABILITY_GROUP_MODE_1_PARAM + i + (MAX_STEPS * 2 / 3)));
+
+			addChild(createLight<LargeLight<RedGreenBlueLight>>(Vec(13.5, 66.5 + i*46), module, QARProbabilityExpander::PROBABILITY_GROUP_MODE_1_LIGHT + i*3));
+			addChild(createLight<LargeLight<RedGreenBlueLight>>(Vec(75.5, 66.5 + i*46), module, QARProbabilityExpander::PROBABILITY_GROUP_MODE_1_LIGHT + i*3 + MAX_STEPS));
+			addChild(createLight<LargeLight<RedGreenBlueLight>>(Vec(137.5, 66.5 + i*46), module, QARProbabilityExpander::PROBABILITY_GROUP_MODE_1_LIGHT + i*3 + (MAX_STEPS * 2)));
         }
 	
 

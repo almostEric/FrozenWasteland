@@ -8,7 +8,7 @@
 #define PASSTHROUGH_LEFT_VARIABLE_COUNT 13
 #define PASSTHROUGH_RIGHT_VARIABLE_COUNT 8
 #define TRACK_LEVEL_PARAM_COUNT TRACK_COUNT * 6
-#define PASSTHROUGH_OFFSET MAX_STEPS * TRACK_COUNT * 2 + TRACK_LEVEL_PARAM_COUNT
+#define PASSTHROUGH_OFFSET MAX_STEPS * TRACK_COUNT * 3 + TRACK_LEVEL_PARAM_COUNT
 
 
 struct QARGrooveExpander : Module {
@@ -225,7 +225,7 @@ struct QARGrooveExpander : Module {
                     
     				for (int j = 0; j < MAX_STEPS; j++) {
                         float initialSwingAmount = clamp(params[STEP_1_SWING_AMOUNT_PARAM+j].getValue() + (inputs[STEP_1_SWING_AMOUNT_INPUT + j].isConnected() ? inputs[STEP_1_SWING_AMOUNT_INPUT + j].getVoltage() / 10 * params[STEP_1_SWING_CV_ATTEN_PARAM + j].getValue() : 0.0f),-0.5,0.5f);
-						producerMessage[TRACK_LEVEL_PARAM_COUNT + (MAX_STEPS * TRACK_COUNT) + (i * MAX_STEPS) + j] = lerp(0,initialSwingAmount,grooveAmount);
+						producerMessage[TRACK_LEVEL_PARAM_COUNT + (MAX_STEPS * TRACK_COUNT * 2) + (i * MAX_STEPS) + j] = lerp(0,initialSwingAmount,grooveAmount);
 					} 					 
 				} 
 			}

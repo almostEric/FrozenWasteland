@@ -14,7 +14,7 @@
 #define PASSTHROUGH_LEFT_VARIABLE_COUNT 13
 #define PASSTHROUGH_RIGHT_VARIABLE_COUNT 8
 #define TRACK_LEVEL_PARAM_COUNT TRACK_COUNT * 6
-#define PASSTHROUGH_OFFSET MAX_STEPS * TRACK_COUNT * 2 + TRACK_LEVEL_PARAM_COUNT
+#define PASSTHROUGH_OFFSET MAX_STEPS * TRACK_COUNT * 3 + TRACK_LEVEL_PARAM_COUNT
 
 using namespace frozenwasteland::dsp;
 
@@ -131,6 +131,16 @@ struct QuadAlgorithmicRhythm : Module {
 		GOLUMB_RULER_ALGO,
 		BOOLEAN_LOGIC_ALGO
 	};
+	enum ProbabilityGroupTriggerModes {
+		NONE_PGTM,
+		FIRES_IF_FIRST_TRIGGERED_PGTM,
+		MAY_FIRE_IF_FIRST_TRIGGERED_PGTM
+	};
+	enum ProbabilityGroupTriggeredStatus {
+		PENDING_PGTS,
+		TRIGGERED_PGTS,
+		NOT_TRIGGERED_PGTS
+	};
 
 	// Expander
 	float consumerMessage[PASSTHROUGH_OFFSET + PASSTHROUGH_LEFT_VARIABLE_COUNT + PASSTHROUGH_RIGHT_VARIABLE_COUNT] = {};// this module must read from here
@@ -142,6 +152,9 @@ struct QuadAlgorithmicRhythm : Module {
 
 	float probabilityMatrix[TRACK_COUNT][MAX_STEPS];
 	float swingMatrix[TRACK_COUNT][MAX_STEPS];
+	float probabilityGroupModeMatrix[TRACK_COUNT][MAX_STEPS];
+	int probabilityGroupTriggered[TRACK_COUNT];
+	int probabilityGroupFirstStep[TRACK_COUNT];
 	float workingProbabilityMatrix[TRACK_COUNT][MAX_STEPS];
 	float workingSwingMatrix[TRACK_COUNT][MAX_STEPS];
 
@@ -269,6 +282,7 @@ struct QuadAlgorithmicRhythm : Module {
 			subBeatIndex[i] = -1;
 			swingRandomness[i] = 0.0f;
 			useGaussianDistribution[i] = false;	
+			probabilityGroupTriggered[i] = PENDING_PGTS;
 
 
 
@@ -635,8 +649,9 @@ struct QuadAlgorithmicRhythm : Module {
 
 			//Process Probability Expander Stuff						
 			for(int i = 0; i < TRACK_COUNT; i++) {
-				for(int j = 0; j < MAX_STEPS; j++) { //reset all probabilities
-					workingProbabilityMatrix[i][j] = 1;
+				probabilityGroupFirstStep[i] = -1;
+				for(int j = 0; j < MAX_STEPS; j++) { //reset all probabilities, find first group step
+					workingProbabilityMatrix[i][j] = 1;					
 				}
 
 				if(message[i] > 0) { // 0 is track not selected
@@ -661,7 +676,16 @@ struct QuadAlgorithmicRhythm : Module {
 						
 						if(stepFound) {
 							float probability = message[TRACK_LEVEL_PARAM_COUNT + (i * EXPANDER_MAX_STEPS) + j];
+							float probabilityMode = message[TRACK_LEVEL_PARAM_COUNT + (EXPANDER_MAX_STEPS * TRACK_COUNT) + (i * EXPANDER_MAX_STEPS) + j];
+							
 							workingProbabilityMatrix[i][stepIndex] = probability;
+							probabilityGroupModeMatrix[i][stepIndex] = probabilityMode;
+							for(int j = 0; j < MAX_STEPS; j++) { //reset all probabilities, find first group step
+								if(probabilityGroupFirstStep[i] < 0 && probabilityGroupModeMatrix[i][j] != NONE_PGTM ) {
+									probabilityGroupFirstStep[i] = j;
+									break;
+								}
+							}
 						} 
 					}
 				}
@@ -731,7 +755,7 @@ struct QuadAlgorithmicRhythm : Module {
 						}
 						
 						if(stepFound) {
-							float swing = message[TRACK_LEVEL_PARAM_COUNT + (EXPANDER_MAX_STEPS * TRACK_COUNT) + (i * EXPANDER_MAX_STEPS) + workingBeatIndex];
+							float swing = message[TRACK_LEVEL_PARAM_COUNT + (EXPANDER_MAX_STEPS * TRACK_COUNT * 2) + (i * EXPANDER_MAX_STEPS) + workingBeatIndex];
 							workingSwingMatrix[i][stepIndex] = swing;						
 						} 
 						workingBeatIndex +=1;
@@ -960,6 +984,7 @@ struct QuadAlgorithmicRhythm : Module {
 		if(beatIndex[trackNumber] >= stepsCount[trackNumber]) {
 			beatIndex[trackNumber] = 0;
 			eocPulse[trackNumber].trigger(1e-3);
+			probabilityGroupTriggered[trackNumber] = PENDING_PGTS;
 			if(chainMode != CHAIN_MODE_NONE) {
 				running[trackNumber] = false;
 			}
@@ -979,12 +1004,21 @@ struct QuadAlgorithmicRhythm : Module {
 
 
         bool probabilityResult = (float) rand()/RAND_MAX < probabilityMatrix[trackNumber][beatIndex[trackNumber]];	
-        
+		//bool groupTriggered = false;
+		if(probabilityGroupModeMatrix[trackNumber][beatIndex[trackNumber]] != NONE_PGTM) {
+			if(probabilityGroupFirstStep[trackNumber] == beatIndex[trackNumber]) {
+				probabilityGroupTriggered[trackNumber] = probabilityResult ? TRIGGERED_PGTS : NOT_TRIGGERED_PGTS;
+			} else if(probabilityGroupTriggered[trackNumber] == TRIGGERED_PGTS && probabilityGroupModeMatrix[trackNumber][beatIndex[trackNumber]] == FIRES_IF_FIRST_TRIGGERED_PGTM) {
+				probabilityResult = true;
+			} else if(probabilityGroupTriggered[trackNumber] == NOT_TRIGGERED_PGTS) {
+				probabilityResult = false;
+			}
+		}
 
         //Create Beat Trigger    
         if(beatMatrix[trackNumber][beatIndex[trackNumber]] == true && probabilityResult && running[trackNumber] && !muted) {
             beatPulse[trackNumber].trigger(1e-3);		
-        }
+        } 
 
         //Create Accent Trigger
         if(accentMatrix[trackNumber][beatIndex[trackNumber]] == true && probabilityResult && running[trackNumber] && !muted) {
@@ -1019,6 +1053,7 @@ struct QuadAlgorithmicRhythm : Module {
 			expanderOutputValue[i] = 0.0;
 			expanderEocValue[i] = 0; 
 			lastExpanderEocValue[i] = 0;
+			probabilityGroupTriggered[i] = PENDING_PGTS;
 			swingRandomness[i] = 0.0f;
 			useGaussianDistribution[i] = false;	
 			subBeatIndex[i] = -1;
@@ -1043,7 +1078,7 @@ struct QARBeatDisplay : TransparentWidget {
 		font = APP->window->loadFont(asset::plugin(pluginInstance, "res/fonts/01 Digit.ttf"));
 	}
 
-	void drawBox(const DrawArgs &args, float stepNumber, float trackNumber,int algorithm, bool isBeat,bool isAccent,bool isCurrent, float probability, float swing, float swingRandomness) {
+	void drawBox(const DrawArgs &args, float stepNumber, float trackNumber,int algorithm, bool isBeat,bool isAccent,bool isCurrent, float probability, int triggerState, int probabilityGroupMode, float swing, float swingRandomness) {
 		
 		//nvgSave(args.vg);
 		//Rect b = Rect(Vec(0, 0), box.size);
@@ -1057,6 +1092,12 @@ struct QARBeatDisplay : TransparentWidget {
 
 		if(isAccent) {
 			opacity = 0xff;
+		}
+
+		if(triggerState == module->TRIGGERED_PGTS && probabilityGroupMode == module->FIRES_IF_FIRST_TRIGGERED_PGTM) {
+			probability = 1.0f;
+		} else if (triggerState == module->NOT_TRIGGERED_PGTS && probabilityGroupMode != module->NONE_PGTM) {
+			probability = 0.0f;
 		}
 
 		//TODO: Replace with switch statement
@@ -1134,13 +1175,15 @@ struct QARBeatDisplay : TransparentWidget {
 				float probability = module->probabilityMatrix[trackNumber][stepNumber];
 				float swing = module->swingMatrix[trackNumber][stepNumber];				
 				float swingRandomness = module->swingRandomness[trackNumber];
-				drawBox(args, float(stepNumber), float(trackNumber),algorithn,isBeat,isAccent,isCurrent,probability,swing,swingRandomness);
+				int triggerState = module->probabilityGroupTriggered[trackNumber];
+				int probabilityGroupMode = module->probabilityGroupModeMatrix[trackNumber][stepNumber];
+				drawBox(args, float(stepNumber), float(trackNumber),algorithn,isBeat,isAccent,isCurrent,probability,triggerState,probabilityGroupMode,swing,swingRandomness);
 			}
 		}
 
 		if(module->constantTime)
 			drawMasterTrack(args, Vec(box.size.x - 21, box.size.y - 80), module->masterTrack);
-			//drawMasterTrack(args, Vec(box.size.x - 21, box.size.y - 80), module->calculatedSwingRandomness[1]);
+			//drawMasterTrack(args, Vec(box.size.x - 21, box.size.y - 80), module->probabilityGroupFirstStep[1]);
 	}
 };
 

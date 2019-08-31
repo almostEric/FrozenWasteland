@@ -1,3 +1,7 @@
+## 1.9.0 (2019-08-31)
+- Added Probably Not(e), Probablist Quantizer
+- QAR Probability Expander now has groups
+
 ## 1.8.1 (2019-08-18)
 - Added BPM LFO PhaseX expander
 
