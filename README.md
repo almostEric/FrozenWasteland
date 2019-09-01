@@ -226,8 +226,7 @@ When they are connected this way, the Clock, Mute and Reset signals, and Eoc out
 - Allows controlling probability on a step by step basis.
 - If DIVS mode is on, then the probabilities will change the 1st beat, 2nd beat, etc no matter which step they fall on
 - Buttons for each step control grouping. Each track's group is independent
-- Blue means that if the first step of group is triggered, then it will also be triggered (so probability does nothing) otherwise not
-- Purple means that if the first step of group does not trigger then it will not trigger, otherwise its own probability determines whether to trigger
+- Group Mode enabled means that if the first step of group is not triggered, then other group members will not, otherwise their probability is used
 - Expanders can be chained so tracks can have their own probability patterns
 - Left expander has priority over expander(s) on right
 - Can also be chained with QAR Groove

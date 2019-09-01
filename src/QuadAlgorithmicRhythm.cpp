@@ -133,8 +133,7 @@ struct QuadAlgorithmicRhythm : Module {
 	};
 	enum ProbabilityGroupTriggerModes {
 		NONE_PGTM,
-		FIRES_IF_FIRST_TRIGGERED_PGTM,
-		MAY_FIRE_IF_FIRST_TRIGGERED_PGTM
+		GROUP_MODE_PGTM,
 	};
 	enum ProbabilityGroupTriggeredStatus {
 		PENDING_PGTS,
@@ -1004,12 +1003,9 @@ struct QuadAlgorithmicRhythm : Module {
 
 
         bool probabilityResult = (float) rand()/RAND_MAX < probabilityMatrix[trackNumber][beatIndex[trackNumber]];	
-		//bool groupTriggered = false;
 		if(probabilityGroupModeMatrix[trackNumber][beatIndex[trackNumber]] != NONE_PGTM) {
 			if(probabilityGroupFirstStep[trackNumber] == beatIndex[trackNumber]) {
 				probabilityGroupTriggered[trackNumber] = probabilityResult ? TRIGGERED_PGTS : NOT_TRIGGERED_PGTS;
-			} else if(probabilityGroupTriggered[trackNumber] == TRIGGERED_PGTS && probabilityGroupModeMatrix[trackNumber][beatIndex[trackNumber]] == FIRES_IF_FIRST_TRIGGERED_PGTM) {
-				probabilityResult = true;
 			} else if(probabilityGroupTriggered[trackNumber] == NOT_TRIGGERED_PGTS) {
 				probabilityResult = false;
 			}
@@ -1094,12 +1090,6 @@ struct QARBeatDisplay : TransparentWidget {
 			opacity = 0xff;
 		}
 
-		if(triggerState == module->TRIGGERED_PGTS && probabilityGroupMode == module->FIRES_IF_FIRST_TRIGGERED_PGTM) {
-			probability = 1.0f;
-		} else if (triggerState == module->NOT_TRIGGERED_PGTS && probabilityGroupMode != module->NONE_PGTM) {
-			probability = 0.0f;
-		}
-
 		//TODO: Replace with switch statement
 		//Default Euclidean Colors
 		NVGcolor strokeColor = nvgRGBA(0xef, 0xe0, 0, 0xff);
@@ -1145,6 +1135,18 @@ struct QARBeatDisplay : TransparentWidget {
 
 		}
 
+		if (triggerState == module->NOT_TRIGGERED_PGTS && probabilityGroupMode != module->NONE_PGTM) {
+			nvgBeginPath(args.vg);
+			nvgStrokeColor(args.vg, nvgRGBA(0xff, 0x1f, 0, 0xaf));
+			nvgStrokeWidth(args.vg, 1.0);
+			nvgMoveTo(args.vg,boxX+1,boxY+1);
+			nvgLineTo(args.vg,boxX+20,boxY+20);
+			//nvgStroke(args.vg);
+			nvgMoveTo(args.vg,boxX+20,boxY+1);
+			nvgLineTo(args.vg,boxX+1,boxY+20);
+			nvgStroke(args.vg);
+			
+		}
 
 
 		//nvgStroke(args.vg);

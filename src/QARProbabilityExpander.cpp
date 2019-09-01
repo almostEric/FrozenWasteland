@@ -40,8 +40,7 @@ struct QARProbabilityExpander : Module {
 	};
 	enum ProbabilityGroupTriggerModes {
 		NONE_PGTM,
-		FIRES_IF_FIRST_TRIGGERED_PGTM,
-		MAY_FIRE_IF_FIRST_TRIGGERED_PGTM
+		GROUP_MODE_PGTM,
 	};
 
 
@@ -147,7 +146,7 @@ struct QARProbabilityExpander : Module {
 
 		for(int i=0; i< MAX_STEPS; i++) {
 			if (probabiltyGroupModeTrigger[i].process(params[PROBABILITY_GROUP_MODE_1_PARAM+i].getValue())) {
-				probabilityGroupMode[i] = (probabilityGroupMode[i] + 1) % 3;
+				probabilityGroupMode[i] = (probabilityGroupMode[i] + 1) % 2;
 			}
 			lights[PROBABILITY_GROUP_MODE_1_LIGHT + i*3].value = probabilityGroupMode[i] == 2;
 			lights[PROBABILITY_GROUP_MODE_1_LIGHT + i*3 + 1].value = 0;
