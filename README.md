@@ -156,10 +156,19 @@ A collection of unusual plugins that will add a certain coolness to your patches
 
 ![Probably Not(e)](./doc/pn.png)
 
-### This is based on the ideas of Dieter Stubler
-### Manual forthcoming
-
---- This is a probablistic quantizer that will use weighted probabilities to quantize note to a scale
+- This is a probablistic quantizer that will use weighted probabilities to quantize note to a scale
+- This is based on the ideas of Dieter Stubler
+- Input voltage is first quantized to nearest note
+- Spread Control allows other notes to be possibly chosen
+- Focus Control controls initial probability, at 1 all notes have equal probability, at 0 furthest notes have a probability of 10%, with a linear increase towards center note
+- Then within the context of key/scale an additional probability is used - by default, the root and fifth (V) of the scale have the highest proability of being selected.
+- If a note is off (red) it will not be selected by the Quantizer
+- These probabilities can be changed by the knobs or CV.
+- The Save button will overwrite the default weights for a scale. The initialize option from the context menu will restore.
+- If Octave Wrap is enabled, notes will stay within the Note In's octave (so a B could would be 11 half-steps above a C), if Octave Wrap is off, the notes will be near the original value
+- Octave control allows shifting of the output
+- The Shift control moves the weightings of the active notes up or down-
+- A more detailed manual will be available soon
 
 ## Quad Algorithmic Rhythm
 
