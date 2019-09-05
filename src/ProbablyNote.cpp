@@ -33,6 +33,7 @@ struct ProbablyNote : Module {
 		OCTAVE_CV_ATTENUVERTER_PARAM,
         WRITE_SCALE_PARAM,
         OCTAVE_WRAPAROUND_PARAM,
+		TEMPERMENT_PARAM,
         NOTE_ACTIVE_PARAM,
         NOTE_WEIGHT_PARAM = NOTE_ACTIVE_PARAM + MAX_NOTES,
 		NUM_PARAMS = NOTE_WEIGHT_PARAM + MAX_NOTES
@@ -45,6 +46,7 @@ struct ProbablyNote : Module {
         SCALE_INPUT,
         KEY_INPUT,
         OCTAVE_INPUT,
+		TEMPERMENT_INPUT,
 		TRIGGER_INPUT,
         EXTERNAL_RANDOM_INPUT,
         NOTE_WEIGHT_INPUT,
@@ -58,6 +60,7 @@ struct ProbablyNote : Module {
 	enum LightIds {
 		DISTRIBUTION_GAUSSIAN_LIGHT,
         OCTAVE_WRAPAROUND_LIGHT,
+		JUST_INTONATION_LIGHT,
         NOTE_ACTIVE_LIGHT,
 		NUM_LIGHTS = NOTE_ACTIVE_LIGHT + MAX_NOTES*2
 	};
@@ -89,7 +92,7 @@ struct ProbablyNote : Module {
     
 
 	
-	dsp::SchmittTrigger clockTrigger,writeScaleTrigger,octaveWrapAroundTrigger,noteActiveTrigger[MAX_NOTES]; 
+	dsp::SchmittTrigger clockTrigger,writeScaleTrigger,octaveWrapAroundTrigger,tempermentTrigger,noteActiveTrigger[MAX_NOTES]; 
     GaussianNoiseGenerator _gauss;
  
     bool octaveWrapAround = false;
@@ -114,6 +117,7 @@ struct ProbablyNote : Module {
 	int lastNote = -1;
 	int lastSpread = -1;
 	float lastFocus = -1;
+	bool justIntonation = false;
 
 	std::string lastPath;
     
@@ -134,6 +138,7 @@ struct ProbablyNote : Module {
 		configParam(ProbablyNote::OCTAVE_PARAM, -4.0, 4.0, 0.0,"Octave");
         configParam(ProbablyNote::OCTAVE_CV_ATTENUVERTER_PARAM, -1.0, 1.0, 0.0,"Octave CV Attenuation","%",0,100);
 		configParam(ProbablyNote::OCTAVE_WRAPAROUND_PARAM, 0.0, 1.0, 0.0,"Octave Wraparound");
+		configParam(ProbablyNote::TEMPERMENT_PARAM, 0.0, 1.0, 0.0,"Just Intonation");
 
         srand(time(NULL));
 
@@ -171,6 +176,7 @@ struct ProbablyNote : Module {
 		json_t *rootJ = json_object();
 
 		json_object_set_new(rootJ, "octaveWrapAround", json_integer((int) octaveWrapAround));
+		json_object_set_new(rootJ, "justIntonation", json_integer((int) justIntonation));
 
 		for(int i=0;i<MAX_SCALES;i++) {
 			for(int j=0;j<MAX_NOTES;j++) {
@@ -192,6 +198,11 @@ struct ProbablyNote : Module {
 		json_t *sumO = json_object_get(rootJ, "octaveWrapAround");
 		if (sumO) {
 			octaveWrapAround = json_integer_value(sumO);			
+		}
+
+		json_t *sumT = json_object_get(rootJ, "justIntonation");
+		if (sumT) {
+			justIntonation = json_integer_value(sumT);			
 		}
 
 		for(int i=0;i<MAX_SCALES;i++) {
@@ -255,6 +266,11 @@ struct ProbablyNote : Module {
 				} 			
 			}			
 		}		
+
+		if (tempermentTrigger.process(params[TEMPERMENT_PARAM].getValue() + inputs[TEMPERMENT_INPUT].getVoltage())) {
+			justIntonation = !justIntonation;
+		}		
+		lights[JUST_INTONATION_LIGHT].value = justIntonation;
 		
         if (octaveWrapAroundTrigger.process(params[OCTAVE_WRAPAROUND_PARAM].getValue())) {
 			octaveWrapAround = !octaveWrapAround;
@@ -408,9 +424,20 @@ struct ProbablyNote : Module {
 						octaveAdjust = 1.0;
 				}
 
-				double quantitizedNoteCV = octaveIn + (randomNote / 12.0) + octave + octaveAdjust; 
+				double quantitizedNoteCV;
+				if(!justIntonation) {
+					quantitizedNoteCV = randomNote / 12.0; 
+				} else {
+					int notePosition = randomNote - key;
+					if(notePosition < 0) {
+						notePosition += MAX_NOTES;
+						octaveAdjust -=1;
+					}
+					quantitizedNoteCV =(noteTemperment[1][notePosition] / 1200.0) + (key /12.0); 
+				}
+				quantitizedNoteCV += octaveIn + octave + octaveAdjust; 
 				outputs[QUANT_OUTPUT].setVoltage(quantitizedNoteCV);
-				outputs[WEIGHT_OUTPUT].setVoltage(clamp(params[NOTE_WEIGHT_PARAM+randomNote].getValue() + (inputs[NOTE_WEIGHT_INPUT+randomNote].getVoltage() / 10.0f),0.0f,1.0f));
+				outputs[WEIGHT_OUTPUT].setVoltage(clamp((params[NOTE_WEIGHT_PARAM+randomNote].getValue() + (inputs[NOTE_WEIGHT_INPUT+randomNote].getVoltage() / 10.0f) * 10.0f),0.0f,10.0f));
         
 			} 
 		}
@@ -728,6 +755,10 @@ struct ProbablyNoteWidget : ModuleWidget {
 
 		addParam(createParam<LEDButton>(Vec(130, 113), module, ProbablyNote::OCTAVE_WRAPAROUND_PARAM));
 		addChild(createLight<LargeLight<BlueLight>>(Vec(131.5, 114.5), module, ProbablyNote::OCTAVE_WRAPAROUND_LIGHT));
+
+		addParam(createParam<LEDButton>(Vec(155, 287), module, ProbablyNote::TEMPERMENT_PARAM));
+		addChild(createLight<LargeLight<BlueLight>>(Vec(156.5, 289.5), module, ProbablyNote::JUST_INTONATION_LIGHT));
+		addInput(createInput<FWPortInSmall>(Vec(156, 307), module, ProbablyNote::TEMPERMENT_INPUT));
 
 
 
