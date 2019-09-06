@@ -1,3 +1,6 @@
+## 1.9.1 (2019-09-06)
+- Probability Note Enahancements
+
 ## 1.9.0 (2019-08-31)
 - Added Probably Not(e), Probablist Quantizer
 - QAR Probability Expander now has groups

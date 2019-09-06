@@ -167,7 +167,10 @@ A collection of unusual plugins that will add a certain coolness to your patches
 - The Save button will overwrite the default weights for a scale. The initialize option from the context menu will restore.
 - If Octave Wrap is enabled, notes will stay within the Note In's octave (so a B could would be 11 half-steps above a C), if Octave Wrap is off, the notes will be near the original value
 - Octave control allows shifting of the output
-- The Shift control moves the weightings of the active notes up or down-
+- The Shift control moves the weightings of the active notes up or down
+- If v/Oct is enabledm the Shift Weight input uses a 1v/Oct scaling so the shift can follow other quanitizers
+- Weight outputs the current notes probability weight so it can be used to affect other modules
+- Change outputs a trigger anytime the quantized note changes
 - A more detailed manual will be available soon
 
 ## Quad Algorithmic Rhythm
