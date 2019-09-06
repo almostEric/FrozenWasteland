@@ -72,18 +72,19 @@
      inkscape:window-width="3840"
      inkscape:pageshadow="2"
      units="px"
-     inkscape:cy="156.93134"
+     inkscape:cy="274.47787"
      guidetolerance="10"
      gridtolerance="10"
-     inkscape:cx="67.001898"
+     inkscape:cx="104.07224"
      showgrid="false"
      id="namedview10"
      pagecolor="#ffffff"
      objecttolerance="10"
      borderopacity="1"
      bordercolor="#666666"
-     inkscape:zoom="6.2107546"
-     showguides="true" /><g
+     inkscape:zoom="8.7833334"
+     showguides="false"
+     inkscape:lockguides="true" /><g
      id="g3774"
      display="none"
      style="display:none"><path
@@ -1818,17 +1819,23 @@
        x="295.172"
        id="tspan19167"
        sodipodi:role="line">WEIGHT SHIFT</tspan></text>
-<text
+<rect
+     style="opacity:0.981;fill:#141061;fill-opacity:1;stroke:#000000;stroke-width:0;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+     id="rect22843"
+     width="82.819664"
+     height="30.592096"
+     x="379.24158"
+     y="540.43384" /><text
      id="text19177"
-     y="547.95331"
-     x="390.75797"
+     y="548"
+     x="412.22665"
      style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:6.66666651px;line-height:1.25;font-family:Homenaje;-inkscape-font-specification:'Homenaje Bold';letter-spacing:0px;word-spacing:0px;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.99999994"
      xml:space="preserve"><tspan
        style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:6.66666651px;font-family:Homenaje;-inkscape-font-specification:'Homenaje Bold';stroke-width:0.99999994"
-       y="547.95331"
-       x="390.75797"
+       y="548"
+       x="412.22665"
        id="tspan19175"
-       sodipodi:role="line">WEIGHT OUT</tspan></text>
+       sodipodi:role="line">WEIGHT</tspan></text>
 <text
      xml:space="preserve"
      style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:6.66666667px;line-height:1.25;font-family:Arial;-inkscape-font-specification:'Arial Bold';text-align:center;letter-spacing:0px;word-spacing:0px;text-anchor:middle;fill:#000000;fill-opacity:1;stroke:none;"
@@ -1839,17 +1846,6 @@
        id="tspan19179"
        x="108.16792"
        y="245.29659" /></text>
-<text
-     id="text19177-0"
-     y="547.94397"
-     x="430.53763"
-     style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:6.66666667px;line-height:1.25;font-family:Homenaje;-inkscape-font-specification:'Homenaje Bold';letter-spacing:0px;word-spacing:0px;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.99999994;"
-     xml:space="preserve"><tspan
-       style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:6.66666667px;font-family:Homenaje;-inkscape-font-specification:'Homenaje Bold';stroke-width:0.99999994;"
-       y="547.94397"
-       x="430.53763"
-       id="tspan19175-2"
-       sodipodi:role="line">QUANT OUT</tspan></text>
 <text
      id="text19165-2"
      y="548"
@@ -1875,12 +1871,12 @@
 <text
      id="text19161-2"
      y="321"
-     x="287.22665"
+     x="287.14001"
      style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:6.66666651px;line-height:1.25;font-family:Homenaje;-inkscape-font-specification:'Homenaje Bold';letter-spacing:0px;word-spacing:0px;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.99999994"
      xml:space="preserve"><tspan
        style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:6.66666651px;font-family:Homenaje;-inkscape-font-specification:'Homenaje Bold';stroke-width:0.99999994"
        y="321"
-       x="287.22665"
+       x="287.14001"
        id="tspan19159-3"
        sodipodi:role="line">SAVE</tspan></text>
 <text
@@ -1894,4 +1890,37 @@
        x="438.02908"
        id="tspan19159-0"
        sodipodi:role="line">JUST INT</tspan></text>
+<text
+     id="text19161-2-3"
+     y="256.95334"
+     x="287.39999"
+     style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:6.66666651px;line-height:1.25;font-family:Homenaje;-inkscape-font-specification:'Homenaje Bold';letter-spacing:0px;word-spacing:0px;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.99999994"
+     xml:space="preserve"><tspan
+       style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:6.66666651px;font-family:Homenaje;-inkscape-font-specification:'Homenaje Bold';stroke-width:0.99999994"
+       y="256.95334"
+       x="287.39999"
+       id="tspan19159-3-6"
+       sodipodi:role="line">v/O</tspan></text>
+<text
+     id="text19177-3"
+     y="547.9267"
+     x="443.36984"
+     style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:6.66666651px;line-height:1.25;font-family:Homenaje;-inkscape-font-specification:'Homenaje Bold';letter-spacing:0px;word-spacing:0px;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.99999994"
+     xml:space="preserve"><tspan
+       style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:6.66666651px;font-family:Homenaje;-inkscape-font-specification:'Homenaje Bold';stroke-width:0.99999994"
+       y="547.9267"
+       x="443.36984"
+       id="tspan19175-9"
+       sodipodi:role="line">QUANT</tspan></text>
+<text
+     id="text19177-9"
+     y="548"
+     x="381.21335"
+     style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:6.66666651px;line-height:1.25;font-family:Homenaje;-inkscape-font-specification:'Homenaje Bold';letter-spacing:0px;word-spacing:0px;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.99999994"
+     xml:space="preserve"><tspan
+       style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:6.66666651px;font-family:Homenaje;-inkscape-font-specification:'Homenaje Bold';stroke-width:0.99999994"
+       y="548"
+       x="381.21335"
+       id="tspan19175-0"
+       sodipodi:role="line">CHANGE</tspan></text>
 </svg>

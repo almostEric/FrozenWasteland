@@ -17,7 +17,7 @@
 
 using namespace frozenwasteland::dsp;
 
-struct ProbablyNote : Module {
+struct ProbablyNoteIndian : Module {
 	enum ParamIds {
 		SPREAD_PARAM,
 		SPREAD_CV_ATTENUVERTER_PARAM,
@@ -34,7 +34,6 @@ struct ProbablyNote : Module {
         WRITE_SCALE_PARAM,
         OCTAVE_WRAPAROUND_PARAM,
 		TEMPERMENT_PARAM,
-		SHIFT_SCALING_PARAM,
         NOTE_ACTIVE_PARAM,
         NOTE_WEIGHT_PARAM = NOTE_ACTIVE_PARAM + MAX_NOTES,
 		NUM_PARAMS = NOTE_WEIGHT_PARAM + MAX_NOTES
@@ -56,14 +55,12 @@ struct ProbablyNote : Module {
 	enum OutputIds {
 		QUANT_OUTPUT,
 		WEIGHT_OUTPUT,
-		NOTE_CHANGE_OUTPUT,
 		NUM_OUTPUTS
 	};
 	enum LightIds {
 		DISTRIBUTION_GAUSSIAN_LIGHT,
         OCTAVE_WRAPAROUND_LIGHT,
 		JUST_INTONATION_LIGHT,
-		SHIFT_LOGARITHMIC_SCALE_LIGHT,
         NOTE_ACTIVE_LIGHT,
 		NUM_LIGHTS = NOTE_ACTIVE_LIGHT + MAX_NOTES*2
 	};
@@ -95,8 +92,7 @@ struct ProbablyNote : Module {
     
 
 	
-	dsp::SchmittTrigger clockTrigger,writeScaleTrigger,octaveWrapAroundTrigger,tempermentTrigger,shiftScalingTrigger,noteActiveTrigger[MAX_NOTES]; 
-	dsp::PulseGenerator noteChangePulse;
+	dsp::SchmittTrigger clockTrigger,writeScaleTrigger,octaveWrapAroundTrigger,tempermentTrigger,noteActiveTrigger[MAX_NOTES]; 
     GaussianNoiseGenerator _gauss;
  
     bool octaveWrapAround = false;
@@ -118,39 +114,37 @@ struct ProbablyNote : Module {
 	float focus = 0; 
 	int currentNote = 0;
 	int probabilityNote = 0;
-	int lastQuantizedCV = 0;
 	int lastNote = -1;
 	int lastSpread = -1;
 	float lastFocus = -1;
 	bool justIntonation = false;
-	bool shiftLogarithmic = false;
 
 	std::string lastPath;
     
 
-	ProbablyNote() {
+	ProbablyNoteIndian() {
 		// Configure the module
 		config(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS, NUM_LIGHTS);
-		configParam(ProbablyNote::SPREAD_PARAM, 0.0, 6.0, 0.0,"Spread");
-        configParam(ProbablyNote::SPREAD_CV_ATTENUVERTER_PARAM, -1.0, 1.0, 0.0,"Spread CV Attenuation" ,"%",0,100);
-		configParam(ProbablyNote::DISTRIBUTION_PARAM, 0.0, 1.0, 0.0,"Distribution");
-		configParam(ProbablyNote::DISTRIBUTION_CV_ATTENUVERTER_PARAM, -1.0, 1.0, 0.0,"Distribution CV Attenuation");
-		configParam(ProbablyNote::SHIFT_PARAM, -11.0, 11.0, 0.0,"Weight Shift");
-        configParam(ProbablyNote::SHIFT_CV_ATTENUVERTER_PARAM, -1.0, 1.0, 0.0,"Weight Shift CV Attenuation" ,"%",0,100);
-		configParam(ProbablyNote::SCALE_PARAM, 0.0, 11.0, 0.0,"Scale");
-        configParam(ProbablyNote::SCALE_CV_ATTENUVERTER_PARAM, -1.0, 1.0, 0.0,"Scale CV Attenuation","%",0,100);
-		configParam(ProbablyNote::KEY_PARAM, 0.0, 11.0, 0.0,"Key");
-        configParam(ProbablyNote::KEY_CV_ATTENUVERTER_PARAM, -1.0, 1.0, 0.0,"Key CV Attenuation","%",0,100); 
-		configParam(ProbablyNote::OCTAVE_PARAM, -4.0, 4.0, 0.0,"Octave");
-        configParam(ProbablyNote::OCTAVE_CV_ATTENUVERTER_PARAM, -1.0, 1.0, 0.0,"Octave CV Attenuation","%",0,100);
-		configParam(ProbablyNote::OCTAVE_WRAPAROUND_PARAM, 0.0, 1.0, 0.0,"Octave Wraparound");
-		configParam(ProbablyNote::TEMPERMENT_PARAM, 0.0, 1.0, 0.0,"Just Intonation");
+		configParam(ProbablyNoteIndian::SPREAD_PARAM, 0.0, 6.0, 0.0,"Spread");
+        configParam(ProbablyNoteIndian::SPREAD_CV_ATTENUVERTER_PARAM, -1.0, 1.0, 0.0,"Spread CV Attenuation" ,"%",0,100);
+		configParam(ProbablyNoteIndian::DISTRIBUTION_PARAM, 0.0, 1.0, 0.0,"Distribution");
+		configParam(ProbablyNoteIndian::DISTRIBUTION_CV_ATTENUVERTER_PARAM, -1.0, 1.0, 0.0,"Distribution CV Attenuation");
+		configParam(ProbablyNoteIndian::SHIFT_PARAM, -11.0, 11.0, 0.0,"Weight Shift");
+        configParam(ProbablyNoteIndian::SHIFT_CV_ATTENUVERTER_PARAM, -1.0, 1.0, 0.0,"Weight Shift CV Attenuation" ,"%",0,100);
+		configParam(ProbablyNoteIndian::SCALE_PARAM, 0.0, 11.0, 0.0,"Scale");
+        configParam(ProbablyNoteIndian::SCALE_CV_ATTENUVERTER_PARAM, -1.0, 1.0, 0.0,"Scale CV Attenuation","%",0,100);
+		configParam(ProbablyNoteIndian::KEY_PARAM, 0.0, 11.0, 0.0,"Key");
+        configParam(ProbablyNoteIndian::KEY_CV_ATTENUVERTER_PARAM, -1.0, 1.0, 0.0,"Key CV Attenuation","%",0,100); 
+		configParam(ProbablyNoteIndian::OCTAVE_PARAM, -4.0, 4.0, 0.0,"Octave");
+        configParam(ProbablyNoteIndian::OCTAVE_CV_ATTENUVERTER_PARAM, -1.0, 1.0, 0.0,"Octave CV Attenuation","%",0,100);
+		configParam(ProbablyNoteIndian::OCTAVE_WRAPAROUND_PARAM, 0.0, 1.0, 0.0,"Octave Wraparound");
+		configParam(ProbablyNoteIndian::TEMPERMENT_PARAM, 0.0, 1.0, 0.0,"Just Intonation");
 
         srand(time(NULL));
 
         for(int i=0;i<MAX_NOTES;i++) {
-            configParam(ProbablyNote::NOTE_ACTIVE_PARAM + i, 0.0, 1.0, 0.0,"Note Active");		
-            configParam(ProbablyNote::NOTE_WEIGHT_PARAM + i, 0.0, 1.0, 0.0,"Note Weight");		
+            configParam(ProbablyNoteIndian::NOTE_ACTIVE_PARAM + i, 0.0, 1.0, 0.0,"Note Active");		
+            configParam(ProbablyNoteIndian::NOTE_WEIGHT_PARAM + i, 0.0, 1.0, 0.0,"Note Weight");		
         }
 
 		onReset();
@@ -183,7 +177,6 @@ struct ProbablyNote : Module {
 
 		json_object_set_new(rootJ, "octaveWrapAround", json_integer((int) octaveWrapAround));
 		json_object_set_new(rootJ, "justIntonation", json_integer((int) justIntonation));
-		json_object_set_new(rootJ, "shiftLogarithmic", json_integer((int) shiftLogarithmic));
 
 		for(int i=0;i<MAX_SCALES;i++) {
 			for(int j=0;j<MAX_NOTES;j++) {
@@ -211,12 +204,6 @@ struct ProbablyNote : Module {
 		if (sumT) {
 			justIntonation = json_integer_value(sumT);			
 		}
-
-		json_t *sumL = json_object_get(rootJ, "shiftLogarithmic");
-		if (sumL) {
-			shiftLogarithmic = json_integer_value(sumL);			
-		}
-
 
 		for(int i=0;i<MAX_SCALES;i++) {
 			for(int j=0;j<MAX_NOTES;j++) {
@@ -290,11 +277,6 @@ struct ProbablyNote : Module {
 		}		
 		lights[OCTAVE_WRAPAROUND_LIGHT].value = octaveWrapAround;
 
-        if (shiftScalingTrigger.process(params[SHIFT_SCALING_PARAM].getValue())) {
-			shiftLogarithmic = !shiftLogarithmic;
-		}		
-		lights[SHIFT_LOGARITHMIC_SCALE_LIGHT].value = shiftLogarithmic;
-
 
         spread = clamp(params[SPREAD_PARAM].getValue() + (inputs[SPREAD_INPUT].getVoltage() * params[SPREAD_CV_ATTENUVERTER_PARAM].getValue()),0.0f,6.0f);
 
@@ -361,17 +343,7 @@ struct ProbablyNote : Module {
 			lastFocus = focus;
 		}
 
-		weightShift = params[SHIFT_PARAM].getValue();
-		if(shiftLogarithmic) {
-			double inputShift = inputs[SHIFT_INPUT].getVoltage() * params[SHIFT_CV_ATTENUVERTER_PARAM].getValue();
-			double unusedIntPart;
-			inputShift = std::modf(inputShift, &unusedIntPart);
-			inputShift = (std::pow(2,inputShift)-1.0) * 12;
-			weightShift += inputShift;
-		} else {
-			weightShift += inputs[SHIFT_INPUT].getVoltage() * 2.2 * params[SHIFT_CV_ATTENUVERTER_PARAM].getValue();
-		}
-		weightShift = clamp(weightShift,-11,11);
+		weightShift = clamp(params[SHIFT_PARAM].getValue() + (inputs[SHIFT_INPUT].getVoltage() * 2.2 * params[SHIFT_CV_ATTENUVERTER_PARAM].getValue()),-11,11);
 		if(lastWeightShift != weightShift) {
 			int actualShift = weightShift - lastWeightShift;
 			float shiftWeights[MAX_NOTES];
@@ -466,12 +438,8 @@ struct ProbablyNote : Module {
 				quantitizedNoteCV += octaveIn + octave + octaveAdjust; 
 				outputs[QUANT_OUTPUT].setVoltage(quantitizedNoteCV);
 				outputs[WEIGHT_OUTPUT].setVoltage(clamp((params[NOTE_WEIGHT_PARAM+randomNote].getValue() + (inputs[NOTE_WEIGHT_INPUT+randomNote].getVoltage() / 10.0f) * 10.0f),0.0f,10.0f));
-				if(lastQuantizedCV != quantitizedNoteCV) {
-					noteChangePulse.trigger(1e-3);	
-					lastQuantizedCV = quantitizedNoteCV;
-				}        
-			}
-			outputs[NOTE_CHANGE_OUTPUT].setVoltage(noteChangePulse.process(1.0 / args.sampleRate) ? 10.0 : 0);
+        
+			} 
 		}
 
 	}
@@ -483,7 +451,7 @@ struct ProbablyNote : Module {
 	void onReset() override;
 };
 
-void ProbablyNote::onReset() {
+void ProbablyNoteIndian::onReset() {
 	clockTrigger.reset();
 	for(int i = 0;i<MAX_SCALES;i++) {
 		for(int j=0;j<MAX_NOTES;j++) {
@@ -495,38 +463,32 @@ void ProbablyNote::onReset() {
 
 
 
-struct ProbablyNoteDisplay : TransparentWidget {
-	ProbablyNote *module;
+struct ProbablyNoteIndianDisplay : TransparentWidget {
+	ProbablyNoteIndian *module;
 	int frame = 0;
 	std::shared_ptr<Font> font;
 
-	ProbablyNoteDisplay() {
+	ProbablyNoteIndianDisplay() {
 		font = APP->window->loadFont(asset::plugin(pluginInstance, "res/fonts/DejaVuSansMono.ttf"));
 	}
 
 
-    void drawKey(const DrawArgs &args, Vec pos, int key, int weightShift) {
-		nvgFontSize(args.vg, 9);
+    void drawKey(const DrawArgs &args, Vec pos, int key, bool shifted) {
+		nvgFontSize(args.vg, 10);
 		nvgFontFaceId(args.vg, font->handle);
 		nvgTextLetterSpacing(args.vg, -1);
 
-		char text[128];
-		if(weightShift != 0) { 
+		if(shifted) 
 			nvgFillColor(args.vg, nvgRGBA(0xff, 0xff, 0x00, 0xff));
-			int shiftedKey = (key + weightShift) % MAX_NOTES;
-			if (shiftedKey < 0)
-				shiftedKey += MAX_NOTES;
-			snprintf(text, sizeof(text), "%s -> %s", module->noteNames[key], module->noteNames[shiftedKey]);
-		}
-		else {
+		else
 			nvgFillColor(args.vg, nvgRGBA(0x00, 0xff, 0x00, 0xff));
-			snprintf(text, sizeof(text), "%s", module->noteNames[key]);
-		}
+		char text[128];
+		snprintf(text, sizeof(text), "%s", module->noteNames[key]);
 		nvgText(args.vg, pos.x, pos.y, text, NULL);
 	}
 
     void drawScale(const DrawArgs &args, Vec pos, int scale, bool shifted) {
-		nvgFontSize(args.vg, 9);
+		nvgFontSize(args.vg, 10);
 		nvgFontFaceId(args.vg, font->handle);
 		nvgTextLetterSpacing(args.vg, -1);
 
@@ -734,20 +696,20 @@ struct ProbablyNoteDisplay : TransparentWidget {
 			return; 
 
 		drawScale(args, Vec(4,83), module->scale, module->weightShift != 0);
-		drawKey(args, Vec(72,83), module->key, module->weightShift);
+		drawKey(args, Vec(76,83), module->key, module->weightShift != 0);
 		//drawOctave(args, Vec(66, 280), module->octave);
 		drawNoteRange(args, module->noteInitialProbability);
 	}
 };
 
-struct ProbablyNoteWidget : ModuleWidget {
-	ProbablyNoteWidget(ProbablyNote *module) {
+struct ProbablyNoteIndianWidget : ModuleWidget {
+	ProbablyNoteIndianWidget(ProbablyNoteIndian *module) {
 		setModule(module);
-		setPanel(APP->window->loadSvg(asset::plugin(pluginInstance, "res/ProbablyNote.svg")));
+		setPanel(APP->window->loadSvg(asset::plugin(pluginInstance, "res/ProbablyNoteIndian.svg")));
 
 
 		{
-			ProbablyNoteDisplay *display = new ProbablyNoteDisplay();
+			ProbablyNoteIndianDisplay *display = new ProbablyNoteIndianDisplay();
 			display->module = module;
 			display->box.pos = Vec(0, 0);
 			display->box.size = Vec(box.size.x, box.size.y);
@@ -761,129 +723,123 @@ struct ProbablyNoteWidget : ModuleWidget {
 
 
 
-		addInput(createInput<FWPortInSmall>(Vec(8, 345), module, ProbablyNote::NOTE_INPUT));
-		addInput(createInput<FWPortInSmall>(Vec(38, 345), module, ProbablyNote::TRIGGER_INPUT));
-		addInput(createInput<FWPortInSmall>(Vec(70, 345), module, ProbablyNote::EXTERNAL_RANDOM_INPUT));
+		addInput(createInput<FWPortInSmall>(Vec(8, 345), module, ProbablyNoteIndian::NOTE_INPUT));
+		addInput(createInput<FWPortInSmall>(Vec(38, 345), module, ProbablyNoteIndian::TRIGGER_INPUT));
+		addInput(createInput<FWPortInSmall>(Vec(70, 345), module, ProbablyNoteIndian::EXTERNAL_RANDOM_INPUT));
 
-        addParam(createParam<RoundSmallFWSnapKnob>(Vec(8,25), module, ProbablyNote::SHIFT_PARAM));			
-        addParam(createParam<RoundReallySmallFWKnob>(Vec(34,51), module, ProbablyNote::SHIFT_CV_ATTENUVERTER_PARAM));			
-		addInput(createInput<FWPortInSmall>(Vec(36, 29), module, ProbablyNote::SHIFT_INPUT));
+        addParam(createParam<RoundSmallFWSnapKnob>(Vec(8,25), module, ProbablyNoteIndian::SHIFT_PARAM));			
+        addParam(createParam<RoundReallySmallFWKnob>(Vec(34,51), module, ProbablyNoteIndian::SHIFT_CV_ATTENUVERTER_PARAM));			
+		addInput(createInput<FWPortInSmall>(Vec(36, 29), module, ProbablyNoteIndian::SHIFT_INPUT));
 
-        addParam(createParam<RoundSmallFWSnapKnob>(Vec(68,25), module, ProbablyNote::SPREAD_PARAM));			
-        addParam(createParam<RoundReallySmallFWKnob>(Vec(94,51), module, ProbablyNote::SPREAD_CV_ATTENUVERTER_PARAM));			
-		addInput(createInput<FWPortInSmall>(Vec(96, 29), module, ProbablyNote::SPREAD_INPUT));
+        addParam(createParam<RoundSmallFWSnapKnob>(Vec(68,25), module, ProbablyNoteIndian::SPREAD_PARAM));			
+        addParam(createParam<RoundReallySmallFWKnob>(Vec(94,51), module, ProbablyNoteIndian::SPREAD_CV_ATTENUVERTER_PARAM));			
+		addInput(createInput<FWPortInSmall>(Vec(96, 29), module, ProbablyNoteIndian::SPREAD_INPUT));
 
-		addParam(createParam<RoundSmallFWKnob>(Vec(128, 25), module, ProbablyNote::DISTRIBUTION_PARAM));
-        addParam(createParam<RoundReallySmallFWKnob>(Vec(154,51), module, ProbablyNote::DISTRIBUTION_CV_ATTENUVERTER_PARAM));			
-		addInput(createInput<FWPortInSmall>(Vec(156, 29), module, ProbablyNote::DISTRIBUTION_INPUT));
+		addParam(createParam<RoundSmallFWKnob>(Vec(128, 25), module, ProbablyNoteIndian::DISTRIBUTION_PARAM));
+        addParam(createParam<RoundReallySmallFWKnob>(Vec(154,51), module, ProbablyNoteIndian::DISTRIBUTION_CV_ATTENUVERTER_PARAM));			
+		addInput(createInput<FWPortInSmall>(Vec(156, 29), module, ProbablyNoteIndian::DISTRIBUTION_INPUT));
 
-        addParam(createParam<RoundSmallFWSnapKnob>(Vec(8,86), module, ProbablyNote::SCALE_PARAM));			
-        addParam(createParam<RoundReallySmallFWKnob>(Vec(34,112), module, ProbablyNote::SCALE_CV_ATTENUVERTER_PARAM));			
-		addInput(createInput<FWPortInSmall>(Vec(36, 90), module, ProbablyNote::SCALE_INPUT));
+        addParam(createParam<RoundSmallFWSnapKnob>(Vec(8,86), module, ProbablyNoteIndian::SCALE_PARAM));			
+        addParam(createParam<RoundReallySmallFWKnob>(Vec(34,112), module, ProbablyNoteIndian::SCALE_CV_ATTENUVERTER_PARAM));			
+		addInput(createInput<FWPortInSmall>(Vec(36, 90), module, ProbablyNoteIndian::SCALE_INPUT));
 
-        addParam(createParam<RoundSmallFWSnapKnob>(Vec(68,86), module, ProbablyNote::KEY_PARAM));			
-        addParam(createParam<RoundReallySmallFWKnob>(Vec(94,112), module, ProbablyNote::KEY_CV_ATTENUVERTER_PARAM));			
-		addInput(createInput<FWPortInSmall>(Vec(96, 90), module, ProbablyNote::KEY_INPUT));
+        addParam(createParam<RoundSmallFWSnapKnob>(Vec(68,86), module, ProbablyNoteIndian::KEY_PARAM));			
+        addParam(createParam<RoundReallySmallFWKnob>(Vec(94,112), module, ProbablyNoteIndian::KEY_CV_ATTENUVERTER_PARAM));			
+		addInput(createInput<FWPortInSmall>(Vec(96, 90), module, ProbablyNoteIndian::KEY_INPUT));
 
-        addParam(createParam<RoundSmallFWSnapKnob>(Vec(128,86), module, ProbablyNote::OCTAVE_PARAM));			
-        addParam(createParam<RoundReallySmallFWKnob>(Vec(154,112), module, ProbablyNote::OCTAVE_CV_ATTENUVERTER_PARAM));			
-		addInput(createInput<FWPortInSmall>(Vec(156, 90), module, ProbablyNote::OCTAVE_INPUT));
+        addParam(createParam<RoundSmallFWSnapKnob>(Vec(128,86), module, ProbablyNoteIndian::OCTAVE_PARAM));			
+        addParam(createParam<RoundReallySmallFWKnob>(Vec(154,112), module, ProbablyNoteIndian::OCTAVE_CV_ATTENUVERTER_PARAM));			
+		addInput(createInput<FWPortInSmall>(Vec(156, 90), module, ProbablyNoteIndian::OCTAVE_INPUT));
 
-		addParam(createParam<TL1105>(Vec(15, 113), module, ProbablyNote::WRITE_SCALE_PARAM));
+		addParam(createParam<TL1105>(Vec(15, 113), module, ProbablyNoteIndian::WRITE_SCALE_PARAM));
 
+		addParam(createParam<LEDButton>(Vec(130, 113), module, ProbablyNoteIndian::OCTAVE_WRAPAROUND_PARAM));
+		addChild(createLight<LargeLight<BlueLight>>(Vec(131.5, 114.5), module, ProbablyNoteIndian::OCTAVE_WRAPAROUND_LIGHT));
 
-		addParam(createParam<LEDButton>(Vec(10, 48), module, ProbablyNote::SHIFT_SCALING_PARAM));
-		addChild(createLight<LargeLight<BlueLight>>(Vec(11.5, 49.5), module, ProbablyNote::SHIFT_LOGARITHMIC_SCALE_LIGHT));
-		
-
-		addParam(createParam<LEDButton>(Vec(130, 113), module, ProbablyNote::OCTAVE_WRAPAROUND_PARAM));
-		addChild(createLight<LargeLight<BlueLight>>(Vec(131.5, 114.5), module, ProbablyNote::OCTAVE_WRAPAROUND_LIGHT));
-
-		addParam(createParam<LEDButton>(Vec(155, 287), module, ProbablyNote::TEMPERMENT_PARAM));
-		addChild(createLight<LargeLight<BlueLight>>(Vec(156.5, 289.5), module, ProbablyNote::JUST_INTONATION_LIGHT));
-		addInput(createInput<FWPortInSmall>(Vec(156, 307), module, ProbablyNote::TEMPERMENT_INPUT));
+		addParam(createParam<LEDButton>(Vec(155, 287), module, ProbablyNoteIndian::TEMPERMENT_PARAM));
+		addChild(createLight<LargeLight<BlueLight>>(Vec(156.5, 289.5), module, ProbablyNoteIndian::JUST_INTONATION_LIGHT));
+		addInput(createInput<FWPortInSmall>(Vec(156, 307), module, ProbablyNoteIndian::TEMPERMENT_INPUT));
 
 
 
-        addParam(createParam<RoundReallySmallFWKnob>(Vec(94,306), module, ProbablyNote::NOTE_WEIGHT_PARAM+0));			
-		addInput(createInput<FWPortInSmall>(Vec(118, 307), module, ProbablyNote::NOTE_WEIGHT_INPUT+0));
-        addParam(createParam<RoundReallySmallFWKnob>(Vec(22,292), module, ProbablyNote::NOTE_WEIGHT_PARAM+1));			
-		addInput(createInput<FWPortInSmall>(Vec(2, 293), module, ProbablyNote::NOTE_WEIGHT_INPUT+1));
-        addParam(createParam<RoundReallySmallFWKnob>(Vec(94,278), module, ProbablyNote::NOTE_WEIGHT_PARAM+2));			
-		addInput(createInput<FWPortInSmall>(Vec(118, 279), module, ProbablyNote::NOTE_WEIGHT_INPUT+2));
-        addParam(createParam<RoundReallySmallFWKnob>(Vec(22,264), module, ProbablyNote::NOTE_WEIGHT_PARAM+3));			
-		addInput(createInput<FWPortInSmall>(Vec(2, 265), module, ProbablyNote::NOTE_WEIGHT_INPUT+3));
-        addParam(createParam<RoundReallySmallFWKnob>(Vec(94,250), module, ProbablyNote::NOTE_WEIGHT_PARAM+4));			
-		addInput(createInput<FWPortInSmall>(Vec(118, 251), module, ProbablyNote::NOTE_WEIGHT_INPUT+4));
-        addParam(createParam<RoundReallySmallFWKnob>(Vec(94,222), module, ProbablyNote::NOTE_WEIGHT_PARAM+5));			
-		addInput(createInput<FWPortInSmall>(Vec(118, 223), module, ProbablyNote::NOTE_WEIGHT_INPUT+5));
-        addParam(createParam<RoundReallySmallFWKnob>(Vec(22,208), module, ProbablyNote::NOTE_WEIGHT_PARAM+6));			
-		addInput(createInput<FWPortInSmall>(Vec(2, 209), module, ProbablyNote::NOTE_WEIGHT_INPUT+6));
-        addParam(createParam<RoundReallySmallFWKnob>(Vec(94,194), module, ProbablyNote::NOTE_WEIGHT_PARAM+7));			
-		addInput(createInput<FWPortInSmall>(Vec(118, 195), module, ProbablyNote::NOTE_WEIGHT_INPUT+7));
-        addParam(createParam<RoundReallySmallFWKnob>(Vec(22,180), module, ProbablyNote::NOTE_WEIGHT_PARAM+8));			
-		addInput(createInput<FWPortInSmall>(Vec(2, 181), module, ProbablyNote::NOTE_WEIGHT_INPUT+8));
-        addParam(createParam<RoundReallySmallFWKnob>(Vec(94,166), module, ProbablyNote::NOTE_WEIGHT_PARAM+9));			
-		addInput(createInput<FWPortInSmall>(Vec(118, 167), module, ProbablyNote::NOTE_WEIGHT_INPUT+9));
-        addParam(createParam<RoundReallySmallFWKnob>(Vec(22,152), module, ProbablyNote::NOTE_WEIGHT_PARAM+10));			
-		addInput(createInput<FWPortInSmall>(Vec(2, 153), module, ProbablyNote::NOTE_WEIGHT_INPUT+10));
-        addParam(createParam<RoundReallySmallFWKnob>(Vec(94,138), module, ProbablyNote::NOTE_WEIGHT_PARAM+11));			
-		addInput(createInput<FWPortInSmall>(Vec(118, 139), module, ProbablyNote::NOTE_WEIGHT_INPUT+11));
+        addParam(createParam<RoundReallySmallFWKnob>(Vec(94,306), module, ProbablyNoteIndian::NOTE_WEIGHT_PARAM+0));			
+		addInput(createInput<FWPortInSmall>(Vec(118, 307), module, ProbablyNoteIndian::NOTE_WEIGHT_INPUT+0));
+        addParam(createParam<RoundReallySmallFWKnob>(Vec(22,292), module, ProbablyNoteIndian::NOTE_WEIGHT_PARAM+1));			
+		addInput(createInput<FWPortInSmall>(Vec(2, 293), module, ProbablyNoteIndian::NOTE_WEIGHT_INPUT+1));
+        addParam(createParam<RoundReallySmallFWKnob>(Vec(94,278), module, ProbablyNoteIndian::NOTE_WEIGHT_PARAM+2));			
+		addInput(createInput<FWPortInSmall>(Vec(118, 279), module, ProbablyNoteIndian::NOTE_WEIGHT_INPUT+2));
+        addParam(createParam<RoundReallySmallFWKnob>(Vec(22,264), module, ProbablyNoteIndian::NOTE_WEIGHT_PARAM+3));			
+		addInput(createInput<FWPortInSmall>(Vec(2, 265), module, ProbablyNoteIndian::NOTE_WEIGHT_INPUT+3));
+        addParam(createParam<RoundReallySmallFWKnob>(Vec(94,250), module, ProbablyNoteIndian::NOTE_WEIGHT_PARAM+4));			
+		addInput(createInput<FWPortInSmall>(Vec(118, 251), module, ProbablyNoteIndian::NOTE_WEIGHT_INPUT+4));
+        addParam(createParam<RoundReallySmallFWKnob>(Vec(94,222), module, ProbablyNoteIndian::NOTE_WEIGHT_PARAM+5));			
+		addInput(createInput<FWPortInSmall>(Vec(118, 223), module, ProbablyNoteIndian::NOTE_WEIGHT_INPUT+5));
+        addParam(createParam<RoundReallySmallFWKnob>(Vec(22,208), module, ProbablyNoteIndian::NOTE_WEIGHT_PARAM+6));			
+		addInput(createInput<FWPortInSmall>(Vec(2, 209), module, ProbablyNoteIndian::NOTE_WEIGHT_INPUT+6));
+        addParam(createParam<RoundReallySmallFWKnob>(Vec(94,194), module, ProbablyNoteIndian::NOTE_WEIGHT_PARAM+7));			
+		addInput(createInput<FWPortInSmall>(Vec(118, 195), module, ProbablyNoteIndian::NOTE_WEIGHT_INPUT+7));
+        addParam(createParam<RoundReallySmallFWKnob>(Vec(22,180), module, ProbablyNoteIndian::NOTE_WEIGHT_PARAM+8));			
+		addInput(createInput<FWPortInSmall>(Vec(2, 181), module, ProbablyNoteIndian::NOTE_WEIGHT_INPUT+8));
+        addParam(createParam<RoundReallySmallFWKnob>(Vec(94,166), module, ProbablyNoteIndian::NOTE_WEIGHT_PARAM+9));			
+		addInput(createInput<FWPortInSmall>(Vec(118, 167), module, ProbablyNoteIndian::NOTE_WEIGHT_INPUT+9));
+        addParam(createParam<RoundReallySmallFWKnob>(Vec(22,152), module, ProbablyNoteIndian::NOTE_WEIGHT_PARAM+10));			
+		addInput(createInput<FWPortInSmall>(Vec(2, 153), module, ProbablyNoteIndian::NOTE_WEIGHT_INPUT+10));
+        addParam(createParam<RoundReallySmallFWKnob>(Vec(94,138), module, ProbablyNoteIndian::NOTE_WEIGHT_PARAM+11));			
+		addInput(createInput<FWPortInSmall>(Vec(118, 139), module, ProbablyNoteIndian::NOTE_WEIGHT_INPUT+11));
 
 
-		addParam(createParam<LEDButton>(Vec(72, 307), module, ProbablyNote::NOTE_ACTIVE_PARAM+0));
-		addChild(createLight<LargeLight<GreenRedLight>>(Vec(73.5, 308.5), module, ProbablyNote::NOTE_ACTIVE_LIGHT+0));
-		addParam(createParam<LEDButton>(Vec(44, 293), module, ProbablyNote::NOTE_ACTIVE_PARAM+1));
-		addChild(createLight<LargeLight<GreenRedLight>>(Vec(45.5, 294.5), module, ProbablyNote::NOTE_ACTIVE_LIGHT+2));
-		addParam(createParam<LEDButton>(Vec(72, 279), module, ProbablyNote::NOTE_ACTIVE_PARAM+2));
-		addChild(createLight<LargeLight<GreenRedLight>>(Vec(73.5, 280.5), module, ProbablyNote::NOTE_ACTIVE_LIGHT+4));
-		addParam(createParam<LEDButton>(Vec(44, 265), module, ProbablyNote::NOTE_ACTIVE_PARAM+3));
-		addChild(createLight<LargeLight<GreenRedLight>>(Vec(45.5, 266.5), module, ProbablyNote::NOTE_ACTIVE_LIGHT+6));
-		addParam(createParam<LEDButton>(Vec(72, 251), module, ProbablyNote::NOTE_ACTIVE_PARAM+4));
-		addChild(createLight<LargeLight<GreenRedLight>>(Vec(73.5, 252.5), module, ProbablyNote::NOTE_ACTIVE_LIGHT+8));
-		addParam(createParam<LEDButton>(Vec(72, 223), module, ProbablyNote::NOTE_ACTIVE_PARAM+5));
-		addChild(createLight<LargeLight<GreenRedLight>>(Vec(73.5, 224.5), module, ProbablyNote::NOTE_ACTIVE_LIGHT+10));
-		addParam(createParam<LEDButton>(Vec(44, 209), module, ProbablyNote::NOTE_ACTIVE_PARAM+6));
-		addChild(createLight<LargeLight<GreenRedLight>>(Vec(45.5, 210.5), module, ProbablyNote::NOTE_ACTIVE_LIGHT+12));
-		addParam(createParam<LEDButton>(Vec(72, 195), module, ProbablyNote::NOTE_ACTIVE_PARAM+7));
-		addChild(createLight<LargeLight<GreenRedLight>>(Vec(73.5, 196.5), module, ProbablyNote::NOTE_ACTIVE_LIGHT+14));
-		addParam(createParam<LEDButton>(Vec(44, 181), module, ProbablyNote::NOTE_ACTIVE_PARAM+8));
-		addChild(createLight<LargeLight<GreenRedLight>>(Vec(45.5, 182.5), module, ProbablyNote::NOTE_ACTIVE_LIGHT+16));
-		addParam(createParam<LEDButton>(Vec(72, 167), module, ProbablyNote::NOTE_ACTIVE_PARAM+9));
-		addChild(createLight<LargeLight<GreenRedLight>>(Vec(73.5, 168.5), module, ProbablyNote::NOTE_ACTIVE_LIGHT+18));
-		addParam(createParam<LEDButton>(Vec(44, 153), module, ProbablyNote::NOTE_ACTIVE_PARAM+10));
-		addChild(createLight<LargeLight<GreenRedLight>>(Vec(45.5, 154.5), module, ProbablyNote::NOTE_ACTIVE_LIGHT+20));
-		addParam(createParam<LEDButton>(Vec(72, 139), module, ProbablyNote::NOTE_ACTIVE_PARAM+11));
-		addChild(createLight<LargeLight<GreenRedLight>>(Vec(73.5, 140.5), module, ProbablyNote::NOTE_ACTIVE_LIGHT+22));
+		addParam(createParam<LEDButton>(Vec(72, 307), module, ProbablyNoteIndian::NOTE_ACTIVE_PARAM+0));
+		addChild(createLight<LargeLight<GreenRedLight>>(Vec(73.5, 308.5), module, ProbablyNoteIndian::NOTE_ACTIVE_LIGHT+0));
+		addParam(createParam<LEDButton>(Vec(44, 293), module, ProbablyNoteIndian::NOTE_ACTIVE_PARAM+1));
+		addChild(createLight<LargeLight<GreenRedLight>>(Vec(45.5, 294.5), module, ProbablyNoteIndian::NOTE_ACTIVE_LIGHT+2));
+		addParam(createParam<LEDButton>(Vec(72, 279), module, ProbablyNoteIndian::NOTE_ACTIVE_PARAM+2));
+		addChild(createLight<LargeLight<GreenRedLight>>(Vec(73.5, 280.5), module, ProbablyNoteIndian::NOTE_ACTIVE_LIGHT+4));
+		addParam(createParam<LEDButton>(Vec(44, 265), module, ProbablyNoteIndian::NOTE_ACTIVE_PARAM+3));
+		addChild(createLight<LargeLight<GreenRedLight>>(Vec(45.5, 266.5), module, ProbablyNoteIndian::NOTE_ACTIVE_LIGHT+6));
+		addParam(createParam<LEDButton>(Vec(72, 251), module, ProbablyNoteIndian::NOTE_ACTIVE_PARAM+4));
+		addChild(createLight<LargeLight<GreenRedLight>>(Vec(73.5, 252.5), module, ProbablyNoteIndian::NOTE_ACTIVE_LIGHT+8));
+		addParam(createParam<LEDButton>(Vec(72, 223), module, ProbablyNoteIndian::NOTE_ACTIVE_PARAM+5));
+		addChild(createLight<LargeLight<GreenRedLight>>(Vec(73.5, 224.5), module, ProbablyNoteIndian::NOTE_ACTIVE_LIGHT+10));
+		addParam(createParam<LEDButton>(Vec(44, 209), module, ProbablyNoteIndian::NOTE_ACTIVE_PARAM+6));
+		addChild(createLight<LargeLight<GreenRedLight>>(Vec(45.5, 210.5), module, ProbablyNoteIndian::NOTE_ACTIVE_LIGHT+12));
+		addParam(createParam<LEDButton>(Vec(72, 195), module, ProbablyNoteIndian::NOTE_ACTIVE_PARAM+7));
+		addChild(createLight<LargeLight<GreenRedLight>>(Vec(73.5, 196.5), module, ProbablyNoteIndian::NOTE_ACTIVE_LIGHT+14));
+		addParam(createParam<LEDButton>(Vec(44, 181), module, ProbablyNoteIndian::NOTE_ACTIVE_PARAM+8));
+		addChild(createLight<LargeLight<GreenRedLight>>(Vec(45.5, 182.5), module, ProbablyNoteIndian::NOTE_ACTIVE_LIGHT+16));
+		addParam(createParam<LEDButton>(Vec(72, 167), module, ProbablyNoteIndian::NOTE_ACTIVE_PARAM+9));
+		addChild(createLight<LargeLight<GreenRedLight>>(Vec(73.5, 168.5), module, ProbablyNoteIndian::NOTE_ACTIVE_LIGHT+18));
+		addParam(createParam<LEDButton>(Vec(44, 153), module, ProbablyNoteIndian::NOTE_ACTIVE_PARAM+10));
+		addChild(createLight<LargeLight<GreenRedLight>>(Vec(45.5, 154.5), module, ProbablyNoteIndian::NOTE_ACTIVE_LIGHT+20));
+		addParam(createParam<LEDButton>(Vec(72, 139), module, ProbablyNoteIndian::NOTE_ACTIVE_PARAM+11));
+		addChild(createLight<LargeLight<GreenRedLight>>(Vec(73.5, 140.5), module, ProbablyNoteIndian::NOTE_ACTIVE_LIGHT+22));
 
 		
 
-		addOutput(createOutput<FWPortInSmall>(Vec(160, 345),  module, ProbablyNote::QUANT_OUTPUT));
-		addOutput(createOutput<FWPortInSmall>(Vec(130, 345),  module, ProbablyNote::WEIGHT_OUTPUT));
-		addOutput(createOutput<FWPortInSmall>(Vec(100, 345),  module, ProbablyNote::NOTE_CHANGE_OUTPUT));
+		addOutput(createOutput<FWPortInSmall>(Vec(152, 345),  module, ProbablyNoteIndian::QUANT_OUTPUT));
+		addOutput(createOutput<FWPortInSmall>(Vec(114, 345),  module, ProbablyNoteIndian::WEIGHT_OUTPUT));
 
 	}
 
 	// struct PNLoadScaleItem : MenuItem {
-	// 	ProbablyNote *module;
+	// 	ProbablyNoteIndian *module;
 	// 	void onAction(const event::Action &e) override {
 	// 	}
 	// };
 
 	// struct PNSaveScaleItem : MenuItem {
-	// 	ProbablyNote *module;
+	// 	ProbablyNoteIndian *module;
 	// 	void onAction(const event::Action &e) override {
 	// 	}
 	// };
 
 	// struct PNDeleteScaleItem : MenuItem {
-	// 	ProbablyNote *module;
+	// 	ProbablyNoteIndian *module;
 	// 	void onAction(const event::Action &e) override {
 	// 	}
 	// };
 
 	// struct PNLoadScaleGroupItem : MenuItem {
-	// 	ProbablyNote *module;
+	// 	ProbablyNoteIndian *module;
 	// 	void onAction(const event::Action &e) override {
 	// 		std::string dir = module->lastPath.empty() ? asset::user("") : rack::string::directory(module->lastPath);
 	// 		char *path = osdialog_file(OSDIALOG_OPEN, dir.c_str(), NULL, NULL);
@@ -895,7 +851,7 @@ struct ProbablyNoteWidget : ModuleWidget {
 	// };
 
 	// struct PNSaveScaleGroupItem : MenuItem {
-	// 	ProbablyNote *module;
+	// 	ProbablyNoteIndian *module;
 	// 	void onAction(const event::Action &e) override {
 	// 		std::string dir = module->lastPath.empty() ? asset::user("") : rack::string::directory(module->lastPath);
 	// 		char *path = osdialog_file(OSDIALOG_SAVE, dir.c_str(), NULL, NULL);
@@ -920,7 +876,7 @@ struct ProbablyNoteWidget : ModuleWidget {
 	// 	MenuLabel *spacerLabel = new MenuLabel();
 	// 	menu->addChild(spacerLabel);
 
-	// 	ProbablyNote *module = dynamic_cast<ProbablyNote*>(this->module);
+	// 	ProbablyNoteIndian *module = dynamic_cast<ProbablyNoteIndian*>(this->module);
 	// 	assert(module);
 
 	// 	MenuLabel *themeLabel = new MenuLabel();
@@ -954,5 +910,5 @@ struct ProbablyNoteWidget : ModuleWidget {
 
 
 // Define the Model with the Module type, ModuleWidget type, and module slug
-Model *modelProbablyNote = createModel<ProbablyNote, ProbablyNoteWidget>("ProbablyNote");
+Model *modelProbablyNoteIndian = createModel<ProbablyNoteIndian, ProbablyNoteIndianWidget>("ProbablyNoteIndian");
     
