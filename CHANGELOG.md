@@ -1,3 +1,6 @@
+## 1.9.2 (2019-09-09)
+- Silly screenshot issue fix (and Probbility Note enhancements are back)
+
 ## 1.9.1 (2019-09-06)
 - Probability Note Enahancements
 
