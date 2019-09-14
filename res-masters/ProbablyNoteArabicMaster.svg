@@ -13,7 +13,7 @@
    version="1.1"
    id="svg4541"
    inkscape:version="0.92.2 (5c3e80d, 2017-08-06)"
-   sodipodi:docname="ProbablyNoteMaster.svg"
+   sodipodi:docname="ProbablyNoteArabicMaster.svg"
    x="0px"
    y="0px"
    viewBox="283.5 206 180 380"
@@ -72,10 +72,10 @@
      inkscape:window-width="3840"
      inkscape:pageshadow="2"
      units="px"
-     inkscape:cy="238.04523"
+     inkscape:cy="274.47787"
      guidetolerance="10"
      gridtolerance="10"
-     inkscape:cx="160.20127"
+     inkscape:cx="104.07224"
      showgrid="false"
      id="namedview10"
      pagecolor="#ffffff"
@@ -1232,7 +1232,7 @@
        id="path18825"
        style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:8px;font-family:Homenaje;-inkscape-font-specification:'Homenaje Bold';stroke-width:0.99999994"
        d="m 431.77599,232.416 q 0.456,0 0.656,-0.272 0.208,-0.272 0.208,-0.632 0,-0.36 -0.136,-0.608 -0.128,-0.256 -0.328,-0.4 -0.2,-0.152 -0.432,-0.328 -0.232,-0.176 -0.432,-0.336 -0.2,-0.168 -0.336,-0.448 -0.128,-0.28 -0.128,-0.64 0,-0.64 0.384,-1.024 0.384,-0.384 1.064,-0.384 h 0.648 v 0.528 h -0.616 q -0.384,0 -0.584,0.248 -0.2,0.248 -0.2,0.536 0,0.288 0.128,0.496 0.136,0.208 0.336,0.344 0.2,0.136 0.432,0.32 0.24,0.184 0.44,0.376 0.2,0.184 0.328,0.504 0.136,0.32 0.136,0.728 0,0.752 -0.432,1.136 -0.424,0.384 -1.168,0.384 h -0.84 v -0.528 z" /></g><g
-     transform="translate(2.98961,3)"
+     transform="translate(2.98961,1)"
      id="g18849"
      style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:8px;line-height:1.25;font-family:Homenaje;-inkscape-font-specification:'Homenaje Bold';letter-spacing:0px;word-spacing:0px;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.99999994"
      aria-label="KEY"><path
@@ -1248,7 +1248,7 @@
        id="path18847"
        style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:8px;font-family:Homenaje;-inkscape-font-specification:'Homenaje Bold';stroke-width:0.99999994"
        d="m 363.99927,278 h -0.704 v -2.224 l -1.128,-3.376 h 0.704 l 0.8,2.648 0.816,-2.648 h 0.704 l -1.192,3.376 z" /></g><g
-     transform="translate(4.00001,3)"
+     transform="translate(4.00001,1)"
      id="g18861"
      style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:8px;line-height:1.25;font-family:Homenaje;-inkscape-font-specification:'Homenaje Bold';letter-spacing:0px;word-spacing:0px;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.99999994"
      aria-label="SCALE"><path
@@ -1923,15 +1923,4 @@
        x="381.21335"
        id="tspan19175-0"
        sodipodi:role="line">CHANGE</tspan></text>
-<text
-     id="text19161-2-3-9"
-     y="320.95334"
-     x="345.39999"
-     style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:6.66666651px;line-height:1.25;font-family:Homenaje;-inkscape-font-specification:'Homenaje Bold';letter-spacing:0px;word-spacing:0px;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.99999994"
-     xml:space="preserve"><tspan
-       style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:6.66666651px;font-family:Homenaje;-inkscape-font-specification:'Homenaje Bold';stroke-width:0.99999994"
-       y="320.95334"
-       x="345.39999"
-       id="tspan19159-3-6-4"
-       sodipodi:role="line">v/O</tspan></text>
 </svg>

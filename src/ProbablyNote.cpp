@@ -35,6 +35,7 @@ struct ProbablyNote : Module {
         OCTAVE_WRAPAROUND_PARAM,
 		TEMPERMENT_PARAM,
 		SHIFT_SCALING_PARAM,
+		KEY_SCALING_PARAM,
         NOTE_ACTIVE_PARAM,
         NOTE_WEIGHT_PARAM = NOTE_ACTIVE_PARAM + MAX_NOTES,
 		NUM_PARAMS = NOTE_WEIGHT_PARAM + MAX_NOTES
@@ -64,9 +65,15 @@ struct ProbablyNote : Module {
         OCTAVE_WRAPAROUND_LIGHT,
 		JUST_INTONATION_LIGHT,
 		SHIFT_LOGARITHMIC_SCALE_LIGHT,
+        KEY_LOGARITHMIC_SCALE_LIGHT,
         NOTE_ACTIVE_LIGHT,
 		NUM_LIGHTS = NOTE_ACTIVE_LIGHT + MAX_NOTES*2
 	};
+
+	// Expander
+	float consumerMessage[8] = {};// this module must read from here
+	float producerMessage[8] = {};// mother will write into here
+
 
 
 	const char* noteNames[MAX_NOTES] = {"C","C#/Db","D","D#/Eb","E","F","F#/Gb","G","G#/Ab","A","A#/Bb","B"};
@@ -95,7 +102,7 @@ struct ProbablyNote : Module {
     
 
 	
-	dsp::SchmittTrigger clockTrigger,writeScaleTrigger,octaveWrapAroundTrigger,tempermentTrigger,shiftScalingTrigger,noteActiveTrigger[MAX_NOTES]; 
+	dsp::SchmittTrigger clockTrigger,writeScaleTrigger,octaveWrapAroundTrigger,tempermentTrigger,shiftScalingTrigger,keyScalingTrigger,noteActiveTrigger[MAX_NOTES]; 
 	dsp::PulseGenerator noteChangePulse;
     GaussianNoiseGenerator _gauss;
  
@@ -111,6 +118,7 @@ struct ProbablyNote : Module {
     int lastScale = -1;
     int key = 0;
     int lastKey = -1;
+	int transposedKey = 0;
     int octave = 0;
 	int weightShift = 0;
 	int lastWeightShift = 0;
@@ -124,6 +132,17 @@ struct ProbablyNote : Module {
 	float lastFocus = -1;
 	bool justIntonation = false;
 	bool shiftLogarithmic = false;
+	bool keyLogarithmic = false;
+
+	bool generateChords = false;
+	float dissonance5Prbability = 0.0;
+	float dissonance7Prbability = 0.0;
+	float suspensionProbability = 0.0;
+	float inversionProbability = 0.0;
+	float externalDissonance5Random = 0.0;
+	float externalDissonance7Random = 0.0;
+	float externalSuspensionRandom = 0.0;
+
 
 	std::string lastPath;
     
@@ -177,6 +196,36 @@ struct ProbablyNote : Module {
         }
         return chosenWeight;
     }
+
+	double quantizedCVValue(int note, int key, bool useJustIntonation) {
+		if(!useJustIntonation) {
+			return (note / 12.0); 
+		} else {
+			int octaveAdjust = 0;
+			int notePosition = note - key;
+			if(notePosition < 0) {
+				notePosition += MAX_NOTES;
+				octaveAdjust -=1;
+			}
+			return (noteTemperment[1][notePosition] / 1200.0) + (key /12.0) + octaveAdjust; 
+		}
+	}
+
+	int nextActiveNote(int note,int offset) {
+		if(offset == 0)
+			return note;
+		int offsetNote = note;
+		bool noteOk = false;
+		int noteCount = 0;
+		do {
+			offsetNote = (offsetNote + 1) % MAX_NOTES;
+			if(noteActive[offsetNote]) {
+				noteCount +=1;
+			}
+			noteOk = noteCount == offset;
+		} while(!noteOk);
+		return offsetNote;
+	}
 
 	json_t *dataToJson() override {
 		json_t *rootJ = json_object();
@@ -295,6 +344,11 @@ struct ProbablyNote : Module {
 		}		
 		lights[SHIFT_LOGARITHMIC_SCALE_LIGHT].value = shiftLogarithmic;
 
+        if (keyScalingTrigger.process(params[KEY_SCALING_PARAM].getValue())) {
+			keyLogarithmic = !keyLogarithmic;
+		}		
+		lights[KEY_LOGARITHMIC_SCALE_LIGHT].value = keyLogarithmic;
+
 
         spread = clamp(params[SPREAD_PARAM].getValue() + (inputs[SPREAD_INPUT].getVoltage() * params[SPREAD_CV_ATTENUVERTER_PARAM].getValue()),0.0f,6.0f);
 
@@ -308,8 +362,17 @@ struct ProbablyNote : Module {
             }
         }
 
-        key = clamp(params[KEY_PARAM].getValue() + (inputs[KEY_INPUT].getVoltage() * MAX_NOTES / 10.0 * params[KEY_CV_ATTENUVERTER_PARAM].getValue()),0.0f,11.0f);
-
+        key = params[KEY_PARAM].getValue();
+		if(keyLogarithmic) {
+			double inputKey = inputs[KEY_INPUT].getVoltage() * params[KEY_CV_ATTENUVERTER_PARAM].getValue();
+			double unusedIntPart;
+			inputKey = std::modf(inputKey, &unusedIntPart);
+			inputKey = std::ceil(inputKey * 12);
+			key += (int)inputKey;
+		} else {
+			key += inputs[KEY_INPUT].getVoltage() * MAX_NOTES / 10.0 * params[KEY_CV_ATTENUVERTER_PARAM].getValue();
+		}
+        key = clamp(key,0,11);
 
         if(key != lastKey || scale != lastScale) {
             for(int i = 0; i < MAX_NOTES;i++) {
@@ -320,8 +383,6 @@ struct ProbablyNote : Module {
 				noteScaleProbability[noteValue] = currentScaleNoteWeighting[i];
 				params[NOTE_WEIGHT_PARAM+noteValue].setValue(noteScaleProbability[noteValue]);
             }
-			lastScale = scale;
-    	    lastKey = key;
         }
 
         octave = clamp(params[OCTAVE_PARAM].getValue() + (inputs[OCTAVE_INPUT].getVoltage() * 0.4 * params[OCTAVE_CV_ATTENUVERTER_PARAM].getValue()),-4.0f,4.0f);
@@ -366,12 +427,36 @@ struct ProbablyNote : Module {
 			double inputShift = inputs[SHIFT_INPUT].getVoltage() * params[SHIFT_CV_ATTENUVERTER_PARAM].getValue();
 			double unusedIntPart;
 			inputShift = std::modf(inputShift, &unusedIntPart);
-			inputShift = (std::pow(2,inputShift)-1.0) * 12;
-			weightShift += inputShift;
+			inputShift = std::ceil(inputShift * 12);
+
+			int desiredKey = (key + (int)inputShift) % MAX_NOTES;
+			if (desiredKey < 0)
+				desiredKey += MAX_NOTES;
+
+			//Find nearest active note to shift amount
+			while (!noteActive[desiredKey]) {
+				desiredKey = (desiredKey + 1) % MAX_NOTES;				
+			}
+
+			//Count how many active notes it takes to get there
+			int noteCount = 0;
+			while (desiredKey != key) {
+				desiredKey -= 1;
+				if(desiredKey < 0)
+					desiredKey += MAX_NOTES;
+				if(noteActive[desiredKey]) 
+					noteCount +=1;
+			}
+
+			weightShift += noteCount;
 		} else {
 			weightShift += inputs[SHIFT_INPUT].getVoltage() * 2.2 * params[SHIFT_CV_ATTENUVERTER_PARAM].getValue();
 		}
 		weightShift = clamp(weightShift,-11,11);
+
+	
+
+		//Shift Probabilities
 		if(lastWeightShift != weightShift) {
 			int actualShift = weightShift - lastWeightShift;
 			float shiftWeights[MAX_NOTES];
@@ -399,9 +484,8 @@ struct ProbablyNote : Module {
 			}
 			for(int i=0;i<MAX_NOTES;i++) {
 				params[NOTE_WEIGHT_PARAM+i].setValue(shiftWeights[i]);
-			}
-			lastWeightShift = weightShift;
-		}
+			}				
+		}		
 
         for(int i=0;i<MAX_NOTES;i++) {
             if (noteActiveTrigger[i].process( params[NOTE_ACTIVE_PARAM+i].getValue())) {
@@ -422,6 +506,49 @@ struct ProbablyNote : Module {
 
 			actualProbability[i] = noteInitialProbability[i] * userProbability; 
         }
+
+		//Find New Key
+		if(scale != lastScale || key != lastKey || weightShift != lastWeightShift) {
+			if(weightShift != 0) {
+				int noteCount = 0;
+				int newIndex = key;
+				int offset = 1;
+				if(weightShift < 0)
+					offset = -1;
+				bool noteFound = false;
+				do {
+					newIndex = (newIndex + offset) % MAX_NOTES;
+					if (newIndex < 0)
+						newIndex+=MAX_NOTES;
+					if(noteActive[newIndex])
+						noteCount+=1;
+					if(noteCount >= std::abs(weightShift))
+						noteFound = true;
+				} while(!noteFound);
+				transposedKey = newIndex;
+			} else {
+				transposedKey = key;
+			}
+
+			lastKey = key;
+			lastScale = scale;
+			lastWeightShift = weightShift;
+		}
+
+
+		//Get Expander Info
+		if(rightExpander.module && rightExpander.module->model == modelPNChordExpander) {	
+			generateChords = true;		
+			float *message = (float*) rightExpander.module->leftExpander.consumerMessage;
+			dissonance5Prbability = message[0];
+			dissonance7Prbability = message[1];
+			suspensionProbability = message[2];
+			externalDissonance5Random = message[4];
+			externalDissonance7Random = message[5];
+			externalSuspensionRandom = message[6];
+		} else {
+			generateChords = false;
+		}
 
 		if( inputs[TRIGGER_INPUT].active ) {
 			if (clockTrigger.process(inputs[TRIGGER_INPUT].value) ) {		
@@ -452,19 +579,92 @@ struct ProbablyNote : Module {
 						octaveAdjust = 1.0;
 				}
 
-				double quantitizedNoteCV;
-				if(!justIntonation) {
-					quantitizedNoteCV = randomNote / 12.0; 
+				double quantitizedNoteCV = quantizedCVValue(randomNote,key,justIntonation);
+				// if(!justIntonation) {
+				// 	quantitizedNoteCV = randomNote / 12.0; 
+				// } else {
+				// 	int notePosition = randomNote - key;
+				// 	if(notePosition < 0) {
+				// 		notePosition += MAX_NOTES;
+				// 		octaveAdjust -=1;
+				// 	}
+				// 	quantitizedNoteCV =(noteTemperment[1][notePosition] / 1200.0) + (key /12.0); 
+				// }
+				quantitizedNoteCV += octaveIn + octave + octaveAdjust;
+				
+				
+				//Chord Stuff
+				if(!generateChords) { 
+					outputs[QUANT_OUTPUT].setChannels(1);
+					outputs[QUANT_OUTPUT].setVoltage(quantitizedNoteCV,0);
 				} else {
-					int notePosition = randomNote - key;
-					if(notePosition < 0) {
-						notePosition += MAX_NOTES;
-						octaveAdjust -=1;
+					outputs[QUANT_OUTPUT].setChannels(4);
+					outputs[QUANT_OUTPUT].setVoltage(quantitizedNoteCV,0);
+
+					float rndDissonance5 = ((float) rand()/RAND_MAX);
+					if(externalDissonance5Random != -1)
+						rndDissonance5 = externalDissonance5Random;
+
+					float rndDissonance7 = ((float) rand()/RAND_MAX);
+					if(externalDissonance7Random != -1)
+						rndDissonance7 = externalDissonance7Random;
+
+					float rndSuspension = ((float) rand()/RAND_MAX);
+					if(externalSuspensionRandom != -1)
+						rndSuspension = externalSuspensionRandom;
+					//float rndInversion = ((float) rand()/RAND_MAX);
+
+					int secondNote = nextActiveNote(randomNote,2);
+					if(rndSuspension < suspensionProbability) {
+						float secondOrFourth = ((float) rand()/RAND_MAX);
+						if(secondOrFourth > 0.5) {
+							secondNote = nextActiveNote(randomNote,3);
+						} else {
+							secondNote = nextActiveNote(randomNote,1);
+						}					
 					}
-					quantitizedNoteCV =(noteTemperment[1][notePosition] / 1200.0) + (key /12.0); 
+					int secondNoteOctave = 0;
+					if(secondNote < randomNote) {
+						secondNoteOctave +=1;
+					}
+
+					int thirdNote = nextActiveNote(randomNote,4);
+					if(rndDissonance5 < dissonance5Prbability) {
+						float flatOrSharp = ((float) rand()/RAND_MAX);
+						int offset = -1;
+						if(flatOrSharp > 0.5) {
+							offset = 1;
+						}
+						thirdNote = (thirdNote + offset) % MAX_NOTES;
+						if(thirdNote < 0)
+							thirdNote += MAX_NOTES;
+					}
+					int thirdNoteOctave = 0;
+					if(thirdNote < randomNote) {
+						thirdNoteOctave +=1;
+					}
+
+					int fourthNote = nextActiveNote(randomNote,6);
+					if(rndDissonance7 < dissonance7Prbability) {
+						float flatOrSharp = ((float) rand()/RAND_MAX);
+						int offset = -1;
+						if(flatOrSharp > 0.5) {
+							offset = 1;
+						}
+						fourthNote = (fourthNote + offset) % MAX_NOTES;
+						if(fourthNote < 0)
+							fourthNote += MAX_NOTES;
+					}
+					int fourthNoteOctave = 0;
+					if(fourthNote < randomNote) {
+						fourthNoteOctave +=1;
+					}
+
+					outputs[QUANT_OUTPUT].setVoltage((double)secondNote/12.0 + octaveIn + octave + octaveAdjust + secondNoteOctave,1);
+					outputs[QUANT_OUTPUT].setVoltage((double)thirdNote/12.0 + octaveIn + octave + octaveAdjust + thirdNoteOctave,2);
+					outputs[QUANT_OUTPUT].setVoltage((double)fourthNote/12.0 + octaveIn + octave + octaveAdjust + fourthNoteOctave,3);
 				}
-				quantitizedNoteCV += octaveIn + octave + octaveAdjust; 
-				outputs[QUANT_OUTPUT].setVoltage(quantitizedNoteCV);
+
 				outputs[WEIGHT_OUTPUT].setVoltage(clamp((params[NOTE_WEIGHT_PARAM+randomNote].getValue() + (inputs[NOTE_WEIGHT_INPUT+randomNote].getVoltage() / 10.0f) * 10.0f),0.0f,10.0f));
 				if(lastQuantizedCV != quantitizedNoteCV) {
 					noteChangePulse.trigger(1e-3);	
@@ -505,18 +705,15 @@ struct ProbablyNoteDisplay : TransparentWidget {
 	}
 
 
-    void drawKey(const DrawArgs &args, Vec pos, int key, int weightShift) {
+    void drawKey(const DrawArgs &args, Vec pos, int key, int transposedKey) {
 		nvgFontSize(args.vg, 9);
 		nvgFontFaceId(args.vg, font->handle);
 		nvgTextLetterSpacing(args.vg, -1);
 
 		char text[128];
-		if(weightShift != 0) { 
+		if(key != transposedKey) { 
 			nvgFillColor(args.vg, nvgRGBA(0xff, 0xff, 0x00, 0xff));
-			int shiftedKey = (key + weightShift) % MAX_NOTES;
-			if (shiftedKey < 0)
-				shiftedKey += MAX_NOTES;
-			snprintf(text, sizeof(text), "%s -> %s", module->noteNames[key], module->noteNames[shiftedKey]);
+			snprintf(text, sizeof(text), "%s -> %s", module->noteNames[key], module->noteNames[transposedKey]);
 		}
 		else {
 			nvgFillColor(args.vg, nvgRGBA(0x00, 0xff, 0x00, 0xff));
@@ -733,8 +930,8 @@ struct ProbablyNoteDisplay : TransparentWidget {
 		if (!module)
 			return; 
 
-		drawScale(args, Vec(4,83), module->scale, module->weightShift != 0);
-		drawKey(args, Vec(72,83), module->key, module->weightShift);
+		drawScale(args, Vec(4,84), module->lastScale, module->lastWeightShift != 0);
+		drawKey(args, Vec(72,84), module->lastKey, module->transposedKey);
 		//drawOctave(args, Vec(66, 280), module->octave);
 		drawNoteRange(args, module->noteInitialProbability);
 	}
@@ -794,13 +991,16 @@ struct ProbablyNoteWidget : ModuleWidget {
 
 		addParam(createParam<LEDButton>(Vec(10, 48), module, ProbablyNote::SHIFT_SCALING_PARAM));
 		addChild(createLight<LargeLight<BlueLight>>(Vec(11.5, 49.5), module, ProbablyNote::SHIFT_LOGARITHMIC_SCALE_LIGHT));
-		
+
+		addParam(createParam<LEDButton>(Vec(70, 113), module, ProbablyNote::KEY_SCALING_PARAM));
+		addChild(createLight<LargeLight<BlueLight>>(Vec(71.5, 114.5), module, ProbablyNote::KEY_LOGARITHMIC_SCALE_LIGHT));
+
 
 		addParam(createParam<LEDButton>(Vec(130, 113), module, ProbablyNote::OCTAVE_WRAPAROUND_PARAM));
 		addChild(createLight<LargeLight<BlueLight>>(Vec(131.5, 114.5), module, ProbablyNote::OCTAVE_WRAPAROUND_LIGHT));
 
-		addParam(createParam<LEDButton>(Vec(155, 287), module, ProbablyNote::TEMPERMENT_PARAM));
-		addChild(createLight<LargeLight<BlueLight>>(Vec(156.5, 289.5), module, ProbablyNote::JUST_INTONATION_LIGHT));
+		addParam(createParam<LEDButton>(Vec(155, 286), module, ProbablyNote::TEMPERMENT_PARAM));
+		addChild(createLight<LargeLight<BlueLight>>(Vec(156.5, 287.5), module, ProbablyNote::JUST_INTONATION_LIGHT));
 		addInput(createInput<FWPortInSmall>(Vec(156, 307), module, ProbablyNote::TEMPERMENT_INPUT));
 
 
@@ -858,7 +1058,7 @@ struct ProbablyNoteWidget : ModuleWidget {
 
 		
 
-		addOutput(createOutput<FWPortInSmall>(Vec(160, 345),  module, ProbablyNote::QUANT_OUTPUT));
+		addOutput(createOutput<FWPortInSmall>(Vec(159, 345),  module, ProbablyNote::QUANT_OUTPUT));
 		addOutput(createOutput<FWPortInSmall>(Vec(130, 345),  module, ProbablyNote::WEIGHT_OUTPUT));
 		addOutput(createOutput<FWPortInSmall>(Vec(100, 345),  module, ProbablyNote::NOTE_CHANGE_OUTPUT));
 

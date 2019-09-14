@@ -34,6 +34,7 @@ struct ProbablyNoteArabic : Module {
         WRITE_SCALE_PARAM,
         OCTAVE_WRAPAROUND_PARAM,
 		TEMPERMENT_PARAM,
+		SHIFT_SCALING_PARAM,
         NOTE_ACTIVE_PARAM,
         NOTE_WEIGHT_PARAM = NOTE_ACTIVE_PARAM + MAX_NOTES,
 		NUM_PARAMS = NOTE_WEIGHT_PARAM + MAX_NOTES
@@ -55,12 +56,14 @@ struct ProbablyNoteArabic : Module {
 	enum OutputIds {
 		QUANT_OUTPUT,
 		WEIGHT_OUTPUT,
+		NOTE_CHANGE_OUTPUT,
 		NUM_OUTPUTS
 	};
 	enum LightIds {
 		DISTRIBUTION_GAUSSIAN_LIGHT,
         OCTAVE_WRAPAROUND_LIGHT,
 		JUST_INTONATION_LIGHT,
+		SHIFT_LOGARITHMIC_SCALE_LIGHT,
         NOTE_ACTIVE_LIGHT,
 		NUM_LIGHTS = NOTE_ACTIVE_LIGHT + MAX_NOTES*2
 	};
@@ -92,7 +95,8 @@ struct ProbablyNoteArabic : Module {
     
 
 	
-	dsp::SchmittTrigger clockTrigger,writeScaleTrigger,octaveWrapAroundTrigger,tempermentTrigger,noteActiveTrigger[MAX_NOTES]; 
+	dsp::SchmittTrigger clockTrigger,writeScaleTrigger,octaveWrapAroundTrigger,tempermentTrigger,shiftScalingTrigger,noteActiveTrigger[MAX_NOTES]; 
+	dsp::PulseGenerator noteChangePulse;
     GaussianNoiseGenerator _gauss;
  
     bool octaveWrapAround = false;
@@ -114,10 +118,12 @@ struct ProbablyNoteArabic : Module {
 	float focus = 0; 
 	int currentNote = 0;
 	int probabilityNote = 0;
+	int lastQuantizedCV = 0;
 	int lastNote = -1;
 	int lastSpread = -1;
 	float lastFocus = -1;
 	bool justIntonation = false;
+	bool shiftLogarithmic = false;
 
 	std::string lastPath;
     
@@ -177,6 +183,7 @@ struct ProbablyNoteArabic : Module {
 
 		json_object_set_new(rootJ, "octaveWrapAround", json_integer((int) octaveWrapAround));
 		json_object_set_new(rootJ, "justIntonation", json_integer((int) justIntonation));
+		json_object_set_new(rootJ, "shiftLogarithmic", json_integer((int) shiftLogarithmic));
 
 		for(int i=0;i<MAX_SCALES;i++) {
 			for(int j=0;j<MAX_NOTES;j++) {
@@ -204,6 +211,12 @@ struct ProbablyNoteArabic : Module {
 		if (sumT) {
 			justIntonation = json_integer_value(sumT);			
 		}
+
+		json_t *sumL = json_object_get(rootJ, "shiftLogarithmic");
+		if (sumL) {
+			shiftLogarithmic = json_integer_value(sumL);			
+		}
+
 
 		for(int i=0;i<MAX_SCALES;i++) {
 			for(int j=0;j<MAX_NOTES;j++) {
@@ -277,6 +290,11 @@ struct ProbablyNoteArabic : Module {
 		}		
 		lights[OCTAVE_WRAPAROUND_LIGHT].value = octaveWrapAround;
 
+        if (shiftScalingTrigger.process(params[SHIFT_SCALING_PARAM].getValue())) {
+			shiftLogarithmic = !shiftLogarithmic;
+		}		
+		lights[SHIFT_LOGARITHMIC_SCALE_LIGHT].value = shiftLogarithmic;
+
 
         spread = clamp(params[SPREAD_PARAM].getValue() + (inputs[SPREAD_INPUT].getVoltage() * params[SPREAD_CV_ATTENUVERTER_PARAM].getValue()),0.0f,6.0f);
 
@@ -343,7 +361,17 @@ struct ProbablyNoteArabic : Module {
 			lastFocus = focus;
 		}
 
-		weightShift = clamp(params[SHIFT_PARAM].getValue() + (inputs[SHIFT_INPUT].getVoltage() * 2.2 * params[SHIFT_CV_ATTENUVERTER_PARAM].getValue()),-11,11);
+		weightShift = params[SHIFT_PARAM].getValue();
+		if(shiftLogarithmic) {
+			double inputShift = inputs[SHIFT_INPUT].getVoltage() * params[SHIFT_CV_ATTENUVERTER_PARAM].getValue();
+			double unusedIntPart;
+			inputShift = std::modf(inputShift, &unusedIntPart);
+			inputShift = (std::pow(2,inputShift)-1.0) * 12;
+			weightShift += inputShift;
+		} else {
+			weightShift += inputs[SHIFT_INPUT].getVoltage() * 2.2 * params[SHIFT_CV_ATTENUVERTER_PARAM].getValue();
+		}
+		weightShift = clamp(weightShift,-11,11);
 		if(lastWeightShift != weightShift) {
 			int actualShift = weightShift - lastWeightShift;
 			float shiftWeights[MAX_NOTES];
@@ -438,8 +466,12 @@ struct ProbablyNoteArabic : Module {
 				quantitizedNoteCV += octaveIn + octave + octaveAdjust; 
 				outputs[QUANT_OUTPUT].setVoltage(quantitizedNoteCV);
 				outputs[WEIGHT_OUTPUT].setVoltage(clamp((params[NOTE_WEIGHT_PARAM+randomNote].getValue() + (inputs[NOTE_WEIGHT_INPUT+randomNote].getVoltage() / 10.0f) * 10.0f),0.0f,10.0f));
-        
-			} 
+				if(lastQuantizedCV != quantitizedNoteCV) {
+					noteChangePulse.trigger(1e-3);	
+					lastQuantizedCV = quantitizedNoteCV;
+				}        
+			}
+			outputs[NOTE_CHANGE_OUTPUT].setVoltage(noteChangePulse.process(1.0 / args.sampleRate) ? 10.0 : 0);
 		}
 
 	}
@@ -473,22 +505,28 @@ struct ProbablyNoteArabicDisplay : TransparentWidget {
 	}
 
 
-    void drawKey(const DrawArgs &args, Vec pos, int key, bool shifted) {
-		nvgFontSize(args.vg, 10);
+    void drawKey(const DrawArgs &args, Vec pos, int key, int weightShift) {
+		nvgFontSize(args.vg, 9);
 		nvgFontFaceId(args.vg, font->handle);
 		nvgTextLetterSpacing(args.vg, -1);
 
-		if(shifted) 
-			nvgFillColor(args.vg, nvgRGBA(0xff, 0xff, 0x00, 0xff));
-		else
-			nvgFillColor(args.vg, nvgRGBA(0x00, 0xff, 0x00, 0xff));
 		char text[128];
-		snprintf(text, sizeof(text), "%s", module->noteNames[key]);
+		if(weightShift != 0) { 
+			nvgFillColor(args.vg, nvgRGBA(0xff, 0xff, 0x00, 0xff));
+			int shiftedKey = (key + weightShift) % MAX_NOTES;
+			if (shiftedKey < 0)
+				shiftedKey += MAX_NOTES;
+			snprintf(text, sizeof(text), "%s -> %s", module->noteNames[key], module->noteNames[shiftedKey]);
+		}
+		else {
+			nvgFillColor(args.vg, nvgRGBA(0x00, 0xff, 0x00, 0xff));
+			snprintf(text, sizeof(text), "%s", module->noteNames[key]);
+		}
 		nvgText(args.vg, pos.x, pos.y, text, NULL);
 	}
 
     void drawScale(const DrawArgs &args, Vec pos, int scale, bool shifted) {
-		nvgFontSize(args.vg, 10);
+		nvgFontSize(args.vg, 9);
 		nvgFontFaceId(args.vg, font->handle);
 		nvgTextLetterSpacing(args.vg, -1);
 
@@ -696,7 +734,7 @@ struct ProbablyNoteArabicDisplay : TransparentWidget {
 			return; 
 
 		drawScale(args, Vec(4,83), module->scale, module->weightShift != 0);
-		drawKey(args, Vec(76,83), module->key, module->weightShift != 0);
+		drawKey(args, Vec(72,83), module->key, module->weightShift);
 		//drawOctave(args, Vec(66, 280), module->octave);
 		drawNoteRange(args, module->noteInitialProbability);
 	}
@@ -753,11 +791,16 @@ struct ProbablyNoteArabicWidget : ModuleWidget {
 
 		addParam(createParam<TL1105>(Vec(15, 113), module, ProbablyNoteArabic::WRITE_SCALE_PARAM));
 
+
+		addParam(createParam<LEDButton>(Vec(10, 48), module, ProbablyNoteArabic::SHIFT_SCALING_PARAM));
+		addChild(createLight<LargeLight<BlueLight>>(Vec(11.5, 49.5), module, ProbablyNoteArabic::SHIFT_LOGARITHMIC_SCALE_LIGHT));
+		
+
 		addParam(createParam<LEDButton>(Vec(130, 113), module, ProbablyNoteArabic::OCTAVE_WRAPAROUND_PARAM));
 		addChild(createLight<LargeLight<BlueLight>>(Vec(131.5, 114.5), module, ProbablyNoteArabic::OCTAVE_WRAPAROUND_LIGHT));
 
-		addParam(createParam<LEDButton>(Vec(155, 287), module, ProbablyNoteArabic::TEMPERMENT_PARAM));
-		addChild(createLight<LargeLight<BlueLight>>(Vec(156.5, 289.5), module, ProbablyNoteArabic::JUST_INTONATION_LIGHT));
+		addParam(createParam<LEDButton>(Vec(155, 286), module, ProbablyNoteArabic::TEMPERMENT_PARAM));
+		addChild(createLight<LargeLight<BlueLight>>(Vec(156.5, 287.5), module, ProbablyNoteArabic::JUST_INTONATION_LIGHT));
 		addInput(createInput<FWPortInSmall>(Vec(156, 307), module, ProbablyNoteArabic::TEMPERMENT_INPUT));
 
 
@@ -815,11 +858,98 @@ struct ProbablyNoteArabicWidget : ModuleWidget {
 
 		
 
-		addOutput(createOutput<FWPortInSmall>(Vec(152, 345),  module, ProbablyNoteArabic::QUANT_OUTPUT));
-		addOutput(createOutput<FWPortInSmall>(Vec(114, 345),  module, ProbablyNoteArabic::WEIGHT_OUTPUT));
+		addOutput(createOutput<FWPortInSmall>(Vec(160, 345),  module, ProbablyNoteArabic::QUANT_OUTPUT));
+		addOutput(createOutput<FWPortInSmall>(Vec(130, 345),  module, ProbablyNoteArabic::WEIGHT_OUTPUT));
+		addOutput(createOutput<FWPortInSmall>(Vec(100, 345),  module, ProbablyNoteArabic::NOTE_CHANGE_OUTPUT));
 
 	}
 
+	// struct PNLoadScaleItem : MenuItem {
+	// 	ProbablyNoteArabic *module;
+	// 	void onAction(const event::Action &e) override {
+	// 	}
+	// };
+
+	// struct PNSaveScaleItem : MenuItem {
+	// 	ProbablyNoteArabic *module;
+	// 	void onAction(const event::Action &e) override {
+	// 	}
+	// };
+
+	// struct PNDeleteScaleItem : MenuItem {
+	// 	ProbablyNoteArabic *module;
+	// 	void onAction(const event::Action &e) override {
+	// 	}
+	// };
+
+	// struct PNLoadScaleGroupItem : MenuItem {
+	// 	ProbablyNoteArabic *module;
+	// 	void onAction(const event::Action &e) override {
+	// 		std::string dir = module->lastPath.empty() ? asset::user("") : rack::string::directory(module->lastPath);
+	// 		char *path = osdialog_file(OSDIALOG_OPEN, dir.c_str(), NULL, NULL);
+	// 		if (path) {
+	// 			//module->loadSample(path);
+	// 			free(path);
+	// 		}
+	// 	}
+	// };
+
+	// struct PNSaveScaleGroupItem : MenuItem {
+	// 	ProbablyNoteArabic *module;
+	// 	void onAction(const event::Action &e) override {
+	// 		std::string dir = module->lastPath.empty() ? asset::user("") : rack::string::directory(module->lastPath);
+	// 		char *path = osdialog_file(OSDIALOG_SAVE, dir.c_str(), NULL, NULL);
+	// 		if (path) {
+	// 			//module->loadSample(path);
+	// 			std::ofstream myfile (path);
+	// 			if (myfile.is_open())
+	// 			{
+	// 				myfile << "This is a line.\n";
+	// 				myfile << "This is another line.\n";
+	// 				myfile.close();
+	// 			}
+	// 			free(path);
+	// 		}
+	// 	}
+	// };
+
+
+	
+	
+	// void appendContextMenu(Menu *menu) override {
+	// 	MenuLabel *spacerLabel = new MenuLabel();
+	// 	menu->addChild(spacerLabel);
+
+	// 	ProbablyNoteArabic *module = dynamic_cast<ProbablyNoteArabic*>(this->module);
+	// 	assert(module);
+
+	// 	MenuLabel *themeLabel = new MenuLabel();
+	// 	themeLabel->text = "Scales";
+	// 	menu->addChild(themeLabel);
+
+	// 	PNLoadScaleItem *pnLoadScaleItem = new PNLoadScaleItem();
+	// 	pnLoadScaleItem->text = "Load Scale";// 
+	// 	pnLoadScaleItem->module = module;
+	// 	menu->addChild(pnLoadScaleItem);
+
+	// 	PNDeleteScaleItem *pnDeleteScaleItem = new PNDeleteScaleItem();
+	// 	pnDeleteScaleItem->text = "Delete Scale";// 
+	// 	pnDeleteScaleItem->module = module;
+	// 	menu->addChild(pnDeleteScaleItem);
+
+	// 	PNLoadScaleGroupItem *pnLoadScaleGroupItem = new PNLoadScaleGroupItem();
+	// 	pnLoadScaleGroupItem->text = "Load Scale Group";// 
+	// 	pnLoadScaleGroupItem->module = module;
+	// 	menu->addChild(pnLoadScaleGroupItem);
+
+	// 	PNSaveScaleGroupItem *pnSaveScaleGroupItem = new PNSaveScaleGroupItem();
+	// 	pnSaveScaleGroupItem->text = "Save Scale Group";// 
+	// 	pnSaveScaleGroupItem->module = module;
+	// 	menu->addChild(pnSaveScaleGroupItem);
+
+
+			
+	// }
 };
 
 

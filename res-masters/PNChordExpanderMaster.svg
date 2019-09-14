@@ -1,0 +1,310 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:xlink="http://www.w3.org/1999/xlink"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   width="60"
+   height="380"
+   viewBox="0 0 15.875 100.54167"
+   version="1.1"
+   id="svg11003"
+   inkscape:version="0.92.2 (5c3e80d, 2017-08-06)"
+   sodipodi:docname="PNChordExpanderMaster.svg">
+  <defs
+     id="defs10997">
+    <linearGradient
+       inkscape:collect="always"
+       id="linearGradient4682">
+      <stop
+         style="stop-color:#202022;stop-opacity:1;"
+         offset="0"
+         id="stop3387" />
+      <stop
+         style="stop-color:#202025;stop-opacity:1;"
+         offset=".3"
+         id="stop3388" />
+      <stop
+         style="stop-color:#08006f;stop-opacity:1;"
+         offset="1"
+         id="stop3389" />
+    </linearGradient>
+    <linearGradient
+       inkscape:collect="always"
+       xlink:href="#linearGradient4682"
+       id="linearGradient4684"
+       x1="35.219627"
+       y1="150.85843"
+       x2="35.23983"
+       y2="50.163956"
+       gradientUnits="userSpaceOnUse"
+       gradientTransform="matrix(0.30864055,0,0,1,24.349422,0)" />
+  </defs>
+  <sodipodi:namedview
+     id="base"
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1.0"
+     inkscape:pageopacity="0.0"
+     inkscape:pageshadow="2"
+     inkscape:zoom="4.843855"
+     inkscape:cx="58.554893"
+     inkscape:cy="214.77162"
+     inkscape:document-units="px"
+     inkscape:current-layer="layer1"
+     showgrid="false"
+     fit-margin-top="0"
+     fit-margin-left="0"
+     fit-margin-right="0"
+     fit-margin-bottom="0"
+     inkscape:window-width="3840"
+     inkscape:window-height="2115"
+     inkscape:window-x="-13"
+     inkscape:window-y="-13"
+     inkscape:window-maximized="1"
+     units="px" />
+  <metadata
+     id="metadata11000">
+    <rdf:RDF>
+      <cc:Work
+         rdf:about="">
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type
+           rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+        <dc:title></dc:title>
+      </cc:Work>
+    </rdf:RDF>
+  </metadata>
+  <g
+     inkscape:label="Layer 1"
+     inkscape:groupmode="layer"
+     id="layer1"
+     transform="translate(-35.146312,-50.389004)">
+    <path
+       inkscape:connector-curvature="0"
+       id="path33493"
+       d="m 35.219628,50.462323 h 15.875 V 150.85843 h -15.875 z m 0,0"
+       style="fill:url(#linearGradient4684);fill-opacity:1;fill-rule:nonzero;stroke:none;stroke-width:0.17476138"
+       inkscape:export-filename="/home/vortico/pics/tmp/LFOs.png"
+       inkscape:export-xdpi="150.22649"
+       inkscape:export-ydpi="150.22649" />
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-weight:normal;font-size:3.53844118px;line-height:1.25;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.26538306"
+       x="25.182867"
+       y="65.018906"
+       id="text5097"
+       transform="scale(1.0030227,0.99698641)"><tspan
+         sodipodi:role="line"
+         id="tspan5095"
+         x="25.182867"
+         y="68.247131"
+         style="stroke-width:0.26538306" /></text>
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:3.53844118px;line-height:1.25;font-family:Homenaje;-inkscape-font-specification:'Homenaje Bold';text-align:center;letter-spacing:0px;word-spacing:0px;text-anchor:middle;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.26538306"
+       x="43.235611"
+       y="54.447826"
+       id="text136"
+       transform="scale(1.0030227,0.99698641)"><tspan
+         sodipodi:role="line"
+         x="43.235611"
+         y="54.447826"
+         style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:3.89228535px;font-family:Homenaje;-inkscape-font-specification:'Homenaje Bold';stroke-width:0.26538306"
+         id="tspan1059">PN-CHORD</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:3.53844118px;line-height:1.25;font-family:Consolas;-inkscape-font-specification:'Consolas Bold';text-align:center;letter-spacing:0px;word-spacing:0px;text-anchor:middle;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.26538306"
+       x="66.08979"
+       y="146.97321"
+       id="text373"
+       transform="scale(1.0030227,0.99698641)"><tspan
+         sodipodi:role="line"
+         id="tspan371"
+         x="66.08979"
+         y="150.04343"
+         style="font-size:2.12306452px;stroke-width:0.26538306" /></text>
+    <flowRoot
+       xml:space="preserve"
+       id="flowRoot250"
+       style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:13.33333302px;line-height:1.25;font-family:Consolas;-inkscape-font-specification:'Consolas Bold';text-align:center;letter-spacing:0px;word-spacing:0px;text-anchor:middle;fill:#ffffff;fill-opacity:1;stroke:none"
+       transform="matrix(1.0060545,0,0,1,-0.21323829,0)"><flowRegion
+         id="flowRegion252"><rect
+           id="rect254"
+           width="3.1819806"
+           height="16.970562"
+           x="78.1353"
+           y="118.90082" /></flowRegion><flowPara
+         id="flowPara256" /></flowRoot>    <text
+       xml:space="preserve"
+       style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:3.53844118px;line-height:1.25;font-family:Consolas;-inkscape-font-specification:'Consolas Bold';text-align:start;letter-spacing:0px;word-spacing:0px;text-anchor:start;fill:#00a3f2;fill-opacity:1;stroke:none;stroke-width:0.26538306"
+       x="41.180653"
+       y="150.40594"
+       id="text3885-7"
+       transform="scale(1.0030227,0.99698641)"><tspan
+         sodipodi:role="line"
+         id="tspan3883-0"
+         x="41.180653"
+         y="150.40594"
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-family:'Bradley Gratis';-inkscape-font-specification:'Bradley Gratis';text-align:start;text-anchor:start;fill:#00a3f2;fill-opacity:1;stroke-width:0.26538306">FW</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:3.53844118px;line-height:1.25;font-family:Consolas;-inkscape-font-specification:'Consolas Bold';text-align:center;letter-spacing:0px;word-spacing:0px;text-anchor:middle;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.26538306"
+       x="61.047493"
+       y="99.040077"
+       id="text6637"
+       transform="scale(1.0030227,0.99698641)"><tspan
+         sodipodi:role="line"
+         id="tspan6635"
+         x="61.047493"
+         y="102.1103"
+         style="stroke-width:0.26538306" /></text>
+    <flowRoot
+       xml:space="preserve"
+       id="flowRoot1051"
+       style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:13.33333302px;line-height:1.25;font-family:Consolas;-inkscape-font-specification:'Consolas Bold';text-align:center;letter-spacing:0px;word-spacing:0px;text-anchor:middle;fill:#ffffff;fill-opacity:1;stroke:none"
+       transform="matrix(1.0060545,0,0,1,-0.21323829,0)"><flowRegion
+         id="flowRegion1053"><rect
+           id="rect1055"
+           width="233.87556"
+           height="149.02275"
+           x="-26.693281"
+           y="28.037596" /></flowRegion><flowPara
+         id="flowPara1057" /></flowRoot>    <text
+       xml:space="preserve"
+       style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:3.53844118px;line-height:1.25;font-family:Consolas;-inkscape-font-specification:'Consolas Bold';text-align:center;letter-spacing:0px;word-spacing:0px;text-anchor:middle;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.26538306"
+       x="72.924469"
+       y="139.92821"
+       id="text307-7"
+       transform="scale(1.0030227,0.99698641)"><tspan
+         sodipodi:role="line"
+         id="tspan305-4"
+         x="72.924469"
+         y="139.92821"
+         style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:2.83075285px;font-family:'Labtop Secundo Wide';-inkscape-font-specification:'Labtop Secundo Wide Bold';stroke-width:0.26538306">OUT</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:3.53844118px;line-height:1.25;font-family:Homenaje;-inkscape-font-specification:'Homenaje Bold';text-align:center;letter-spacing:0px;word-spacing:0px;text-anchor:middle;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.26538306"
+       x="41.217999"
+       y="69.098312"
+       id="text303-0-9"
+       transform="scale(1.0030227,0.99698641)"><tspan
+         sodipodi:role="line"
+         id="tspan301-8-8"
+         x="41.217999"
+         y="69.098312"
+         style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:2.83075285px;font-family:Homenaje;-inkscape-font-specification:'Homenaje Bold';stroke-width:0.26538306">DISSONANCE</tspan></text>
+    <flowRoot
+       xml:space="preserve"
+       id="flowRoot1227"
+       style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:13.33333302px;line-height:1.25;font-family:Consolas;-inkscape-font-specification:'Consolas Bold';text-align:center;letter-spacing:0px;word-spacing:0px;text-anchor:middle;fill:#ffffff;fill-opacity:1;stroke:none"
+       transform="matrix(1.0060545,0,0,1,-0.21323829,0)"><flowRegion
+         id="flowRegion1229"><rect
+           id="rect1231"
+           width="73.539108"
+           height="30.405592"
+           x="-114.5513"
+           y="110.59232" /></flowRegion><flowPara
+         id="flowPara1233" /></flowRoot>    <flowRoot
+       xml:space="preserve"
+       id="flowRoot5298"
+       style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:13.33333302px;line-height:1.25;font-family:Consolas;-inkscape-font-specification:'Consolas Bold';text-align:center;letter-spacing:0px;word-spacing:0px;text-anchor:middle;fill:#000000;fill-opacity:1;stroke:none"
+       transform="matrix(1.0060545,0,0,1,-0.21323829,0)"><flowRegion
+         id="flowRegion5300"><rect
+           id="rect5302"
+           width="171.82695"
+           height="43.133514"
+           x="83.438599"
+           y="19.729092" /></flowRegion><flowPara
+         id="flowPara5304" /></flowRoot>    <text
+       xml:space="preserve"
+       style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:3.53844118px;line-height:1.25;font-family:Homenaje;-inkscape-font-specification:'Homenaje Bold';text-align:center;letter-spacing:0px;word-spacing:0px;text-anchor:middle;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.26538306"
+       x="43.046776"
+       y="111.55961"
+       id="text303-0-9-0"
+       transform="scale(1.0030227,0.99698641)"><tspan
+         sodipodi:role="line"
+         id="tspan301-8-8-9"
+         x="43.046776"
+         y="111.55961"
+         style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:2.83075285px;font-family:Homenaje;-inkscape-font-specification:'Homenaje Bold';stroke-width:0.26538306">SUSPENSIONS</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:3.53844094px;line-height:1.25;font-family:Homenaje;-inkscape-font-specification:'Homenaje Bold';text-align:center;letter-spacing:0px;word-spacing:0px;text-anchor:middle;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.26538306"
+       x="48.983711"
+       y="69.020477"
+       id="text303-0-9-1"
+       transform="scale(1.0030227,0.9969864)"><tspan
+         sodipodi:role="line"
+         id="tspan301-8-8-8"
+         x="48.983711"
+         y="69.020477"
+         style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:2.11666679px;font-family:Homenaje;-inkscape-font-specification:'Homenaje Bold';stroke-width:0.26538306">V</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:3.5384407px;line-height:1.25;font-family:Homenaje;-inkscape-font-specification:'Homenaje Bold';text-align:center;letter-spacing:0px;word-spacing:0px;text-anchor:middle;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.26538306"
+       x="48.940071"
+       y="90.173531"
+       id="text303-0-9-1-3"
+       transform="scale(1.0030227,0.9969864)"><tspan
+         sodipodi:role="line"
+         id="tspan301-8-8-8-2"
+         x="48.940071"
+         y="90.173531"
+         style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:2.11666679px;font-family:Homenaje;-inkscape-font-specification:'Homenaje Bold';stroke-width:0.26538306">VII</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:3.53844094px;line-height:1.25;font-family:Homenaje;-inkscape-font-specification:'Homenaje Bold';text-align:center;letter-spacing:0px;word-spacing:0px;text-anchor:middle;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.26538306"
+       x="41.217999"
+       y="90.328964"
+       id="text303-0-9-4"
+       transform="scale(1.0030227,0.9969864)"><tspan
+         sodipodi:role="line"
+         id="tspan301-8-8-4"
+         x="41.217999"
+         y="90.328964"
+         style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:2.83075285px;font-family:Homenaje;-inkscape-font-specification:'Homenaje Bold';stroke-width:0.26538306">DISSONANCE</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:3.5384407px;line-height:1.25;font-family:Homenaje;-inkscape-font-specification:'Homenaje Bold';text-align:center;letter-spacing:0px;word-spacing:0px;text-anchor:middle;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.26538306"
+       x="39.076748"
+       y="80.264221"
+       id="text303-0-9-1-5"
+       transform="scale(1.0030227,0.9969864)"><tspan
+         sodipodi:role="line"
+         id="tspan301-8-8-8-9"
+         x="39.076748"
+         y="80.264221"
+         style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:2.11666679px;font-family:Homenaje;-inkscape-font-specification:'Homenaje Bold';stroke-width:0.26538306">EXT RND</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:3.5384407px;line-height:1.25;font-family:Homenaje;-inkscape-font-specification:'Homenaje Bold';text-align:center;letter-spacing:0px;word-spacing:0px;text-anchor:middle;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.26538306"
+       x="39.076748"
+       y="101.49487"
+       id="text303-0-9-1-5-0"
+       transform="scale(1.0030227,0.9969864)"><tspan
+         sodipodi:role="line"
+         id="tspan301-8-8-8-9-0"
+         x="39.076748"
+         y="101.49487"
+         style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:2.11666679px;font-family:Homenaje;-inkscape-font-specification:'Homenaje Bold';stroke-width:0.26538306">EXT RND</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:3.5384407px;line-height:1.25;font-family:Homenaje;-inkscape-font-specification:'Homenaje Bold';text-align:center;letter-spacing:0px;word-spacing:0px;text-anchor:middle;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.26538306"
+       x="39.076748"
+       y="122.72552"
+       id="text303-0-9-1-5-2"
+       transform="scale(1.0030227,0.9969864)"><tspan
+         sodipodi:role="line"
+         id="tspan301-8-8-8-9-8"
+         x="39.076748"
+         y="122.72552"
+         style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:2.11666679px;font-family:Homenaje;-inkscape-font-specification:'Homenaje Bold';stroke-width:0.26538306">EXT RND</tspan></text>
+  </g>
+</svg>
