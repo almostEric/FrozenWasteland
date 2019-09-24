@@ -1,3 +1,8 @@
+### 1.9.5 (2019-09-)
+- Probability Not(e) Fixes and Improvements
+- PN Bohlen-Pierce added
+- PN Chord Expander
+
 ## 1.9.2 (2019-09-09)
 - Silly screenshot issue fix (and Probbility Note enhancements are back)
 
@@ -5,7 +10,7 @@
 - Probability Note Enahancements
 
 ## 1.9.0 (2019-08-31)
-- Added Probably Not(e), Probablist Quantizer
+- Added Probably Not(e), Probablistic Quantizer
 - QAR Probability Expander now has groups
 
 ## 1.8.1 (2019-08-18)

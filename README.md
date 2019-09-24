@@ -167,11 +167,26 @@ A collection of unusual plugins that will add a certain coolness to your patches
 - The Save button will overwrite the default weights for a scale. The initialize option from the context menu will restore.
 - If Octave Wrap is enabled, notes will stay within the Note In's octave (so a B could would be 11 half-steps above a C), if Octave Wrap is off, the notes will be near the original value
 - Octave control allows shifting of the output
-- The Shift control moves the weightings of the active notes up or down
-- If v/Oct is enabledm the Shift Weight input uses a 1v/Oct scaling so the shift can follow other quanitizers
+- The Shift control moves the weightings of the active notes up or down - this can be used to move between modes within a scale (ie c major to a minor)
+- If v/Oct is enabledm the Shift Weight and Key inputs uses a 1v/Oct scaling so the shift can follow other quanitizers
 - Weight outputs the current notes probability weight so it can be used to affect other modules
 - Change outputs a trigger anytime the quantized note changes
+- Weighting changes the overall weighting from linear (0%) to logarithmic (100%). 
 - A more detailed manual will be available soon
+
+![Probably Not(e) - Bohlen Pierce](./doc/pnbp.png)
+
+- Same baseic features a Probable Not(e)
+- Based on the Bohelen Pierce tuning system which uses a 3:1 "tritave" divided into 13 notes instead of the traditional 2:1 octave with 12 notes
+- For reference: https://en.wikipedia.org/wiki/Bohlen%E2%80%93Pierce_scale
+
+![PN - Chord Expander](./doc/pnce.png)
+- Expander for Probably Note (original version only for now)
+- The Quant output of Probably Not(e) becomes polyphonic when expander added
+- This will not generate every chord that is possible, but it can create very musical sounding ones.
+- Generates 4 note chords based on the root of the current PN note and using notes within the key/scale.
+- Dissonance probablilty controls whether notes are randomly diminished or augmented.
+- Suspension controls whether the III of scale gets changed to suspended II or IV.
 
 ## Quad Algorithmic Rhythm
 

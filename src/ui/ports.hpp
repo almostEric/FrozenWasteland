@@ -9,6 +9,15 @@ struct FWPortInSmall : SvgPort
     }
 };
 
+struct FWPortInReallySmall : SvgPort 
+{
+    FWPortInReallySmall() 
+    {
+        setSvg( APP->window->loadSvg(asset::plugin(pluginInstance, "res/ComponentLibrary/ReallySmallInPort.svg")));   		   
+    }
+};
+
+
 struct FWPortOutSmall : SvgPort 
 {
     FWPortOutSmall() 

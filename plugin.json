@@ -81,8 +81,14 @@
 		{
 			"slug": "ProbablyNote",
 			"name": "Probably Note",
-			"description": "Probability Quantizer",
-			"tags": ["Quantizer"]
+			"description": "Probabilistic Quantizer",
+			"tags": ["Quantizer","Random"]
+		},
+		{
+			"slug": "ProbablyNoteBP",
+			"name": "Probably Note - Bohlen Pierce",
+			"description": "Probabilistic Quantizer using Bohlen Pierce tuning",
+			"tags": ["Quantizer","Random"]
 		},
 		{
 			"slug": "PNChordExpander",

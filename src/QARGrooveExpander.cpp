@@ -278,23 +278,23 @@ struct QARGrooveExpanderWidget : ModuleWidget {
 
 
          for(int i=0; i<MAX_STEPS / 3;i++) {
-		    addParam(createParam<RoundSmallFWKnob>(Vec(22, 40 + i*45), module, QARGrooveExpander::STEP_1_SWING_AMOUNT_PARAM + i));
-		    addParam(createParam<RoundSmallFWKnob>(Vec(87, 40 + i*45), module, QARGrooveExpander::STEP_1_SWING_AMOUNT_PARAM + i + (MAX_STEPS / 3)));
-		    addParam(createParam<RoundSmallFWKnob>(Vec(152, 40 + i*45), module, QARGrooveExpander::STEP_1_SWING_AMOUNT_PARAM + i + (MAX_STEPS * 2 / 3)));
+		    addParam(createParam<RoundSmallFWKnob>(Vec(22, 30 + i*45), module, QARGrooveExpander::STEP_1_SWING_AMOUNT_PARAM + i));
+		    addParam(createParam<RoundSmallFWKnob>(Vec(87, 30 + i*45), module, QARGrooveExpander::STEP_1_SWING_AMOUNT_PARAM + i + (MAX_STEPS / 3)));
+		    addParam(createParam<RoundSmallFWKnob>(Vec(152, 30 + i*45), module, QARGrooveExpander::STEP_1_SWING_AMOUNT_PARAM + i + (MAX_STEPS * 2 / 3)));
 
-		    addParam(createParam<RoundReallySmallFWKnob>(Vec(49, 53 + i*45), module, QARGrooveExpander::STEP_1_SWING_CV_ATTEN_PARAM + i));
-		    addParam(createParam<RoundReallySmallFWKnob>(Vec(114, 53 + i*45), module, QARGrooveExpander::STEP_1_SWING_CV_ATTEN_PARAM + i + (MAX_STEPS / 3)));
-		    addParam(createParam<RoundReallySmallFWKnob>(Vec(179, 53 + i*45), module, QARGrooveExpander::STEP_1_SWING_CV_ATTEN_PARAM + i + (MAX_STEPS * 2 / 3)));
+		    addParam(createParam<RoundReallySmallFWKnob>(Vec(46, 48 + i*45), module, QARGrooveExpander::STEP_1_SWING_CV_ATTEN_PARAM + i));
+		    addParam(createParam<RoundReallySmallFWKnob>(Vec(111, 48 + i*45), module, QARGrooveExpander::STEP_1_SWING_CV_ATTEN_PARAM + i + (MAX_STEPS / 3)));
+		    addParam(createParam<RoundReallySmallFWKnob>(Vec(176, 48 + i*45), module, QARGrooveExpander::STEP_1_SWING_CV_ATTEN_PARAM + i + (MAX_STEPS * 2 / 3)));
     
-    		addInput(createInput<FWPortInSmall>(Vec(50, 33 + i*45), module, QARGrooveExpander::STEP_1_SWING_AMOUNT_INPUT + i));
-    		addInput(createInput<FWPortInSmall>(Vec(115, 33 + i*45), module, QARGrooveExpander::STEP_1_SWING_AMOUNT_INPUT + i + (MAX_STEPS / 3)));
-    		addInput(createInput<FWPortInSmall>(Vec(180, 33 + i*45), module, QARGrooveExpander::STEP_1_SWING_AMOUNT_INPUT + i + (MAX_STEPS * 2 / 3)));
+    		addInput(createInput<FWPortInReallySmall>(Vec(50, 33 + i*45), module, QARGrooveExpander::STEP_1_SWING_AMOUNT_INPUT + i));
+    		addInput(createInput<FWPortInReallySmall>(Vec(115, 33 + i*45), module, QARGrooveExpander::STEP_1_SWING_AMOUNT_INPUT + i + (MAX_STEPS / 3)));
+    		addInput(createInput<FWPortInReallySmall>(Vec(180, 33 + i*45), module, QARGrooveExpander::STEP_1_SWING_AMOUNT_INPUT + i + (MAX_STEPS * 2 / 3)));
 
         }
 
          for(int i=0;i<TRACK_COUNT; i++) {
-			addParam(createParam<LEDButton>(Vec(76 + i*24, 298), module, QARGrooveExpander::TRACK_1_GROOVE_ENABLED_PARAM + i));
-			addChild(createLight<LargeLight<BlueLight>>(Vec(77.5 + i*24, 299.5), module, QARGrooveExpander::TRACK_1_GROOVE_ENABELED_LIGHT + i));
+			addParam(createParam<LEDButton>(Vec(75 + i*24, 296), module, QARGrooveExpander::TRACK_1_GROOVE_ENABLED_PARAM + i));
+			addChild(createLight<LargeLight<BlueLight>>(Vec(76.5 + i*24, 298.5), module, QARGrooveExpander::TRACK_1_GROOVE_ENABELED_LIGHT + i));
 
 		}
 

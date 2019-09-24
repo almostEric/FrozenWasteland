@@ -13,7 +13,8 @@
 
 #define MAX_NOTES 12
 #define MAX_SCALES 12
-#define MAX_TEMPERMENTS 2
+#define MAX_JINS 9
+
 
 using namespace frozenwasteland::dsp;
 
@@ -25,15 +26,16 @@ struct ProbablyNoteArabic : Module {
 		DISTRIBUTION_CV_ATTENUVERTER_PARAM,
         SHIFT_PARAM,
 		SHIFT_CV_ATTENUVERTER_PARAM,
-        SCALE_PARAM,
-		SCALE_CV_ATTENUVERTER_PARAM,
+        LOWER_JINS_PARAM,
+		LOWER_JINS_CV_ATTENUVERTER_PARAM,
+        UPPER_JINS_PARAM,
+		UPPER_JINS_CV_ATTENUVERTER_PARAM,
         KEY_PARAM,
 		KEY_CV_ATTENUVERTER_PARAM,
         OCTAVE_PARAM,
 		OCTAVE_CV_ATTENUVERTER_PARAM,
         WRITE_SCALE_PARAM,
         OCTAVE_WRAPAROUND_PARAM,
-		TEMPERMENT_PARAM,
 		SHIFT_SCALING_PARAM,
         NOTE_ACTIVE_PARAM,
         NOTE_WEIGHT_PARAM = NOTE_ACTIVE_PARAM + MAX_NOTES,
@@ -44,10 +46,10 @@ struct ProbablyNoteArabic : Module {
 		SPREAD_INPUT,
 		DISTRIBUTION_INPUT,
 		SHIFT_INPUT,
-        SCALE_INPUT,
+        LOWER_JINS_INPUT,
+        UPPER_JINS_INPUT,
         KEY_INPUT,
         OCTAVE_INPUT,
-		TEMPERMENT_INPUT,
 		TRIGGER_INPUT,
         EXTERNAL_RANDOM_INPUT,
         NOTE_WEIGHT_INPUT,
@@ -70,7 +72,8 @@ struct ProbablyNoteArabic : Module {
 
 
 	const char* noteNames[MAX_NOTES] = {"C","C#/Db","D","D#/Eb","E","F","F#/Gb","G","G#/Ab","A","A#/Bb","B"};
-	const char* scaleNames[MAX_NOTES] = {"Chromatic","Whole Tone","Aeolian (minor)","Locrian","Ionian (Major)","Dorian","Phrygian","Lydian","Mixolydian","Gypsy","Hungarian","Blues"};
+	const char* scaleNames[MAX_JINS] = {"Ajam","Bayati","Hijaz","Kurd","Nahawand","Nikriz","Rast","Saba","Sikah"};
+	const char* arabicScaleNames[MAX_JINS] = {"عجم","بياتي","حجاز","كرد","نهاوند","نكريز","راست","صبا","سيكاه"};
 	float defaultScaleNoteWeighting[MAX_SCALES][MAX_NOTES] = {
 		{1,1,1,1,1,1,1,1,1,1,1,1},
 		{1,0,1,0,1,0,1,0,1,0,1,0},
@@ -88,9 +91,8 @@ struct ProbablyNoteArabic : Module {
     float scaleNoteWeighting[MAX_SCALES][MAX_NOTES]; 
 
 	const char* tempermentNames[MAX_NOTES] = {"Equal","Just"};
-    double noteTemperment[MAX_TEMPERMENTS][MAX_NOTES] = {
-        {0,100,200,300,400,500,600,700,800,900,1000,1100},
-        {0,111.73,203.91,315.64,386.61,498.04,582.51,701.955,813.69,884.36,996.09,1088.27},
+    double noteTemperment[MAX_NOTES] = {
+        0,111.73,203.91,315.64,386.61,498.04,582.51,701.955,813.69,884.36,996.09,1088.27
     };
     
 
@@ -135,16 +137,18 @@ struct ProbablyNoteArabic : Module {
         configParam(ProbablyNoteArabic::SPREAD_CV_ATTENUVERTER_PARAM, -1.0, 1.0, 0.0,"Spread CV Attenuation" ,"%",0,100);
 		configParam(ProbablyNoteArabic::DISTRIBUTION_PARAM, 0.0, 1.0, 0.0,"Distribution");
 		configParam(ProbablyNoteArabic::DISTRIBUTION_CV_ATTENUVERTER_PARAM, -1.0, 1.0, 0.0,"Distribution CV Attenuation");
-		configParam(ProbablyNoteArabic::SHIFT_PARAM, -11.0, 11.0, 0.0,"Weight Shift");
+		configParam(ProbablyNoteArabic::SHIFT_PARAM, -6.0, 6.0, 0.0,"Weight Shift");
         configParam(ProbablyNoteArabic::SHIFT_CV_ATTENUVERTER_PARAM, -1.0, 1.0, 0.0,"Weight Shift CV Attenuation" ,"%",0,100);
-		configParam(ProbablyNoteArabic::SCALE_PARAM, 0.0, 11.0, 0.0,"Scale");
-        configParam(ProbablyNoteArabic::SCALE_CV_ATTENUVERTER_PARAM, -1.0, 1.0, 0.0,"Scale CV Attenuation","%",0,100);
-		configParam(ProbablyNoteArabic::KEY_PARAM, 0.0, 11.0, 0.0,"Key");
-        configParam(ProbablyNoteArabic::KEY_CV_ATTENUVERTER_PARAM, -1.0, 1.0, 0.0,"Key CV Attenuation","%",0,100); 
+		configParam(ProbablyNoteArabic::LOWER_JINS_PARAM, 0.0, 8.0, 0.0,"Lower Jins");
+        configParam(ProbablyNoteArabic::LOWER_JINS_CV_ATTENUVERTER_PARAM, -1.0, 1.0, 0.0,"Lower Jins CV Attenuation","%",0,100);
+		configParam(ProbablyNoteArabic::UPPER_JINS_PARAM, 0.0, 8.0, 0.0,"Upper Jins");
+        configParam(ProbablyNoteArabic::UPPER_JINS_CV_ATTENUVERTER_PARAM, -1.0, 1.0, 0.0,"Upper Jins CV Attenuation","%",0,100);
+		//configParam(ProbablyNoteArabic::KEY_PARAM, 0.0, 11.0, 0.0,"Key");
+        //configParam(ProbablyNoteArabic::KEY_CV_ATTENUVERTER_PARAM, -1.0, 1.0, 0.0,"Key CV Attenuation","%",0,100); 
 		configParam(ProbablyNoteArabic::OCTAVE_PARAM, -4.0, 4.0, 0.0,"Octave");
         configParam(ProbablyNoteArabic::OCTAVE_CV_ATTENUVERTER_PARAM, -1.0, 1.0, 0.0,"Octave CV Attenuation","%",0,100);
 		configParam(ProbablyNoteArabic::OCTAVE_WRAPAROUND_PARAM, 0.0, 1.0, 0.0,"Octave Wraparound");
-		configParam(ProbablyNoteArabic::TEMPERMENT_PARAM, 0.0, 1.0, 0.0,"Just Intonation");
+		
 
         srand(time(NULL));
 
@@ -280,10 +284,7 @@ struct ProbablyNoteArabic : Module {
 			}			
 		}		
 
-		if (tempermentTrigger.process(params[TEMPERMENT_PARAM].getValue() + inputs[TEMPERMENT_INPUT].getVoltage())) {
-			justIntonation = !justIntonation;
-		}		
-		lights[JUST_INTONATION_LIGHT].value = justIntonation;
+		
 		
         if (octaveWrapAroundTrigger.process(params[OCTAVE_WRAPAROUND_PARAM].getValue())) {
 			octaveWrapAround = !octaveWrapAround;
@@ -301,12 +302,12 @@ struct ProbablyNoteArabic : Module {
         focus = clamp(params[DISTRIBUTION_PARAM].getValue() + (inputs[DISTRIBUTION_INPUT].getVoltage() / 10.0f * params[DISTRIBUTION_CV_ATTENUVERTER_PARAM].getValue()),0.0f,1.0f);
 
         
-        scale = clamp(params[SCALE_PARAM].getValue() + (inputs[SCALE_INPUT].getVoltage() * MAX_SCALES / 10.0 * params[SCALE_CV_ATTENUVERTER_PARAM].getValue()),0.0,11.0f);
-        if(scale != lastScale) {
-            for(int i = 0;i<MAX_NOTES;i++) {
-                currentScaleNoteWeighting[i] = scaleNoteWeighting[scale][i];
-            }
-        }
+        // scale = clamp(params[SCALE_PARAM].getValue() + (inputs[SCALE_INPUT].getVoltage() * MAX_SCALES / 10.0 * params[SCALE_CV_ATTENUVERTER_PARAM].getValue()),0.0,11.0f);
+        // if(scale != lastScale) {
+        //     for(int i = 0;i<MAX_NOTES;i++) {
+        //         currentScaleNoteWeighting[i] = scaleNoteWeighting[scale][i];
+        //     }
+        // }
 
         key = clamp(params[KEY_PARAM].getValue() + (inputs[KEY_INPUT].getVoltage() * MAX_NOTES / 10.0 * params[KEY_CV_ATTENUVERTER_PARAM].getValue()),0.0f,11.0f);
 
@@ -461,7 +462,7 @@ struct ProbablyNoteArabic : Module {
 						notePosition += MAX_NOTES;
 						octaveAdjust -=1;
 					}
-					quantitizedNoteCV =(noteTemperment[1][notePosition] / 1200.0) + (key /12.0); 
+					quantitizedNoteCV =(noteTemperment[notePosition] / 1200.0) + (key /12.0); 
 				}
 				quantitizedNoteCV += octaveIn + octave + octaveAdjust; 
 				outputs[QUANT_OUTPUT].setVoltage(quantitizedNoteCV);
@@ -777,9 +778,9 @@ struct ProbablyNoteArabicWidget : ModuleWidget {
         addParam(createParam<RoundReallySmallFWKnob>(Vec(154,51), module, ProbablyNoteArabic::DISTRIBUTION_CV_ATTENUVERTER_PARAM));			
 		addInput(createInput<FWPortInSmall>(Vec(156, 29), module, ProbablyNoteArabic::DISTRIBUTION_INPUT));
 
-        addParam(createParam<RoundSmallFWSnapKnob>(Vec(8,86), module, ProbablyNoteArabic::SCALE_PARAM));			
-        addParam(createParam<RoundReallySmallFWKnob>(Vec(34,112), module, ProbablyNoteArabic::SCALE_CV_ATTENUVERTER_PARAM));			
-		addInput(createInput<FWPortInSmall>(Vec(36, 90), module, ProbablyNoteArabic::SCALE_INPUT));
+        addParam(createParam<RoundSmallFWSnapKnob>(Vec(8,86), module, ProbablyNoteArabic::LOWER_JINS_PARAM));			
+        addParam(createParam<RoundReallySmallFWKnob>(Vec(34,112), module, ProbablyNoteArabic::LOWER_JINS_CV_ATTENUVERTER_PARAM));			
+		addInput(createInput<FWPortInSmall>(Vec(36, 90), module, ProbablyNoteArabic::LOWER_JINS_INPUT));
 
         addParam(createParam<RoundSmallFWSnapKnob>(Vec(68,86), module, ProbablyNoteArabic::KEY_PARAM));			
         addParam(createParam<RoundReallySmallFWKnob>(Vec(94,112), module, ProbablyNoteArabic::KEY_CV_ATTENUVERTER_PARAM));			
@@ -799,9 +800,6 @@ struct ProbablyNoteArabicWidget : ModuleWidget {
 		addParam(createParam<LEDButton>(Vec(130, 113), module, ProbablyNoteArabic::OCTAVE_WRAPAROUND_PARAM));
 		addChild(createLight<LargeLight<BlueLight>>(Vec(131.5, 114.5), module, ProbablyNoteArabic::OCTAVE_WRAPAROUND_LIGHT));
 
-		addParam(createParam<LEDButton>(Vec(155, 286), module, ProbablyNoteArabic::TEMPERMENT_PARAM));
-		addChild(createLight<LargeLight<BlueLight>>(Vec(156.5, 287.5), module, ProbablyNoteArabic::JUST_INTONATION_LIGHT));
-		addInput(createInput<FWPortInSmall>(Vec(156, 307), module, ProbablyNoteArabic::TEMPERMENT_INPUT));
 
 
 

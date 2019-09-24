@@ -253,25 +253,25 @@ struct QARProbabilityExpanderWidget : ModuleWidget {
 
 
          for(int i=0; i<MAX_STEPS / 3;i++) {
-		    addParam(createParam<RoundSmallFWKnob>(Vec(10, 40 + i*46), module, QARProbabilityExpander::PROBABILITY_1_PARAM + i));
-		    addParam(createParam<RoundSmallFWKnob>(Vec(72, 40 + i*46), module, QARProbabilityExpander::PROBABILITY_1_PARAM + i + (MAX_STEPS / 3)));
-		    addParam(createParam<RoundSmallFWKnob>(Vec(134, 40 + i*46), module, QARProbabilityExpander::PROBABILITY_1_PARAM + i + (MAX_STEPS * 2 / 3)));
+		    addParam(createParam<RoundSmallFWKnob>(Vec(10, 30 + i*46), module, QARProbabilityExpander::PROBABILITY_1_PARAM + i));
+		    addParam(createParam<RoundSmallFWKnob>(Vec(72, 30 + i*46), module, QARProbabilityExpander::PROBABILITY_1_PARAM + i + (MAX_STEPS / 3)));
+		    addParam(createParam<RoundSmallFWKnob>(Vec(134, 30 + i*46), module, QARProbabilityExpander::PROBABILITY_1_PARAM + i + (MAX_STEPS * 2 / 3)));
 
-		    addParam(createParam<RoundReallySmallFWKnob>(Vec(37, 53 + i*46), module, QARProbabilityExpander::PROBABILITY_ATTEN_1_PARAM + i));
-		    addParam(createParam<RoundReallySmallFWKnob>(Vec(99, 53 + i*46), module, QARProbabilityExpander::PROBABILITY_ATTEN_1_PARAM + i + (MAX_STEPS / 3)));
-		    addParam(createParam<RoundReallySmallFWKnob>(Vec(161, 53 + i*46), module, QARProbabilityExpander::PROBABILITY_ATTEN_1_PARAM + i + (MAX_STEPS * 2 / 3)));
+		    addParam(createParam<RoundReallySmallFWKnob>(Vec(36, 50 + i*46), module, QARProbabilityExpander::PROBABILITY_ATTEN_1_PARAM + i));
+		    addParam(createParam<RoundReallySmallFWKnob>(Vec(98, 50 + i*46), module, QARProbabilityExpander::PROBABILITY_ATTEN_1_PARAM + i + (MAX_STEPS / 3)));
+		    addParam(createParam<RoundReallySmallFWKnob>(Vec(160, 50 + i*46), module, QARProbabilityExpander::PROBABILITY_ATTEN_1_PARAM + i + (MAX_STEPS * 2 / 3)));
     
-    		addInput(createInput<FWPortInSmall>(Vec(38, 33 + i*46), module, QARProbabilityExpander::PROBABILITY_1_INPUT + i));
-    		addInput(createInput<FWPortInSmall>(Vec(100, 33 + i*46), module, QARProbabilityExpander::PROBABILITY_1_INPUT + i + (MAX_STEPS / 3)));
-    		addInput(createInput<FWPortInSmall>(Vec(162, 33 + i*46), module, QARProbabilityExpander::PROBABILITY_1_INPUT + i + (MAX_STEPS * 2 / 3)));
+    		addInput(createInput<FWPortInReallySmall>(Vec(40, 33 + i*46), module, QARProbabilityExpander::PROBABILITY_1_INPUT + i));
+    		addInput(createInput<FWPortInReallySmall>(Vec(102, 33 + i*46), module, QARProbabilityExpander::PROBABILITY_1_INPUT + i + (MAX_STEPS / 3)));
+    		addInput(createInput<FWPortInReallySmall>(Vec(164, 33 + i*46), module, QARProbabilityExpander::PROBABILITY_1_INPUT + i + (MAX_STEPS * 2 / 3)));
 
-			addParam(createParam<LEDButton>(Vec(12, 65 + i*46), module, QARProbabilityExpander::PROBABILITY_GROUP_MODE_1_PARAM + i));
-		    addParam(createParam<LEDButton>(Vec(74, 65 + i*46), module, QARProbabilityExpander::PROBABILITY_GROUP_MODE_1_PARAM + i + (MAX_STEPS / 3)));
-		    addParam(createParam<LEDButton>(Vec(136, 65 + i*46), module, QARProbabilityExpander::PROBABILITY_GROUP_MODE_1_PARAM + i + (MAX_STEPS * 2 / 3)));
+			addParam(createParam<LEDButton>(Vec(12, 55 + i*46), module, QARProbabilityExpander::PROBABILITY_GROUP_MODE_1_PARAM + i));
+		    addParam(createParam<LEDButton>(Vec(74, 55 + i*46), module, QARProbabilityExpander::PROBABILITY_GROUP_MODE_1_PARAM + i + (MAX_STEPS / 3)));
+		    addParam(createParam<LEDButton>(Vec(136, 55 + i*46), module, QARProbabilityExpander::PROBABILITY_GROUP_MODE_1_PARAM + i + (MAX_STEPS * 2 / 3)));
 
-			addChild(createLight<LargeLight<RedGreenBlueLight>>(Vec(13.5, 66.5 + i*46), module, QARProbabilityExpander::PROBABILITY_GROUP_MODE_1_LIGHT + i*3));
-			addChild(createLight<LargeLight<RedGreenBlueLight>>(Vec(75.5, 66.5 + i*46), module, QARProbabilityExpander::PROBABILITY_GROUP_MODE_1_LIGHT + i*3 + MAX_STEPS));
-			addChild(createLight<LargeLight<RedGreenBlueLight>>(Vec(137.5, 66.5 + i*46), module, QARProbabilityExpander::PROBABILITY_GROUP_MODE_1_LIGHT + i*3 + (MAX_STEPS * 2)));
+			addChild(createLight<LargeLight<RedGreenBlueLight>>(Vec(13.5, 56.5 + i*46), module, QARProbabilityExpander::PROBABILITY_GROUP_MODE_1_LIGHT + i*3));
+			addChild(createLight<LargeLight<RedGreenBlueLight>>(Vec(75.5, 56.5 + i*46), module, QARProbabilityExpander::PROBABILITY_GROUP_MODE_1_LIGHT + i*3 + MAX_STEPS));
+			addChild(createLight<LargeLight<RedGreenBlueLight>>(Vec(137.5, 56.5 + i*46), module, QARProbabilityExpander::PROBABILITY_GROUP_MODE_1_LIGHT + i*3 + (MAX_STEPS * 2)));
         }
 	
 
