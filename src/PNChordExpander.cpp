@@ -97,19 +97,19 @@ struct PNChordExpander : Module {
 			producerMessage[5] = inputs[DISSONANCE7_EXTERNAL_RANDOM_INPUT].isConnected() ? inputs[DISSONANCE7_EXTERNAL_RANDOM_INPUT].getVoltage() / 10.0f : -1;
 			producerMessage[6] = inputs[SUSPENSIONS_EXTERNAL_RANDOM_INPUT].isConnected() ? inputs[SUSPENSIONS_EXTERNAL_RANDOM_INPUT].getVoltage() / 10.0f : -1;
 
-			//leftExpander.module->rightExpander.messageFlipRequested = true;
+			leftExpander.module->rightExpander.messageFlipRequested = true;
 
 			// From Mother	
 			float *messagesFromMother = (float*)leftExpander.consumerMessage;
-			// thirdOffset = messagesFromMother[0]; 
-			// fifthOffset = messagesFromMother[1]; 
-			// seventhOffset = messagesFromMother[2]; 
+			thirdOffset = messagesFromMother[0]; 
+			fifthOffset = messagesFromMother[1]; 
+			seventhOffset = messagesFromMother[2]; 
 			//Disabling for now. :/
-			thirdOffset = 2; 
-			fifthOffset = 2; 
-			seventhOffset = 2; 
+			// thirdOffset = 2; 
+			// fifthOffset = 2; 
+			// seventhOffset = 2; 
 			
-			leftExpander.messageFlipRequested = true;
+			//leftExpander.messageFlipRequested = true;
 			
 					
 		} else {

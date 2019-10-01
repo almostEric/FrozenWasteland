@@ -1,4 +1,7 @@
-### 1.9.5 (2019-09-)
+### 1.9.6 (2019-10-02)
+- Probability Not(e) Fixes and Improvements
+
+### 1.9.5 (2019-09-24)
 - Probability Not(e) Fixes and Improvements
 - PN Bohlen-Pierce added
 - PN Chord Expander

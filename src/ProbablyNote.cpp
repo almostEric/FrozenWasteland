@@ -21,6 +21,8 @@ struct ProbablyNote : Module {
 	enum ParamIds {
 		SPREAD_PARAM,
 		SPREAD_CV_ATTENUVERTER_PARAM,
+		SLANT_PARAM,
+		SLANT_CV_ATTENUVERTER_PARAM,
 		DISTRIBUTION_PARAM,
 		DISTRIBUTION_CV_ATTENUVERTER_PARAM,
         SHIFT_PARAM,
@@ -31,7 +33,7 @@ struct ProbablyNote : Module {
 		KEY_CV_ATTENUVERTER_PARAM,
         OCTAVE_PARAM,
 		OCTAVE_CV_ATTENUVERTER_PARAM,
-        WRITE_SCALE_PARAM,
+        RESET_SCALE_PARAM,
         OCTAVE_WRAPAROUND_PARAM,
 		TEMPERMENT_PARAM,
 		SHIFT_SCALING_PARAM,
@@ -45,6 +47,7 @@ struct ProbablyNote : Module {
 	enum InputIds {
 		NOTE_INPUT,
 		SPREAD_INPUT,
+		SLANT_INPUT,
 		DISTRIBUTION_INPUT,
 		SHIFT_INPUT,
         SCALE_INPUT,
@@ -53,6 +56,7 @@ struct ProbablyNote : Module {
 		TEMPERMENT_INPUT,
 		TRIGGER_INPUT,
         EXTERNAL_RANDOM_INPUT,
+		OCTAVE_WRAP_INPUT,		
         NOTE_WEIGHT_INPUT,
 		NUM_INPUTS = NOTE_WEIGHT_INPUT + MAX_NOTES
 	};
@@ -105,7 +109,7 @@ struct ProbablyNote : Module {
     
 
 	
-	dsp::SchmittTrigger clockTrigger,writeScaleTrigger,octaveWrapAroundTrigger,tempermentTrigger,shiftScalingTrigger,keyScalingTrigger,noteActiveTrigger[MAX_NOTES]; 
+	dsp::SchmittTrigger clockTrigger,resetScaleTrigger,octaveWrapAroundTrigger,tempermentTrigger,shiftScalingTrigger,keyScalingTrigger,noteActiveTrigger[MAX_NOTES]; 
 	dsp::PulseGenerator noteChangePulse;
     GaussianNoiseGenerator _gauss;
  
@@ -115,6 +119,7 @@ struct ProbablyNote : Module {
     float noteInitialProbability[MAX_NOTES] = {0.0f};
     float currentScaleNoteWeighting[MAX_NOTES] = {0.0};
 	float actualProbability[MAX_NOTES] = {0.0};
+	int controlIndex[MAX_NOTES] = {0};
 
 
     int scale = 0;
@@ -126,13 +131,17 @@ struct ProbablyNote : Module {
 	int weightShift = 0;
 	int lastWeightShift = 0;
     int spread = 0;
+	float upperSpread = 0.0;
+	float lowerSpread = 0.0;
+	float slant = 0;
 	float focus = 0; 
 	int currentNote = 0;
 	int probabilityNote = 0;
 	double lastQuantizedCV = 0.0;
-	bool noteChanged = false;
+	bool resetTriggered = false;
 	int lastNote = -1;
 	int lastSpread = -1;
+	float lastSlant = -1;
 	float lastFocus = -1;
 	bool justIntonation = false;
 	bool shiftLogarithmic = false;
@@ -162,6 +171,8 @@ struct ProbablyNote : Module {
 		config(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS, NUM_LIGHTS);
 		configParam(ProbablyNote::SPREAD_PARAM, 0.0, 6.0, 0.0,"Spread");
         configParam(ProbablyNote::SPREAD_CV_ATTENUVERTER_PARAM, -1.0, 1.0, 0.0,"Spread CV Attenuation" ,"%",0,100);
+		configParam(ProbablyNote::SLANT_PARAM, -1.0, 1.0, 0.0,"Slant");
+        configParam(ProbablyNote::SLANT_CV_ATTENUVERTER_PARAM, -1.0, 1.0, 0.0,"Slant CV Attenuation" ,"%",0,100);
 		configParam(ProbablyNote::DISTRIBUTION_PARAM, 0.0, 1.0, 0.0,"Distribution");
 		configParam(ProbablyNote::DISTRIBUTION_CV_ATTENUVERTER_PARAM, -1.0, 1.0, 0.0,"Distribution CV Attenuation");
 		configParam(ProbablyNote::SHIFT_PARAM, -11.0, 11.0, 0.0,"Weight Shift");
@@ -345,55 +356,22 @@ struct ProbablyNote : Module {
 			messageToSlave[0] = 1.0f; 
 			messageToSlave[1] = -1.0f; 
 			messageToSlave[2] = -1.0f; 
-			//rightExpander.module->leftExpander.messageFlipRequested = true;
-				
+			rightExpander.module->leftExpander.messageFlipRequested = true;
+
+							
 
 		} else {
 			generateChords = false;
 		}
 
 	
-        if (writeScaleTrigger.process(params[WRITE_SCALE_PARAM].getValue())) {
-			//Move everything back to shift 0 before saving
-			int restoreShift =  -lastWeightShift;
-			float shiftWeights[MAX_NOTES];
-			if(restoreShift != 0) {
-				for(int i=0;i<MAX_NOTES;i++) {
-					if(noteActive[i]) {
-						int noteCount = 0;
-						int newIndex = i;
-						int offset = 1;
-						if(restoreShift < 0)
-							offset = -1;
-						bool noteFound = false;
-						do {
-							newIndex = (newIndex + offset) % MAX_NOTES;
-							if (newIndex < 0)
-								newIndex+=MAX_NOTES;
-							if(noteActive[newIndex])
-								noteCount+=1;
-							if(noteCount >= std::abs(restoreShift))
-								noteFound = true;
-						} while(!noteFound);
-						shiftWeights[newIndex] = params[NOTE_WEIGHT_PARAM+i].getValue();
-					} else {
-						shiftWeights[i] = params[NOTE_WEIGHT_PARAM+i].getValue();
-					}
-				}
-			} else {
-				for(int i=0;i<MAX_NOTES;i++) {
-					shiftWeights[i] = params[NOTE_WEIGHT_PARAM+i].getValue();
-				}
-			}
-			//Now adjust for key
-			for(int i=0;i<MAX_NOTES;i++) {
-				int actualNote = (i + key) % MAX_NOTES;
-				if(noteActive[actualNote]) {
-					scaleNoteWeighting[scale][i] = shiftWeights[actualNote];
-				} else {
-					scaleNoteWeighting[scale][i] = 0.0f;
-				} 			
-			}			
+        if (resetScaleTrigger.process(params[RESET_SCALE_PARAM].getValue())) {
+			resetTriggered = true;
+			lastWeightShift = 0;			
+			for(int j=0;j<MAX_NOTES;j++) {
+				scaleNoteWeighting[scale][j] = defaultScaleNoteWeighting[scale][j];
+				currentScaleNoteWeighting[j] = defaultScaleNoteWeighting[scale][j];;
+			}					
 		}		
 
 		if (tempermentTrigger.process(params[TEMPERMENT_PARAM].getValue() + inputs[TEMPERMENT_INPUT].getVoltage())) {
@@ -401,7 +379,7 @@ struct ProbablyNote : Module {
 		}		
 		lights[JUST_INTONATION_LIGHT].value = justIntonation;
 		
-        if (octaveWrapAroundTrigger.process(params[OCTAVE_WRAPAROUND_PARAM].getValue())) {
+        if (octaveWrapAroundTrigger.process(params[OCTAVE_WRAPAROUND_PARAM].getValue() + inputs[OCTAVE_WRAP_INPUT].getVoltage())) {
 			octaveWrapAround = !octaveWrapAround;
 		}		
 		lights[OCTAVE_WRAPAROUND_LIGHT].value = octaveWrapAround;
@@ -419,16 +397,13 @@ struct ProbablyNote : Module {
 
         spread = clamp(params[SPREAD_PARAM].getValue() + (inputs[SPREAD_INPUT].getVoltage() * params[SPREAD_CV_ATTENUVERTER_PARAM].getValue()),0.0f,6.0f);
 
+        slant = clamp(params[SLANT_PARAM].getValue() + (inputs[SLANT_INPUT].getVoltage() / 10.0f * params[SLANT_CV_ATTENUVERTER_PARAM].getValue()),-1.0f,1.0f);
+
         focus = clamp(params[DISTRIBUTION_PARAM].getValue() + (inputs[DISTRIBUTION_INPUT].getVoltage() / 10.0f * params[DISTRIBUTION_CV_ATTENUVERTER_PARAM].getValue()),0.0f,1.0f);
 
         
         scale = clamp(params[SCALE_PARAM].getValue() + (inputs[SCALE_INPUT].getVoltage() * MAX_SCALES / 10.0 * params[SCALE_CV_ATTENUVERTER_PARAM].getValue()),0.0,11.0f);
-        if(scale != lastScale) {
-            for(int i = 0;i<MAX_NOTES;i++) {
-                currentScaleNoteWeighting[i] = scaleNoteWeighting[scale][i];
-            }
-        }
-
+        
         key = params[KEY_PARAM].getValue();
 		if(keyLogarithmic) {
 			double inputKey = inputs[KEY_INPUT].getVoltage() * params[KEY_CV_ATTENUVERTER_PARAM].getValue();
@@ -440,18 +415,7 @@ struct ProbablyNote : Module {
 			key += inputs[KEY_INPUT].getVoltage() * MAX_NOTES / 10.0 * params[KEY_CV_ATTENUVERTER_PARAM].getValue();
 		}
         key = clamp(key,0,11);
-
-        if(key != lastKey || scale != lastScale) {
-            for(int i = 0; i < MAX_NOTES;i++) {
-                int noteValue = (i + key) % MAX_NOTES;
-                if(noteValue < 0)
-                    noteValue +=MAX_NOTES;
-                noteActive[noteValue] = currentScaleNoteWeighting[i] > 0.0;
-				noteScaleProbability[noteValue] = currentScaleNoteWeighting[i];
-				params[NOTE_WEIGHT_PARAM + (useCircleLayout ? i : noteValue)].setValue(noteScaleProbability[noteValue]);
-            }
-        }
-
+		
         octave = clamp(params[OCTAVE_PARAM].getValue() + (inputs[OCTAVE_INPUT].getVoltage() * 0.4 * params[OCTAVE_CV_ATTENUVERTER_PARAM].getValue()),-4.0f,4.0f);
 
         double noteIn = inputs[NOTE_INPUT].getVoltage();
@@ -466,24 +430,31 @@ struct ProbablyNote : Module {
 			}            
         }
 
-		if(lastNote != currentNote || lastSpread != spread || lastFocus != focus) {
+		if(lastNote != currentNote || lastSpread != spread || lastSlant != slant || lastFocus != focus) {
 			for(int i = 0; i<MAX_NOTES;i++) {
 				noteInitialProbability[i] = 0.0;
 			}
 			noteInitialProbability[currentNote] = 1.0;
+			upperSpread = std::ceil((float)spread * std::min(slant+1.0,1.0));
+			lowerSpread = std::ceil((float)spread * std::min(1.0-slant,1.0));
+
+			
+
 			for(int i=1;i<=spread;i++) {
 				int noteAbove = (currentNote + i) % MAX_NOTES;
 				int noteBelow = (currentNote - i);
 				if(noteBelow < 0)
                     noteBelow +=MAX_NOTES;
 
-				float initialProbability = lerp(1.0,lerp(0.1,1.0,focus),(float)i/(float)spread); 
-				
-				noteInitialProbability[noteAbove] = initialProbability;				
-				noteInitialProbability[noteBelow] = initialProbability;				
+				float upperInitialProbability = lerp(1.0,lerp(0.1,1.0,focus),(float)i/(float)spread); 
+				float lowerInitialProbability = lerp(1.0,lerp(0.1,1.0,focus),(float)i/(float)spread); 
+
+				noteInitialProbability[noteAbove] = i <= upperSpread ? upperInitialProbability : 0.0f;				
+				noteInitialProbability[noteBelow] = i <= lowerSpread ? lowerInitialProbability : 0.0f;				
 			}
 			lastNote = currentNote;
 			lastSpread = spread;
+			lastSlant = slant;
 			lastFocus = focus;
 		}
 
@@ -518,17 +489,27 @@ struct ProbablyNote : Module {
 		weightShift = clamp(weightShift,-11,11);
 
 	
+		//Process scales, keys and weights
+		if(scale != lastScale || key != lastKey || weightShift != lastWeightShift || resetTriggered) {
 
-		//Shift Probabilities
-		if(lastWeightShift != weightShift) {
-			int actualShift = weightShift - lastWeightShift;
+			for(int i=0;i<MAX_NOTES;i++) {
+				currentScaleNoteWeighting[i] = scaleNoteWeighting[scale][i];
+				int noteValue = (i + key) % MAX_NOTES;
+				if(noteValue < 0)
+					noteValue +=MAX_NOTES;
+				noteActive[noteValue] = currentScaleNoteWeighting[i] > 0.0;
+				noteScaleProbability[noteValue] = currentScaleNoteWeighting[i];
+			}	
+
 			float shiftWeights[MAX_NOTES];
 	        for(int i=0;i<MAX_NOTES;i++) {
+				int newIndex = i;
 				if(noteActive[i]) {
 					int noteCount = 0;
-					int newIndex = i;
-					int offset = 1;
-					if(actualShift < 0)
+					int offset = 0;
+					if(weightShift > 0)
+						offset = 1;
+					else if(weightShift < 0)
 						offset = -1;
 					bool noteFound = false;
 					do {
@@ -537,23 +518,35 @@ struct ProbablyNote : Module {
 							newIndex+=MAX_NOTES;
 						if(noteActive[newIndex])
 							noteCount+=1;
-						if(noteCount >= std::abs(actualShift))
+						if(noteCount >= std::abs(weightShift))
 							noteFound = true;
 					} while(!noteFound);
-					shiftWeights[newIndex] = params[NOTE_WEIGHT_PARAM+i].getValue();
+					shiftWeights[newIndex] = noteScaleProbability[i];
+					controlIndex[i] = newIndex;
 				} else {
-					shiftWeights[i] = params[NOTE_WEIGHT_PARAM+i].getValue();
+					shiftWeights[i] = noteScaleProbability[i];
+					controlIndex[i] = i;					
+				}
+				if(i == key) {
+					transposedKey = newIndex;
 				}
 			}
 			for(int i=0;i<MAX_NOTES;i++) {
-				params[NOTE_WEIGHT_PARAM+i].setValue(shiftWeights[i]);
-			}				
-		}		
+				int noteValue = (i + key) % MAX_NOTES;
+				params[NOTE_WEIGHT_PARAM + (useCircleLayout ? i : noteValue)].setValue(shiftWeights[noteValue]);
+			}	
 
-        for(int i=0;i<MAX_NOTES;i++) {
-			int actualTarget = useCircleLayout ?  (i + key) % MAX_NOTES : i;
+			lastKey = key;
+			lastScale = scale;
+			lastWeightShift = weightShift;
+			resetTriggered = false;
+		}
+
+		for(int i=0;i<MAX_NOTES;i++) {
+			int controlOffset = (i + key) % MAX_NOTES;
+			int actualTarget = useCircleLayout ?  controlOffset : i;
             if (noteActiveTrigger[i].process( params[NOTE_ACTIVE_PARAM+i].getValue())) {
-                noteActive[actualTarget] = !noteActive[actualTarget];             }
+                noteActive[actualTarget] = !noteActive[actualTarget];             }	
 
 			float userProbability;
 			if(noteActive[actualTarget]) {
@@ -564,39 +557,20 @@ struct ProbablyNote : Module {
 			else { 
 				userProbability = 0.0;
 				lights[NOTE_ACTIVE_LIGHT+i*2].value = 0;    
-				lights[NOTE_ACTIVE_LIGHT+i*2+1].value = 1;    
+				lights[NOTE_ACTIVE_LIGHT+i*2+1].value = 1;    	
 			}
 
 			actualProbability[actualTarget] = noteInitialProbability[actualTarget] * userProbability; 
-        }
 
-		//Find New Key
-		if(scale != lastScale || key != lastKey || weightShift != lastWeightShift) {
-			if(weightShift != 0) {
-				int noteCount = 0;
-				int newIndex = key;
-				int offset = 1;
-				if(weightShift < 0)
-					offset = -1;
-				bool noteFound = false;
-				do {
-					newIndex = (newIndex + offset) % MAX_NOTES;
-					if (newIndex < 0)
-						newIndex+=MAX_NOTES;
-					if(noteActive[newIndex])
-						noteCount+=1;
-					if(noteCount >= std::abs(weightShift))
-						noteFound = true;
-				} while(!noteFound);
-				transposedKey = newIndex;
+			if(useCircleLayout) {
+				int scalePosition = controlIndex[controlOffset] - key;
+				if (scalePosition < 0)
+					scalePosition += MAX_NOTES;
+				scaleNoteWeighting[scale][i] = noteActive[controlOffset] ? params[NOTE_WEIGHT_PARAM+scalePosition].getValue() : 0.0; 
 			} else {
-				transposedKey = key;
-			}
-
-			lastKey = key;
-			lastScale = scale;
-			lastWeightShift = weightShift;
-		}
+				scaleNoteWeighting[scale][i] = noteActive[controlIndex[controlOffset]] ? params[NOTE_WEIGHT_PARAM+controlIndex[controlOffset]].getValue() : 0.0; 
+			}									
+        }
 
 		if( inputs[TRIGGER_INPUT].active ) {
 			if (clockTrigger.process(inputs[TRIGGER_INPUT].getVoltage()) ) {		
@@ -621,9 +595,9 @@ struct ProbablyNote : Module {
 				probabilityNote = randomNote;
 				float octaveAdjust = 0.0;
 				if(!octaveWrapAround) {
-					if(randomNote > currentNote && randomNote - currentNote > spread)
+					if(randomNote > currentNote && randomNote - currentNote > upperSpread)
 						octaveAdjust = -1.0;
-					if(randomNote < currentNote && currentNote - randomNote > spread)
+					if(randomNote < currentNote && currentNote - randomNote > lowerSpread)
 						octaveAdjust = 1.0;
 				}
 
@@ -733,9 +707,13 @@ struct ProbablyNote : Module {
 
 void ProbablyNote::onReset() {
 	clockTrigger.reset();
+	resetTriggered = true;
 	for(int i = 0;i<MAX_SCALES;i++) {
 		for(int j=0;j<MAX_NOTES;j++) {
 			scaleNoteWeighting[i][j] = defaultScaleNoteWeighting[i][j];
+			if(i == scale) {
+				currentScaleNoteWeighting[j] = defaultScaleNoteWeighting[i][j];
+			}
 		}
 	}
 }
@@ -822,13 +800,13 @@ struct ProbablyNoteWidget : ModuleWidget {
 				case 0:
 				//C
 				nvgBeginPath(args.vg);
-				nvgMoveTo(args.vg,1,330);
-				nvgLineTo(args.vg,142, 330);
-				nvgLineTo(args.vg,142, 302);
-				nvgLineTo(args.vg,62, 302);
-				nvgArc(args.vg,50.5,302,12.5,0,M_PI-rotate90,NVG_CW);
-				nvgLineTo(args.vg,50.5, 314);		
-				nvgLineTo(args.vg,1, 314);
+				nvgMoveTo(args.vg,25,330);
+				nvgLineTo(args.vg,167, 330);
+				nvgLineTo(args.vg,167, 302);
+				nvgLineTo(args.vg,87, 302);
+				nvgArc(args.vg,75.5,302,12.5,0,M_PI-rotate90,NVG_CW);
+				nvgLineTo(args.vg,75.5, 314);		
+				nvgLineTo(args.vg,25, 314);
 				nvgClosePath(args.vg);		
 				nvgFill(args.vg);
 				break;
@@ -836,11 +814,10 @@ struct ProbablyNoteWidget : ModuleWidget {
 				case 1:
 				//C#
 				nvgBeginPath(args.vg);
-				nvgMoveTo(args.vg,1,314.5);
-				nvgLineTo(args.vg,50.5,314.5);
-				nvgArc(args.vg,50.5,302,12.5,M_PI-rotate90,0-rotate90,NVG_CCW);
-				//nvgLineTo(args.vg,62,290);		
-				nvgLineTo(args.vg,1,289.5);
+				nvgMoveTo(args.vg,25,314.5);
+				nvgLineTo(args.vg,75.5,314.5);
+				nvgArc(args.vg,75.5,302,12.5,M_PI-rotate90,0-rotate90,NVG_CCW);
+				nvgLineTo(args.vg,25,289.5);
 				nvgClosePath(args.vg);		
 				nvgFill(args.vg);
 				break;
@@ -848,14 +825,14 @@ struct ProbablyNoteWidget : ModuleWidget {
 				case 2:
 				//D
 				nvgBeginPath(args.vg);
-				nvgMoveTo(args.vg,62,302);
-				nvgLineTo(args.vg,142,302);
-				nvgLineTo(args.vg,142,274);		
-				nvgLineTo(args.vg,62,274);
-				nvgArc(args.vg,50.5,274,12.5,0,M_PI-rotate90,NVG_CW);
-				nvgLineTo(args.vg,1,286.5);
-				nvgLineTo(args.vg,1,289.5);
-				nvgArc(args.vg,50.5,302,12.5,0-rotate90,0,NVG_CW);
+				nvgMoveTo(args.vg,87,302);
+				nvgLineTo(args.vg,167,302);
+				nvgLineTo(args.vg,167,274);		
+				nvgLineTo(args.vg,87,274);
+				nvgArc(args.vg,75.5,274,12.5,0,M_PI-rotate90,NVG_CW);
+				nvgLineTo(args.vg,25,286.5);
+				nvgLineTo(args.vg,25,289.5);
+				nvgArc(args.vg,75.5,302,12.5,0-rotate90,0,NVG_CW);
 				nvgClosePath(args.vg);		
 				nvgFill(args.vg);
 				break;
@@ -863,10 +840,10 @@ struct ProbablyNoteWidget : ModuleWidget {
 				case 3:
 				//D#
 				nvgBeginPath(args.vg);
-				nvgMoveTo(args.vg,1,286.5);
-				nvgLineTo(args.vg,50.5,286.5);
-				nvgArc(args.vg,50.5,274,12.5,M_PI-rotate90,0-rotate90,NVG_CCW);
-				nvgLineTo(args.vg,1,261.5);
+				nvgMoveTo(args.vg,25,286.5);
+				nvgLineTo(args.vg,75.5,286.5);
+				nvgArc(args.vg,75.5,274,12.5,M_PI-rotate90,0-rotate90,NVG_CCW);
+				nvgLineTo(args.vg,25,261.5);
 				nvgClosePath(args.vg);		
 				nvgFill(args.vg);
 				break;
@@ -874,13 +851,13 @@ struct ProbablyNoteWidget : ModuleWidget {
 				case 4:
 				//E
 				nvgBeginPath(args.vg);
-				nvgMoveTo(args.vg,62,274);
-				nvgLineTo(args.vg,142,274);
-				nvgLineTo(args.vg,142,246);		
-				nvgLineTo(args.vg,1,246);
-				nvgLineTo(args.vg,1, 261.5);		
-				nvgLineTo(args.vg,50.5, 261.5);
-				nvgArc(args.vg,50.5,274,12.5,0-rotate90,0,NVG_CW);
+				nvgMoveTo(args.vg,87,274);
+				nvgLineTo(args.vg,167,274);
+				nvgLineTo(args.vg,167,246);		
+				nvgLineTo(args.vg,25,246);
+				nvgLineTo(args.vg,25,261.5);		
+				nvgLineTo(args.vg,75.5, 261.5);
+				nvgArc(args.vg,75.5,274,12.5,0-rotate90,0,NVG_CW);
 				nvgClosePath(args.vg);		
 				nvgFill(args.vg);
 				break;
@@ -888,13 +865,13 @@ struct ProbablyNoteWidget : ModuleWidget {
 				case 5:
 				//F 
 				nvgBeginPath(args.vg);
-				nvgMoveTo(args.vg,1,246);
-				nvgLineTo(args.vg,142, 246);
-				nvgLineTo(args.vg,142, 218);
-				nvgLineTo(args.vg,62, 218);
-				nvgArc(args.vg,50.5,218,12.5,0,M_PI-rotate90,NVG_CW);
-				nvgLineTo(args.vg,50.5, 230.5);		
-				nvgLineTo(args.vg,1, 230.5);
+				nvgMoveTo(args.vg,25,246);
+				nvgLineTo(args.vg,167, 246);
+				nvgLineTo(args.vg,167, 218);
+				nvgLineTo(args.vg,87, 218);
+				nvgArc(args.vg,75.5,218,12.5,0,M_PI-rotate90,NVG_CW);
+				nvgLineTo(args.vg,75.5, 230.5);		
+				nvgLineTo(args.vg,25, 230.5);
 				nvgClosePath(args.vg);		
 				nvgFill(args.vg);
 				break;
@@ -902,11 +879,11 @@ struct ProbablyNoteWidget : ModuleWidget {
 				case 6:
 				//F#
 				nvgBeginPath(args.vg);
-				nvgMoveTo(args.vg,1,230.5);
-				nvgLineTo(args.vg,50.5,230.5);
-				nvgArc(args.vg,50.5,218,12.5,M_PI-rotate90,0-rotate90,NVG_CCW);
+				nvgMoveTo(args.vg,25,230.5);
+				nvgLineTo(args.vg,75.5,230.5);
+				nvgArc(args.vg,75.5,218,12.5,M_PI-rotate90,0-rotate90,NVG_CCW);
 				//nvgLineTo(args.vg,62,206);		
-				nvgLineTo(args.vg,1,205.5);
+				nvgLineTo(args.vg,25,205.5);
 				nvgClosePath(args.vg);		
 				nvgFill(args.vg);
 				break;
@@ -914,14 +891,14 @@ struct ProbablyNoteWidget : ModuleWidget {
 				case 7:
 				//G
 				nvgBeginPath(args.vg);
-				nvgMoveTo(args.vg,62,218);
-				nvgLineTo(args.vg,142,218);
-				nvgLineTo(args.vg,142,190);		
-				nvgLineTo(args.vg,62,190);
-				nvgArc(args.vg,50.5,190,12.5,0,M_PI-rotate90,NVG_CW);
-				nvgLineTo(args.vg,1,202.5);
-				nvgLineTo(args.vg,1,205.5);
-				nvgArc(args.vg,50.5,218,12.5,0-rotate90,0,NVG_CW);
+				nvgMoveTo(args.vg,87,218);
+				nvgLineTo(args.vg,167,218);
+				nvgLineTo(args.vg,167,190);		
+				nvgLineTo(args.vg,87,190);
+				nvgArc(args.vg,75.5,190,12.5,0,M_PI-rotate90,NVG_CW);
+				nvgLineTo(args.vg,25,202.5);
+				nvgLineTo(args.vg,25,205.5);
+				nvgArc(args.vg,75.5,218,12.5,0-rotate90,0,NVG_CW);
 				nvgClosePath(args.vg);		
 				nvgFill(args.vg);
 				break;
@@ -929,10 +906,10 @@ struct ProbablyNoteWidget : ModuleWidget {
 				case 8:
 				//G#
 				nvgBeginPath(args.vg);
-				nvgMoveTo(args.vg,1,202.5);
-				nvgLineTo(args.vg,50.5,202.5);
-				nvgArc(args.vg,50.5,190,12.5,M_PI-rotate90,0-rotate90,NVG_CCW);
-				nvgLineTo(args.vg,1,178);
+				nvgMoveTo(args.vg,25,202.5);
+				nvgLineTo(args.vg,75.5,202.5);
+				nvgArc(args.vg,75.5,190,12.5,M_PI-rotate90,0-rotate90,NVG_CCW);
+				nvgLineTo(args.vg,25,178);
 				nvgClosePath(args.vg);		
 				nvgFill(args.vg);
 				break;
@@ -940,14 +917,14 @@ struct ProbablyNoteWidget : ModuleWidget {
 				case 9:
 				//A
 				nvgBeginPath(args.vg);
-				nvgMoveTo(args.vg,62,190);
-				nvgLineTo(args.vg,142,190);
-				nvgLineTo(args.vg,142,162);		
-				nvgLineTo(args.vg,62,162);
-				nvgArc(args.vg,50.5,162,12.5,0,M_PI-rotate90,NVG_CW);
-				nvgLineTo(args.vg,1,174.5);
-				nvgLineTo(args.vg,1,177.5);
-				nvgArc(args.vg,50.5,190,12.5,0-rotate90,0,NVG_CW);
+				nvgMoveTo(args.vg,87,190);
+				nvgLineTo(args.vg,167,190);
+				nvgLineTo(args.vg,167,162);		
+				nvgLineTo(args.vg,87,162);
+				nvgArc(args.vg,75.5,162,12.5,0,M_PI-rotate90,NVG_CW);
+				nvgLineTo(args.vg,25,174.5);
+				nvgLineTo(args.vg,25,177.5);
+				nvgArc(args.vg,75.5,190,12.5,0-rotate90,0,NVG_CW);
 				nvgClosePath(args.vg);		
 				nvgFill(args.vg);
 				break;
@@ -955,10 +932,10 @@ struct ProbablyNoteWidget : ModuleWidget {
 				case 10:
 				//A#
 				nvgBeginPath(args.vg);
-				nvgMoveTo(args.vg,1,174.5);
-				nvgLineTo(args.vg,50.5,174.5);
-				nvgArc(args.vg,50.5,162,12.5,M_PI-rotate90,0-rotate90,NVG_CCW);
-				nvgLineTo(args.vg,1,150);
+				nvgMoveTo(args.vg,25,174.5);
+				nvgLineTo(args.vg,75.5,174.5);
+				nvgArc(args.vg,75.5,162,12.5,M_PI-rotate90,0-rotate90,NVG_CCW);
+				nvgLineTo(args.vg,25,150);
 				nvgClosePath(args.vg);		
 				nvgFill(args.vg);
 				break;
@@ -966,13 +943,13 @@ struct ProbablyNoteWidget : ModuleWidget {
 				case 11:
 				//B
 				nvgBeginPath(args.vg);
-				nvgMoveTo(args.vg,62,162);
-				nvgLineTo(args.vg,142,162);
-				nvgLineTo(args.vg,142,134);		
-				nvgLineTo(args.vg,1,134);
-				nvgLineTo(args.vg,1,149.5);		
-				nvgLineTo(args.vg,50.5,149.5);
-				nvgArc(args.vg,50.5,162,12.5,0-rotate90,0,NVG_CW);
+				nvgMoveTo(args.vg,87,162);
+				nvgLineTo(args.vg,167,162);
+				nvgLineTo(args.vg,167,134);		
+				nvgLineTo(args.vg,25,134);
+				nvgLineTo(args.vg,25,149.5);		
+				nvgLineTo(args.vg,75.5,149.5);
+				nvgArc(args.vg,75.5,162,12.5,0-rotate90,0,NVG_CW);
 				nvgClosePath(args.vg);		
 				nvgFill(args.vg);
 				break;
@@ -984,18 +961,18 @@ struct ProbablyNoteWidget : ModuleWidget {
 	void drawNoteRangeCircular(const DrawArgs &args, float *noteInitialProbability, int key) 
 	{		
 		float notePosition[MAX_NOTES][3] = {
-			{93,163,NVG_ALIGN_LEFT},
-			{128,185,NVG_ALIGN_LEFT},
-			{158,212,NVG_ALIGN_CENTER},
-			{165,250,NVG_ALIGN_CENTER},
-			{151,288,NVG_ALIGN_CENTER},
-			{124,310,NVG_ALIGN_RIGHT},
-			{87,317,NVG_ALIGN_RIGHT},
-			{50,302,NVG_ALIGN_RIGHT},
-			{22,272,NVG_ALIGN_CENTER}, 
-			{15,236,NVG_ALIGN_CENTER},
-			{20,198,NVG_ALIGN_LEFT},
-			{56,172,NVG_ALIGN_LEFT}
+			{103,163,NVG_ALIGN_LEFT},
+			{138,185,NVG_ALIGN_LEFT},
+			{168,212,NVG_ALIGN_CENTER},
+			{175,250,NVG_ALIGN_CENTER},
+			{161,288,NVG_ALIGN_CENTER},
+			{134,310,NVG_ALIGN_RIGHT},
+			{97,317,NVG_ALIGN_RIGHT},
+			{60,302,NVG_ALIGN_RIGHT},
+			{32,272,NVG_ALIGN_CENTER}, 
+			{25,236,NVG_ALIGN_CENTER},
+			{30,198,NVG_ALIGN_LEFT},
+			{66,172,NVG_ALIGN_LEFT}
 		};
 
 		// Draw indicator
@@ -1015,16 +992,16 @@ struct ProbablyNoteWidget : ModuleWidget {
 			
 
 			nvgBeginPath(args.vg);
-			nvgArc(args.vg,90,240,85.0,startDegree,endDegree,NVG_CW);
-			double x= cos(endDegree) * 65.0 + 90.0;
+			nvgArc(args.vg,100,240,85.0,startDegree,endDegree,NVG_CW);
+			double x= cos(endDegree) * 65.0 + 100.0;
 			double y= sin(endDegree) * 65.0 + 240;
 			nvgLineTo(args.vg,x,y);
-			nvgArc(args.vg,90,240,65.0,endDegree,startDegree,NVG_CCW);
+			nvgArc(args.vg,100,240,65.0,endDegree,startDegree,NVG_CCW);
 			nvgClosePath(args.vg);		
 			nvgFill(args.vg);
 
 			nvgFontSize(args.vg, 8);
-			nvgFontFaceId(args.vg, font->handle);
+			nvgFontFaceId(args.vg, font->handle);	
 			nvgTextLetterSpacing(args.vg, -1);
 			nvgFillColor(args.vg, nvgRGBA(0x00, 0x00, 0x00, 0xff));
 
@@ -1083,20 +1060,20 @@ struct ProbablyNoteWidget : ModuleWidget {
 
 
 		addInput(createInput<FWPortInSmall>(Vec(8, 345), module, ProbablyNote::NOTE_INPUT));
-		addInput(createInput<FWPortInSmall>(Vec(38, 345), module, ProbablyNote::TRIGGER_INPUT));
-		addInput(createInput<FWPortInSmall>(Vec(70, 345), module, ProbablyNote::EXTERNAL_RANDOM_INPUT));
+		addInput(createInput<FWPortInSmall>(Vec(43, 345), module, ProbablyNote::TRIGGER_INPUT));
+		addInput(createInput<FWPortInSmall>(Vec(80, 345), module, ProbablyNote::EXTERNAL_RANDOM_INPUT));
 
-        addParam(createParam<RoundSmallFWSnapKnob>(Vec(8,25), module, ProbablyNote::SHIFT_PARAM));			
-        addParam(createParam<RoundReallySmallFWKnob>(Vec(34,51), module, ProbablyNote::SHIFT_CV_ATTENUVERTER_PARAM));			
-		addInput(createInput<FWPortInSmall>(Vec(36, 29), module, ProbablyNote::SHIFT_INPUT));
+        addParam(createParam<RoundSmallFWSnapKnob>(Vec(23,25), module, ProbablyNote::SPREAD_PARAM));			
+        addParam(createParam<RoundReallySmallFWKnob>(Vec(49,51), module, ProbablyNote::SPREAD_CV_ATTENUVERTER_PARAM));			
+		addInput(createInput<FWPortInSmall>(Vec(51, 29), module, ProbablyNote::SPREAD_INPUT));
 
-        addParam(createParam<RoundSmallFWSnapKnob>(Vec(68,25), module, ProbablyNote::SPREAD_PARAM));			
-        addParam(createParam<RoundReallySmallFWKnob>(Vec(94,51), module, ProbablyNote::SPREAD_CV_ATTENUVERTER_PARAM));			
-		addInput(createInput<FWPortInSmall>(Vec(96, 29), module, ProbablyNote::SPREAD_INPUT));
+        addParam(createParam<RoundSmallFWKnob>(Vec(98,25), module, ProbablyNote::SLANT_PARAM));			
+        addParam(createParam<RoundReallySmallFWKnob>(Vec(124,51), module, ProbablyNote::SLANT_CV_ATTENUVERTER_PARAM));			
+		addInput(createInput<FWPortInSmall>(Vec(126, 29), module, ProbablyNote::SLANT_INPUT));
 
-		addParam(createParam<RoundSmallFWKnob>(Vec(128, 25), module, ProbablyNote::DISTRIBUTION_PARAM));
-        addParam(createParam<RoundReallySmallFWKnob>(Vec(154,51), module, ProbablyNote::DISTRIBUTION_CV_ATTENUVERTER_PARAM));			
-		addInput(createInput<FWPortInSmall>(Vec(156, 29), module, ProbablyNote::DISTRIBUTION_INPUT));
+		addParam(createParam<RoundSmallFWKnob>(Vec(168, 25), module, ProbablyNote::DISTRIBUTION_PARAM));
+        addParam(createParam<RoundReallySmallFWKnob>(Vec(194,51), module, ProbablyNote::DISTRIBUTION_CV_ATTENUVERTER_PARAM));			
+		addInput(createInput<FWPortInSmall>(Vec(196, 29), module, ProbablyNote::DISTRIBUTION_INPUT));
 
         addParam(createParam<RoundSmallFWSnapKnob>(Vec(8,86), module, ProbablyNote::SCALE_PARAM));			
         addParam(createParam<RoundReallySmallFWKnob>(Vec(34,112), module, ProbablyNote::SCALE_CV_ATTENUVERTER_PARAM));			
@@ -1106,28 +1083,33 @@ struct ProbablyNoteWidget : ModuleWidget {
         addParam(createParam<RoundReallySmallFWKnob>(Vec(94,112), module, ProbablyNote::KEY_CV_ATTENUVERTER_PARAM));			
 		addInput(createInput<FWPortInSmall>(Vec(96, 90), module, ProbablyNote::KEY_INPUT));
 
-        addParam(createParam<RoundSmallFWSnapKnob>(Vec(128,86), module, ProbablyNote::OCTAVE_PARAM));			
-        addParam(createParam<RoundReallySmallFWKnob>(Vec(154,112), module, ProbablyNote::OCTAVE_CV_ATTENUVERTER_PARAM));			
-		addInput(createInput<FWPortInSmall>(Vec(156, 90), module, ProbablyNote::OCTAVE_INPUT));
+        addParam(createParam<RoundSmallFWSnapKnob>(Vec(128,85), module, ProbablyNote::SHIFT_PARAM));			
+        addParam(createParam<RoundReallySmallFWKnob>(Vec(154,112), module, ProbablyNote::SHIFT_CV_ATTENUVERTER_PARAM));			
+		addInput(createInput<FWPortInSmall>(Vec(156, 90), module, ProbablyNote::SHIFT_INPUT));
 
-		addParam(createParam<TL1105>(Vec(15, 113), module, ProbablyNote::WRITE_SCALE_PARAM));
+        addParam(createParam<RoundSmallFWSnapKnob>(Vec(188,86), module, ProbablyNote::OCTAVE_PARAM));			
+        addParam(createParam<RoundReallySmallFWKnob>(Vec(214,112), module, ProbablyNote::OCTAVE_CV_ATTENUVERTER_PARAM));			
+		addInput(createInput<FWPortInSmall>(Vec(216, 90), module, ProbablyNote::OCTAVE_INPUT));
+
+		addParam(createParam<TL1105>(Vec(15, 113), module, ProbablyNote::RESET_SCALE_PARAM));
 
 
-		addParam(createParam<LEDButton>(Vec(10, 48), module, ProbablyNote::SHIFT_SCALING_PARAM));
-		addChild(createLight<LargeLight<BlueLight>>(Vec(11.5, 49.5), module, ProbablyNote::SHIFT_LOGARITHMIC_SCALE_LIGHT));
+		addParam(createParam<LEDButton>(Vec(130, 113), module, ProbablyNote::SHIFT_SCALING_PARAM));
+		addChild(createLight<LargeLight<BlueLight>>(Vec(131.5, 114.5), module, ProbablyNote::SHIFT_LOGARITHMIC_SCALE_LIGHT));
 
 		addParam(createParam<LEDButton>(Vec(70, 113), module, ProbablyNote::KEY_SCALING_PARAM));
 		addChild(createLight<LargeLight<BlueLight>>(Vec(71.5, 114.5), module, ProbablyNote::KEY_LOGARITHMIC_SCALE_LIGHT));
 
 
-		addParam(createParam<LEDButton>(Vec(130, 113), module, ProbablyNote::OCTAVE_WRAPAROUND_PARAM));
-		addChild(createLight<LargeLight<BlueLight>>(Vec(131.5, 114.5), module, ProbablyNote::OCTAVE_WRAPAROUND_LIGHT));
+		addParam(createParam<LEDButton>(Vec(214, 143), module, ProbablyNote::OCTAVE_WRAPAROUND_PARAM));
+		addChild(createLight<LargeLight<BlueLight>>(Vec(215.5, 144.5), module, ProbablyNote::OCTAVE_WRAPAROUND_LIGHT));
+		addInput(createInput<FWPortInSmall>(Vec(192, 144), module, ProbablyNote::OCTAVE_WRAP_INPUT));
+		
+		addParam(createParam<LEDButton>(Vec(214, 180), module, ProbablyNote::TEMPERMENT_PARAM));
+		addChild(createLight<LargeLight<BlueLight>>(Vec(215.5, 181.5), module, ProbablyNote::JUST_INTONATION_LIGHT));
+		addInput(createInput<FWPortInSmall>(Vec(192, 181), module, ProbablyNote::TEMPERMENT_INPUT)); 
 
-		addParam(createParam<LEDButton>(Vec(155, 145), module, ProbablyNote::TEMPERMENT_PARAM));
-		addChild(createLight<LargeLight<BlueLight>>(Vec(156.5, 146.5), module, ProbablyNote::JUST_INTONATION_LIGHT));
-		addInput(createInput<FWPortInSmall>(Vec(156, 166), module, ProbablyNote::TEMPERMENT_INPUT));
-
-		addParam(createParam<RoundReallySmallFWKnob>(Vec(152,312), module, ProbablyNote::WEIGHT_SCALING_PARAM));		
+		addParam(createParam<RoundReallySmallFWKnob>(Vec(202,217), module, ProbablyNote::WEIGHT_SCALING_PARAM));		
 
 
 
@@ -1138,167 +1120,167 @@ struct ProbablyNoteWidget : ModuleWidget {
 
 		// addInput(bob);
 
-		weightParam = createParam<RoundReallySmallFWKnob>(Vec(94,306), module, ProbablyNote::NOTE_WEIGHT_PARAM+0);
+		weightParam = createParam<RoundReallySmallFWKnob>(Vec(119,306), module, ProbablyNote::NOTE_WEIGHT_PARAM+0);
 		weightParams[0] = weightParam;
 		addParam(weightParam);		
-		weightInput = createInput<FWPortInReallySmall>(Vec(117, 310), module, ProbablyNote::NOTE_WEIGHT_INPUT+0);
+		weightInput = createInput<FWPortInReallySmall>(Vec(142, 310), module, ProbablyNote::NOTE_WEIGHT_INPUT+0);
 		inputs[0] = weightInput;	
 		addInput(weightInput);
-		noteOnParam = createParam<LEDButton>(Vec(72, 307), module, ProbablyNote::NOTE_ACTIVE_PARAM+0);
+		noteOnParam = createParam<LEDButton>(Vec(97, 307), module, ProbablyNote::NOTE_ACTIVE_PARAM+0);
 		noteOnParams[0] = noteOnParam;
 		addParam(noteOnParam);
-		noteOnLight = createLight<LargeLight<GreenRedLight>>(Vec(73.5, 308.5), module, ProbablyNote::NOTE_ACTIVE_LIGHT+0); 
+		noteOnLight = createLight<LargeLight<GreenRedLight>>(Vec(98.5, 308.5), module, ProbablyNote::NOTE_ACTIVE_LIGHT+0); 
 		lights[0] = noteOnLight;
 		addChild(noteOnLight);
 
-		weightParam = createParam<RoundReallySmallFWKnob>(Vec(22,292), module, ProbablyNote::NOTE_WEIGHT_PARAM+1);
+		weightParam = createParam<RoundReallySmallFWKnob>(Vec(47,292), module, ProbablyNote::NOTE_WEIGHT_PARAM+1);
 		weightParams[1] = weightParam;
 		addParam(weightParam);		
-		weightInput = createInput<FWPortInReallySmall>(Vec(7, 296), module, ProbablyNote::NOTE_WEIGHT_INPUT+1);
+		weightInput = createInput<FWPortInReallySmall>(Vec(32, 296), module, ProbablyNote::NOTE_WEIGHT_INPUT+1);
 		inputs[1] = weightInput;	
 		addInput(weightInput);
-		noteOnParam = createParam<LEDButton>(Vec(44, 293), module, ProbablyNote::NOTE_ACTIVE_PARAM+1);
+		noteOnParam = createParam<LEDButton>(Vec(69, 293), module, ProbablyNote::NOTE_ACTIVE_PARAM+1);
 		noteOnParams[1] = noteOnParam;
 		addParam(noteOnParam);
-		noteOnLight = createLight<LargeLight<GreenRedLight>>(Vec(45.5, 294.5), module, ProbablyNote::NOTE_ACTIVE_LIGHT+2); 
+		noteOnLight = createLight<LargeLight<GreenRedLight>>(Vec(70.5, 294.5), module, ProbablyNote::NOTE_ACTIVE_LIGHT+2); 
 		lights[1] = noteOnLight;
 		addChild(noteOnLight);
 
-		weightParam = createParam<RoundReallySmallFWKnob>(Vec(94,278), module, ProbablyNote::NOTE_WEIGHT_PARAM+2);
+		weightParam = createParam<RoundReallySmallFWKnob>(Vec(119,278), module, ProbablyNote::NOTE_WEIGHT_PARAM+2);
 		weightParams[2] = weightParam;
 		addParam(weightParam);		
-		weightInput = createInput<FWPortInReallySmall>(Vec(117, 282), module, ProbablyNote::NOTE_WEIGHT_INPUT+2);
+		weightInput = createInput<FWPortInReallySmall>(Vec(142, 282), module, ProbablyNote::NOTE_WEIGHT_INPUT+2);
 		inputs[2] = weightInput;	
 		addInput(weightInput);
-		noteOnParam = createParam<LEDButton>(Vec(72, 279), module, ProbablyNote::NOTE_ACTIVE_PARAM+2);
+		noteOnParam = createParam<LEDButton>(Vec(97, 279), module, ProbablyNote::NOTE_ACTIVE_PARAM+2);
 		noteOnParams[2] = noteOnParam;
 		addParam(noteOnParam);
-		noteOnLight = createLight<LargeLight<GreenRedLight>>(Vec(73.5, 280.5), module, ProbablyNote::NOTE_ACTIVE_LIGHT+4); 
+		noteOnLight = createLight<LargeLight<GreenRedLight>>(Vec(98.5, 280.5), module, ProbablyNote::NOTE_ACTIVE_LIGHT+4); 
 		lights[2] = noteOnLight;
 		addChild(noteOnLight);
 
-		weightParam = createParam<RoundReallySmallFWKnob>(Vec(22,264), module, ProbablyNote::NOTE_WEIGHT_PARAM+3);
+		weightParam = createParam<RoundReallySmallFWKnob>(Vec(47,264), module, ProbablyNote::NOTE_WEIGHT_PARAM+3);
 		weightParams[3] = weightParam;
 		addParam(weightParam);		
-		weightInput = createInput<FWPortInReallySmall>(Vec(7, 268), module, ProbablyNote::NOTE_WEIGHT_INPUT+3);
+		weightInput = createInput<FWPortInReallySmall>(Vec(32, 268), module, ProbablyNote::NOTE_WEIGHT_INPUT+3);
 		inputs[3] = weightInput;	
 		addInput(weightInput);
-		noteOnParam = createParam<LEDButton>(Vec(44, 265), module, ProbablyNote::NOTE_ACTIVE_PARAM+3);
+		noteOnParam = createParam<LEDButton>(Vec(69, 265), module, ProbablyNote::NOTE_ACTIVE_PARAM+3);
 		noteOnParams[3] = noteOnParam;
 		addParam(noteOnParam);
-		noteOnLight = createLight<LargeLight<GreenRedLight>>(Vec(45.5, 266.5), module, ProbablyNote::NOTE_ACTIVE_LIGHT+6); 
+		noteOnLight = createLight<LargeLight<GreenRedLight>>(Vec(70.5, 266.5), module, ProbablyNote::NOTE_ACTIVE_LIGHT+6); 
 		lights[3] = noteOnLight;
 		addChild(noteOnLight);
 
-		weightParam = createParam<RoundReallySmallFWKnob>(Vec(94,250), module, ProbablyNote::NOTE_WEIGHT_PARAM+4);
+		weightParam = createParam<RoundReallySmallFWKnob>(Vec(119,250), module, ProbablyNote::NOTE_WEIGHT_PARAM+4);
 		weightParams[4] = weightParam;
 		addParam(weightParam);		
-		weightInput = createInput<FWPortInReallySmall>(Vec(117, 254), module, ProbablyNote::NOTE_WEIGHT_INPUT+4);
+		weightInput = createInput<FWPortInReallySmall>(Vec(142, 254), module, ProbablyNote::NOTE_WEIGHT_INPUT+4);
 		inputs[4] = weightInput;	
 		addInput(weightInput);
-		noteOnParam = createParam<LEDButton>(Vec(72, 251), module, ProbablyNote::NOTE_ACTIVE_PARAM+4);
+		noteOnParam = createParam<LEDButton>(Vec(97, 251), module, ProbablyNote::NOTE_ACTIVE_PARAM+4);
 		noteOnParams[4] = noteOnParam;
 		addParam(noteOnParam);
-		noteOnLight = createLight<LargeLight<GreenRedLight>>(Vec(73.5, 252.5), module, ProbablyNote::NOTE_ACTIVE_LIGHT+8); 
+		noteOnLight = createLight<LargeLight<GreenRedLight>>(Vec(98.5, 252.5), module, ProbablyNote::NOTE_ACTIVE_LIGHT+8); 
 		lights[4] = noteOnLight;
 		addChild(noteOnLight);
 
-		weightParam = createParam<RoundReallySmallFWKnob>(Vec(94,222), module, ProbablyNote::NOTE_WEIGHT_PARAM+5);
+		weightParam = createParam<RoundReallySmallFWKnob>(Vec(119,222), module, ProbablyNote::NOTE_WEIGHT_PARAM+5);
 		weightParams[5] = weightParam;
 		addParam(weightParam);		
-		weightInput = createInput<FWPortInReallySmall>(Vec(117, 226), module, ProbablyNote::NOTE_WEIGHT_INPUT+5);
+		weightInput = createInput<FWPortInReallySmall>(Vec(142, 226), module, ProbablyNote::NOTE_WEIGHT_INPUT+5);
 		inputs[5] = weightInput;	
 		addInput(weightInput);
-		noteOnParam = createParam<LEDButton>(Vec(72, 223), module, ProbablyNote::NOTE_ACTIVE_PARAM+5);
+		noteOnParam = createParam<LEDButton>(Vec(97, 223), module, ProbablyNote::NOTE_ACTIVE_PARAM+5);
 		noteOnParams[5] = noteOnParam;
 		addParam(noteOnParam);
-		noteOnLight = createLight<LargeLight<GreenRedLight>>(Vec(73.5, 224.5), module, ProbablyNote::NOTE_ACTIVE_LIGHT+10); 
+		noteOnLight = createLight<LargeLight<GreenRedLight>>(Vec(98.5, 224.5), module, ProbablyNote::NOTE_ACTIVE_LIGHT+10); 
 		lights[5] = noteOnLight;
 		addChild(noteOnLight);
 
-		weightParam = createParam<RoundReallySmallFWKnob>(Vec(22,208), module, ProbablyNote::NOTE_WEIGHT_PARAM+6);
+		weightParam = createParam<RoundReallySmallFWKnob>(Vec(47,208), module, ProbablyNote::NOTE_WEIGHT_PARAM+6);
 		weightParams[6] = weightParam;
 		addParam(weightParam);		
-		weightInput = createInput<FWPortInReallySmall>(Vec(7, 212), module, ProbablyNote::NOTE_WEIGHT_INPUT+6);
+		weightInput = createInput<FWPortInReallySmall>(Vec(32, 212), module, ProbablyNote::NOTE_WEIGHT_INPUT+6);
 		inputs[6] = weightInput;	
 		addInput(weightInput);
-		noteOnParam = createParam<LEDButton>(Vec(44, 209), module, ProbablyNote::NOTE_ACTIVE_PARAM+6);
+		noteOnParam = createParam<LEDButton>(Vec(69, 209), module, ProbablyNote::NOTE_ACTIVE_PARAM+6);
 		noteOnParams[6] = noteOnParam;
 		addParam(noteOnParam);
-		noteOnLight = createLight<LargeLight<GreenRedLight>>(Vec(45.5, 210.5), module, ProbablyNote::NOTE_ACTIVE_LIGHT+12); 
+		noteOnLight = createLight<LargeLight<GreenRedLight>>(Vec(70.5, 210.5), module, ProbablyNote::NOTE_ACTIVE_LIGHT+12); 
 		lights[6] = noteOnLight;
 		addChild(noteOnLight);
 
-		weightParam = createParam<RoundReallySmallFWKnob>(Vec(94,194), module, ProbablyNote::NOTE_WEIGHT_PARAM+7);
+		weightParam = createParam<RoundReallySmallFWKnob>(Vec(119,194), module, ProbablyNote::NOTE_WEIGHT_PARAM+7);
 		weightParams[7] = weightParam;
 		addParam(weightParam);		
-		weightInput = createInput<FWPortInReallySmall>(Vec(117, 198), module, ProbablyNote::NOTE_WEIGHT_INPUT+7);
+		weightInput = createInput<FWPortInReallySmall>(Vec(142, 198), module, ProbablyNote::NOTE_WEIGHT_INPUT+7);
 		inputs[7] = weightInput;	
 		addInput(weightInput);
-		noteOnParam = createParam<LEDButton>(Vec(72, 195), module, ProbablyNote::NOTE_ACTIVE_PARAM+7);
+		noteOnParam = createParam<LEDButton>(Vec(97, 195), module, ProbablyNote::NOTE_ACTIVE_PARAM+7);
 		noteOnParams[7] = noteOnParam;
 		addParam(noteOnParam);
-		noteOnLight = createLight<LargeLight<GreenRedLight>>(Vec(73.5, 196.5), module, ProbablyNote::NOTE_ACTIVE_LIGHT+14); 
+		noteOnLight = createLight<LargeLight<GreenRedLight>>(Vec(98.5, 196.5), module, ProbablyNote::NOTE_ACTIVE_LIGHT+14); 
 		lights[7] = noteOnLight;
 		addChild(noteOnLight);
 
-		weightParam = createParam<RoundReallySmallFWKnob>(Vec(22,180), module, ProbablyNote::NOTE_WEIGHT_PARAM+8);
+		weightParam = createParam<RoundReallySmallFWKnob>(Vec(47,180), module, ProbablyNote::NOTE_WEIGHT_PARAM+8);
 		weightParams[8] = weightParam;
 		addParam(weightParam);		
-		weightInput = createInput<FWPortInReallySmall>(Vec(7, 184), module, ProbablyNote::NOTE_WEIGHT_INPUT+8);
+		weightInput = createInput<FWPortInReallySmall>(Vec(32, 184), module, ProbablyNote::NOTE_WEIGHT_INPUT+8);
 		inputs[8] = weightInput;	
 		addInput(weightInput);
-		noteOnParam = createParam<LEDButton>(Vec(44, 181), module, ProbablyNote::NOTE_ACTIVE_PARAM+8);
+		noteOnParam = createParam<LEDButton>(Vec(69, 181), module, ProbablyNote::NOTE_ACTIVE_PARAM+8);
 		noteOnParams[8] = noteOnParam;
 		addParam(noteOnParam);
-		noteOnLight = createLight<LargeLight<GreenRedLight>>(Vec(45.5, 182.5), module, ProbablyNote::NOTE_ACTIVE_LIGHT+16); 
+		noteOnLight = createLight<LargeLight<GreenRedLight>>(Vec(70.5, 182.5), module, ProbablyNote::NOTE_ACTIVE_LIGHT+16); 
 		lights[8] = noteOnLight;
 		addChild(noteOnLight);
 
-		weightParam = createParam<RoundReallySmallFWKnob>(Vec(94,166), module, ProbablyNote::NOTE_WEIGHT_PARAM+9);
+		weightParam = createParam<RoundReallySmallFWKnob>(Vec(119,166), module, ProbablyNote::NOTE_WEIGHT_PARAM+9);
 		weightParams[9] = weightParam;
 		addParam(weightParam);		
-		weightInput = createInput<FWPortInReallySmall>(Vec(117, 170), module, ProbablyNote::NOTE_WEIGHT_INPUT+9);
+		weightInput = createInput<FWPortInReallySmall>(Vec(132, 170), module, ProbablyNote::NOTE_WEIGHT_INPUT+9);
 		inputs[9] = weightInput;	
 		addInput(weightInput);
-		noteOnParam = createParam<LEDButton>(Vec(72, 167), module, ProbablyNote::NOTE_ACTIVE_PARAM+9);
+		noteOnParam = createParam<LEDButton>(Vec(97, 167), module, ProbablyNote::NOTE_ACTIVE_PARAM+9);
 		noteOnParams[9] = noteOnParam;
 		addParam(noteOnParam);
-		noteOnLight = createLight<LargeLight<GreenRedLight>>(Vec(73.5, 168.5), module, ProbablyNote::NOTE_ACTIVE_LIGHT+18); 
+		noteOnLight = createLight<LargeLight<GreenRedLight>>(Vec(98.5, 168.5), module, ProbablyNote::NOTE_ACTIVE_LIGHT+18); 
 		lights[9] = noteOnLight;
 		addChild(noteOnLight);
 
-		weightParam = createParam<RoundReallySmallFWKnob>(Vec(22,152), module, ProbablyNote::NOTE_WEIGHT_PARAM+10);
+		weightParam = createParam<RoundReallySmallFWKnob>(Vec(47,152), module, ProbablyNote::NOTE_WEIGHT_PARAM+10);
 		weightParams[10] = weightParam;
 		addParam(weightParam);		
-		weightInput = createInput<FWPortInReallySmall>(Vec(7, 156), module, ProbablyNote::NOTE_WEIGHT_INPUT+10);
+		weightInput = createInput<FWPortInReallySmall>(Vec(32, 156), module, ProbablyNote::NOTE_WEIGHT_INPUT+10);
 		inputs[10] = weightInput;	
 		addInput(weightInput);
-		noteOnParam = createParam<LEDButton>(Vec(44, 153), module, ProbablyNote::NOTE_ACTIVE_PARAM+10);
+		noteOnParam = createParam<LEDButton>(Vec(69, 153), module, ProbablyNote::NOTE_ACTIVE_PARAM+10);
 		noteOnParams[10] = noteOnParam;
 		addParam(noteOnParam);
-		noteOnLight = createLight<LargeLight<GreenRedLight>>(Vec(45.5, 154.5), module, ProbablyNote::NOTE_ACTIVE_LIGHT+20); 
+		noteOnLight = createLight<LargeLight<GreenRedLight>>(Vec(70.5, 154.5), module, ProbablyNote::NOTE_ACTIVE_LIGHT+20); 
 		lights[10] = noteOnLight;
 		addChild(noteOnLight);
 
-		weightParam = createParam<RoundReallySmallFWKnob>(Vec(94,138), module, ProbablyNote::NOTE_WEIGHT_PARAM+11);
+		weightParam = createParam<RoundReallySmallFWKnob>(Vec(119,138), module, ProbablyNote::NOTE_WEIGHT_PARAM+11);
 		weightParams[11] = weightParam;
 		addParam(weightParam);		
-		weightInput = createInput<FWPortInReallySmall>(Vec(117, 142), module, ProbablyNote::NOTE_WEIGHT_INPUT+11);
+		weightInput = createInput<FWPortInReallySmall>(Vec(142, 142), module, ProbablyNote::NOTE_WEIGHT_INPUT+11);
 		inputs[11] = weightInput;	
 		addInput(weightInput);
-		noteOnParam = createParam<LEDButton>(Vec(72, 139), module, ProbablyNote::NOTE_ACTIVE_PARAM+11);
+		noteOnParam = createParam<LEDButton>(Vec(97, 139), module, ProbablyNote::NOTE_ACTIVE_PARAM+11);
 		noteOnParams[11] = noteOnParam;
 		addParam(noteOnParam);
-		noteOnLight = createLight<LargeLight<GreenRedLight>>(Vec(73.5, 140.5), module, ProbablyNote::NOTE_ACTIVE_LIGHT+22); 
+		noteOnLight = createLight<LargeLight<GreenRedLight>>(Vec(98.5, 140.5), module, ProbablyNote::NOTE_ACTIVE_LIGHT+22); 
 		lights[11] = noteOnLight;
 		addChild(noteOnLight);
 
 		
 
-		addOutput(createOutput<FWPortInSmall>(Vec(159, 345),  module, ProbablyNote::QUANT_OUTPUT));
-		addOutput(createOutput<FWPortInSmall>(Vec(130, 345),  module, ProbablyNote::WEIGHT_OUTPUT));
-		addOutput(createOutput<FWPortInSmall>(Vec(100, 345),  module, ProbablyNote::NOTE_CHANGE_OUTPUT));
+		addOutput(createOutput<FWPortInSmall>(Vec(205, 345),  module, ProbablyNote::QUANT_OUTPUT));
+		addOutput(createOutput<FWPortInSmall>(Vec(172, 345),  module, ProbablyNote::WEIGHT_OUTPUT));
+		addOutput(createOutput<FWPortInSmall>(Vec(134, 345),  module, ProbablyNote::NOTE_CHANGE_OUTPUT));
 
 	}
 
@@ -1310,119 +1292,114 @@ struct ProbablyNoteWidget : ModuleWidget {
 				circlePanel->visible  = false;
 				panel->visible = true;
 
-				weightParams[0]->box.pos.x = 94;
+				weightParams[0]->box.pos.x = 119;
 				weightParams[0]->box.pos.y = 306;
-				inputs[0]->box.pos.x = 117;
+				inputs[0]->box.pos.x = 142;
 				inputs[0]->box.pos.y =310;
-				noteOnParams[0]->box.pos.x = 72;
+				noteOnParams[0]->box.pos.x = 97;
 				noteOnParams[0]->box.pos.y = 307;
-				lights[0]->box.pos.x = 73.5;
+				lights[0]->box.pos.x = 98.5;
 				lights[0]->box.pos.y = 308.5;
 												
-				weightParams[1]->box.pos.x = 22;
+				weightParams[1]->box.pos.x = 47;
 				weightParams[1]->box.pos.y = 292;
-				inputs[1]->box.pos.x = 7;
+				inputs[1]->box.pos.x = 32;
 				inputs[1]->box.pos.y = 296;
-				noteOnParams[1]->box.pos.x = 44;
+				noteOnParams[1]->box.pos.x = 69;
 				noteOnParams[1]->box.pos.y = 294;
-				lights[1]->box.pos.x = 45.5;
+				lights[1]->box.pos.x = 70.5;
 				lights[1]->box.pos.y = 294.5;
 
-				weightParams[2]->box.pos.x = 94;
+				weightParams[2]->box.pos.x = 119;
 				weightParams[2]->box.pos.y = 278;
-				inputs[2]->box.pos.x = 117;
+				inputs[2]->box.pos.x = 142;
 				inputs[2]->box.pos.y = 282;
-				noteOnParams[2]->box.pos.x = 72;
+				noteOnParams[2]->box.pos.x = 97;
 				noteOnParams[2]->box.pos.y = 279;
-				lights[2]->box.pos.x = 73.5;
+				lights[2]->box.pos.x = 98.5;
 				lights[2]->box.pos.y = 280.5;
 
-
-				weightParams[3]->box.pos.x = 22;
+				weightParams[3]->box.pos.x = 47;
 				weightParams[3]->box.pos.y = 264;
-				inputs[3]->box.pos.x = 7;
+				inputs[3]->box.pos.x = 32;
 				inputs[3]->box.pos.y = 268;
-				noteOnParams[3]->box.pos.x = 44;
+				noteOnParams[3]->box.pos.x = 69;
 				noteOnParams[3]->box.pos.y = 265;
-				lights[3]->box.pos.x = 45.5;
+				lights[3]->box.pos.x = 70.5;
 				lights[3]->box.pos.y = 266.5;
 
 
-				weightParams[4]->box.pos.x = 94;
+				weightParams[4]->box.pos.x = 119;
 				weightParams[4]->box.pos.y = 250;
-				inputs[4]->box.pos.x = 117;
+				inputs[4]->box.pos.x = 142;
 				inputs[4]->box.pos.y = 254;
-				noteOnParams[4]->box.pos.x = 72;
+				noteOnParams[4]->box.pos.x = 97;
 				noteOnParams[4]->box.pos.y = 251;
-				lights[4]->box.pos.x = 73.5;
+				lights[4]->box.pos.x = 98.5;
 				lights[4]->box.pos.y = 252;
 
-				weightParams[5]->box.pos.x = 94;
+				weightParams[5]->box.pos.x = 119;
 				weightParams[5]->box.pos.y = 222;
-				inputs[5]->box.pos.x = 117;
+				inputs[5]->box.pos.x = 142;
 				inputs[5]->box.pos.y = 226;
-				noteOnParams[5]->box.pos.x = 72;
+				noteOnParams[5]->box.pos.x = 97;
 				noteOnParams[5]->box.pos.y = 223;
-				lights[5]->box.pos.x = 73.5;
+				lights[5]->box.pos.x = 98.5;
 				lights[5]->box.pos.y = 224.5;
 
-
-				weightParams[6]->box.pos.x = 22;
+				weightParams[6]->box.pos.x = 47;
 				weightParams[6]->box.pos.y = 208;
-				inputs[6]->box.pos.x = 7;
+				inputs[6]->box.pos.x = 32;
 				inputs[6]->box.pos.y = 212;
-				noteOnParams[6]->box.pos.x = 44;
+				noteOnParams[6]->box.pos.x = 69;
 				noteOnParams[6]->box.pos.y = 209;
-				lights[6]->box.pos.x = 45.5;
+				lights[6]->box.pos.x = 70.5;
 				lights[6]->box.pos.y = 210.5;
 
 
-				weightParams[7]->box.pos.x = 94;
+				weightParams[7]->box.pos.x = 119;
 				weightParams[7]->box.pos.y = 194;
-				inputs[7]->box.pos.x = 117;
+				inputs[7]->box.pos.x = 142;
 				inputs[7]->box.pos.y = 198;
-				noteOnParams[7]->box.pos.x = 72;
+				noteOnParams[7]->box.pos.x = 97;
 				noteOnParams[7]->box.pos.y = 195;
-				lights[7]->box.pos.x = 73.5;
+				lights[7]->box.pos.x = 98.5;
 				lights[7]->box.pos.y = 196.5;
 
-				weightParams[8]->box.pos.x = 22;
+				weightParams[8]->box.pos.x = 47;
 				weightParams[8]->box.pos.y = 180;
-				inputs[8]->box.pos.x = 7;
+				inputs[8]->box.pos.x = 32;
 				inputs[8]->box.pos.y = 184;
-				noteOnParams[8]->box.pos.x = 44;
+				noteOnParams[8]->box.pos.x = 69;
 				noteOnParams[8]->box.pos.y = 181;
-				lights[8]->box.pos.x = 45.5;
+				lights[8]->box.pos.x = 70.5;
 				lights[8]->box.pos.y = 182.5;
 
-
-				weightParams[9]->box.pos.x = 94;
+				weightParams[9]->box.pos.x = 119;
 				weightParams[9]->box.pos.y = 166;
-				inputs[9]->box.pos.x = 117;
+				inputs[9]->box.pos.x = 142;
 				inputs[9]->box.pos.y = 170;
-				noteOnParams[9]->box.pos.x = 72;
+				noteOnParams[9]->box.pos.x = 97;
 				noteOnParams[9]->box.pos.y = 167;
-				lights[9]->box.pos.x = 73.5;
+				lights[9]->box.pos.x = 98.5;
 				lights[9]->box.pos.y = 168.5;
 
-
-				weightParams[10]->box.pos.x = 22;
+				weightParams[10]->box.pos.x = 47;
 				weightParams[10]->box.pos.y = 152;
-				inputs[10]->box.pos.x = 7;
+				inputs[10]->box.pos.x = 32;
 				inputs[10]->box.pos.y = 156;
-				noteOnParams[10]->box.pos.x = 44;
+				noteOnParams[10]->box.pos.x = 69;
 				noteOnParams[10]->box.pos.y = 153;
-				lights[10]->box.pos.x = 45.5;
+				lights[10]->box.pos.x = 70.5;
 				lights[10]->box.pos.y = 154.5;
 
-
-				weightParams[11]->box.pos.x = 94;
+				weightParams[11]->box.pos.x = 119;
 				weightParams[11]->box.pos.y = 138;
-				inputs[11]->box.pos.x = 117;
+				inputs[11]->box.pos.x = 142;
 				inputs[11]->box.pos.y = 142;
-				noteOnParams[11]->box.pos.x = 72;
+				noteOnParams[11]->box.pos.x = 97;
 				noteOnParams[11]->box.pos.y = 139;
-				lights[11]->box.pos.x = 73.5;
+				lights[11]->box.pos.x = 98.5;
 				lights[11]->box.pos.y = 140.5;
 
 			} else {
@@ -1432,19 +1409,19 @@ struct ProbablyNoteWidget : ModuleWidget {
 				for(int i=0;i<MAX_NOTES;i++) {
 					double position = 2.0 * M_PI / MAX_NOTES * i  - M_PI / 2.0; // Rotate 90 degrees
 
-					double x= cos(position) * 54.0 + 80.0;
+					double x= cos(position) * 54.0 + 90.0;
 					double y= sin(position) * 54.0 + 230.5;
 
 					//Rotate inputs 1 degrees
 					weightParams[i]->box.pos.x = x;
 					weightParams[i]->box.pos.y = y;
-					x= cos(position + (M_PI / 180.0 * 1.0)) * 36.0 + 84.0;
+					x= cos(position + (M_PI / 180.0 * 1.0)) * 36.0 + 94.0;
 					y= sin(position + (M_PI / 180.0 * 1.0)) * 36.0 + 235.0;
 					inputs[i]->box.pos.x = x;
 					inputs[i]->box.pos.y = y;
 
 					//Rotate buttons 5 degrees
-					x= cos(position - (M_PI / 180.0 * 5.0)) * 75.0 + 81.0;
+					x= cos(position - (M_PI / 180.0 * 5.0)) * 75.0 + 91.0;
 					y= sin(position - (M_PI / 180.0 * 5.0)) * 75.0 + 231.0;
 					noteOnParams[i]->box.pos.x = x;
 					noteOnParams[i]->box.pos.y = y;
@@ -1456,54 +1433,7 @@ struct ProbablyNoteWidget : ModuleWidget {
 		Widget::step();
 	}
 
-	// struct PNLoadScaleItem : MenuItem {
-	// 	ProbablyNote *module;
-	// 	void onAction(const event::Action &e) override {
-	// 	}
-	// };
 
-	// struct PNSaveScaleItem : MenuItem {
-	// 	ProbablyNote *module;
-	// 	void onAction(const event::Action &e) override {
-	// 	}
-	// };
-
-	// struct PNDeleteScaleItem : MenuItem {
-	// 	ProbablyNote *module;
-	// 	void onAction(const event::Action &e) override {
-	// 	}
-	// };
-
-	// struct PNLoadScaleGroupItem : MenuItem {
-	// 	ProbablyNote *module;
-	// 	void onAction(const event::Action &e) override {
-	// 		std::string dir = module->lastPath.empty() ? asset::user("") : rack::string::directory(module->lastPath);
-	// 		char *path = osdialog_file(OSDIALOG_OPEN, dir.c_str(), NULL, NULL);
-	// 		if (path) {
-	// 			//module->loadSample(path);
-	// 			free(path);
-	// 		}
-	// 	}
-	// };
-
-	// struct PNSaveScaleGroupItem : MenuItem {
-	// 	ProbablyNote *module;
-	// 	void onAction(const event::Action &e) override {
-	// 		std::string dir = module->lastPath.empty() ? asset::user("") : rack::string::directory(module->lastPath);
-	// 		char *path = osdialog_file(OSDIALOG_SAVE, dir.c_str(), NULL, NULL);
-	// 		if (path) {
-	// 			//module->loadSample(path);
-	// 			std::ofstream myfile (path);
-	// 			if (myfile.is_open())
-	// 			{
-	// 				myfile << "This is a line.\n";
-	// 				myfile << "This is another line.\n";
-	// 				myfile.close();
-	// 			}
-	// 			free(path);
-	// 		}
-	// 	}
-	// };
 
 	struct PNLayoutItem : MenuItem {
 		ProbablyNote *module;
@@ -1540,33 +1470,6 @@ struct ProbablyNoteWidget : ModuleWidget {
 		pnLayout2Item->module = module;
 		pnLayout2Item->layout= true;
 		menu->addChild(pnLayout2Item);
-
-
-		// MenuLabel *themeLabel = new MenuLabel();
-		// themeLabel->text = "Scales";
-		// menu->addChild(themeLabel);
-
-		// PNLoadScaleItem *pnLoadScaleItem = new PNLoadScaleItem();
-		// pnLoadScaleItem->text = "Load Scale";// 
-		// pnLoadScaleItem->module = module;
-		// menu->addChild(pnLoadScaleItem);
-
-		// PNDeleteScaleItem *pnDeleteScaleItem = new PNDeleteScaleItem();
-		// pnDeleteScaleItem->text = "Delete Scale";// 
-		// pnDeleteScaleItem->module = module;
-		// menu->addChild(pnDeleteScaleItem);
-
-		// PNLoadScaleGroupItem *pnLoadScaleGroupItem = new PNLoadScaleGroupItem();
-		// pnLoadScaleGroupItem->text = "Load Scale Group";// 
-		// pnLoadScaleGroupItem->module = module;
-		// menu->addChild(pnLoadScaleGroupItem);
-
-		// PNSaveScaleGroupItem *pnSaveScaleGroupItem = new PNSaveScaleGroupItem();
-		// pnSaveScaleGroupItem->text = "Save Scale Group";// 
-		// pnSaveScaleGroupItem->module = module;
-		// menu->addChild(pnSaveScaleGroupItem);
-
-
 			
 	}
 };
