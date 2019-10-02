@@ -83,31 +83,31 @@ struct PNChordExpander : Module {
 		bool motherPresent = (leftExpander.module && leftExpander.module->model == modelProbablyNote);
 		if (motherPresent) {
 			// To Mother
-			float *producerMessage = (float*) leftExpander.producerMessage;
+			//float *producerMessage = (float*) leftExpander.producerMessage;
+			float *messagesToMother = (float*)leftExpander.module->rightExpander.producerMessage;
 
 			dissonance5Probability = clamp(params[DISSONANCE5_PROBABILITY_PARAM].getValue() + (inputs[DISSONANCE5_PROBABILITY_INPUT].isConnected() ? inputs[DISSONANCE5_PROBABILITY_INPUT].getVoltage() / 10 * params[DISSONANCE5_PROBABILITY_CV_ATTENUVERTER_PARAM].getValue() : 0.0f),0.0,1.0f);
 			dissonance7Probability = clamp(params[DISSONANCE7_PROBABILITY_PARAM].getValue() + (inputs[DISSONANCE7_PROBABILITY_INPUT].isConnected() ? inputs[DISSONANCE7_PROBABILITY_INPUT].getVoltage() / 10 * params[DISSONANCE7_PROBABILITY_CV_ATTENUVERTER_PARAM].getValue() : 0.0f),0.0,1.0f);
 			suspensionProbability = clamp(params[SUSPENSIONS_PROBABILITY_PARAM].getValue() + (inputs[SUSPENSIONS_PROBABILITY_INPUT].isConnected() ? inputs[SUSPENSIONS_PROBABILITY_INPUT].getVoltage() / 10 * params[SUSPENSIONS_PROBABILITY_CV_ATTENUVERTER_PARAM].getValue() : 0.0f),0.0,1.0f);
 
-			producerMessage[0] = dissonance5Probability;
-			producerMessage[1] = dissonance7Probability;
-			producerMessage[2] = suspensionProbability;
-			//producerMessage[3] = clamp(params[INVERSION_PROBABILITY_PARAM].getValue() + (inputs[INVERSION_PROBABILITY_INPUT].isConnected() ? inputs[INVERSION_PROBABILITY_INPUT].getVoltage() / 10 * params[INVERSION_PROBABILITY_CV_ATTENUVERTER_PARAM].getValue() : 0.0f),0.0,1.0f);
-			producerMessage[4] = inputs[DISSONANCE5_EXTERNAL_RANDOM_INPUT].isConnected() ? inputs[DISSONANCE5_EXTERNAL_RANDOM_INPUT].getVoltage() / 10.0f : -1;
-			producerMessage[5] = inputs[DISSONANCE7_EXTERNAL_RANDOM_INPUT].isConnected() ? inputs[DISSONANCE7_EXTERNAL_RANDOM_INPUT].getVoltage() / 10.0f : -1;
-			producerMessage[6] = inputs[SUSPENSIONS_EXTERNAL_RANDOM_INPUT].isConnected() ? inputs[SUSPENSIONS_EXTERNAL_RANDOM_INPUT].getVoltage() / 10.0f : -1;
+			messagesToMother[0] = dissonance5Probability;
+			messagesToMother[1] = dissonance7Probability;
+			messagesToMother[2] = suspensionProbability;
+			//messagesToMother[3] = clamp(params[INVERSION_PROBABILITY_PARAM].getValue() + (inputs[INVERSION_PROBABILITY_INPUT].isConnected() ? inputs[INVERSION_PROBABILITY_INPUT].getVoltage() / 10 * params[INVERSION_PROBABILITY_CV_ATTENUVERTER_PARAM].getValue() : 0.0f),0.0,1.0f);
+			messagesToMother[4] = inputs[DISSONANCE5_EXTERNAL_RANDOM_INPUT].isConnected() ? inputs[DISSONANCE5_EXTERNAL_RANDOM_INPUT].getVoltage() / 10.0f : -1;
+			messagesToMother[5] = inputs[DISSONANCE7_EXTERNAL_RANDOM_INPUT].isConnected() ? inputs[DISSONANCE7_EXTERNAL_RANDOM_INPUT].getVoltage() / 10.0f : -1;
+			messagesToMother[6] = inputs[SUSPENSIONS_EXTERNAL_RANDOM_INPUT].isConnected() ? inputs[SUSPENSIONS_EXTERNAL_RANDOM_INPUT].getVoltage() / 10.0f : -1;
 
 			leftExpander.module->rightExpander.messageFlipRequested = true;
 
+
 			// From Mother	
-			float *messagesFromMother = (float*)leftExpander.consumerMessage;
+			float *messagesFromMother = (float*)leftExpander.consumerMessage;		
 			thirdOffset = messagesFromMother[0]; 
 			fifthOffset = messagesFromMother[1]; 
 			seventhOffset = messagesFromMother[2]; 
-			//Disabling for now. :/
-			// thirdOffset = 2; 
-			// fifthOffset = 2; 
-			// seventhOffset = 2; 
+
+			//thirdOffset = 1;
 			
 			//leftExpander.messageFlipRequested = true;
 			

@@ -1,4 +1,4 @@
- #include "FrozenWasteland.hpp"
+#include "FrozenWasteland.hpp"
 #include "ui/knobs.hpp"
 #include "ui/ports.hpp"
 #include "dsp-noise/noise.hpp"
@@ -383,7 +383,6 @@ struct ProbablyNoteBP : Module {
 		}
 		tritaveIn= std::floor(noteIn);
         double fractionalValue = noteIn - tritaveIn;
-
         double lastDif = 1.0f;    
         for(int i = 0;i<MAX_NOTES;i++) {            
 			double currentDif = std::abs((i / 13.0) - fractionalValue);
@@ -618,6 +617,9 @@ struct ProbablyNoteBPDisplay : TransparentWidget {
 		nvgFontSize(args.vg, 9);
 		nvgFontFaceId(args.vg, font->handle);
 		nvgTextLetterSpacing(args.vg, -1);
+
+		if(key < 0)
+			return;
 
 		char text[128];
 		if(key != transposedKey) { 

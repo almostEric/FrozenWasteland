@@ -1,5 +1,5 @@
 ### 1.9.6 (2019-10-02)
-- Probability Not(e) Fixes and Improvements
+- Probability Not(e), Probability Not(e) BP and PN-Chord Expander Fixes and Improvements
 
 ### 1.9.5 (2019-09-24)
 - Probability Not(e) Fixes and Improvements

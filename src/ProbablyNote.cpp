@@ -194,9 +194,8 @@ struct ProbablyNote : Module {
             configParam(ProbablyNote::NOTE_WEIGHT_PARAM + i, 0.0, 1.0, 0.0,"Note Weight");		
         }
 
-		leftExpander.producerMessage = producerMessage;
-		leftExpander.consumerMessage = consumerMessage;
-
+		rightExpander.producerMessage = producerMessage;
+		rightExpander.consumerMessage = consumerMessage;
 
 		onReset();
 	}
@@ -343,19 +342,24 @@ struct ProbablyNote : Module {
 		//Get Expander Info
 		if(rightExpander.module && rightExpander.module->model == modelPNChordExpander) {	
 			generateChords = true;		
-			float *message = (float*) rightExpander.module->leftExpander.consumerMessage;
-			dissonance5Prbability = message[0];
-			dissonance7Prbability = message[1];
-			suspensionProbability = message[2];
-			externalDissonance5Random = message[4];
-			externalDissonance7Random = message[5];
-			externalSuspensionRandom = message[6];
+			float *messagesFromExpander = (float*)rightExpander.consumerMessage;
+			dissonance5Prbability = messagesFromExpander[0];
+			dissonance7Prbability = messagesFromExpander[1];
+			suspensionProbability = messagesFromExpander[2];
+			externalDissonance5Random = messagesFromExpander[4];
+			externalDissonance7Random = messagesFromExpander[5];
+			externalSuspensionRandom = messagesFromExpander[6];
 
 			//Send outputs to slaves if present		
-			float *messageToSlave = (float*)(rightExpander.module->leftExpander.producerMessage);
-			messageToSlave[0] = 1.0f; 
-			messageToSlave[1] = -1.0f; 
-			messageToSlave[2] = -1.0f; 
+			float *messageToExpander = (float*)(rightExpander.module->leftExpander.producerMessage);
+			
+			// messageToExpander[0] = 1.0f; 
+			// messageToExpander[1] = -1.0f; 
+			// messageToExpander[2] = -1.0f; 
+
+			messageToExpander[0] = thirdOffset; 
+			messageToExpander[1] = fifthOffset; 
+			messageToExpander[2] = seventhOffset; 
 			rightExpander.module->leftExpander.messageFlipRequested = true;
 
 							
@@ -745,6 +749,10 @@ struct ProbablyNoteWidget : ModuleWidget {
 		nvgFontSize(args.vg, 9);
 		nvgFontFaceId(args.vg, font->handle);
 		nvgTextLetterSpacing(args.vg, -1);
+
+		if(key < 0)
+			return;
+
 
 		char text[128];
 		if(key != transposedKey) { 

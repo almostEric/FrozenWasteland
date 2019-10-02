@@ -160,6 +160,7 @@ A collection of unusual plugins that will add a certain coolness to your patches
 - This is based on the ideas of Dieter Stubler
 - Input voltage is first quantized to nearest note
 - Spread Control allows other notes to be possibly chosen
+- Slant Control controls the direction of notes to choose (either below, above, or both)
 - Focus Control controls initial probability, at 1 all notes have equal probability, at 0 furthest notes have a probability of 10%, with a linear increase towards center note
 - Then within the context of key/scale an additional probability is used - by default, the root and fifth (V) of the scale have the highest proability of being selected.
 - If a note is off (red) it will not be selected by the Quantizer
