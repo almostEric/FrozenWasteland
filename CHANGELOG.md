@@ -1,3 +1,6 @@
+### 1.9.7 (2019-10-02)
+- added Seeds of Change CV and Gate Expanders
+
 ### 1.9.6 (2019-10-02)
 - Probability Not(e), Probability Not(e) BP and PN-Chord Expander Fixes and Improvements
 

@@ -296,6 +296,16 @@ When they are connected this way, the Clock, Mute and Reset signals, and Eoc out
 - Since initial random seed can be specified by knob or CV, sequences are repeatable
 - ![Full Documentation](./doc/SeedsofChange.pdf) 
 
+## Seeds of Change - CV Expander
+
+![Seeds of Change - CV Expander](./doc/soccv.png)
+- Adds 12 Additional probalistic CV outputs to a master SoC.
+
+## Seeds of Change - Gate Expander
+
+![Seeds of Change - CV Expander](./doc/socg.png)
+- Adds 12 Additional probalistic gate outputs to a master SoC.
+
 ## Seriously Slow LFO
 
 ![Seriously Slow LFO](./doc/sslfo.png)

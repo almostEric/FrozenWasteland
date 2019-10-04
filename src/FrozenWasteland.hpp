@@ -27,6 +27,8 @@ extern Model *modelQARGrooveExpander;
 extern Model *modelQARProbabilityExpander;
 extern Model *modelQuantussyCell;
 extern Model *modelSeedsOfChange;
+extern Model *modelSeedsOfChangeCVExpander;
+extern Model *modelSeedsOfChangeGateExpander;
 extern Model *modelStringTheory;
 extern Model *modelRouletteLFO;
 extern Model *modelSeriouslySlowLFO;
