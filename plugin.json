@@ -112,7 +112,7 @@
 			"slug": "QARProbabilityExpander",
 			"name": "QAR - Probability",
 			"description": "Add Randomness to QAR Rhythms",
-			"tags": ["Expander,Random"]
+			"tags": ["Expander","Random"]
 		},
 		{
 			"slug": "QuantussyCell",
