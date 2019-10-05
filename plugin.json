@@ -136,13 +136,13 @@
 			"slug": "SeedsOfChangeCVExpander",
 			"name": "Seeds Of Change - CV Expander",
 			"description": "Additional CV Outs for SoC",
-			"tags": ["Expander,Random"]
+			"tags": ["Expander","Random"]
 		},
 		{
 			"slug": "SeedsOfChangeGateExpander",
 			"name": "Seeds Of Change - Gate Expander",
 			"description": "Additional Gates for SoC",
-			"tags": ["Expander,Random"]
+			"tags": ["Expander","Random"]
 		},
 		{
 			"slug": "StringTheory",
