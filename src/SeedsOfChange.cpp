@@ -65,7 +65,7 @@ struct SeedsOfChange : Module {
 	SeedsOfChange() {
 		// Configure the module
 		config(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS, NUM_LIGHTS);
-		configParam(SeedsOfChange::SEED_PARAM, 0.0, 99.0, 0.0,"Seed");
+		configParam(SeedsOfChange::SEED_PARAM, 0.0, 9999.0, 0.0,"Seed");
 		configParam(SeedsOfChange::RESET_PARAM, 0.0, 1.0, 0.0);
 		configParam(SeedsOfChange::DISTRIBUTION_PARAM, 0.0, 1.0, 0.0,"Distribution");
 		for (int i=0; i<NBOUT; i++) {
@@ -102,7 +102,7 @@ struct SeedsOfChange : Module {
 		resetInput += params[RESET_PARAM].getValue(); 		
 
         if (resetTrigger.process(resetInput) ) {
-            init_genrand((unsigned long)(inputs[SEED_INPUT].isConnected() ? inputs[SEED_INPUT].getVoltage()*9.9 : params[SEED_PARAM].getValue()));
+            init_genrand((unsigned long)(inputs[SEED_INPUT].isConnected() ? inputs[SEED_INPUT].getVoltage()*999.9 : params[SEED_PARAM].getValue()));
         } 
 
 		if( inputs[CLOCK_INPUT].active ) {
@@ -176,7 +176,7 @@ void SeedsOfChange::onReset() {
 void SeedsOfChange::init_genrand(unsigned long s)
 {
 	
-	s = s>99?99:s;
+	s = s>9999?9999:s;
 	latest_seed = s;
     mt[0]= s & 0xffffffffUL;
     for (mti=1; mti<N; mti++) {

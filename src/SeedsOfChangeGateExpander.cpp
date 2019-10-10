@@ -136,7 +136,7 @@ void SeedsOfChangeGateExpander::onReset() {
 void SeedsOfChangeGateExpander::init_genrand(unsigned long s)
 {
 	
-	s = s>99?99:s;
+	s = s>9999?9999:s;
 	latest_seed = s;
     mt[0]= s & 0xffffffffUL;
     for (mti=1; mti<N; mti++) {

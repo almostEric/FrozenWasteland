@@ -1,3 +1,6 @@
+### 1.9.8 (2019-10-11)
+- Expanded # of seeds to 10000
+
 ### 1.9.7 (2019-10-02)
 - added Seeds of Change CV and Gate Expanders
 

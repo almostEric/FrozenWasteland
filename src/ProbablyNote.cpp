@@ -98,8 +98,23 @@ struct ProbablyNote : Module {
 		{1,0,0.2,0.5,0,0,0.3,0.8,0.2,0,0,0.3},
 		{1,0,0,0.5,0,0.4,0,0.8,0,0,0.3,0},
 	}; 
+	bool defaultScaleNoteStatus[MAX_SCALES][MAX_NOTES] = {
+		{1,1,1,1,1,1,1,1,1,1,1,1},
+		{1,0,1,0,1,0,1,0,1,0,1,0},
+		{1,0,1,0,1,1,0,1,0,1,0,1},
+		{1,0,1,1,0,1,0,1,0,1,1,0},
+		{1,1,0,1,0,1,0,1,1,0,1,0},
+		{1,0,1,0,1,0,1,1,0,1,0,1},
+		{1,0,1,0,1,1,0,1,0,1,1,0},
+		{1,0,1,1,0,1,0,1,1,0,1,0},
+		{1,1,0,1,0,1,1,0,1,0,1,0},
+		{1,1,0,0,1,1,0,1,1,0,0,1},
+		{1,0,1,1,0,0,1,1,1,0,0,1},
+		{1,0,0,1,0,1,0,1,0,0,1,0},
+	}; 
 
 	float scaleNoteWeighting[MAX_SCALES][MAX_NOTES]; 
+	bool scaleNoteStatus[MAX_SCALES][MAX_NOTES];
 
 	const char* tempermentNames[MAX_NOTES] = {"Equal","Just"};
     double noteTemperment[MAX_TEMPERMENTS][MAX_NOTES] = {
@@ -118,7 +133,8 @@ struct ProbablyNote : Module {
     float noteScaleProbability[MAX_NOTES] = {0.0f};
     float noteInitialProbability[MAX_NOTES] = {0.0f};
     float currentScaleNoteWeighting[MAX_NOTES] = {0.0};
-	float actualProbability[MAX_NOTES] = {0.0};
+    bool currentScaleNoteStatus[MAX_NOTES] = {false};
+    float actualProbability[MAX_NOTES] = {0.0};
 	int controlIndex[MAX_NOTES] = {0};
 
 
@@ -285,6 +301,15 @@ struct ProbablyNote : Module {
 				sprintf(notebuf, "%i", j);
 				strcat(buf, notebuf);
 				json_object_set_new(rootJ, buf, json_real((float) scaleNoteWeighting[i][j]));
+
+				char buf2[100];
+				char notebuf2[100];
+				strcpy(buf2, "scaleStatus-");
+				strcat(buf2, scaleNames[i]);
+				strcat(buf2, ".");
+				sprintf(notebuf2, "%i", j);
+				strcat(buf2, notebuf2);
+				json_object_set_new(rootJ, buf2, json_integer((int) scaleNoteStatus[i][j]));
 			}
 		}
 		return rootJ;
@@ -332,6 +357,18 @@ struct ProbablyNote : Module {
 				if (sumJ) {
 					scaleNoteWeighting[i][j] = json_real_value(sumJ);
 				}
+
+				char buf2[100];
+				char notebuf2[100];
+				strcpy(buf2, "scaleStatus-");
+				strcat(buf2, scaleNames[i]);
+				strcat(buf2, ".");
+				sprintf(notebuf2, "%i", j);
+				strcat(buf2, notebuf2);
+				json_t *sumJ2 = json_object_get(rootJ, buf2);
+				if (sumJ2) {
+					scaleNoteStatus[i][j] = json_integer_value(sumJ2);
+				}
 			}
 		}		
 	}
@@ -353,10 +390,6 @@ struct ProbablyNote : Module {
 			//Send outputs to slaves if present		
 			float *messageToExpander = (float*)(rightExpander.module->leftExpander.producerMessage);
 			
-			// messageToExpander[0] = 1.0f; 
-			// messageToExpander[1] = -1.0f; 
-			// messageToExpander[2] = -1.0f; 
-
 			messageToExpander[0] = thirdOffset; 
 			messageToExpander[1] = fifthOffset; 
 			messageToExpander[2] = seventhOffset; 
@@ -374,8 +407,9 @@ struct ProbablyNote : Module {
 			lastWeightShift = 0;			
 			for(int j=0;j<MAX_NOTES;j++) {
 				scaleNoteWeighting[scale][j] = defaultScaleNoteWeighting[scale][j];
-				currentScaleNoteWeighting[j] = defaultScaleNoteWeighting[scale][j];;
-			}					
+				scaleNoteStatus[scale][j] = defaultScaleNoteStatus[scale][j];
+				currentScaleNoteWeighting[j] = defaultScaleNoteWeighting[scale][j];
+				currentScaleNoteStatus[j] =	defaultScaleNoteStatus[scale][j];		}					
 		}		
 
 		if (tempermentTrigger.process(params[TEMPERMENT_PARAM].getValue() + inputs[TEMPERMENT_INPUT].getVoltage())) {
@@ -498,10 +532,11 @@ struct ProbablyNote : Module {
 
 			for(int i=0;i<MAX_NOTES;i++) {
 				currentScaleNoteWeighting[i] = scaleNoteWeighting[scale][i];
+				currentScaleNoteStatus[i] = scaleNoteStatus[scale][i];
 				int noteValue = (i + key) % MAX_NOTES;
 				if(noteValue < 0)
 					noteValue +=MAX_NOTES;
-				noteActive[noteValue] = currentScaleNoteWeighting[i] > 0.0;
+				noteActive[noteValue] = currentScaleNoteStatus[i];
 				noteScaleProbability[noteValue] = currentScaleNoteWeighting[i];
 			}	
 
@@ -570,9 +605,11 @@ struct ProbablyNote : Module {
 				int scalePosition = controlIndex[controlOffset] - key;
 				if (scalePosition < 0)
 					scalePosition += MAX_NOTES;
-				scaleNoteWeighting[scale][i] = noteActive[controlOffset] ? params[NOTE_WEIGHT_PARAM+scalePosition].getValue() : 0.0; 
+				scaleNoteWeighting[scale][i] = params[NOTE_WEIGHT_PARAM+scalePosition].getValue(); 
+				scaleNoteStatus[scale][i] =noteActive[controlOffset];
 			} else {
-				scaleNoteWeighting[scale][i] = noteActive[controlIndex[controlOffset]] ? params[NOTE_WEIGHT_PARAM+controlIndex[controlOffset]].getValue() : 0.0; 
+				scaleNoteWeighting[scale][i] = params[NOTE_WEIGHT_PARAM+controlIndex[controlOffset]].getValue(); 
+				scaleNoteStatus[scale][i] = noteActive[controlOffset];
 			}									
         }
 
@@ -715,8 +752,10 @@ void ProbablyNote::onReset() {
 	for(int i = 0;i<MAX_SCALES;i++) {
 		for(int j=0;j<MAX_NOTES;j++) {
 			scaleNoteWeighting[i][j] = defaultScaleNoteWeighting[i][j];
+			scaleNoteStatus[i][j] = defaultScaleNoteStatus[i][j];
 			if(i == scale) {
 				currentScaleNoteWeighting[j] = defaultScaleNoteWeighting[i][j];
+				currentScaleNoteStatus[j] = defaultScaleNoteStatus[i][j];
 			}
 		}
 	}

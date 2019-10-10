@@ -294,6 +294,7 @@ When they are connected this way, the Clock, Mute and Reset signals, and Eoc out
 
 - Generates 4 psuedo-Random values and 4 psuedo-Random Gates..
 - Since initial random seed can be specified by knob or CV, sequences are repeatable
+- Seed Value does not take effect until the reset button is pressed or reset trigger received
 - ![Full Documentation](./doc/SeedsofChange.pdf) 
 
 ## Seeds of Change - CV Expander
