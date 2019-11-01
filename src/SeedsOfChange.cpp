@@ -143,7 +143,7 @@ struct SeedsOfChange : Module {
 		}	
 
 		//Set Expander Info
-		if(rightExpander.module && rightExpander.module->model == modelSeedsOfChangeCVExpander) {	
+		if(rightExpander.module && (rightExpander.module->model == modelSeedsOfChangeCVExpander || rightExpander.module->model == modelSeedsOfChangeGateExpander)) {	
 
 			//Send outputs to slaves if present		
 			float *messageToExpander = (float*)(rightExpander.module->leftExpander.producerMessage);

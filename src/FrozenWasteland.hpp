@@ -18,7 +18,7 @@ extern Model *modelTheOneRingModulator;
 extern Model *modelPhasedLockedLoop;
 extern Model *modelPortlandWeather;
 extern Model *modelProbablyNote;
-//extern Model *modelProbablyNoteArabic;
+extern Model *modelProbablyNoteArabic;
 extern Model *modelProbablyNoteBP;
 //extern Model *modelProbablyNoteIndian;
 extern Model *modelPNChordExpander;

@@ -54,7 +54,7 @@
      inkscape:pageopacity="0.0"
      inkscape:pageshadow="2"
      inkscape:zoom="4"
-     inkscape:cx="0.01988"
+     inkscape:cx="-124.48012"
      inkscape:cy="193.79805"
      inkscape:document-units="px"
      inkscape:current-layer="layer1"
@@ -77,7 +77,7 @@
         <dc:format>image/svg+xml</dc:format>
         <dc:type
            rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
-        <dc:title></dc:title>
+        <dc:title />
       </cc:Work>
     </rdf:RDF>
   </metadata>
@@ -221,14 +221,14 @@
          id="tspan1059-1-5">BAND 3</tspan></text>
     <text
        xml:space="preserve"
-       style="font-style:normal;font-weight:bold;font-size:3.52777767px;line-height:1.25;font-family:Homenaje;text-align:center;letter-spacing:0px;word-spacing:0px;text-anchor:middle;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.26458332;-inkscape-font-specification:'Homenaje Bold';font-stretch:normal;font-variant:normal;"
+       style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:3.52777767px;line-height:1.25;font-family:Homenaje;-inkscape-font-specification:'Homenaje Bold';text-align:center;letter-spacing:0px;word-spacing:0px;text-anchor:middle;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.26458332"
        x="56.414799"
-       y="106.72268"
+       y="106.48067"
        id="text136-8-7"><tspan
          sodipodi:role="line"
          x="56.414799"
-         y="106.72268"
-         style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:2.82222223px;font-family:Homenaje;-inkscape-font-specification:'Homenaje Bold';stroke-width:0.26458332;"
+         y="106.48067"
+         style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:2.82222223px;font-family:Homenaje;-inkscape-font-specification:'Homenaje Bold';stroke-width:0.26458332"
          id="tspan1059-1-2">SENDS</tspan></text>
     <text
        xml:space="preserve"
@@ -267,45 +267,45 @@
        xml:space="preserve"
        style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:3.52777767px;line-height:1.25;font-family:Homenaje;-inkscape-font-specification:Homenaje;text-align:center;letter-spacing:0px;word-spacing:0px;text-anchor:middle;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.26458332"
        x="40.915981"
-       y="117.04707"
+       y="116.51791"
        id="text136-8-7-8"><tspan
          sodipodi:role="line"
          x="40.915981"
-         y="117.04707"
+         y="116.51791"
          style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:2.11666656px;font-family:Homenaje;-inkscape-font-specification:Homenaje;stroke-width:0.26458332"
          id="tspan1059-1-2-4">LO</tspan></text>
     <text
        xml:space="preserve"
        style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:3.52777767px;line-height:1.25;font-family:Homenaje;-inkscape-font-specification:Homenaje;text-align:center;letter-spacing:0px;word-spacing:0px;text-anchor:middle;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.26458332"
-       x="62.231972"
-       y="117.04707"
+       x="51.64864"
+       y="116.51791"
        id="text136-8-7-8-3"><tspan
          sodipodi:role="line"
-         x="62.231972"
-         y="117.04707"
+         x="51.64864"
+         y="116.51791"
          style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:2.11666656px;font-family:Homenaje;-inkscape-font-specification:Homenaje;stroke-width:0.26458332"
          id="tspan1059-1-2-4-8">MID-LO</tspan></text>
     <text
        xml:space="preserve"
        style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:3.52777767px;line-height:1.25;font-family:Homenaje;-inkscape-font-specification:Homenaje;text-align:center;letter-spacing:0px;word-spacing:0px;text-anchor:middle;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.26458332"
-       x="51.551487"
-       y="117.064"
+       x="62.134823"
+       y="116.53484"
        id="text136-8-7-8-5"><tspan
          sodipodi:role="line"
-         x="51.551487"
-         y="117.064"
+         x="62.134823"
+         y="116.53484"
          style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:2.11666656px;font-family:Homenaje;-inkscape-font-specification:Homenaje;stroke-width:0.26458332"
          id="tspan1059-1-2-4-4">MID-HI</tspan></text>
     <text
        xml:space="preserve"
-       style="font-style:normal;font-weight:normal;font-size:3.52777767px;line-height:1.25;font-family:Homenaje;text-align:center;letter-spacing:0px;word-spacing:0px;text-anchor:middle;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.26458332;-inkscape-font-specification:Homenaje;font-stretch:normal;font-variant:normal;"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:3.52777767px;line-height:1.25;font-family:Homenaje;-inkscape-font-specification:Homenaje;text-align:center;letter-spacing:0px;word-spacing:0px;text-anchor:middle;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.26458332"
        x="72.678879"
-       y="117.064"
+       y="116.53484"
        id="text136-8-7-8-8"><tspan
          sodipodi:role="line"
          x="72.678879"
-         y="117.064"
-         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:2.11666656px;font-family:Homenaje;-inkscape-font-specification:Homenaje;stroke-width:0.26458332;"
+         y="116.53484"
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:2.11666656px;font-family:Homenaje;-inkscape-font-specification:Homenaje;stroke-width:0.26458332"
          id="tspan1059-1-2-4-1">HI</tspan></text>
     <path
        inkscape:connector-curvature="0"

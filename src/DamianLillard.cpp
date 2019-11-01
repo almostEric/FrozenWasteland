@@ -145,7 +145,8 @@ struct DamianLillardBandDisplay : TransparentWidget {
 		nvgFillColor(args.vg, nvgRGBA(0x00, 0xff, 0x00, 0xff));
 		char text[128];
 		snprintf(text, sizeof(text), " % 4.0f", cutoffFrequency);
-		nvgText(args.vg, pos.x + 8, pos.y, text, NULL);
+		nvgTextAlign(args.vg,NVG_ALIGN_RIGHT);
+		nvgText(args.vg, pos.x + 36, pos.y, text, NULL);
 	}
 
 	void draw(const DrawArgs &args) override {
@@ -153,7 +154,7 @@ struct DamianLillardBandDisplay : TransparentWidget {
 			return;
 
 		for(int i=0;i<FREQUENCIES;i++) {
-			drawFrequency(args, Vec(i * 46.0, box.size.y - 75), module->freq[i]);
+			drawFrequency(args, Vec(i * 50.0, box.size.y - 75), module->freq[i]);
 		}
 	}
 };

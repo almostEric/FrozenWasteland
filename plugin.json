@@ -1,9 +1,9 @@
 {
 	"slug": "FrozenWasteland",
 	"name": "Frozen Wasteland",
-	"version": "1.9.8",
+	"version": "1.10.0",
 	"author": "almostEric",
-	"license": "CC0-1.0",
+	"license": "GPLv3",
 	"authorEmail": "almostEric@frozenwastelandmodules.com",
 	"pluginUrl": "https://github.com/almostEric/FrozenWasteland/blob/master/README.md",
 	"authorUrl": "https://vcvrack.com/",
@@ -82,6 +82,12 @@
 			"slug": "ProbablyNote",
 			"name": "Probably Note",
 			"description": "Probabilistic Quantizer",
+			"tags": ["Quantizer","Random"]
+		},
+		{
+			"slug": "ProbablyNoteArabic",
+			"name": "Probably Note - Arabic",
+			"description": "Probabilistic Quantizer using Arabic maqams",
 			"tags": ["Quantizer","Random"]
 		},
 		{

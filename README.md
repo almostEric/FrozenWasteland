@@ -170,6 +170,8 @@ A collection of unusual plugins that will add a certain coolness to your patches
 - Octave control allows shifting of the output
 - The Shift control moves the weightings of the active notes up or down - this can be used to move between modes within a scale (ie c major to a minor)
 - If v/Oct is enabledm the Shift Weight and Key inputs uses a 1v/Oct scaling so the shift can follow other quanitizers
+- Intonation: off = Equal Temperment, Green = Just Intonation, Blue = Pythagorean tuning
+- Intonation has a trigger input that switches between equal and whatever intonation was selected
 - Weight outputs the current notes probability weight so it can be used to affect other modules
 - Change outputs a trigger anytime the quantized note changes
 - Weighting changes the overall weighting from linear (0%) to logarithmic (100%). 

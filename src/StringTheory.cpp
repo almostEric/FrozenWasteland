@@ -141,6 +141,28 @@ struct StringTheory : Module {
 		}
 	}
 
+	json_t *dataToJson() override {
+		json_t *rootJ = json_object();
+		
+        json_object_set_new(rootJ, "noiseType", json_integer((int) noiseType));
+        json_object_set_new(rootJ, "windowFunction", json_integer((int) windowFunction));
+
+		
+		
+		return rootJ;
+	}
+
+	void dataFromJson(json_t *rootJ) override {
+
+        json_t *sdnt = json_object_get(rootJ, "noiseType");
+		if (sdnt)
+			noiseType = json_integer_value(sdnt);		
+
+        json_t *sdwf = json_object_get(rootJ, "windowFunction");
+		if (sdwf)
+			windowFunction = json_integer_value(sdwf);		
+	}
+
 	void process(const ProcessArgs &args) override {
 		
 		grainCount = params[GRAIN_COUNT_PARAM].getValue();

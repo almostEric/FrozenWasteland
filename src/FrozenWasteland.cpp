@@ -26,7 +26,7 @@ void init(rack::Plugin *p) {
 	p->addModel(modelPhasedLockedLoop);
 	p->addModel(modelPortlandWeather);
 	p->addModel(modelProbablyNote);
-	//p->addModel(modelProbablyNoteArabic);
+	p->addModel(modelProbablyNoteArabic);
 	p->addModel(modelProbablyNoteBP);
 	//p->addModel(modelProbablyNoteIndian);
 	p->addModel(modelPNChordExpander);

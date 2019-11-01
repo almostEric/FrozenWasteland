@@ -40,7 +40,9 @@ struct ProbablyNoteBP : Module {
 		SHIFT_SCALING_PARAM,
 		KEY_SCALING_PARAM,
 		WEIGHT_SCALING_PARAM,
-		MASTER_WEIGHT_ADJUST_PARAM,
+		PITCH_RANDOMNESS_PARAM,
+		PITCH_RANDOMNESS_CV_ATTENUVERTER_PARAM,
+		PITCH_RANDOMNESS_GAUSSIAN_PARAM,
         NOTE_ACTIVE_PARAM,
         NOTE_WEIGHT_PARAM = NOTE_ACTIVE_PARAM + MAX_NOTES,
 		NUM_PARAMS = NOTE_WEIGHT_PARAM + MAX_NOTES
@@ -58,6 +60,7 @@ struct ProbablyNoteBP : Module {
 		TRIGGER_INPUT,
         EXTERNAL_RANDOM_INPUT,
 		TRITAVE_WRAP_INPUT,
+		PITCH_RANDOMNESS_INPUT,
         NOTE_WEIGHT_INPUT,
 		NUM_INPUTS = NOTE_WEIGHT_INPUT + MAX_NOTES
 	};
@@ -74,6 +77,7 @@ struct ProbablyNoteBP : Module {
 		SHIFT_LOGARITHMIC_SCALE_LIGHT,
         KEY_LOGARITHMIC_SCALE_LIGHT,
 		TRITAVE_MAPPING_LIGHT,
+		PITCH_RANDOMNESS_GAUSSIAN_LIGHT,
         NOTE_ACTIVE_LIGHT,
 		NUM_LIGHTS = NOTE_ACTIVE_LIGHT + MAX_NOTES*2
 	};
@@ -118,7 +122,7 @@ struct ProbablyNoteBP : Module {
     
 	const double tritaveFrequency = 1.5849625;
 	
-	dsp::SchmittTrigger clockTrigger,resetScaleTrigger,tritaveWrapAroundTrigger,tempermentTrigger,tritaveMappingTrigger,shiftScalingTrigger,keyScalingTrigger,noteActiveTrigger[MAX_NOTES]; 
+	dsp::SchmittTrigger clockTrigger,resetScaleTrigger,tritaveWrapAroundTrigger,tempermentTrigger,tritaveMappingTrigger,shiftScalingTrigger,keyScalingTrigger,pitchRandomnessGaussianTrigger,noteActiveTrigger[MAX_NOTES]; 
 	dsp::PulseGenerator noteChangePulse;
     GaussianNoiseGenerator _gauss;
  
@@ -157,6 +161,7 @@ struct ProbablyNoteBP : Module {
 	bool shiftLogarithmic = false;
 	bool keyLogarithmic = false;
 	bool tritaveMapping = true;
+	bool pitchRandomGaussian = false;
 
 
 	std::string lastPath;
@@ -182,6 +187,9 @@ struct ProbablyNoteBP : Module {
 		configParam(ProbablyNoteBP::TRITAVE_WRAPAROUND_PARAM, 0.0, 1.0, 0.0,"Tritave Wraparound");
 		configParam(ProbablyNoteBP::TEMPERMENT_PARAM, 0.0, 1.0, 0.0,"Just Intonation");
 		configParam(ProbablyNoteBP::WEIGHT_SCALING_PARAM, 0.0, 1.0, 0.0,"Weight Scaling","%",0,100);
+		configParam(ProbablyNoteBP::PITCH_RANDOMNESS_PARAM, 0.0, 10.0, 0.0,"Randomize Pitch Amount"," Cents");
+        configParam(ProbablyNoteBP::PITCH_RANDOMNESS_CV_ATTENUVERTER_PARAM, -1.0, 1.0, 0.0,"Randomize Pitch Amount CV Attenuation","%",0,100);
+
 
         srand(time(NULL));
 
@@ -263,6 +271,7 @@ struct ProbablyNoteBP : Module {
 		json_object_set_new(rootJ, "shiftLogarithmic", json_integer((int) shiftLogarithmic));
 		json_object_set_new(rootJ, "keyLogarithmic", json_integer((int) keyLogarithmic));
 		json_object_set_new(rootJ, "tritaveMapping", json_integer((int) tritaveMapping));
+		json_object_set_new(rootJ, "pitchRandomGaussian", json_integer((int) pitchRandomGaussian));
 
 		for(int i=0;i<MAX_SCALES;i++) {
 			for(int j=0;j<MAX_NOTES;j++) {
@@ -313,6 +322,11 @@ struct ProbablyNoteBP : Module {
 		json_t *sumTt = json_object_get(rootJ, "tritaveMapping");
 		if (sumTt) {
 			tritaveMapping = json_integer_value(sumTt);			
+		}
+
+		json_t *sumPg = json_object_get(rootJ, "pitchRandomGaussian");
+		if (sumPg) {
+			pitchRandomGaussian = json_integer_value(sumPg);			
 		}
 
 
@@ -383,6 +397,11 @@ struct ProbablyNoteBP : Module {
 			tritaveMapping = !tritaveMapping;
 		}		
 		lights[TRITAVE_MAPPING_LIGHT].value = tritaveMapping;
+
+		if (pitchRandomnessGaussianTrigger.process(params[PITCH_RANDOMNESS_GAUSSIAN_PARAM].getValue())) {
+			pitchRandomGaussian = !pitchRandomGaussian;
+		}		
+		lights[PITCH_RANDOMNESS_GAUSSIAN_LIGHT].value = pitchRandomGaussian;
 
 
         spread = clamp(params[SPREAD_PARAM].getValue() + (inputs[SPREAD_INPUT].getVoltage() * params[SPREAD_CV_ATTENUVERTER_PARAM].getValue()),0.0f,7.0f);
@@ -610,8 +629,22 @@ struct ProbablyNoteBP : Module {
 				}
 				double quantitizedNoteCV = (noteTemperment[tempermentIndex][notePosition] / 1200.0) + (key * 146.308 / 1200.0); 
 
+				float pitchRandomness = 0;
+				float randomRange = clamp(params[PITCH_RANDOMNESS_PARAM].getValue() + (inputs[PITCH_RANDOMNESS_INPUT].getVoltage() * params[PITCH_RANDOMNESS_CV_ATTENUVERTER_PARAM].getValue()),0.0,10.0);
+				if(pitchRandomGaussian) {
+					bool gaussOk = false; // don't want values that are beyond our mean
+					float gaussian;
+					do {
+						gaussian= _gauss.next();
+						gaussOk = gaussian >= -1 && gaussian <= 1;
+					} while (!gaussOk);
+					pitchRandomness = (2.0 - gaussian) * randomRange / 1200.0;
+				} else {
+					pitchRandomness = (1.0 - ((double) rand()/RAND_MAX)) * randomRange / 600.0;
+				}
+
 				quantitizedNoteCV += (tritaveIn + tritave + tritaveAdjust) * tritaveFrequency; 
-				outputs[QUANT_OUTPUT].setVoltage(quantitizedNoteCV);
+				outputs[QUANT_OUTPUT].setVoltage(quantitizedNoteCV + pitchRandomness);
 				outputs[WEIGHT_OUTPUT].setVoltage(clamp((params[NOTE_WEIGHT_PARAM+randomNote].getValue() + (inputs[NOTE_WEIGHT_INPUT+randomNote].getVoltage() / 10.0f) * 10.0f),0.0f,10.0f));
 				if(lastQuantizedCV != quantitizedNoteCV) {
 					noteChangePulse.trigger(1e-3);	
@@ -771,8 +804,8 @@ struct ProbablyNoteBPDisplay : TransparentWidget {
 		if (!module)
 			return; 
 
-		drawScale(args, Vec(4,83), module->scale, module->weightShift != 0);
-		drawKey(args, Vec(72,84), module->lastKey, module->transposedKey);
+		drawScale(args, Vec(10,82), module->scale, module->weightShift != 0);
+		drawKey(args, Vec(74,82), module->lastKey, module->transposedKey);
 		//drawTritave(args, Vec(66, 280), module->tritave);
 		drawNoteRange(args, module->noteInitialProbability, module->key);
 	}
@@ -831,7 +864,7 @@ struct ProbablyNoteBPWidget : ModuleWidget {
         addParam(createParam<RoundReallySmallFWKnob>(Vec(214,112), module, ProbablyNoteBP::TRITAVE_CV_ATTENUVERTER_PARAM));			
 		addInput(createInput<FWPortInSmall>(Vec(216, 90), module, ProbablyNoteBP::TRITAVE_INPUT));
 
-		addParam(createParam<TL1105>(Vec(15, 113), module, ProbablyNoteBP::RESET_SCALE_PARAM));
+		addParam(createParam<TL1105>(Vec(15, 115), module, ProbablyNoteBP::RESET_SCALE_PARAM));
 
 
 		addParam(createParam<LEDButton>(Vec(130, 113), module, ProbablyNoteBP::SHIFT_SCALING_PARAM));
@@ -849,10 +882,18 @@ struct ProbablyNoteBPWidget : ModuleWidget {
 		addChild(createLight<LargeLight<BlueLight>>(Vec(9.5, 146.5), module, ProbablyNoteBP::TRITAVE_MAPPING_LIGHT));
 
 		addParam(createParam<LEDButton>(Vec(214, 180), module, ProbablyNoteBP::TEMPERMENT_PARAM));
-		addChild(createLight<LargeLight<BlueLight>>(Vec(215.5, 181.5), module, ProbablyNoteBP::JUST_INTONATION_LIGHT));
+		addChild(createLight<LargeLight<GreenLight>>(Vec(215.5, 181.5), module, ProbablyNoteBP::JUST_INTONATION_LIGHT));
 		addInput(createInput<FWPortInSmall>(Vec(192, 181), module, ProbablyNoteBP::TEMPERMENT_INPUT)); 
 
-		addParam(createParam<RoundReallySmallFWKnob>(Vec(202,217), module, ProbablyNoteBP::WEIGHT_SCALING_PARAM));	
+
+		addParam(createParam<RoundSmallFWKnob>(Vec(188,216), module, ProbablyNoteBP::PITCH_RANDOMNESS_PARAM));			
+        addParam(createParam<RoundReallySmallFWKnob>(Vec(214,242), module, ProbablyNoteBP::PITCH_RANDOMNESS_CV_ATTENUVERTER_PARAM));			
+		addInput(createInput<FWPortInSmall>(Vec(216, 220), module, ProbablyNoteBP::PITCH_RANDOMNESS_INPUT));
+		addParam(createParam<LEDButton>(Vec(191, 250), module, ProbablyNoteBP::PITCH_RANDOMNESS_GAUSSIAN_PARAM));
+		addChild(createLight<LargeLight<BlueLight>>(Vec(192.5, 251.5), module, ProbablyNoteBP::PITCH_RANDOMNESS_GAUSSIAN_LIGHT));
+
+
+		addParam(createParam<RoundReallySmallFWKnob>(Vec(202,292), module, ProbablyNoteBP::WEIGHT_SCALING_PARAM));	
 
 
 

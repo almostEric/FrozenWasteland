@@ -13,7 +13,7 @@
 
 #define MAX_NOTES 12
 #define MAX_SCALES 12
-#define MAX_TEMPERMENTS 2
+#define MAX_TEMPERMENTS 3
 
 using namespace frozenwasteland::dsp;
 
@@ -39,7 +39,9 @@ struct ProbablyNote : Module {
 		SHIFT_SCALING_PARAM,
 		KEY_SCALING_PARAM,
 		WEIGHT_SCALING_PARAM,	
-		MASTER_WEIGHT_ADJUST_PARAM,
+		PITCH_RANDOMNESS_PARAM,
+		PITCH_RANDOMNESS_CV_ATTENUVERTER_PARAM,
+		PITCH_RANDOMNESS_GAUSSIAN_PARAM,
         NOTE_ACTIVE_PARAM,
         NOTE_WEIGHT_PARAM = NOTE_ACTIVE_PARAM + MAX_NOTES,
 		NUM_PARAMS = NOTE_WEIGHT_PARAM + MAX_NOTES
@@ -57,6 +59,7 @@ struct ProbablyNote : Module {
 		TRIGGER_INPUT,
         EXTERNAL_RANDOM_INPUT,
 		OCTAVE_WRAP_INPUT,		
+		PITCH_RANDOMNESS_INPUT,
         NOTE_WEIGHT_INPUT,
 		NUM_INPUTS = NOTE_WEIGHT_INPUT + MAX_NOTES
 	};
@@ -69,9 +72,10 @@ struct ProbablyNote : Module {
 	enum LightIds {
 		DISTRIBUTION_GAUSSIAN_LIGHT,
         OCTAVE_WRAPAROUND_LIGHT,
-		JUST_INTONATION_LIGHT,
-		SHIFT_LOGARITHMIC_SCALE_LIGHT,
+		INTONATION_LIGHT,
+		SHIFT_LOGARITHMIC_SCALE_LIGHT = INTONATION_LIGHT+3,
         KEY_LOGARITHMIC_SCALE_LIGHT,
+		PITCH_RANDOMNESS_GAUSSIAN_LIGHT,
         NOTE_ACTIVE_LIGHT,
 		NUM_LIGHTS = NOTE_ACTIVE_LIGHT + MAX_NOTES*2
 	};
@@ -83,7 +87,7 @@ struct ProbablyNote : Module {
 
 
 	const char* noteNames[MAX_NOTES] = {"C","C#/Db","D","D#/Eb","E","F","F#/Gb","G","G#/Ab","A","A#/Bb","B"};
-	const char* scaleNames[MAX_NOTES] = {"Chromatic","Whole Tone","Ionian (Major)","Dorian","Phrygian","Lydian","Mixolydian","Aeolian (minor)","Locrian","Gypsy","Hungarian","Blues"};
+	const char* scaleNames[MAX_NOTES] = {"Chromatic","Whole Tone","Ionian M","Dorian","Phrygian","Lydian","Mixolydian","Aeolian m","Locrian","Gypsy","Hungarian","Blues"};
 	float defaultScaleNoteWeighting[MAX_SCALES][MAX_NOTES] = {
 		{1,1,1,1,1,1,1,1,1,1,1,1},
 		{1,0,1,0,1,0,1,0,1,0,1,0},
@@ -116,15 +120,16 @@ struct ProbablyNote : Module {
 	float scaleNoteWeighting[MAX_SCALES][MAX_NOTES]; 
 	bool scaleNoteStatus[MAX_SCALES][MAX_NOTES];
 
-	const char* tempermentNames[MAX_NOTES] = {"Equal","Just"};
+	const char* tempermentNames[MAX_TEMPERMENTS] = {"Equal","Just","Pythagorean"};
     double noteTemperment[MAX_TEMPERMENTS][MAX_NOTES] = {
         {0,100,200,300,400,500,600,700,800,900,1000,1100},
         {0,111.73,203.91,315.64,386.61,498.04,582.51,701.955,813.69,884.36,996.09,1088.27},
+        {0,90.22,203.91,294.13,407.82,498.04,611.73,701.955,792.18,905.87,996.09,1109.78},
     };
     
 
 	
-	dsp::SchmittTrigger clockTrigger,resetScaleTrigger,octaveWrapAroundTrigger,tempermentTrigger,shiftScalingTrigger,keyScalingTrigger,noteActiveTrigger[MAX_NOTES]; 
+	dsp::SchmittTrigger clockTrigger,resetScaleTrigger,octaveWrapAroundTrigger,tempermentActiveTrigger,tempermentTrigger,shiftScalingTrigger,keyScalingTrigger,pitchRandomnessGaussianTrigger,noteActiveTrigger[MAX_NOTES]; 
 	dsp::PulseGenerator noteChangePulse;
     GaussianNoiseGenerator _gauss;
  
@@ -159,9 +164,11 @@ struct ProbablyNote : Module {
 	int lastSpread = -1;
 	float lastSlant = -1;
 	float lastFocus = -1;
-	bool justIntonation = false;
+	bool alternateIntonationActive = false;
+	int currentIntonation = 0;
 	bool shiftLogarithmic = false;
 	bool keyLogarithmic = false;
+	bool pitchRandomGaussian = false;
 
 	bool useCircleLayout = false;
 
@@ -202,6 +209,8 @@ struct ProbablyNote : Module {
 		configParam(ProbablyNote::OCTAVE_WRAPAROUND_PARAM, 0.0, 1.0, 0.0,"Octave Wraparound");
 		configParam(ProbablyNote::TEMPERMENT_PARAM, 0.0, 1.0, 0.0,"Just Intonation");
 		configParam(ProbablyNote::WEIGHT_SCALING_PARAM, 0.0, 1.0, 0.0,"Weight Scaling","%",0,100);
+		configParam(ProbablyNote::PITCH_RANDOMNESS_PARAM, 0.0, 10.0, 0.0,"Randomize Pitch Amount"," Cents");
+        configParam(ProbablyNote::PITCH_RANDOMNESS_CV_ATTENUVERTER_PARAM, -1.0, 1.0, 0.0,"Randomize Pitch Amount CV Attenuation","%",0,100);
 
         srand(time(NULL));
 
@@ -247,8 +256,8 @@ struct ProbablyNote : Module {
         return chosenWeight;
     }
 
-	double quantizedCVValue(int note, int key, bool useJustIntonation) {
-		if(!useJustIntonation) {
+	double quantizedCVValue(int note, int key, int intonationType) {
+		if(intonationType == 0) {
 			return (note / 12.0); 
 		} else {
 			int octaveAdjust = 0;
@@ -257,7 +266,7 @@ struct ProbablyNote : Module {
 				notePosition += MAX_NOTES;
 				octaveAdjust -=1;
 			}
-			return (noteTemperment[1][notePosition] / 1200.0) + (key /12.0) + octaveAdjust; 
+			return (noteTemperment[intonationType][notePosition] / 1200.0) + (key /12.0) + octaveAdjust; 
 		}
 	}
 
@@ -283,11 +292,12 @@ struct ProbablyNote : Module {
 		json_t *rootJ = json_object();
 
 		json_object_set_new(rootJ, "octaveWrapAround", json_integer((int) octaveWrapAround));
-		json_object_set_new(rootJ, "justIntonation", json_integer((int) justIntonation));
+		json_object_set_new(rootJ, "alternateIntonationActive", json_integer((int) alternateIntonationActive));
+		json_object_set_new(rootJ, "currentIntonation", json_integer((int) currentIntonation));
 		json_object_set_new(rootJ, "shiftLogarithmic", json_integer((int) shiftLogarithmic));
 		json_object_set_new(rootJ, "keyLogarithmic", json_integer((int) keyLogarithmic));
 		json_object_set_new(rootJ, "useCircleLayout", json_integer((int) useCircleLayout));
- 
+		json_object_set_new(rootJ, "pitchRandomGaussian", json_integer((int) pitchRandomGaussian)); 
 
 		
 
@@ -322,9 +332,14 @@ struct ProbablyNote : Module {
 			octaveWrapAround = json_integer_value(sumO);			
 		}
 
-		json_t *sumT = json_object_get(rootJ, "justIntonation");
+		json_t *sumTa = json_object_get(rootJ, "alternateIntonationActive");
+		if (sumTa) {
+			alternateIntonationActive = json_integer_value(sumTa);			
+		}
+
+		json_t *sumT = json_object_get(rootJ, "currentIntonation");
 		if (sumT) {
-			justIntonation = json_integer_value(sumT);			
+			currentIntonation = json_integer_value(sumT);			
 		}
 
 		json_t *sumL = json_object_get(rootJ, "shiftLogarithmic");
@@ -338,11 +353,17 @@ struct ProbablyNote : Module {
 			keyLogarithmic = json_integer_value(sumK);			
 		}
 
+		json_t *sumPg = json_object_get(rootJ, "pitchRandomGaussian");
+		if (sumPg) {
+			pitchRandomGaussian = json_integer_value(sumPg);			
+		}
+
 		json_t *sumCl = json_object_get(rootJ, "useCircleLayout");
 		if (sumCl) {
 			useCircleLayout = json_integer_value(sumCl);			
 		}
 
+		
 
 		for(int i=0;i<MAX_SCALES;i++) {
 			for(int j=0;j<MAX_NOTES;j++) {
@@ -412,10 +433,21 @@ struct ProbablyNote : Module {
 				currentScaleNoteStatus[j] =	defaultScaleNoteStatus[scale][j];		}					
 		}		
 
-		if (tempermentTrigger.process(params[TEMPERMENT_PARAM].getValue() + inputs[TEMPERMENT_INPUT].getVoltage())) {
-			justIntonation = !justIntonation;
+		if (tempermentActiveTrigger.process(inputs[TEMPERMENT_INPUT].getVoltage())) {
+			alternateIntonationActive = !alternateIntonationActive;
 		}		
-		lights[JUST_INTONATION_LIGHT].value = justIntonation;
+		if (tempermentTrigger.process(params[TEMPERMENT_PARAM].getValue())) {
+			currentIntonation = (currentIntonation + 1) % MAX_TEMPERMENTS;
+			alternateIntonationActive = currentIntonation > 0;
+		}		
+		if(alternateIntonationActive) {
+			lights[INTONATION_LIGHT + 1].value = currentIntonation == 1;
+			lights[INTONATION_LIGHT + 2].value = currentIntonation == 2;
+		} else {
+			lights[INTONATION_LIGHT].value = 0;
+			lights[INTONATION_LIGHT+1].value = 0;
+			lights[INTONATION_LIGHT+2].value = 0;
+		}
 		
         if (octaveWrapAroundTrigger.process(params[OCTAVE_WRAPAROUND_PARAM].getValue() + inputs[OCTAVE_WRAP_INPUT].getVoltage())) {
 			octaveWrapAround = !octaveWrapAround;
@@ -431,6 +463,12 @@ struct ProbablyNote : Module {
 			keyLogarithmic = !keyLogarithmic;
 		}		
 		lights[KEY_LOGARITHMIC_SCALE_LIGHT].value = keyLogarithmic;
+
+		if (pitchRandomnessGaussianTrigger.process(params[PITCH_RANDOMNESS_GAUSSIAN_PARAM].getValue())) {
+			pitchRandomGaussian = !pitchRandomGaussian;
+		}		
+		lights[PITCH_RANDOMNESS_GAUSSIAN_LIGHT].value = pitchRandomGaussian;
+
 
 
         spread = clamp(params[SPREAD_PARAM].getValue() + (inputs[SPREAD_INPUT].getVoltage() * params[SPREAD_CV_ATTENUVERTER_PARAM].getValue()),0.0f,6.0f);
@@ -642,17 +680,32 @@ struct ProbablyNote : Module {
 						octaveAdjust = 1.0;
 				}
 
-				double quantitizedNoteCV = quantizedCVValue(randomNote,key,justIntonation);
+				float pitchRandomness = 0;
+				float randomRange = clamp(params[PITCH_RANDOMNESS_PARAM].getValue() + (inputs[PITCH_RANDOMNESS_INPUT].getVoltage() * params[PITCH_RANDOMNESS_CV_ATTENUVERTER_PARAM].getValue()),0.0,10.0);
+				if(pitchRandomGaussian) {
+					bool gaussOk = false; // don't want values that are beyond our mean
+					float gaussian;
+					do {
+						gaussian= _gauss.next();
+						gaussOk = gaussian >= -1 && gaussian <= 1;
+					} while (!gaussOk);
+					pitchRandomness = (2.0 - gaussian) * randomRange / 1200.0;
+				} else {
+					pitchRandomness = (1.0 - ((double) rand()/RAND_MAX)) * randomRange / 600.0;
+				}
+
+
+				double quantitizedNoteCV = quantizedCVValue(randomNote,key,alternateIntonationActive ? currentIntonation : 0);
 				quantitizedNoteCV += octaveIn + octave + octaveAdjust;
 				
 				
 				//Chord Stuff
 				if(!generateChords) { 
 					outputs[QUANT_OUTPUT].setChannels(1);
-					outputs[QUANT_OUTPUT].setVoltage(quantitizedNoteCV,0);
+					outputs[QUANT_OUTPUT].setVoltage(quantitizedNoteCV + pitchRandomness,0);
 				} else {
 					outputs[QUANT_OUTPUT].setChannels(4);
-					outputs[QUANT_OUTPUT].setVoltage(quantitizedNoteCV,0);
+					outputs[QUANT_OUTPUT].setVoltage(quantitizedNoteCV + pitchRandomness,0);
 
 					float rndDissonance5 = ((float) rand()/RAND_MAX);
 					if(externalDissonance5Random != -1)
@@ -1070,8 +1123,8 @@ struct ProbablyNoteWidget : ModuleWidget {
 		if (!module)
 			return; 
 
-		drawScale(args, Vec(4,84), module->lastScale, module->lastWeightShift != 0);
-		drawKey(args, Vec(72,84), module->lastKey, module->transposedKey);
+		drawScale(args, Vec(10,82), module->lastScale, module->lastWeightShift != 0);
+		drawKey(args, Vec(74,82), module->lastKey, module->transposedKey);
 		//drawOctave(args, Vec(66, 280), module->octave);
 		if(module->useCircleLayout) {
 			drawNoteRangeCircular(args, module->noteInitialProbability, module->key);
@@ -1138,7 +1191,7 @@ struct ProbablyNoteWidget : ModuleWidget {
         addParam(createParam<RoundReallySmallFWKnob>(Vec(214,112), module, ProbablyNote::OCTAVE_CV_ATTENUVERTER_PARAM));			
 		addInput(createInput<FWPortInSmall>(Vec(216, 90), module, ProbablyNote::OCTAVE_INPUT));
 
-		addParam(createParam<TL1105>(Vec(15, 113), module, ProbablyNote::RESET_SCALE_PARAM));
+		addParam(createParam<TL1105>(Vec(15, 115), module, ProbablyNote::RESET_SCALE_PARAM));
 
 
 		addParam(createParam<LEDButton>(Vec(130, 113), module, ProbablyNote::SHIFT_SCALING_PARAM));
@@ -1153,10 +1206,17 @@ struct ProbablyNoteWidget : ModuleWidget {
 		addInput(createInput<FWPortInSmall>(Vec(192, 144), module, ProbablyNote::OCTAVE_WRAP_INPUT));
 		
 		addParam(createParam<LEDButton>(Vec(214, 180), module, ProbablyNote::TEMPERMENT_PARAM));
-		addChild(createLight<LargeLight<BlueLight>>(Vec(215.5, 181.5), module, ProbablyNote::JUST_INTONATION_LIGHT));
+		addChild(createLight<LargeLight<RedGreenBlueLight>>(Vec(215.5, 181.5), module, ProbablyNote::INTONATION_LIGHT));
 		addInput(createInput<FWPortInSmall>(Vec(192, 181), module, ProbablyNote::TEMPERMENT_INPUT)); 
 
-		addParam(createParam<RoundReallySmallFWKnob>(Vec(202,217), module, ProbablyNote::WEIGHT_SCALING_PARAM));		
+
+		addParam(createParam<RoundSmallFWKnob>(Vec(188,216), module, ProbablyNote::PITCH_RANDOMNESS_PARAM));			
+        addParam(createParam<RoundReallySmallFWKnob>(Vec(214,242), module, ProbablyNote::PITCH_RANDOMNESS_CV_ATTENUVERTER_PARAM));			
+		addInput(createInput<FWPortInSmall>(Vec(216, 220), module, ProbablyNote::PITCH_RANDOMNESS_INPUT));
+		addParam(createParam<LEDButton>(Vec(190, 250), module, ProbablyNote::PITCH_RANDOMNESS_GAUSSIAN_PARAM));
+		addChild(createLight<LargeLight<BlueLight>>(Vec(191.5, 251.5), module, ProbablyNote::PITCH_RANDOMNESS_GAUSSIAN_LIGHT));
+
+		addParam(createParam<RoundReallySmallFWKnob>(Vec(202,292), module, ProbablyNote::WEIGHT_SCALING_PARAM));		
 
 
 
