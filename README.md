@@ -156,7 +156,7 @@ A collection of unusual plugins that will add a certain coolness to your patches
 
 ![Probably Not(e)](./doc/pn.png)
 
-- This is a probablistic quantizer that will use weighted probabilities to quantize note to a scale
+- This is a probabilistic quantizer that will use weighted probabilities to quantize note to a scale
 - This is based on the ideas of Dieter Stubler
 - Input voltage is first quantized to nearest note
 - Spread Control allows other notes to be possibly chosen
@@ -169,7 +169,7 @@ A collection of unusual plugins that will add a certain coolness to your patches
 - If Octave Wrap is enabled, notes will stay within the Note In's octave (so a B could would be 11 half-steps above a C), if Octave Wrap is off, the notes will be near the original value
 - Octave control allows shifting of the output
 - The Shift control moves the weightings of the active notes up or down - this can be used to move between modes within a scale (ie c major to a minor)
-- If v/Oct is enabledm the Shift Weight and Key inputs uses a 1v/Oct scaling so the shift can follow other quanitizers
+- If v/Oct is enabled the Shift Weight and Key inputs uses a 1v/Oct scaling so the shift can follow other quanitizers
 - Intonation: off = Equal Temperment, Green = Just Intonation, Blue = Pythagorean tuning
 - Intonation has a trigger input that switches between equal and whatever intonation was selected
 - Weight outputs the current notes probability weight so it can be used to affect other modules
@@ -179,7 +179,7 @@ A collection of unusual plugins that will add a certain coolness to your patches
 
 ![Probably Not(e) - Bohlen Pierce](./doc/pnbp.png)
 
-- Same baseic features a Probable Not(e)
+- Same basic features a Probable Not(e)
 - Based on the Bohelen Pierce tuning system which uses a 3:1 "tritave" divided into 13 notes instead of the traditional 2:1 octave with 12 notes
 - For reference: https://en.wikipedia.org/wiki/Bohlen%E2%80%93Pierce_scale
 
@@ -199,7 +199,7 @@ A collection of unusual plugins that will add a certain coolness to your patches
 - 3 Algorithms, Euclidean, Golumb Ruler and Boolean. Each track can use its own Algorithm (Boolean only available on tracks 3 & 4).
 - CV Control of Alogorithm. Try hooking EOC output to Algorithm trigger to get alternating rhythms
 - CV control of Steps, Divisions and Offset, Padding, Accents and Accent Rotation
-- QARs can be chained together to create arbitrarily long sequences. This can either be done manually by patching the appropriate outputs and input triggers together, or just by having multiple QARs be adjaent.
+- QARs can be chained together to create arbitrarily long sequences. This can either be done manually by patching the appropriate outputs and input triggers together, or just by having multiple QARs be adjacent.
 When they are connected this way, the Clock, Mute and Reset signals, and Eoc outputs and Start inputs are normallized, this means they are automatically patched together, but you can still override this by patching something in. Additionally the master QAR will output all of the triggers from the attached modules 
 - If Chain Mode is Boss, the QAR runs on start up, then stops if the track's Start input is patched, until a Start trigger is received - basically the first QAR should be set to this
 - If Chain Mode is Employee, the QAR track will be idle until a Start trigger is received.
@@ -294,20 +294,20 @@ When they are connected this way, the Clock, Mute and Reset signals, and Eoc out
 
 ![Seeds of Change](./doc/soc.png)
 
-- Generates 4 psuedo-Random values and 4 psuedo-Random Gates..
-- Since initial random seed can be specified by knob or CV, sequences are repeatable
-- Seed Value does not take effect until the reset button is pressed or reset trigger received
+- Generates 4 pseudo-Random values and 4 pseudo-Random Gates.
+- Since initial random seed can be specified by knob or CV, sequences are repeatable.
+- Seed Value does not take effect until the reset button is pressed or reset trigger received.
 - ![Full Documentation](./doc/SeedsofChange.pdf) 
 
 ## Seeds of Change - CV Expander
 
 ![Seeds of Change - CV Expander](./doc/soccv.png)
-- Adds 12 Additional probalistic CV outputs to a master SoC.
+- Adds 12 Additional probabilistic CV outputs to a master SoC.
 
 ## Seeds of Change - Gate Expander
 
 ![Seeds of Change - CV Expander](./doc/socg.png)
-- Adds 12 Additional probalistic gate outputs to a master SoC.
+- Adds 12 Additional probabilistic gate outputs to a master SoC.
 
 ## Seriously Slow LFO
 
