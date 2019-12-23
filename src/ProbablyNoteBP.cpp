@@ -14,6 +14,8 @@
 #define MAX_NOTES 13
 #define MAX_SCALES 10
 #define MAX_TEMPERMENTS 2
+#define NUM_SHIFT_MODES 3
+#define TRIGGER_DELAY_SAMPLES 5
 
 using namespace frozenwasteland::dsp;
 
@@ -74,13 +76,19 @@ struct ProbablyNoteBP : Module {
 		DISTRIBUTION_GAUSSIAN_LIGHT,
         TRITAVE_WRAPAROUND_LIGHT,
 		JUST_INTONATION_LIGHT,
-		SHIFT_LOGARITHMIC_SCALE_LIGHT,
-        KEY_LOGARITHMIC_SCALE_LIGHT,
+		SHIFT_MODE_LIGHT,
+        KEY_LOGARITHMIC_SCALE_LIGHT = SHIFT_MODE_LIGHT + 3,
 		TRITAVE_MAPPING_LIGHT,
 		PITCH_RANDOMNESS_GAUSSIAN_LIGHT,
         NOTE_ACTIVE_LIGHT,
 		NUM_LIGHTS = NOTE_ACTIVE_LIGHT + MAX_NOTES*2
 	};
+	enum ShiftModes {
+		SHIFT_STEP_PER_VOLT,
+		SHIFT_STEP_BY_V_OCTAVE_RELATIVE,
+		SHIFT_STEP_BY_V_OCTAVE_ABSOLUTE,
+	};
+
 
 
 	const char* noteNames[MAX_NOTES] = {"C","C#/Db","D","E","F","F#/Gb","G","H","H#/Jb","J","A","A#/Bb","B"};
@@ -135,6 +143,11 @@ struct ProbablyNoteBP : Module {
 	float actualProbability[MAX_NOTES] = {0.0};
 	int controlIndex[MAX_NOTES] = {0};
 
+	bool triggerDelayEnabled = false;
+	float triggerDelay[TRIGGER_DELAY_SAMPLES] = {0};
+	int triggerDelayIndex = 0;
+
+
 
     int scale = 0;
     int lastScale = -1;
@@ -158,7 +171,7 @@ struct ProbablyNoteBP : Module {
 	float lastSlant = -1;
 	float lastFocus = -1;
 	bool justIntonation = false;
-	bool shiftLogarithmic = false;
+	int shiftMode = 0;
 	bool keyLogarithmic = false;
 	bool tritaveMapping = true;
 	bool pitchRandomGaussian = false;
@@ -201,26 +214,26 @@ struct ProbablyNoteBP : Module {
 		onReset();
 	}
 
-    float lerp(float v0, float v1, float t) {
+    double lerp(double v0, double v1, float t) {
         return (1 - t) * v0 + t * v1;
     }
 
     int weightedProbability(float *weights,float scaling,float randomIn) {
-        float weightTotal = 0.0f;
-		float linearWeight, logWeight, weight;
+        double weightTotal = 0.0f;
+		double linearWeight, logWeight, weight;
             
         for(int i = 0;i <MAX_NOTES; i++) {
 			linearWeight = weights[i];
-			logWeight = std::log10(weights[i]*10 + 1);
+			logWeight = (std::pow(10,weights[i]) - 1) / 10.0;
 			weight = lerp(linearWeight,logWeight,scaling);
             weightTotal += weight;
         }
 
         int chosenWeight = -1;        
-        float rnd = randomIn * weightTotal;
+        double rnd = randomIn * weightTotal;
         for(int i = 0;i <MAX_NOTES;i++ ) {
 			linearWeight = weights[i];
-			logWeight = std::log10(weights[i]*10 + 1);
+			logWeight = (std::pow(10,weights[i]) - 1) / 10.0;
 			weight = lerp(linearWeight,logWeight,scaling);
 
             if(rnd < weight) {
@@ -266,9 +279,10 @@ struct ProbablyNoteBP : Module {
 	json_t *dataToJson() override {
 		json_t *rootJ = json_object();
 
+		json_object_set_new(rootJ, "triggerDelayEnabled", json_integer((bool) triggerDelayEnabled));
 		json_object_set_new(rootJ, "tritaveWrapAround", json_integer((int) tritaveWrapAround));
 		json_object_set_new(rootJ, "justIntonation", json_integer((int) justIntonation));
-		json_object_set_new(rootJ, "shiftLogarithmic", json_integer((int) shiftLogarithmic));
+		json_object_set_new(rootJ, "shiftMode", json_integer((int) shiftMode));
 		json_object_set_new(rootJ, "keyLogarithmic", json_integer((int) keyLogarithmic));
 		json_object_set_new(rootJ, "tritaveMapping", json_integer((int) tritaveMapping));
 		json_object_set_new(rootJ, "pitchRandomGaussian", json_integer((int) pitchRandomGaussian));
@@ -299,6 +313,11 @@ struct ProbablyNoteBP : Module {
 
 	void dataFromJson(json_t *rootJ) override {
 
+		json_t *ctTd = json_object_get(rootJ, "triggerDelayEnabled");
+		if (ctTd)
+			triggerDelayEnabled = json_integer_value(ctTd);
+
+
 		json_t *sumO = json_object_get(rootJ, "tritaveWrapAround");
 		if (sumO) {
 			tritaveWrapAround = json_integer_value(sumO);			
@@ -309,9 +328,9 @@ struct ProbablyNoteBP : Module {
 			justIntonation = json_integer_value(sumT);			
 		}
 
-		json_t *sumL = json_object_get(rootJ, "shiftLogarithmic");
+		json_t *sumL = json_object_get(rootJ, "shiftMode");
 		if (sumL) {
-			shiftLogarithmic = json_integer_value(sumL);			
+			shiftMode = json_integer_value(sumL);			
 		}
 
 		json_t *sumK = json_object_get(rootJ, "keyLogarithmic");
@@ -384,9 +403,12 @@ struct ProbablyNoteBP : Module {
 		lights[TRITAVE_WRAPAROUND_LIGHT].value = tritaveWrapAround;
 
         if (shiftScalingTrigger.process(params[SHIFT_SCALING_PARAM].getValue())) {
-			shiftLogarithmic = !shiftLogarithmic;
+			shiftMode = (shiftMode + 1) % NUM_SHIFT_MODES;
 		}		
-		lights[SHIFT_LOGARITHMIC_SCALE_LIGHT].value = shiftLogarithmic;
+		lights[SHIFT_MODE_LIGHT].value = 0;
+		lights[SHIFT_MODE_LIGHT+1].value = (shiftMode == SHIFT_STEP_BY_V_OCTAVE_ABSOLUTE ? 1 : 0);
+		lights[SHIFT_MODE_LIGHT+2].value = (shiftMode == SHIFT_STEP_BY_V_OCTAVE_RELATIVE ? 1 : 0);
+
 
 		if (keyScalingTrigger.process(params[KEY_SCALING_PARAM].getValue())) {
 			keyLogarithmic = !keyLogarithmic;
@@ -477,7 +499,7 @@ struct ProbablyNoteBP : Module {
 		}
 
 		weightShift = params[SHIFT_PARAM].getValue();
-		if(shiftLogarithmic && inputs[SHIFT_INPUT].isConnected()) {
+		if(shiftMode != SHIFT_STEP_PER_VOLT && inputs[SHIFT_INPUT].isConnected()) {
 			double inputShift = inputs[SHIFT_INPUT].getVoltage() * params[SHIFT_CV_ATTENUVERTER_PARAM].getValue();
 			double unusedIntPart;
 			if(!tritaveMapping) {
@@ -486,16 +508,25 @@ struct ProbablyNoteBP : Module {
 			inputShift = std::modf(inputShift, &unusedIntPart);
 			inputShift = std::round(inputShift * 13);
 
-			int desiredKey = inputShift;
+			int desiredKey;
+			if(shiftMode == SHIFT_STEP_BY_V_OCTAVE_RELATIVE) {
+				desiredKey = (key + (int)inputShift) % MAX_NOTES;	
+				if(desiredKey < 0)
+					desiredKey += MAX_NOTES;
+			} else {
+				 desiredKey = (int)inputShift;
+			}
 			
 			//Find nearest active note to shift amount
-			while (!noteActive[desiredKey]) {
-				desiredKey = (desiredKey + 1) % MAX_NOTES;				
+			int noteCount = 0;
+			while (!noteActive[desiredKey] && noteCount < MAX_NOTES) {
+				desiredKey = (desiredKey + 1) % MAX_NOTES;	
+				noteCount+=1;			
 			}
 
 			//Count how many active notes it takes to get there
-			int noteCount = 0;
-			while (desiredKey != key) {
+			noteCount = 0;
+			while (desiredKey != key && noteCount < MAX_NOTES) {
 				desiredKey -= 1;
 				if(desiredKey < 0)
 					desiredKey += MAX_NOTES;
@@ -592,7 +623,13 @@ struct ProbablyNoteBP : Module {
         
 
 		if( inputs[TRIGGER_INPUT].active ) {
-			if (clockTrigger.process(inputs[TRIGGER_INPUT].value) ) {		
+			float currentTriggerInput = inputs[TRIGGER_INPUT].getVoltage();
+			triggerDelay[triggerDelayIndex] = currentTriggerInput;
+			int delayedIndex = (triggerDelayIndex + 1) % TRIGGER_DELAY_SAMPLES;
+			float triggerInputValue = triggerDelayEnabled ? triggerDelay[delayedIndex] : currentTriggerInput;
+			triggerDelayIndex = delayedIndex;
+
+			if (clockTrigger.process(triggerInputValue) ) {		
 				float rnd = ((float) rand()/RAND_MAX);
 				if(inputs[EXTERNAL_RANDOM_INPUT].isConnected()) {
 					rnd = inputs[EXTERNAL_RANDOM_INPUT].getVoltage() / 10.0f;
@@ -665,6 +702,13 @@ struct ProbablyNoteBP : Module {
 
 void ProbablyNoteBP::onReset() {
 	clockTrigger.reset();
+
+	for(int i=0;i<TRIGGER_DELAY_SAMPLES;i++) {
+		triggerDelay[i] = 0.0f;
+	}
+	triggerDelayEnabled = false;
+
+
 	for(int i = 0;i<MAX_SCALES;i++) {
 		for(int j=0;j<MAX_NOTES;j++) {
 			scaleNoteWeighting[i][j] = defaultScaleNoteWeighting[i][j];
@@ -704,7 +748,7 @@ struct ProbablyNoteBPDisplay : TransparentWidget {
 			snprintf(text, sizeof(text), "%s -> %s", module->noteNames[key], module->noteNames[transposedKey]);
 		}
 		else {
-			nvgFillColor(args.vg, nvgRGBA(0x00, 0xff, 0x00, 0xff));
+			nvgFillColor(args.vg, nvgRGBA(0x4a, 0xc3, 0x27, 0xff));
 			snprintf(text, sizeof(text), "%s", module->noteNames[key]);
 		}
 		nvgText(args.vg, pos.x, pos.y, text, NULL);
@@ -718,7 +762,7 @@ struct ProbablyNoteBPDisplay : TransparentWidget {
 		if(shifted) 
 			nvgFillColor(args.vg, nvgRGBA(0xff, 0xff, 0x00, 0xff));
 		else
-			nvgFillColor(args.vg, nvgRGBA(0x00, 0xff, 0x00, 0xff));
+			nvgFillColor(args.vg, nvgRGBA(0x4a, 0xc3, 0x27, 0xff));
 		char text[128];
 		snprintf(text, sizeof(text), "%s", module->scaleNames[scale]);
 		nvgText(args.vg, pos.x, pos.y, text, NULL);
@@ -729,7 +773,7 @@ struct ProbablyNoteBPDisplay : TransparentWidget {
 		nvgFontFaceId(args.vg, font->handle);
 		nvgTextLetterSpacing(args.vg, -1);
 
-		nvgFillColor(args.vg, nvgRGBA(0x00, 0xff, 0x00, 0xff));
+		nvgFillColor(args.vg, nvgRGBA(0x4a, 0xc3, 0x27, 0xff));
 		char text[128];
 		snprintf(text, sizeof(text), " %i", tritave);
 		nvgText(args.vg, pos.x, pos.y, text, NULL);
@@ -852,26 +896,29 @@ struct ProbablyNoteBPWidget : ModuleWidget {
         addParam(createParam<RoundReallySmallFWKnob>(Vec(34,112), module, ProbablyNoteBP::SCALE_CV_ATTENUVERTER_PARAM));			
 		addInput(createInput<FWPortInSmall>(Vec(36, 90), module, ProbablyNoteBP::SCALE_INPUT));
 
+		addParam(createParam<TL1105>(Vec(15, 115), module, ProbablyNoteBP::RESET_SCALE_PARAM));
+
         addParam(createParam<RoundSmallFWSnapKnob>(Vec(68,86), module, ProbablyNoteBP::KEY_PARAM));			
         addParam(createParam<RoundReallySmallFWKnob>(Vec(94,112), module, ProbablyNoteBP::KEY_CV_ATTENUVERTER_PARAM));			
 		addInput(createInput<FWPortInSmall>(Vec(96, 90), module, ProbablyNoteBP::KEY_INPUT));
 
-        addParam(createParam<RoundSmallFWSnapKnob>(Vec(128,85), module, ProbablyNoteBP::SHIFT_PARAM));			
-        addParam(createParam<RoundReallySmallFWKnob>(Vec(154,112), module, ProbablyNoteBP::SHIFT_CV_ATTENUVERTER_PARAM));			
-		addInput(createInput<FWPortInSmall>(Vec(156, 90), module, ProbablyNoteBP::SHIFT_INPUT));
+		addParam(createParam<LEDButton>(Vec(70, 113), module, ProbablyNoteBP::KEY_SCALING_PARAM));
+		addChild(createLight<LargeLight<BlueLight>>(Vec(71.5, 114.5), module, ProbablyNoteBP::KEY_LOGARITHMIC_SCALE_LIGHT));
+
+        addParam(createParam<RoundSmallFWSnapKnob>(Vec(133,85), module, ProbablyNoteBP::SHIFT_PARAM));			
+        addParam(createParam<RoundReallySmallFWKnob>(Vec(159,112), module, ProbablyNoteBP::SHIFT_CV_ATTENUVERTER_PARAM));			
+		addInput(createInput<FWPortInSmall>(Vec(161, 90), module, ProbablyNoteBP::SHIFT_INPUT));
+
+		addParam(createParam<LEDButton>(Vec(135, 113), module, ProbablyNoteBP::SHIFT_SCALING_PARAM));
+		addChild(createLight<LargeLight<RedGreenBlueLight>>(Vec(136.5, 114.5), module, ProbablyNoteBP::SHIFT_MODE_LIGHT));
 
         addParam(createParam<RoundSmallFWSnapKnob>(Vec(188,86), module, ProbablyNoteBP::TRITAVE_PARAM));			
         addParam(createParam<RoundReallySmallFWKnob>(Vec(214,112), module, ProbablyNoteBP::TRITAVE_CV_ATTENUVERTER_PARAM));			
 		addInput(createInput<FWPortInSmall>(Vec(216, 90), module, ProbablyNoteBP::TRITAVE_INPUT));
 
-		addParam(createParam<TL1105>(Vec(15, 115), module, ProbablyNoteBP::RESET_SCALE_PARAM));
 
 
-		addParam(createParam<LEDButton>(Vec(130, 113), module, ProbablyNoteBP::SHIFT_SCALING_PARAM));
-		addChild(createLight<LargeLight<BlueLight>>(Vec(131.5, 114.5), module, ProbablyNoteBP::SHIFT_LOGARITHMIC_SCALE_LIGHT));
 
-		addParam(createParam<LEDButton>(Vec(70, 113), module, ProbablyNoteBP::KEY_SCALING_PARAM));
-		addChild(createLight<LargeLight<BlueLight>>(Vec(71.5, 114.5), module, ProbablyNoteBP::KEY_LOGARITHMIC_SCALE_LIGHT));
 
 
 		addParam(createParam<LEDButton>(Vec(214, 143), module, ProbablyNoteBP::TRITAVE_WRAPAROUND_PARAM));
@@ -890,7 +937,7 @@ struct ProbablyNoteBPWidget : ModuleWidget {
         addParam(createParam<RoundReallySmallFWKnob>(Vec(214,242), module, ProbablyNoteBP::PITCH_RANDOMNESS_CV_ATTENUVERTER_PARAM));			
 		addInput(createInput<FWPortInSmall>(Vec(216, 220), module, ProbablyNoteBP::PITCH_RANDOMNESS_INPUT));
 		addParam(createParam<LEDButton>(Vec(191, 250), module, ProbablyNoteBP::PITCH_RANDOMNESS_GAUSSIAN_PARAM));
-		addChild(createLight<LargeLight<BlueLight>>(Vec(192.5, 251.5), module, ProbablyNoteBP::PITCH_RANDOMNESS_GAUSSIAN_LIGHT));
+		addChild(createLight<LargeLight<GreenLight>>(Vec(192.5, 251.5), module, ProbablyNoteBP::PITCH_RANDOMNESS_GAUSSIAN_LIGHT));
 
 
 		addParam(createParam<RoundReallySmallFWKnob>(Vec(202,292), module, ProbablyNoteBP::WEIGHT_SCALING_PARAM));	
@@ -927,6 +974,31 @@ struct ProbablyNoteBPWidget : ModuleWidget {
 
 	}
 
+	struct TriggerDelayItem : MenuItem {
+		ProbablyNoteBP *module;
+		void onAction(const event::Action &e) override {
+			module->triggerDelayEnabled = !module->triggerDelayEnabled;
+		}
+		void step() override {
+			text = "Trigger Delay";
+			rightText = (module->triggerDelayEnabled) ? "✔" : "";
+		}
+	};
+
+	
+	
+	void appendContextMenu(Menu *menu) override {
+		MenuLabel *spacerLabel = new MenuLabel();
+		menu->addChild(spacerLabel);
+
+		ProbablyNoteBP *module = dynamic_cast<ProbablyNoteBP*>(this->module);
+		assert(module);
+
+		TriggerDelayItem *triggerDelayItem = new TriggerDelayItem();
+		triggerDelayItem->module = module;
+		menu->addChild(triggerDelayItem);
+
+	}
 	
 };
 

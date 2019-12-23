@@ -53,9 +53,9 @@
      borderopacity="1.0"
      inkscape:pageopacity="0.0"
      inkscape:pageshadow="2"
-     inkscape:zoom="16"
-     inkscape:cx="328.4872"
-     inkscape:cy="275.73987"
+     inkscape:zoom="4"
+     inkscape:cx="312.9247"
+     inkscape:cy="105.73987"
      inkscape:document-units="px"
      inkscape:current-layer="layer1"
      showgrid="false"
@@ -78,7 +78,7 @@
         <dc:format>image/svg+xml</dc:format>
         <dc:type
            rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
-        <dc:title></dc:title>
+        <dc:title />
       </cc:Work>
     </rdf:RDF>
   </metadata>
@@ -498,13 +498,13 @@
     <text
        xml:space="preserve"
        style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:3.55690169px;line-height:1.25;font-family:Homenaje;-inkscape-font-specification:Homenaje;letter-spacing:0px;word-spacing:0px;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.26676762"
-       x="110.75169"
+       x="106.81545"
        y="135.87193"
        id="text4978-4-9-8"
        transform="scale(1.0082557,0.9918119)"><tspan
          sodipodi:role="line"
          id="tspan4976-4-4-3"
-         x="110.75169"
+         x="106.81545"
          y="135.87193"
          style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:2.84552145px;font-family:Homenaje;-inkscape-font-specification:Homenaje;stroke-width:0.26676762">FB SEND</tspan></text>
     <text
@@ -1107,5 +1107,17 @@
          d="m 152.29059,60.798701 h -0.76068 v -1.02526 h -0.62838 v 1.0418 h -0.39688"
          style="fill:none;stroke:#ffffff;stroke-width:0.13229169;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1" />
     </g>
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:3.55690169px;line-height:1.25;font-family:Homenaje;-inkscape-font-specification:Homenaje;letter-spacing:0px;word-spacing:0px;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.26676762"
+       x="118.44717"
+       y="135.85196"
+       id="text4978-4-9-8-6"
+       transform="scale(1.0082557,0.9918119)"><tspan
+         sodipodi:role="line"
+         id="tspan4976-4-4-3-0"
+         x="118.44717"
+         y="135.85196"
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:2.84552145px;font-family:Homenaje;-inkscape-font-specification:Homenaje;stroke-width:0.26676762">COMPRESS</tspan></text>
   </g>
 </svg>

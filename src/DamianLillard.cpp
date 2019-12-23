@@ -6,7 +6,7 @@ using namespace std;
 
 #define BANDS 4
 #define FREQUENCIES 3
-#define numFilters 6
+#define numFilters 8
 
 struct DamianLillard : Module {
 	typedef float T;
@@ -64,14 +64,16 @@ struct DamianLillard : Module {
 		configParam(FREQ_3_CV_ATTENUVERTER_PARAM, -1.0, 1.0, 0,"Cutoff Frequency 3 CV Attenuation","%",0,100);
 
 		filterParams[0].setMode(StateVariableFilterParams<T>::Mode::LowPass);
-		filterParams[1].setMode(StateVariableFilterParams<T>::Mode::HiPass);
-		filterParams[2].setMode(StateVariableFilterParams<T>::Mode::LowPass);
-		filterParams[3].setMode(StateVariableFilterParams<T>::Mode::HiPass);
-		filterParams[4].setMode(StateVariableFilterParams<T>::Mode::LowPass);
-		filterParams[5].setMode(StateVariableFilterParams<T>::Mode::HiPass);
+		filterParams[1].setMode(StateVariableFilterParams<T>::Mode::LowPass);
+		filterParams[2].setMode(StateVariableFilterParams<T>::Mode::HiPass);
+		filterParams[3].setMode(StateVariableFilterParams<T>::Mode::LowPass);
+		filterParams[4].setMode(StateVariableFilterParams<T>::Mode::HiPass);
+		filterParams[5].setMode(StateVariableFilterParams<T>::Mode::LowPass);
+		filterParams[6].setMode(StateVariableFilterParams<T>::Mode::HiPass);
+		filterParams[7].setMode(StateVariableFilterParams<T>::Mode::HiPass);
 
 		for (int i = 0; i < numFilters; ++i) {
-	        filterParams[i].setQ(5); 	
+	        filterParams[i].setQ(0.707); 	
 	        filterParams[i].setFreq(T(.1));
 	    }
 	}
@@ -93,7 +95,7 @@ void DamianLillard::process(const ProcessArgs &args) {
 		freq[i] = minCutoff * powf(maxCutoff / minCutoff, cutoffExp);
 
 		//Prevent band overlap
-		if(i>0 && freq[i] < lastFreq[i-1]) {
+		if(i > 0 && freq[i] < lastFreq[i-1]) {
 			freq[i] = lastFreq[i-1]+1;
 		}
 		if(i<FREQUENCIES-1 && freq[i] > lastFreq[i+1]) {
@@ -102,16 +104,20 @@ void DamianLillard::process(const ProcessArgs &args) {
 
 		if(freq[i] != lastFreq[i]) {
 			float Fc = freq[i] / args.sampleRate;
-			filterParams[i*2].setFreq(T(Fc));
+			if(i==0) 
+				filterParams[0].setFreq(T(Fc));
+			if(i==2) 
+				filterParams[7].setFreq(T(Fc));
 			filterParams[i*2 + 1].setFreq(T(Fc));
+			filterParams[i*2 + 2].setFreq(T(Fc));
 			lastFreq[i] = freq[i];
 		}
 	}
 
-	output[0] = StateVariableFilter<T>::run(signalIn, filterStates[0], filterParams[0]) * 5;
-	output[1] = StateVariableFilter<T>::run(StateVariableFilter<T>::run(signalIn, filterStates[1], filterParams[1]), filterStates[2], filterParams[2]) * 5;
-	output[2] = StateVariableFilter<T>::run(StateVariableFilter<T>::run(signalIn, filterStates[3], filterParams[3]), filterStates[4], filterParams[4]) * 5;
-	output[3] = StateVariableFilter<T>::run(signalIn, filterStates[5], filterParams[5]) * 5;
+	output[0] = StateVariableFilter<T>::run(StateVariableFilter<T>::run(signalIn, filterStates[0], filterParams[0]), filterStates[1], filterParams[1]) * 5;
+	output[1] = StateVariableFilter<T>::run(StateVariableFilter<T>::run(signalIn, filterStates[2], filterParams[2]), filterStates[3], filterParams[3]) * 5;
+	output[2] = StateVariableFilter<T>::run(StateVariableFilter<T>::run(signalIn, filterStates[4], filterParams[4]), filterStates[5], filterParams[5]) * 5;
+	output[3] = StateVariableFilter<T>::run(StateVariableFilter<T>::run(signalIn, filterStates[6], filterParams[6]), filterStates[7], filterParams[7]) * 5;
 
 	for(int i=0; i<BANDS; i++) {		
 		outputs[BAND_1_OUTPUT+i].setVoltage(output[i]);

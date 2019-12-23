@@ -84,7 +84,7 @@
      inkscape:cy="191.79061"
      guidetolerance="10"
      gridtolerance="10"
-     inkscape:cx="-6.6944038"
+     inkscape:cx="-131.24848"
      showgrid="false"
      id="namedview10"
      pagecolor="#ffffff"
@@ -867,12 +867,12 @@
        d="m 423.72136,283.944 v -5.6 h 2.44 v 0.544 h -1.736 v 1.792 h 1.408 v 0.544 h -1.408 v 2.176 h 1.816 v 0.544 z" /></g><text
      id="text19169"
      y="287.99976"
-     x="413.1723"
+     x="417.85199"
      style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:6.66666651px;line-height:1.25;font-family:Homenaje;-inkscape-font-specification:'Homenaje Bold';letter-spacing:0px;word-spacing:0px;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.99999994"
      xml:space="preserve"><tspan
        style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:8px;font-family:Homenaje;-inkscape-font-specification:'Homenaje Bold';stroke-width:0.99999994"
        y="287.99976"
-       x="413.1723"
+       x="417.85199"
        id="tspan19167"
        sodipodi:role="line">WEIGHT SHIFT</tspan></text>
 <text
@@ -889,14 +889,14 @@
 <text
      id="text19161-2-3"
      y="320.95309"
-     x="403.4003"
+     x="408.07999"
      style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:6.66666651px;line-height:1.25;font-family:Homenaje;-inkscape-font-specification:'Homenaje Bold';letter-spacing:0px;word-spacing:0px;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.99999994"
      xml:space="preserve"><tspan
        style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:6.66666651px;font-family:Homenaje;-inkscape-font-specification:'Homenaje Bold';stroke-width:0.99999994"
        y="320.95309"
-       x="403.4003"
+       x="408.07999"
        id="tspan19159-3-6"
-       sodipodi:role="line">v/O</tspan></text>
+       sodipodi:role="line">MODE</tspan></text>
 <text
      id="text19161-2-3-9"
      y="320.95309"
@@ -990,32 +990,16 @@
        x="473.27066"
        id="tspan19159-3-5"
        sodipodi:role="line">GAUSSIAN</tspan></text>
-<g
-     transform="matrix(3.7795274,0,0,2.0997374,154.66354,156.41855)"
-     id="g7045"><rect
-       y="58.855671"
-       x="36.204647"
-       height="4.7625003"
-       width="9.5250006"
-       id="rect6948-0"
-       style="fill:#999999;fill-opacity:1;stroke-width:0.10016956" /><rect
-       y="59.120251"
-       x="36.520828"
-       height="4.2333336"
-       width="8.9958334"
-       id="rect4735-6"
-       style="fill:#141414;fill-opacity:1;stroke-width:0.09300231" /></g><g
-     transform="matrix(2.7296586,0,0,2.0997374,256.67367,156.41855)"
-     id="g7045-2"><rect
-       y="58.855671"
-       x="36.204647"
-       height="4.7625003"
-       width="9.5250006"
-       id="rect6948-0-4"
-       style="fill:#999999;fill-opacity:1;stroke-width:0.10016956" /><rect
-       y="59.120251"
-       x="36.520828"
-       height="4.2333336"
-       width="8.9958334"
-       id="rect4735-6-7"
-       style="fill:#141414;fill-opacity:1;stroke-width:0.09300231" /></g></svg>
+<rect
+     style="fill:#101015;fill-opacity:1;stroke:#999999;stroke-width:0.53564948;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+     id="rect6948-0"
+     width="41.464352"
+     height="9.9643507"
+     x="291.51782"
+     y="280.01782" /><rect
+     style="fill:#101015;fill-opacity:1;stroke:#999999;stroke-width:0.71468067;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+     id="rect6948-0-4"
+     width="54.28532"
+     height="9.7853193"
+     x="355.60733"
+     y="280.10733" /></svg>

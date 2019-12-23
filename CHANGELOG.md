@@ -1,3 +1,13 @@
+### 1.10.0 (2019-12-23)
+- New Modules: Probably Not(e) - Arabic, Drunken Rampage, Just a Phase(r) and QAR - Warped Space Expander
+- Added Random Pitch Variability to Probably Not(e) and Probably Note(e) - Bohlen-Pierce
+- Added Pythagorean Tuning to Probably Note
+- Added Compressor to Portland Weather
+- Fixed logarithmic scaling and weight shift in Probably Notes
+- Bug fixes in QAR
+- Bug fixes in Seeds of Change expanders, added attenuverters to all SoC modules
+- Fixed labeling and phase issues in Damian Lillard
+
 ### 1.9.8 (2019-10-11)
 - Expanded # of seeds to 10000
 

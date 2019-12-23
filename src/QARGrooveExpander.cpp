@@ -7,7 +7,7 @@
 #define NUM_TAPS 16
 #define PASSTHROUGH_LEFT_VARIABLE_COUNT 13
 #define PASSTHROUGH_RIGHT_VARIABLE_COUNT 8
-#define TRACK_LEVEL_PARAM_COUNT TRACK_COUNT * 6
+#define TRACK_LEVEL_PARAM_COUNT TRACK_COUNT * 9
 #define PASSTHROUGH_OFFSET MAX_STEPS * TRACK_COUNT * 3 + TRACK_LEVEL_PARAM_COUNT
 
 
@@ -63,6 +63,8 @@ struct QARGrooveExpander : Module {
 	// Expander
 	float consumerMessage[PASSTHROUGH_OFFSET + PASSTHROUGH_LEFT_VARIABLE_COUNT + PASSTHROUGH_RIGHT_VARIABLE_COUNT] = {};// this module must read from here
 	float producerMessage[PASSTHROUGH_OFFSET + 1 + PASSTHROUGH_LEFT_VARIABLE_COUNT + PASSTHROUGH_RIGHT_VARIABLE_COUNT] = {};// mother will write into here
+
+	float grooveLength;
 
     float lerp(float v0, float v1, float t) {
 	  return (1 - t) * v0 + t * v1;
@@ -175,7 +177,7 @@ struct QARGrooveExpander : Module {
 
         
 
-		bool motherPresent = (leftExpander.module && (leftExpander.module->model == modelQuadAlgorithmicRhythm || leftExpander.module->model == modelQARProbabilityExpander || leftExpander.module->model == modelQARGrooveExpander));
+		bool motherPresent = (leftExpander.module && (leftExpander.module->model == modelQuadAlgorithmicRhythm || leftExpander.module->model == modelQARProbabilityExpander || leftExpander.module->model == modelQARGrooveExpander || leftExpander.module->model == modelQARWarpedSpaceExpander));
 		//lights[CONNECTED_LIGHT].value = motherPresent;
 		if (motherPresent) {
 			// To Mother
@@ -187,12 +189,12 @@ struct QARGrooveExpander : Module {
 			}
 
 			//If another expander is present, get its values (we can overwrite them)
-			bool anotherExpanderPresent = (rightExpander.module && (rightExpander.module->model == modelQARGrooveExpander || rightExpander.module->model == modelQARProbabilityExpander || rightExpander.module->model == modelQuadAlgorithmicRhythm));
+			bool anotherExpanderPresent = (rightExpander.module && (rightExpander.module->model == modelQARGrooveExpander || rightExpander.module->model == modelQARProbabilityExpander || rightExpander.module->model == modelQARWarpedSpaceExpander || rightExpander.module->model == modelQuadAlgorithmicRhythm));
 			if(anotherExpanderPresent)
 			{			
 				float *message = (float*) rightExpander.module->leftExpander.consumerMessage;	
 
-                if(rightExpander.module->model == modelQARProbabilityExpander || rightExpander.module->model == modelQARGrooveExpander ) { // Get QRE values							
+                if(rightExpander.module->model == modelQARProbabilityExpander || rightExpander.module->model == modelQARGrooveExpander || rightExpander.module->model == modelQARWarpedSpaceExpander) { // Get QRE values							
 					for(int i = 0; i < PASSTHROUGH_OFFSET; i++) {
                         producerMessage[i] = message[i];
 					}
@@ -212,7 +214,7 @@ struct QARGrooveExpander : Module {
 			}
 
 
-            float grooveLength = clamp(params[GROOVE_LENGTH_PARAM].getValue() + (inputs[GROOVE_LENGTH_INPUT].isConnected() ? inputs[GROOVE_LENGTH_INPUT].getVoltage() * 1.8f * params[GROOVE_LENGTH_CV_PARAM].getValue() : 0.0f),1.0,18.0f);
+            grooveLength = clamp(params[GROOVE_LENGTH_PARAM].getValue() + (inputs[GROOVE_LENGTH_INPUT].isConnected() ? inputs[GROOVE_LENGTH_INPUT].getVoltage() * 1.8f * params[GROOVE_LENGTH_CV_PARAM].getValue() : 0.0f),1.0,18.0f);
             float grooveAmount = clamp(params[GROOVE_AMOUNT_PARAM].getValue() + (inputs[GROOVE_AMOUNT_INPUT].isConnected() ? inputs[GROOVE_AMOUNT_INPUT].getVoltage() / 10 * params[GROOVE_AMOUNT_CV_PARAM].getValue() : 0.0f),0.0,1.0f);
             float randomAmount = clamp(params[SWING_RANDOMNESS_PARAM].getValue() + (inputs[SWING_RANDOMNESS_INPUT].isConnected() ? inputs[SWING_RANDOMNESS_INPUT].getVoltage() / 10 * params[SWING_RANDOMNESS_CV_PARAM].getValue() : 0.0f),0.0,1.0f);
             for (int i = 0; i < TRACK_COUNT; i++) {
@@ -265,16 +267,70 @@ struct QARGrooveExpander : Module {
 };
 
 
+
+struct QARGrooveExpanderDisplay : TransparentWidget {
+	QARGrooveExpander *module;
+	int frame = 0;
+	std::shared_ptr<Font> font;
+
+	QARGrooveExpanderDisplay() {
+		font = APP->window->loadFont(asset::plugin(pluginInstance, "res/fonts/DejaVuSansMono.ttf"));
+	}
+
+
+
+	void drawActiveGrooveSteps(const DrawArgs &args, int grooveLength) 
+	{		
+
+
+		// Draw indicator for upper Ajnas
+		nvgStrokeColor(args.vg, nvgRGBA(0x2d, 0xc3, 0xff, 0xff));
+		nvgStrokeWidth(args.vg, 2);
+		for(int i = 0; i<grooveLength;i++) {
+
+			float x= (i / 6) * 65 + 15.0;
+			float y= (i % 6) * 45 + 51.0;
+
+			nvgBeginPath(args.vg);
+			nvgCircle(args.vg,x,y,6.0);
+			nvgClosePath(args.vg);		
+			nvgStroke(args.vg);
+		}
+
+	}
+
+
+	void draw(const DrawArgs &args) override {
+		if (!module)
+			return; 
+
+
+		drawActiveGrooveSteps(args,(int)(module->grooveLength));
+	}
+};
+
 struct QARGrooveExpanderWidget : ModuleWidget {
 	QARGrooveExpanderWidget(QARGrooveExpander *module) {
 		setModule(module);
 
 		setPanel(APP->window->loadSvg(asset::plugin(pluginInstance, "res/QARGrooveExpander.svg")));
 
+		{
+			QARGrooveExpanderDisplay *display = new QARGrooveExpanderDisplay();
+			display->module = module;
+			display->box.pos = Vec(0, 0);
+			display->box.size = Vec(box.size.x, box.size.y);
+			addChild(display);
+		}
+
+
 		addChild(createWidget<ScrewSilver>(Vec(RACK_GRID_WIDTH - 12, 0)));
 		addChild(createWidget<ScrewSilver>(Vec(box.size.x - 2 * RACK_GRID_WIDTH + 12, 0)));
 		addChild(createWidget<ScrewSilver>(Vec(RACK_GRID_WIDTH - 12, RACK_GRID_HEIGHT - RACK_GRID_WIDTH)));
 		addChild(createWidget<ScrewSilver>(Vec(box.size.x - 2 * RACK_GRID_WIDTH + 12, RACK_GRID_HEIGHT - RACK_GRID_WIDTH)));
+
+
+		
 
 
          for(int i=0; i<MAX_STEPS / 3;i++) {

@@ -58,6 +58,12 @@ struct RoundReallySmallFWSnapKnob : RoundKnob {
 	}
 };
 
+struct RoundExtremelySmallFWKnob : RoundKnob {
+	RoundExtremelySmallFWKnob() {
+		setSvg(APP->window->loadSvg(asset::plugin(pluginInstance,"res/ComponentLibrary/RoundExtremelySmallFWKnob.svg")));
+	}
+};
+
 
 
 

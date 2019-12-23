@@ -18,8 +18,10 @@ void init(rack::Plugin *p) {
 	p->addModel(modelBPMLFO2);
 	p->addModel(modelBPMLFOPhaseExpander);
 	p->addModel(modelDamianLillard);
+	p->addModel(modelDrunkenRampage);
 	p->addModel(modelEverlastingGlottalStopper);
 	p->addModel(modelHairPick);
+	p->addModel(modelJustAPhaser);
 	p->addModel(modelLissajousLFO);
 	p->addModel(modelMrBlueSky);
 	p->addModel(modelTheOneRingModulator);
@@ -33,6 +35,7 @@ void init(rack::Plugin *p) {
 	p->addModel(modelQuadAlgorithmicRhythm);
 	p->addModel(modelQARGrooveExpander);
 	p->addModel(modelQARProbabilityExpander);
+	p->addModel(modelQARWarpedSpaceExpander);
 	p->addModel(modelQuantussyCell);
 	p->addModel(modelSeedsOfChange);
 	p->addModel(modelSeedsOfChangeCVExpander);

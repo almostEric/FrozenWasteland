@@ -6,6 +6,7 @@
 #include "samplerate.h"
 #include "ringbuffer.hpp"
 #include "StateVariableFilter.h"
+#include "filters/Compressor.hpp"
 #include <iostream>
 
 #define HISTORY_SIZE (1<<22)
@@ -52,6 +53,7 @@ struct PortlandWeather : Module {
 		PING_PONG_TRIGGER_MODE_PARAM,
 		STACK_TRIGGER_MODE_PARAM,
 		MUTE_TRIGGER_MODE_PARAM,
+		COMPRESSION_MODE_PARAM,
 		NUM_PARAMS
 	};
 	enum InputIds {
@@ -99,9 +101,10 @@ struct PortlandWeather : Module {
 	enum LightIds {
 		PING_PONG_LIGHT,
 		REVERSE_LIGHT,
-		TAP_MUTED_LIGHT,
+		COMPRESSION_MODE_LIGHT,
+		TAP_MUTED_LIGHT = COMPRESSION_MODE_LIGHT+2,
 		TAP_STACKED_LIGHT = TAP_MUTED_LIGHT+NUM_TAPS,
-		FREQ_LIGHT = TAP_STACKED_LIGHT+NUM_TAPS,
+		FREQ_LIGHT = TAP_STACKED_LIGHT+NUM_TAPS,		
 		NUM_LIGHTS
 	};
 	enum FilterModes {
@@ -115,8 +118,59 @@ struct PortlandWeather : Module {
 		TRIGGER_TRIGGER_MODE,
 		GATE_TRIGGE_MODE
 	};
+	enum CompressionModes {
+		COMPRESSION_NONE,
+		COMPRESSION_CLAMP,
+		COMPRESSION_HARD,
+		COMPRESSION_ADAPTIVE,
+		NUM_COMPRESSION_MODES
+	};
 
+	Compressor compressor[CHANNELS];
 
+	uint8_t compressionMode = COMPRESSION_NONE;
+
+	void changeCompressionMode (uint8_t newMode) {
+		if (newMode == compressionMode) {
+			return;
+		}
+
+		if (newMode == COMPRESSION_HARD) {
+			// reset to hard compression
+			for (uint8_t i = 0; i < 2; i++) {
+				compressor[i].setCoefficients(1.0f, 30.0f, 5.0f, 20.0f, sampleRate);
+			}
+		}
+
+		//compressionMode = newMode;
+	}
+
+	// void changeCompressorSampleRate (float nSampleRate) {
+
+	// 	if (compressionMode == COMPRESSION_HARD) {
+	// 		// reset to hard compression
+	// 		for (uint8_t i = 0; i < CHANNELS; i++) {
+	// 			compressor[i].setCoefficients(1.0f, 30.0f, 5.0f, 20.0f, sampleRate);
+	// 		}
+	// 	}
+	// }
+
+	inline float limit (float in, uint8_t which) {
+		if (compressionMode == COMPRESSION_NONE) {
+			return in;
+		} else if (compressionMode == COMPRESSION_CLAMP) {
+			return clamp(in, -6.0f, 6.0f);
+		} else if (compressionMode == COMPRESSION_HARD) {
+			return compressor[which].process(in);
+		} else {
+			// adaptive compression
+			float ratio = fabs(in) / 4.0f;
+			compressor[which].setCoefficients(1.0f, 30.0f, 5.0f, ratio, sampleRate);
+			return compressor[which].process(in);
+		}
+	}
+
+	float sampleRate = 44100;
 
 	const char* grooveNames[NUM_GROOVES] = {"Straight","Swing","Hard Swing","Reverse Swing","Alternate Swing","Accelerando","Ritardando","Waltz Time","Half Swing","Roller Coaster","Quintuple","Random 1","Random 2","Random 3","Early Reflection","Late Reflection"};
 	const float tapGroovePatterns[NUM_GROOVES][NUM_TAPS] = {
@@ -178,7 +232,7 @@ struct PortlandWeather : Module {
 	
 
 	
-	dsp::SchmittTrigger clockTrigger,pingPongTrigger,reverseTrigger,clearBufferTrigger,mutingTrigger[NUM_TAPS],stackingTrigger[NUM_TAPS];
+	dsp::SchmittTrigger clockTrigger,pingPongTrigger,reverseTrigger,clearBufferTrigger,compressionModeTrigger,mutingTrigger[NUM_TAPS],stackingTrigger[NUM_TAPS];
 	double divisions[DIVISIONS] = {1/256.0,1/192.0,1/128.0,1/96.0,1/64.0,1/48.0,1/32.0,1/24.0,1/16.0,1/13.0,1/12.0,1/11.0,1/8.0,1/7.0,1/6.0,1/5.0,1/4.0,1/3.0,1/2.0,1/1.5,1,1/1.5,2.0,3.0,4.0,5.0,6.0,7.0,8.0,9.0,10.0,11.0,12.0,13.0,16.0,24.0};
 	const char* divisionNames[DIVISIONS] = {"/256","/192","/128","/96","/64","/48","/32","/24","/16","/13","/12","/11","/8","/7","/6","/5","/4","/3","/2","/1.5","x 1","x 1.5","x 2","x 3","x 4","x 5","x 6","x 7","x 8","x 9","x 10","x 11","x 12","x 13","x 16","x 24"};
 	int division = 0;
@@ -244,7 +298,9 @@ struct PortlandWeather : Module {
 		configParam(REVERSE_PARAM, 0.0f, 1.0f, 0.0f);
 		
 		configParam(PING_PONG_PARAM, 0.0f, 1.0f, 0.0f);
-		
+
+		configParam(COMPRESSION_MODE_PARAM, 0.0f, 1.0f, 0.0f);
+
 		//last tap isn't stacked
 		for (int i = 0; i< NUM_TAPS-1; i++) {
 			configParam(TAP_STACKED_PARAM + i, 0.0f, 1.0f, 0.0f);
@@ -271,6 +327,7 @@ struct PortlandWeather : Module {
 
 		
 		float sampleRate = APP->engine->getSampleRate();
+		//sampleRate = APP->engine->getSampleRate();
 
 		for (int i = 0; i < NUM_TAPS; ++i) {
 			tapMuted[i] = false;
@@ -297,6 +354,8 @@ struct PortlandWeather : Module {
 			for(int j=0;j<MAX_GRAINS;j++) {
 				granularPitchShift[i+NUM_TAPS][j].Init((float*) pitchShiftBuffer[i+NUM_TAPS][j],((float)j)/MAX_GRAINS);
 			}
+
+			compressor[i].setCoefficients(1.0f, 30.0f, 5.0f, 20.0f, sampleRate);
 		}
 	}
 
@@ -307,6 +366,8 @@ struct PortlandWeather : Module {
 		json_object_set_new(rootJ, "pingPong", json_integer((int) pingPong));
 
 		json_object_set_new(rootJ, "reverse", json_integer((int) reverse));
+
+		json_object_set_new(rootJ, "compressionMode", json_integer((int) compressionMode));
 
 		json_object_set_new(rootJ, "grainCount", json_integer((int) grainCount));
 
@@ -336,6 +397,11 @@ struct PortlandWeather : Module {
 		json_t *sumR = json_object_get(rootJ, "reverse");
 		if (sumR) {
 			reverse = json_integer_value(sumR);			
+		}
+
+		json_t *sumCM = json_object_get(rootJ, "compressionMode");
+		if (sumCM) {
+			compressionMode = json_integer_value(sumCM);			
 		}
 
 		json_t *sumGc = json_object_get(rootJ, "grainCount");
@@ -389,7 +455,7 @@ struct PortlandWeather : Module {
 		divisionf = clamp(divisionf,0.0f,35.0f);
 		division = (DIVISIONS-1) - int(divisionf); //TODO: Reverse Division Order
 
-		timeElapsed += 1.0 / args.sampleRate;
+		timeElapsed += 1.0 / sampleRate;
 		if(inputs[CLOCK_INPUT].isConnected()) {
 			if(clockTrigger.process(inputs[CLOCK_INPUT].getVoltage())) {
 				if(firstClockReceived) {
@@ -408,7 +474,7 @@ struct PortlandWeather : Module {
 			}
 				
 		} else {
-			baseDelay = clamp(params[TIME_PARAM].getValue() + inputs[TIME_CV_INPUT].getVoltage(), 0.001f, HISTORY_SIZE / args.sampleRate);	
+			baseDelay = clamp(params[TIME_PARAM].getValue() + inputs[TIME_CV_INPUT].getVoltage(), 0.001f, HISTORY_SIZE / sampleRate);	
 			duration = 0.0f;
 			firstClockReceived = false;
 			secondClockReceived = false;			
@@ -444,7 +510,34 @@ struct PortlandWeather : Module {
 			reverseHistoryBuffer[1].clear();		
 		}
 
-		
+
+		if(compressionModeTrigger.process(params[COMPRESSION_MODE_PARAM].getValue())) {
+			compressionMode = (compressionMode + 1) % NUM_COMPRESSION_MODES;
+			changeCompressionMode(compressionMode);
+		}
+		switch(compressionMode) {
+			case COMPRESSION_NONE :
+				lights[COMPRESSION_MODE_LIGHT].value = 0;
+				lights[COMPRESSION_MODE_LIGHT+1].value = 0;
+				lights[COMPRESSION_MODE_LIGHT+2].value = 0;
+				break;
+			case COMPRESSION_CLAMP :
+				lights[COMPRESSION_MODE_LIGHT].value = 1;
+				lights[COMPRESSION_MODE_LIGHT+1].value = 0;
+				lights[COMPRESSION_MODE_LIGHT+2].value = 0;
+				break;
+			case COMPRESSION_HARD :
+				lights[COMPRESSION_MODE_LIGHT].value = 1;
+				lights[COMPRESSION_MODE_LIGHT+1].value = 1;
+				lights[COMPRESSION_MODE_LIGHT+2].value = 0;
+				break;
+			case COMPRESSION_ADAPTIVE :
+				lights[COMPRESSION_MODE_LIGHT].value = 0;
+				lights[COMPRESSION_MODE_LIGHT+1].value = 1;
+				lights[COMPRESSION_MODE_LIGHT+2].value = 0;
+				break;
+		}
+
 
 		FloatFrame dryFrame;
 		FloatFrame inFrame;
@@ -528,7 +621,7 @@ struct PortlandWeather : Module {
 			// 	testDelay = duration;
 			// }
 
-			float index = delayTime[tap] * args.sampleRate;
+			float index = delayTime[tap] * sampleRate;
 			if(index > 0)
 			{
 				// How many samples do we need consume to catch up?
@@ -619,7 +712,7 @@ struct PortlandWeather : Module {
 				}
 
 				float cutoffExp = clamp(params[TAP_FC_PARAM+tap].getValue() + inputs[TAP_FC_CV_INPUT+tap].getVoltage() / 10.0f,0.0f,1.0f); 
-				float tapFc = minCutoff * powf(maxCutoff / minCutoff, cutoffExp) / args.sampleRate;
+				float tapFc = minCutoff * powf(maxCutoff / minCutoff, cutoffExp) / sampleRate;
 				if(lastTapFc[tap] != tapFc) {
 					filterParams[tap].setFreq(T(tapFc));
 					lastTapFc[tap] = tapFc;
@@ -685,7 +778,7 @@ struct PortlandWeather : Module {
 				}
 			
 
-				float index = delay * args.sampleRate;
+				float index = delay * sampleRate;
 				if(index > 0)
 				{
 					// How many samples do we need consume to catch up?
@@ -734,7 +827,7 @@ struct PortlandWeather : Module {
 			
 		
 			//Set reverse size = delay of feedback
-			reverseHistoryBuffer[channel].setDelaySize((delay) * args.sampleRate);			
+			reverseHistoryBuffer[channel].setDelaySize((delay) * sampleRate);			
 
 		
 
@@ -786,12 +879,12 @@ struct PortlandWeather : Module {
 
 		if(color != lastColor) {
 			float lowpassFreq = 10000.0f * powf(10.0f, clamp(2.0f*color, 0.0f, 1.0f));
-			lowpassFilter[0].setCutoff(lowpassFreq / args.sampleRate);
-			lowpassFilter[1].setCutoff(lowpassFreq / args.sampleRate);
+			lowpassFilter[0].setCutoff(lowpassFreq / sampleRate);
+			lowpassFilter[1].setCutoff(lowpassFreq / sampleRate);
 		
 			float highpassFreq = 10.0f * powf(10.0f, clamp(2.0f*color - 1.0f, 0.0f, 1.0f));
-			highpassFilter[0].setCutoff(highpassFreq / args.sampleRate);
-			highpassFilter[1].setCutoff(highpassFreq / args.sampleRate);
+			highpassFilter[0].setCutoff(highpassFreq / sampleRate);
+			highpassFilter[1].setCutoff(highpassFreq / sampleRate);
 		
 			lastColor = color;
 		}
@@ -817,12 +910,12 @@ struct PortlandWeather : Module {
 		}
 		
 		if (pingPong) {
-			lastFeedback.l = feedbackValue.r;
-			lastFeedback.r = feedbackValue.l;
+			lastFeedback.l = limit(feedbackValue.r,1);
+			lastFeedback.r = limit(feedbackValue.l,0);
 		} else
 		{
-			lastFeedback.l = feedbackValue.l;
-			lastFeedback.r = feedbackValue.r;
+			lastFeedback.l = limit(feedbackValue.l,0);
+			lastFeedback.r = limit(feedbackValue.r,1);
 		}
 		
 		float mix = clamp(params[MIX_PARAM].getValue() + inputs[MIX_INPUT].getVoltage() / 10.0f, 0.0f, 1.0f);
@@ -1053,6 +1146,9 @@ struct PortlandWeatherWidget : ModuleWidget {
 		addChild(createLight<LargeLight<BlueLight>>(Vec(372.5, 117.5), module, PortlandWeather::PING_PONG_LIGHT));
 		addInput(createInput<PJ301MPort>(Vec(395, 112), module, PortlandWeather::PING_PONG_INPUT));
 
+		addParam(createParam<LEDButton>(Vec(332, 330), module, PortlandWeather::COMPRESSION_MODE_PARAM));
+		addChild(createLight<LargeLight<RedGreenBlueLight>>(Vec(333.5, 331.5), module, PortlandWeather::COMPRESSION_MODE_LIGHT));
+
 
 		//last tap isn't stacked
 		for (int i = 0; i< NUM_TAPS-1; i++) {
@@ -1125,8 +1221,8 @@ struct PortlandWeatherWidget : ModuleWidget {
 
 		addInput(createInput<PJ301MPort>(Vec(227, 330), module, PortlandWeather::EXTERNAL_DELAY_TIME_INPUT));
 
-		addOutput(createOutput<PJ301MPort>(Vec(277, 330), module, PortlandWeather::FEEDBACK_L_OUTPUT));
-		addOutput(createOutput<PJ301MPort>(Vec(307, 330), module, PortlandWeather::FEEDBACK_R_OUTPUT));
+		addOutput(createOutput<PJ301MPort>(Vec(262, 330), module, PortlandWeather::FEEDBACK_L_OUTPUT));
+		addOutput(createOutput<PJ301MPort>(Vec(292, 330), module, PortlandWeather::FEEDBACK_R_OUTPUT));
 		addInput(createInput<PJ301MPort>(Vec(365, 330), module, PortlandWeather::FEEDBACK_L_RETURN));
 		addInput(createInput<PJ301MPort>(Vec(395, 330), module, PortlandWeather::FEEDBACK_R_RETURN));
 
@@ -1154,18 +1250,7 @@ struct PortlandWeatherWidget : ModuleWidget {
 		}
 	};
 
-	// struct GrainSizeItem : MenuItem {
-	// 	PortlandWeather *module;
-	// 	void onAction(const event::Action &e) override {
-	// 		module->displayDelayNoteMode = !module->displayDelayNoteMode;
-	// 	}
-	// };
-	// struct WindowingFunctionItem : MenuItem {
-	// 	PortlandWeather *module;
-	// 	void onAction(const event::Action &e) override {
-	// 		module->emitResetOnStopRun = !module->emitResetOnStopRun;
-	// 	}
-	// };	
+	
 	
 	void appendContextMenu(Menu *menu) override {
 		MenuLabel *spacerLabel = new MenuLabel();

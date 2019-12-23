@@ -39,7 +39,11 @@ A collection of unusual plugins that will add a certain coolness to your patches
 - Basic example, distort only the mid lows and/or mid highs so your distortion doesn't remove bottom end
 - or, apply different delays to create interesting resonances and other FX
 - Video of a snare drum being fed into four delay lines: https://www.youtube.com/watch?v=EB7A_hzMpNI
-- Use your imagination!
+
+## Drunken Rampage
+![Drunken Rampage](./doc/dr.png)
+- Based on Befaco's Rampage module
+- New BAC % control makes DR randomly overshoot input voltage (depending on how drunk you have set the channel, it may take a couple tries to reach it)
 
 ## Everlasting Glottal Stopper
 ![Everlasting Glottal Stopper](./doc/egs.png)
@@ -60,6 +64,12 @@ A collection of unusual plugins that will add a certain coolness to your patches
 - The Edge Level, Tent Level and Tent Tap control the overall volume of the taps.
 - Feedback Type can add non-linearity and exponential decay. Clarinet mode is same as guitar for now.
 - The size out allows the comb's length to control other modules (say the feedback delay time in Portland Weather)
+
+## Just a Phase(r)
+![Just a Phase(r)](./doc/jp.png)
+- Classic Phaser effect with control over nearly everything
+- Mod Type controls how the notches are modulated - either logarithmic, constant, logarithmic with notches alternating directions and constant with notches alternating directions
+- Span controls the range of the notches, at 100% it is about 4 octaves
 
 ## Lissajou LFO.
 
@@ -156,7 +166,7 @@ A collection of unusual plugins that will add a certain coolness to your patches
 
 ![Probably Not(e)](./doc/pn.png)
 
-- This is a probablistic quantizer that will use weighted probabilities to quantize note to a scale
+- This is a probabilistic quantizer that will use weighted probabilities to quantize note to a scale
 - This is based on the ideas of Dieter Stubler
 - Input voltage is first quantized to nearest note
 - Spread Control allows other notes to be possibly chosen
@@ -169,7 +179,9 @@ A collection of unusual plugins that will add a certain coolness to your patches
 - If Octave Wrap is enabled, notes will stay within the Note In's octave (so a B could would be 11 half-steps above a C), if Octave Wrap is off, the notes will be near the original value
 - Octave control allows shifting of the output
 - The Shift control moves the weightings of the active notes up or down - this can be used to move between modes within a scale (ie c major to a minor)
-- If v/Oct is enabledm the Shift Weight and Key inputs uses a 1v/Oct scaling so the shift can follow other quanitizers
+- If v/Oct is enabled the Key inputs use a 1v/Oct scaling so the key can follow other quanitizers or MIDI keyboards
+- Shift has 3 modes, with the light off, the shift is 1V - per note shift (+ or -). Blue is a v/Oct of scaling where the shift is relative to the key. 
+  Green is v/Oct where the note is absolute (so 0V will shift to C)
 - Intonation: off = Equal Temperment, Green = Just Intonation, Blue = Pythagorean tuning
 - Intonation has a trigger input that switches between equal and whatever intonation was selected
 - Weight outputs the current notes probability weight so it can be used to affect other modules
@@ -179,7 +191,7 @@ A collection of unusual plugins that will add a certain coolness to your patches
 
 ![Probably Not(e) - Bohlen Pierce](./doc/pnbp.png)
 
-- Same baseic features a Probable Not(e)
+- Same basic features a Probable Not(e)
 - Based on the Bohelen Pierce tuning system which uses a 3:1 "tritave" divided into 13 notes instead of the traditional 2:1 octave with 12 notes
 - For reference: https://en.wikipedia.org/wiki/Bohlen%E2%80%93Pierce_scale
 
@@ -190,6 +202,15 @@ A collection of unusual plugins that will add a certain coolness to your patches
 - Generates 4 note chords based on the root of the current PN note and using notes within the key/scale.
 - Dissonance probablilty controls whether notes are randomly diminished or augmented.
 - Suspension controls whether the III of scale gets changed to suspended II or IV.
+
+![Probably Not(e) - Arabic](./doc/pna.png)
+- Another probabilistic quantizer based on Arabic scales (or more accurately, Arabic jins and maqams)
+- This module is based on the work of Johnny Farraj and Sami Abu Shumays. Their book Inside Arabic Music is very highly recommended (and will help understanding how this module works)
+- In Maqam Scale mode, the PN-A acts like other quantizers in the Probably Note family, but uses Arabic maqams (which are made up of one or more jins)
+- Much more powerful is turning off the scale mode which will then display the complete sayr - or possible modulation routes for a maqam. Since maqams in this mode do not have octave equivalence, the input is limited to -1 to 1v to determine which note to play (negative voltages choose notes below the tonic)
+- Use the octave control to change octaves if needed (multi octave melodies are rare in Arabic music)
+- use the tonic control to change which key the Maqam is played in (the tonic is limited to realistic values for the Maqam)
+- Either use the Jins control to modulate, or even better use the modulate trigger input to use the probability to pick the next jins
 
 ## Quad Algorithmic Rhythm
 
@@ -233,7 +254,7 @@ When they are connected this way, the Clock, Mute and Reset signals, and Eoc out
 
 ## QAR Groove Expander
 
-![QAR Groove Expander](./doc/QARG.png)
+![QAR Groove Expander](./doc/qarg.png)
 
 - Expander Module for Quad Algorithmic Rhythm
 - Allows creating patterns that move steps before and after the beat.
@@ -250,7 +271,7 @@ When they are connected this way, the Clock, Mute and Reset signals, and Eoc out
 
 ## QAR Probability Expander
 
-![QAR Probability Expander](./doc/QARP.png)
+![QAR Probability Expander](./doc/qarp.png)
 
 - Expander Module for Quad Algorithmic Rhythm
 - Allows controlling probability on a step by step basis.
@@ -260,6 +281,14 @@ When they are connected this way, the Clock, Mute and Reset signals, and Eoc out
 - Expanders can be chained so tracks can have their own probability patterns
 - Left expander has priority over expander(s) on right
 - Can also be chained with QAR Groove
+
+## QAR Warped Space Expander
+![QAR Warped Space Expander](./doc/qarws.png)
+
+- Expander Module for Quad Algorithmic Rhythm
+- Allows warping the duration of beats
+- The time of the track will stay constant, but some beats will be faster and others slower.
+- The position control allows moving where the warped beats around
 
 ## Quantussy Cell
 

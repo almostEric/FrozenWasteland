@@ -105,6 +105,44 @@ void Biquad::calcBiquad(void) {
             b2 = (1 - K / Q + K * K) * norm;
             break;
 
+        case bq_type_allpass:
+            // norm = 1 / (1 - K / Q + K * K);
+            // a0 = (1 + K / Q + K * K) * norm;
+            // a1 = 2 * (K * K - 1) * norm;
+            // a2 = 1;
+            // b1 = a1;
+            // //b2 = norm;
+            // b2 = a0;
+
+
+            {        
+            double alpha = sin(Fc) / 2.0 * Q;
+            double cs = cos(Fc);
+            norm = 1.0 / (1.0 + alpha);
+            b1 = -2.0 * cs * norm;
+            b2 = (1.0 - alpha) * norm;
+            a0 = (1.0 - alpha) * norm;
+            a1 = -2.0 * cs * norm;
+            a2 = (1.0 + alpha) * norm;
+            }
+            break;
+
+
+           //b0 = 1 - K / Q + K * K
+           //a0 = 1 + K/Q + K * K
+           //a1 = 2 * (K * K - 1)
+           //a2 = 1 - K / Q + K * K
+           //b1 = 2 * (K * K - 1)
+           //b2 = 1
+
+            //Symmetrical
+           //b0 = 1 - K / Q + K * K
+           // a0 = 1 + K / Q + K * K
+           // a1 = 2 * (K * K - 1)
+           // a2 = 1 - K / Q + K^2
+           // b1 = 2 * (K * K - 1)
+           // b2 = 1 + K / Q + K * K  (!!)
+
         case bq_type_peak:
             if (peakGain >= 0) {    // boost
                 norm = 1 / (1 + 1/Q * K + K * K);

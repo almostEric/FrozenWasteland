@@ -85,8 +85,8 @@ struct MrBlueSky : Module {
 		float sampleRate = APP->engine->getSampleRate();
 
 		for(int i=0; i<2*BANDS; i++) {
-			iFilter[i] = new Biquad(bq_type_bandpass, freq[i%BANDS] / sampleRate, 5, 6);
-			cFilter[i] = new Biquad(bq_type_bandpass, freq[i%BANDS] / sampleRate, 5, 6);
+			iFilter[i] = new Biquad(bq_type_bandpass, freq[i%BANDS] / sampleRate, 5, 0);
+			cFilter[i] = new Biquad(bq_type_bandpass, freq[i%BANDS] / sampleRate, 5, 0);
 		};
 	}
 

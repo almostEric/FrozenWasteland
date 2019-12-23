@@ -66,16 +66,16 @@
      inkscape:bbox-nodes="true"
      inkscape:current-layer="svg4541"
      inkscape:window-maximized="1"
-     inkscape:window-y="-16"
-     inkscape:window-x="-16"
-     inkscape:window-height="2644"
-     inkscape:window-width="4800"
+     inkscape:window-y="-13"
+     inkscape:window-x="-13"
+     inkscape:window-height="2115"
+     inkscape:window-width="3840"
      inkscape:pageshadow="2"
      units="px"
      inkscape:cy="217.1601"
      guidetolerance="10"
      gridtolerance="10"
-     inkscape:cx="37.653268"
+     inkscape:cx="-94.398929"
      showgrid="false"
      id="namedview10"
      pagecolor="#ffffff"
@@ -231,12 +231,12 @@
 <text
      xml:space="preserve"
      style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:8px;line-height:1.25;font-family:Homenaje;-inkscape-font-specification:'Homenaje Bold';letter-spacing:0px;word-spacing:0px;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.99999994"
-     x="289.15601"
+     x="288.15601"
      y="266.944"
      id="text5443-7-5-4"><tspan
        sodipodi:role="line"
        id="tspan5441-1-6-2"
-       x="289.15601"
+       x="288.15601"
        y="266.944"
        style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:8px;font-family:Homenaje;-inkscape-font-specification:'Homenaje Bold';stroke-width:0.99999994">CLOCK</tspan></text>
 <g
@@ -311,12 +311,12 @@
      xml:space="preserve"
      style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:8px;line-height:1.25;font-family:Homenaje;-inkscape-font-specification:'Homenaje Bold';letter-spacing:0px;word-spacing:0px;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.99999994"
      x="382.15601"
-     y="462"
+     y="468"
      id="text5443-7-5-4-0"><tspan
        sodipodi:role="line"
        id="tspan5441-1-6-2-7"
        x="382.15601"
-       y="462"
+       y="468"
        style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:8px;font-family:Homenaje;-inkscape-font-specification:'Homenaje Bold';stroke-width:0.99999994">GATE</tspan></text>
 <text
      xml:space="preserve"
@@ -344,12 +344,12 @@
      xml:space="preserve"
      style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:8px;line-height:1.25;font-family:Homenaje;-inkscape-font-specification:'Homenaje Bold';letter-spacing:0px;word-spacing:0px;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.99999994"
      x="290.91599"
-     y="461.944"
+     y="467.944"
      id="text5443-7-5-4-4-7-9"><tspan
        sodipodi:role="line"
        id="tspan5441-1-6-2-3-5-2"
        x="290.91599"
-       y="461.944"
+       y="467.944"
        style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:8px;font-family:Homenaje;-inkscape-font-specification:'Homenaje Bold';stroke-width:0.99999994">PROBABILITY</tspan></text>
 <text
      xml:space="preserve"
@@ -397,11 +397,11 @@
      xml:space="preserve"
      style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:8px;line-height:1.25;font-family:Homenaje;-inkscape-font-specification:'Homenaje Bold';letter-spacing:0px;word-spacing:0px;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.99999994"
      x="289.06799"
-     y="233.944"
+     y="236"
      id="text5443-7-5-4-06"><tspan
        sodipodi:role="line"
        id="tspan5441-1-6-2-5"
        x="289.06799"
-       y="233.944"
+       y="236"
        style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:8px;font-family:Homenaje;-inkscape-font-specification:'Homenaje Bold';stroke-width:0.99999994">SEED</tspan></text>
 </svg>

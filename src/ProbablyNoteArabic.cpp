@@ -12,14 +12,14 @@
 #include <string>
 
 #define MAX_NOTES 12
-#define MAX_JINS 24
+#define MAX_JINS 25
 #define MAX_FAMILIES 16
-#define MAX_UPPER_AJNAS 10
-#define MAX_OCTAVE_AJNAS 4
+#define MAX_AJNAS_IN_SAYR 13
+#define MAX_AJNAS_IN_SCALE 3
 #define MAX_MAQAM 8
 #define MAX_JINS_NOTES 9
-#define MAX_COMPLETE_SCALE_SIZE 16
-
+#define SCALE_SIZE 7
+#define TRIGGER_DELAY_SAMPLES 5
 
 using namespace frozenwasteland::dsp;
 
@@ -28,28 +28,27 @@ struct Jins {
 	int NumberMainTones;
 	int NumberLowerTones;
 	int NumberExtendedTones;
+	int TonicPosition;
 	int GhammazPosition;
 	int NumberTonics;
 	int AvailableTonics[MAX_NOTES];
 	float Intonation[MAX_JINS_NOTES];
-	float DefaultWeighting[MAX_JINS_NOTES];	
+	float Weighting[MAX_JINS_NOTES];	
 	int NumberMaqams;
 };
 
 
 struct Maqam {
 	const char* Name;
-	int NumberUpperAnjas;
-	int UpperAjnas[MAX_UPPER_AJNAS];
-	int OverlapPoint[MAX_UPPER_AJNAS];
-	float AjnasWeighting[MAX_UPPER_AJNAS+1][MAX_UPPER_AJNAS+1];
-	bool AjnasUsed[MAX_UPPER_AJNAS+1][MAX_UPPER_AJNAS+1];
-
-	int NumberOctaveAnjas;
-	int OctaveAjnas[MAX_OCTAVE_AJNAS];
-	float OctaveAjnasWeighting[MAX_UPPER_AJNAS+1][MAX_OCTAVE_AJNAS];
-	bool OctaveAjnasUsed[MAX_UPPER_AJNAS+1][MAX_OCTAVE_AJNAS];
-
+	int NumberAjnasInSayr;
+	int AjnasInSayr[MAX_AJNAS_IN_SAYR];
+	int SayrOverlapPoint[MAX_AJNAS_IN_SAYR];
+	float AjnasWeighting[MAX_AJNAS_IN_SAYR+1];
+	bool AjnasUsed[MAX_AJNAS_IN_SAYR+1][MAX_AJNAS_IN_SAYR+1];
+	int NumberAjnasInScale;
+	int AjnasInScale[MAX_AJNAS_IN_SCALE];
+	int ScaleOverlapPoint[MAX_AJNAS_IN_SCALE];
+	int AscendingDescending[MAX_AJNAS_IN_SCALE];
 };
 
 struct ProbablyNoteArabic : Module {
@@ -61,31 +60,27 @@ struct ProbablyNoteArabic : Module {
 		FOCUS_PARAM,
 		FOCUS_CV_ATTENUVERTER_PARAM,
         MAQAM_PARAM,
-		MAQAM_CV_ATTENUVERTER_PARAM,
         FAMILY_PARAM,
-		FAMILY_CV_ATTENUVERTER_PARAM,
-		MODULATE_PARAM,
+		MAQAM_SCALE_MODE_PARAM,
+		MODULATE_JINS_PARAM,
         MODULATION_CHANCE_PARAM,
 		MODULATION_CHANCE_CV_ATTENUVERTER_PARAM,
         TONIC_PARAM,
-		TONIC_CV_ATTENUVERTER_PARAM,
-        USE_TRADITIONAL_TONIC_PARAM,
         OCTAVE_PARAM,
 		OCTAVE_CV_ATTENUVERTER_PARAM,	
 		PITCH_RANDOMNESS_PARAM,
 		PITCH_RANDOMNESS_CV_ATTENUVERTER_PARAM,
 		PITCH_RANDOMNESS_GAUSSIAN_PARAM,
-        RESET_SCALE_PARAM,
-		WEIGHT_SCALING_PARAM,
-		LOWER_JINS_ACTIVE_PARAM,
-		LOWER_JINS_WEIGHT_PARAM,
-		UPPER_AJNAS_ACTIVE_PARAM,
-		UPPER_AJNAS_WEIGHT_PARAM = UPPER_AJNAS_ACTIVE_PARAM + MAX_UPPER_AJNAS,
-		OCTAVE_AJNAS_ACTIVE_PARAM = UPPER_AJNAS_WEIGHT_PARAM + MAX_UPPER_AJNAS,
-		OCTAVE_AJNAS_WEIGHT_PARAM = OCTAVE_AJNAS_ACTIVE_PARAM + MAX_OCTAVE_AJNAS,
-        NOTE_ACTIVE_PARAM = OCTAVE_AJNAS_WEIGHT_PARAM + MAX_OCTAVE_AJNAS,
-        NOTE_WEIGHT_PARAM = NOTE_ACTIVE_PARAM + MAX_COMPLETE_SCALE_SIZE,
-		NUM_PARAMS = NOTE_WEIGHT_PARAM + MAX_COMPLETE_SCALE_SIZE
+        RESET_MAQAM_PARAM,
+		RESET_JINS_PARAM,
+		JINS_WEIGHT_SCALING_PARAM,
+		NOTE_WEIGHT_SCALING_PARAM,
+		CURRENT_JINS_PARAM,
+		AJNAS_ACTIVE_PARAM,
+		AJNAS_WEIGHT_PARAM = AJNAS_ACTIVE_PARAM + MAX_AJNAS_IN_SAYR+1,
+        NOTE_ACTIVE_PARAM = AJNAS_WEIGHT_PARAM + MAX_AJNAS_IN_SAYR+1,
+        NOTE_WEIGHT_PARAM = NOTE_ACTIVE_PARAM + MAX_JINS_NOTES,
+		NUM_PARAMS = NOTE_WEIGHT_PARAM + MAX_JINS_NOTES
 	};
 	enum InputIds {
 		NOTE_INPUT,
@@ -101,13 +96,13 @@ struct ProbablyNoteArabic : Module {
 		RESET_SCALE_INPUT,
 		TRIGGER_INPUT,
         EXTERNAL_RANDOM_INPUT,
-		MODULATION_TRIGGER_INPUT,
+        EXTERNAL_RANDOM_JINS_INPUT,
+        EXTERNAL_RANDOM_OCTAVE_JINS_INPUT,
+		MODULATE_JINS_TRIGGER_INPUT,
 		JINS_SELECT_INPUT,
-		LOWER_JINS_WEIGHT_INPUT,		
-        UPPER_AJNAS_WEIGHT_INPUT,
-        OCTAVE_AJNAS_WEIGHT_INPUT = UPPER_AJNAS_WEIGHT_INPUT + MAX_UPPER_AJNAS,
-        NOTE_WEIGHT_INPUT = OCTAVE_AJNAS_WEIGHT_INPUT + MAX_OCTAVE_AJNAS,
-		NUM_INPUTS = NOTE_WEIGHT_INPUT + MAX_COMPLETE_SCALE_SIZE
+        AJNAS_WEIGHT_INPUT,
+        NOTE_WEIGHT_INPUT = AJNAS_WEIGHT_INPUT + MAX_AJNAS_IN_SAYR+1,
+		NUM_INPUTS = NOTE_WEIGHT_INPUT + MAX_JINS_NOTES
 	};
 	enum OutputIds {
 		QUANT_OUTPUT,
@@ -117,13 +112,11 @@ struct ProbablyNoteArabic : Module {
 		NUM_OUTPUTS
 	};
 	enum LightIds {
-		USE_TRADITIONAL_TONIC_LIGHT,
+		MAQAM_SCALE_MODE_LIGHT,
 		PITCH_RANDOMNESS_GAUSSIAN_LIGHT,
-		LOWER_JINS_ACTIVE_LIGHT,
-		UPPER_AJNAS_ACTIVE_LIGHT = LOWER_JINS_ACTIVE_LIGHT + 2,
-		OCTAVE_AJNAS_ACTIVE_LIGHT = UPPER_AJNAS_ACTIVE_LIGHT + MAX_UPPER_AJNAS * 2,
-        NOTE_ACTIVE_LIGHT = OCTAVE_AJNAS_ACTIVE_LIGHT + MAX_OCTAVE_AJNAS * 2,
-		NUM_LIGHTS = NOTE_ACTIVE_LIGHT + MAX_COMPLETE_SCALE_SIZE * 2
+		AJNAS_ACTIVE_LIGHT = PITCH_RANDOMNESS_GAUSSIAN_LIGHT + 2,
+        NOTE_ACTIVE_LIGHT = AJNAS_ACTIVE_LIGHT + (MAX_AJNAS_IN_SAYR+1) * 2 ,
+		NUM_LIGHTS = NOTE_ACTIVE_LIGHT + MAX_JINS_NOTES * 2
 	};
 
 
@@ -131,111 +124,301 @@ struct ProbablyNoteArabic : Module {
 
 // c c#     d       d#     e     f       f#      g       g#      a     a#     b
 //{0,111.73,203.91,315.64,386.61,498.04,582.51,701.955,813.69,884.36,996.09,1088.27},
+//0         200           400    500           700            900           1100
+
+	float whiteKeys[SCALE_SIZE] = {0,200,400,500,700,900,1100};
+
 //pythagorean minor 3d 294.13, maj 407.82
-	Jins jins[MAX_JINS] = {
-		{"Rast", 5,2,2,4,3, {0,5,7}, {-315.64,-161.73,0,203.91,344.13,498.04,701.955,813.69,884.36}, {0.05,0.1,1,0.5,0.5,0.5,0.8,0.1,0.05}, 7}, 
-		{"Nahawand", 5,3,1,4,4, {0,2,5,7}, {-386.61,-315.64,-111.78,0,203.91,294.13,498.04,701.955,813.69}, {0.03,0.05,0.1,1,0.5,0.5,0.5,0.8,0.1}, 5}, 
-		{"Nikriz", 5,2,2,4,4, {0,2,5,7}, {-386.61,-111.73,0,203.91,315.64,582.51,701.955,813.69,884.36}, {0.05,0.1,1,0.5,0.5,0.5,0.8,0.1,0.05}, 4}, 
-		{"Ajam", 5,2,1,4,3, {0,5,7}, {-315.64,-111.73,0,203.91,407.82,498.04,701.955,884.36}, {0.05,0.1,1,0.5,0.5,0.8,0.1,0.05}, 4}, 
-		{"Bayati", 4,2,2,3,4, {1,4,9,0}, {-336.61,-203.91,0,161.73,386.61,498.04,701.955,813.69}, {0.05,0.1,1,0.5,0.5,0.8,0.1,0.05}, 6}, 
-		{"Hijaz", 4,2,2,3,4, {1,7,9,0}, {-336.61,-203.91,0,111.73,294.13,498.04,701.955,813.69}, {0.05,0.1,1,0.5,0.5,0.8,0.1,0.05}, 7}, 
-		{"Kurd", 4,1,2,4,4, {1,7,9,0}, {-203.91,0,121.73,315.64,498.04,701.955,813.69}, {0.05,0.1,1,0.5,0.5,0.8,0.1,0.05}, 3}, 
-		{"Saba", 3,2,3,2,3, {1,7,9}, {-336.61,-203.91,0,161.73,294.13,386.61,498.04,582.51}, {0.05,0.1,1,0.5,0.5,0.8,0.1,0.05}, 2}, 
-		{"Sikah", 3,3,1,2,3, {4,9,11}, {-386.61,-203.91,-111.73,50,203.91,386.61,498.04}, {0.05,0.05,0.1,1,0.5,0.8,0.1}, 7}, 
-		{"Jiharkah", 5,2,1,4,3, {5,7,11}, {-315.64,-161.73,0,203.91,382.33,473.04,701.955,884.36}, {0.05,0.1,1,0.5,0.5,0.8,0.1,0.05}, 1}, //Extended Jins
-		{"Sazkar", 5,2,2,4,4, {0,2,5,7}, {-315.64,-161.73,0,244.91,344.13,498.04,701.955,813.69,884.36}, {0.05,0.1,1,0.5,0.5,0.5,0.8,0.1,0.05}, 5}, 
-		{"Musta'ar", 3,3,1,2,3, {4,9,11}, {-386.61,-203.91,-111.73,50,203.91,386.61,498.04}, {0.03,0.05,0.1,1,0.5,0.8,0.1}, 1}, 
-		{"Murassa", 5,2,1,4,4, {0,2,5,7}, {-315.64,-111.78,0,203.91,294.13,498.04,582.51,884.36}, {0.05,0.1,1,0.5,0.5,0.5,0.8,0.1}, 1}, 
-		{"Athar Kurd", 5,2,1,4,5, {0,2,5,7,9}, {-315.64,-111.78,0,111.73,315.64,582.51,701.955,884.36}, {0.05,0.1,1,0.5,0.5,0.5,0.8,0.1}, 1}, 
-		{"Saba Zamzam", 3,1,3,2,3, {1,7,9}, {-203.91,0,111.73,294.13,386.61,498.04,582.51}, {0.05,0.1,1,0.5,0.5,0.8,0.1,0.05}, 1}, 
-		{"Lami", 4,0,2,4,1, {1}, {0,111.73,315.64,498.04,582.51,813.69}, {1,0.5,0.5,0.8,0.1,0.05}, 1}, 
-		{"Upper Rast", 4,1,1,1,1, {0}, {-203.91,0,203.91,344.13,498.04,701.955}, {0.1,0.8,0.5,0.5,1.0,0.1}, 0}, //Auexillary Jins for modulations #16
-		{"Upper Ajam", 4,1,1,1,1, {0}, {-203.91,0,203.91,407.82,498.04,701.955}, {0.1,0.8,0.5,0.5,1.0,0.1}, 0}, 
-		{"Saba Dalanshin", 3,1,2,1,1, {0}, {-203.91,0,161.73,294.13,498.04,701.955,813.69}, {0.1,0.8,0.5,1,0.1,0.1,0.05}, 0}, 
-		{"Hijazkar", 6,0,0,2,1, {0}, {-336.61,-203.91,0,111.73,294.13,498.04,701.955,813.69}, {0.05,0.1,1,0.5,0.5,0.8,0.1,0.05}, 0}, //Not done
-		{"Sikah Baladi", 6,0,0,2,1, {0}, {-386.61,-203.91,-111.73,50,203.91,386.61,498.04}, {0.05,0.05,0.1,1,0.5,0.8,0.1}, 0}, //Not done
-		{"Mukhalif Sharqi", 3,0,0,2,1, {0}, {0,203.91,386.61}, {1,0.5,0.8}, 0}, //Not done
-		{"Hijaz Murassa", 4,2,1,1,1, {0}, {-336.61,-203.91,0,111.73,294.13,498.04,701.955,813.69}, {0.05,0.1,1,0.5,0.5,0.8,0.1,0.05}, 0}, //Not done
-		{"Ajam Murassa", 5,1,1,4,1, {0}, {-111.73,0,203.91,407.82,498.04,701.955,884.36}, {0.1,1,0.5,0.5,0.8,0.1,0.05}, 0}, //Not Done
+	Jins defaultJins[MAX_JINS] = {
+		{"Rast", 5,2,2,1,5,3, {0,5,7}, {-315.64,-161.73,0,203.91,344.13,498.04,701.955,813.69,884.36}, {0.05,0.1,1,0.5,0.5,0.5,0.8,0.1,0.05}, 7}, 
+		{"Nahawand", 5,3,1,1,5,4, {0,2,5,7}, {-386.61,-315.64,-111.78,0,203.91,294.13,498.04,701.955,813.69}, {0.03,0.05,0.1,1,0.5,0.5,0.5,0.8,0.1}, 2}, 
+		{"Nikriz", 5,2,2,1,5,4, {0,2,5,7}, {-386.61,-111.73,0,203.91,315.64,582.51,701.955,813.69,884.36}, {0.05,0.1,1,0.5,0.5,0.5,0.8,0.1,0.05}, 2}, 
+		{"Ajam", 5,2,1,1,5,3, {0,5,7}, {-315.64,-111.73,0,203.91,407.82,498.04,701.955,884.36}, {0.05,0.1,1,0.5,0.5,0.5,0.8,0.1}, 3}, 
+		{"Bayati", 4,2,2,1,4,4, {1,4,9,0}, {-336.61,-203.91,0,161.73,386.61,498.04,701.955,813.69}, {0.05,0.1,1,0.5,0.5,0.8,0.1,0.05}, 3}, 
+		{"Hijaz", 4,2,2,1,4,4, {1,7,9,0}, {-336.61,-203.91,0,111.73,294.13,498.04,701.955,813.69}, {0.05,0.1,1,0.5,0.5,0.8,0.1,0.05}, 3}, 
+		{"Kurd", 4,1,2,1,4,4, {1,7,9,0}, {-203.91,0,121.73,315.64,498.04,701.955,813.69}, {0.05,0.1,1,0.5,0.5,0.8,0.1,0.05}, 3}, 
+		{"Saba", 3,2,3,1,3,3, {1,7,9}, {-336.61,-203.91,0,161.73,294.13,386.61,498.04,582.51}, {0.05,0.1,1,0.5,0.8,0.1,0.05,0.05}, 1}, 
+		{"Sikah", 3,3,1,1,3,3, {4,9,11}, {-386.61,-203.91,-111.73,50,203.91,386.61,498.04}, {0.05,0.05,0.1,1,0.5,0.8,0.1}, 5}, 
+		{"Jiharkah", 5,2,1,1,5,3, {5,7,11}, {-315.64,-161.73,0,203.91,382.33,473.04,701.955,884.36}, {0.05,0.1,1,0.5,0.5,0.5,0.8,0.1}, 1}, //Extended Jins
+		{"Sazkar", 5,2,2,1,5,4, {0,2,5,7}, {-315.64,-161.73,0,244.91,344.13,498.04,701.955,813.69,884.36}, {0.05,0.1,1,0.5,0.5,0.5,0.8,0.1,0.05}, 1}, 
+		{"Musta'ar", 3,3,1,1,3,3, {4,9,11}, {-386.61,-203.91,-111.73,50,203.91,386.61,498.04}, {0.03,0.05,0.1,1,0.5,0.8,0.1}, 1}, 
+		{"Nahawand Murassa", 5,2,1,1,5,4, {0,2,5,7}, {-315.64,-111.78,0,203.91,294.13,498.04,582.51,884.36}, {0.05,0.1,1,0.5,0.5,0.5,0.8,0.1}, 1}, 
+		{"Athar Kurd", 5,2,1,1,5,5, {0,2,5,7,9}, {-315.64,-111.78,0,111.73,315.64,582.51,701.955,884.36}, {0.05,0.1,1,0.5,0.5,0.5,0.8,0.1}, 1}, 
+		{"Saba Zamzam", 3,1,3,1,3,3, {1,7,9}, {-203.91,0,111.73,294.13,386.61,498.04,582.51}, {0.05,0.1,1,0.5,0.5,0.8,0.1,0.05}, 1}, 
+		{"Lami", 4,0,2,1,4,1, {1}, {0,111.73,315.64,498.04,582.51,813.69}, {1,0.5,0.5,0.8,0.1,0.05}, 1}, 
+		{"Upper Rast", 4,1,1,4,1,1, {0}, {-203.91,0,203.91,344.13,498.04,701.955}, {0.1,0.8,0.5,0.5,1.0,0.1}, 0}, //Auxillary Jins for modulations #16
+		{"Upper Ajam", 4,1,1,4,1,1, {0}, {-203.91,0,203.91,407.82,498.04,701.955}, {0.1,0.8,0.5,0.5,1.0,0.1}, 0}, 
+		{"Saba Dalanshin", 3,1,2,3,1,1, {0}, {-203.91,0,161.73,294.13,498.04,701.955,813.69}, {0.1,0.8,0.5,1,0.1,0.1,0.05}, 0}, 
+		{"Hijazkar", 4,2,0,1,1,1, {0}, {-405.86,-111.73,0,111.73,405.86,498.04}, {0.05,0.1,1,0.5,0.5,0.5}, 0}, 
+		{"Sikah Baladi", 4,2,0,1,1,1, {7}, {-501.61,-188.91,0,228.91,461.61,548.04}, {0.5,0.5,1,0.5,0.5,0.5}, 0}, 
+		{"Mukhalif Sharqi", 3,0,0,1,1,1, {4}, {50,111.73,203.91}, {1,0.5,0.5}, 0}, 
+		{"Hijaz Murassa", 4,2,1,1,4,1, {1}, {-203.91,-111.73,0,111.73,407.82,498.04,582.51}, {0.05,0.1,1,0.5,0.5,0.8,0.1}, 0}, 
+		{"Ajam Murassa", 5,1,1,1,5,1, {5}, {-111.73,0,203.91,407.82,548.04,701.955,884.36}, {0.1,1,0.5,0.5,0.5,0.8,0.1}, 0}, 	
+		{"Husayni", 5,0,0,1,5,1, {0}, {-111.73,0,203.91,407.82,498.04,701.955,884.36}, {0.1,1,0.5,0.5,0.8,0.1,0.05}, 0}, //Not Done
 	};
 
-	Maqam maqams[MAX_FAMILIES][MAX_MAQAM] = {
+	Maqam defaultMaqams[MAX_FAMILIES][MAX_MAQAM] = {
 		{ 
-			{"Rast", 6, {0,1,2,3,4,5}, {5,5,5,5,5,5}, 
-				{{1.0f,1.0f,0.3,0.3,0.3,0.1,0.3},{1.0f,1.0f,0.3,0.3,0.3,0.1,0.3},{1.0f,1.0f,0.3,0.3,0.3,0.1,0.3},{1.0f,1.0f,0.3,0.3,0.3,0.1,0.3},{1.0f,1.0f,0.3,0.3,0.3,0.1,0.3},{1.0f,1.0f,0.3,0.3,0.3,0.1,0.3},{1.0f,1.0f,0.3,0.3,0.3,0.1,0.3}}, 
-				{{1,1,1,1,1,1,1},{1,1,1,1,1,1,1},{1,1,1,1,1,1,1},{1,1,1,1,1,1,1},{1,1,1,1,1,1,1},{1,1,1,1,1,1,1},{1,1,1,1,1,1,1}} }, //Not done -place holder jins
-			{"Kirdan", 4, {16,1,5,8}, {5,5,5,3}, 
-				{{1.0f,1.0f,0.5,0.4,0.3},{1.0f,1.0f,0.5,0.4,0.0},{1.0f,1.0f,0.5,0.4,0.3},{1.0f,1.0f,0.5,0.4,0.3},{1.0f,0.0f,0.5,0.4,0.3}}, 
-				{{1,1,1,1,1},{1,1,1,1,0},{1,1,1,1,1},{1,1,1,1,1},{1,0,1,1,1}} }, 
-			{"Suznak", 5, {5,4,7,1,8}, {5,5,5,5,3}, 
-				{{1.0f,1.0f,0.0,0.0,0.5,0.5},{1.0f,1.0f,0.5,0.4,0.3,0.3},{1.0f,1.0f,0.5,0.4,0.3,0.3},{0.0f,1.0f,0.5,0.4,0.3,0.3},{1.0f,0.0f,0.5,0.4,0.3,0.3},{1.0f,0.0f,0.5,0.4,0.3,0.3}}, 
-				{{1,1,1,0,0,1},{1,1,1,1,1,1},{1,1,1,1,1,1},{0,1,1,1,1,1},{1,1,1,1,1,1},{1,1,1,1,1,1}} },
-			{"Nairuz", 4, {4,7,5,1}, {5,5,5,5}, 
-				{{1.0f,1.0f,0.5,0.4,0.3},{1.0f,1.0f,0.5,0.4,0.3},{1.0f,1.0f,0.5,0.4,0.3},{1.0f,1.0f,0.5,0.4,0.3},{1.0f,1.0f,0.5,0.4,0.3}}, 
-				{{1,1,1,1,1},{1,1,1,1,1},{1,1,1,1,1},{1,1,1,1,1},{1,1,1,1,1}} },
-			{"Dalanshin", 3, {18,16,1}, {6,5,5}, 
-				{{1.0f,1.0f,0.5,0.4},{1.0f,1.0f,0.5,0.4},{1.0f,1.0f,0.5,0.4},{1.0f,1.0f,0.5,0.4}}, 
-				{{1,1,1,1},{1,1,1,1},{1,1,1,1},{1,1,1,1}} }, 
+			{"Rast", 13, {16,1,5,0,4,7,1,9,20,18,8,11,2}, {5,5,5,8,5,5,8,8,6,6,3,3,1}, 
+				{1.0f,1.0f,0.6,0.6,0.6,0.5,0.5,0.3,0.3,0.4,0.3,0.2,0.2,0.1}, 
+				//0                            1                              2                             3                             4                            5                              6                             7                             8                             9                             10                            11                           12                             13                      
+				{{1,1,1,1,1,1,1,0,0,1,0,1,1,1},{1,1,1,1,1,0,0,1,1,1,0,0,0,1},{1,1,1,1,1,0,0,1,1,1,1,1,1,0},{1,0,1,1,1,1,0,1,1,0,1,1,1,0},{1,1,1,1,1,0,0,0,0,1,0,0,0,1},{1,0,0,1,1,1,1,1,1,0,0,1,0,0},{1,0,0,0,0,1,1,0,0,0,0,1,0,0},{1,1,0,0,0,0,0,1,0,1,0,0,0,0},{1,1,0,0,0,0,0,0,1,1,1,0,0,0},{1,1,0,0,0,0,0,1,1,1,0,0,0,0},{0,1,1,0,0,0,0,0,0,1,0,1,0,0},{1,1,1,1,1,1,1,0,0,0,0,1,1,0},{1,0,1,1,1,0,0,0,0,0,0,1,1,0},{1,1,0,0,0,0,0,0,0,0,0,0,0,1}},
+				3,{0,16,1},{1,5,5},{2,0,1}
+			},
+			{"Kirdan", 5, {16,1,5,8,0}, {5,5,5,3,8}, 
+				{1.0f,1.0f,0.5,0.4,0.3,0.3}, 
+				{{1,1,1,1,1,1},{1,1,1,1,0,1},{1,1,1,1,1,0},{1,1,1,1,1,0},{1,0,1,1,1,0},{1,1,0,0,0,1}},
+				2,{0,16},{1,5},{2,2}
+			}, 
+			{"Suznak", 7, {5,4,7,1,1,8,0}, {5,5,5,8,5,3,8}, 
+				{1.0f,1.0f,0.5,0.5,0.5,0.5,0.4}, 
+				{{1,1,1,0,0,0,1,1},{1,1,1,1,1,1,1,1},{1,1,1,1,0,1,1,1},{0,1,1,1,0,1,1,0},{0,1,1,0,1,0,0,0},{1,1,1,1,0,1,1,0},{1,1,1,1,0,1,1,1},{1,1,0,0,0,0,1,1}},
+				2,{0,5},{1,5},{2,2}
+			},
+			{"Nairuz", 5, {4,7,1,5,1}, {5,5,8,5,5}, 
+				{1.0f,1.0f,0.5,0.5,0.4,0.3}, 
+				{{1,1,1,0,1,1},{1,1,1,1,1,1},{1,1,1,0,1,1},{0,1,0,1,1,0},{1,1,1,1,1,1},{1,1,1,0,1,1}},
+				2,{0,4},{1,5},{2,2}
+			}, 
+			{"Dalanshin", 5, {18,16,1,0,9}, {6,5,5,8,8}, 
+				{1.0f,1.0f,0.5,0.4,0.4,0.4}, 
+				{{1,1,1,1,1,0},{1,1,1,1,1,1},{1,1,1,1,0,1},{1,1,1,1,0,0},{1,1,1,0,1,1},{0,1,1,0,1,1}},
+				2,{0,16},{1,5},{2,2}
+			},
 			{"Suzdalara", 3, {5,8,11}, {5,3,3}, 
-				{{1.0f,1.0f,0.5,0.4},{1.0f,1.0f,0.5,0.4},{1.0f,1.0f,0.5,0.4},{1.0f,1.0f,0.5,0.4}}, 
-				{{1,1,1,1},{1,1,1,1},{1,1,1,1},{1,1,1,1}} }, 
+				{1.0f,1.0f,0.5,0.4}, 
+				{{1,1,1,1},{1,1,1,1},{1,1,1,1},{1,1,1,1}},
+				2,{0,1},{1,5},{2,2}
+			},
 			{"Mahur", 3, {17,1,5}, {5,5,5}, 
-				{{1.0f,1.0f,0.5,0.4},{1.0f,1.0f,0.5,0.4},{1.0f,1.0f,0.5,0.4},{1.0f,1.0f,0.5,0.4}}, 
-				{{1,1,1,1},{1,1,1,1},{1,1,1,1},{1,1,1,1}} } 
+				{1.0f,1.0f,0.5,0.4}, 
+				{{1,1,1,1},{1,1,1,1},{1,1,1,1},{1,1,1,1}},
+				2,{0,17},{1,5},{2,2}
+			}
 		},
 		{
-
+			{"Nahawand", 8, {6,5,4,17,1,12,3,2}, {5,5,5,5,8,1,3,1}, 
+				{1.0f,1.0f,0.5,0.5,0.5,0.4,0.4,0.4,0.4}, 
+				//0                   1                   2                   3                   4                   5                   6                   7                    8
+				{{1,1,1,1,1,1,1,1,1},{1,1,1,1,0,1,0,1,0},{1,1,1,1,1,1,0,1,0},{1,1,1,1,0,1,0,1,0},{1,0,1,0,1,1,0,0,0},{1,1,1,1,1,1,0,0,0},{1,0,0,0,0,0,1,0,0},{1,1,0,1,0,0,0,1,0},{1,0,0,0,0,0,0,0,0}},
+				3,{1,5,6},{1,5,5},{2,0,1}
+			},
+			{"Ushshaq Masri", 6, {4,1,3,4,0,3}, {5,8,10,12,8,3}, 
+				{1.0f,1.0f,0.7,0.7,0.6,0.5,0.4}, 
+				{{1,1,1,0,0,0,1},{1,1,1,0,1,1,1},{1,1,1,1,1,1,0},{0,0,1,1,1,0,0},{0,1,1,1,1,1,0},{0,1,1,0,1,1,0},{1,1,0,0,0,0,1}},
+				2,{1,4},{1,5},{2,2}
+			}
 		},
 		{
-
+			{"Nikriz", 10, {1,3,17,6,4,12,0,2,19,19}, {5,7,4,9,9,5,5,5,9,5}, 
+				{1.0f,1.0f,0.5,0.5,0.5,0.5,0.4,0.4,0.4,0.4,0.3}, 
+				//0                       1                       2                       3                       4                       5                        6                        7                 
+				{{1,1,1,0,0,0,0,0,0,0,1},{1,1,1,0,1,1,0,1,1,1,1},{1,1,1,1,1,0,0,0,0,0,0},{0,0,1,1,0,0,0,0,0,0,0},{0,1,1,0,1,0,0,0,0,0,0},{0,1,0,0,0,1,0,0,1,0,0,0},{0,1,0,0,0,0,1,0,0,0,0},{0,1,0,0,0,1,0,1,1,1,0},{0,1,0,0,0,0,0,1,1,1,0},{0,1,0,0,0,0,0,1,1,1,0},{1,1,0,0,0,0,0,0,0,0,1}},
+				2,{2,1},{1,5},{2,2}
+			},
+			{"Nawa Athar", 8, {19,1,2,1,1,6,4,5}, {5,8,8,5,1,5,5,5}, 
+				{1.0f,1.0f,0.8,0.5,0.5,0.5,0.5,0.5}, 
+				//0                   1                   2                   3                  4                5                   6                   7
+				{{1,1,1,1,1,1,0,0,0},{1,1,1,1,1,0,0,0,1},{1,1,1,1,0,0,1,1,1},{1,1,1,1,0,0,0,0,0},{1,1,1,0,0,0,0},{1,0,0,0,0,1,1,1,1},{0,0,1,0,0,1,1,1,0},{0,0,1,0,0,1,1,1,0},{0,1,0,1,0,1,0,0,1}},
+				2,{2,19},{1,5},{2,2}
+			}
 		},
 		{ 
-			{"Ajam", 6, {0,1,2,3,4,5}, {5,5,5,5,5,5}, 
-				{{1.0f,1.0f,0.3,0.3,0.3,0.1,0.3},{1.0f,1.0f,0.3,0.3,0.3,0.1,0.3},{1.0f,1.0f,0.3,0.3,0.3,0.1,0.3},{1.0f,1.0f,0.3,0.3,0.3,0.1,0.3},{1.0f,1.0f,0.3,0.3,0.3,0.1,0.3},{1.0f,1.0f,0.3,0.3,0.3,0.1,0.3},{1.0f,1.0f,0.3,0.3,0.3,0.1,0.3}}, 
-				{{1,1,1,1,1,1,1},{1,1,1,1,1,1,1},{1,1,1,1,1,1,1},{1,1,1,1,1,1,1},{1,1,1,1,1,1,1},{1,1,1,1,1,1,1},{1,1,1,1,1,1,1}} }, 
-			{"Jiharkah", 5, {4,5,6,7,8}, {5,5,5,6,5}, {1.0f,1.0f,0.3,0.3,0.3,0.3}, {{1,1,1,1,1,1,1},{1,1,1,1,1,1,1},{1,1,1,1,1,1,1},{1,1,1,1,1,1,1},{1,1,1,1,1,1,1},{1,1,1,1,1,1,1}} } 
+			{"Ajam", 7, {17,6,1,5,18,5,19}, {5,8,5,5,3,1,1}, 
+				{1.0f,1.0f,0.8,0.4,0.4,0.4,0.2,0.2}, 
+				{{1,1,1,1,1,1,1,1},{1,1,1,1,1,0,0,0},{1,1,1,1,1,0,0,0},{1,1,1,1,1,0,0,0},{1,1,1,1,1,1,0,0},{1,0,0,0,1,1,0,0},{1,0,0,0,0,0,1,0},{1,0,0,0,0,0,0,1}},
+				3,{3,17,1},{1,5,5},{2,0,1}
+			}, 
+			{"Shawq Afza", 5, {5,18,17,1,4}, {5,3,5,5,5}, 
+				{1.0f,1.0f,0.6,0.5,0.4,0.4}, 
+				{{1,1,1,1,1,0},{1,1,1,1,1,1},{1,1,1,0,0,0},{1,1,0,1,1,0},{1,1,0,1,1,1},{0,1,0,0,1,1}},
+				2,{3,5},{1,5},{2,2}
+			},
+			{"Ajam Ushayran", 11, {3,1,6,1,19,4,18,17,1,4,6}, {8,5,10,9,10,10,5,5,5,3,3}, 
+				{1.0f,1.0f,0.5,0.5,0.5,0.5,0.4,0.4,0.4,0.4,0.3,0.3}, 
+				//0                       1                       2                       3                       4                       5                        6                        7                 
+				{{1,1,1,0,0,0,0,0,1,1,0,1},{1,1,1,1,1,1,1,1,1,1,0,1},{1,1,1,1,0,0,1,1,1,0,1,1},{0,1,1,1,0,0,0,0,0,0,0,0},{0,1,0,0,1,0,0,0,0,0,0,0},{0,1,0,0,0,1,0,0,0,0,0,0},{0,1,1,0,0,0,1,0,0,0,0,0},{0,1,1,0,0,0,0,1,1,0,0,0},{1,1,1,0,0,0,0,1,1,1,0,0},{1,0,0,0,0,0,0,0,1,1,0,0},{1,0,1,0,0,0,0,0,0,0,1,1},{1,0,1,0,0,0,0,0,0,0,1,1}},
+				3,{3,6,1},{1,3,6},{2,2,2}
+			},
 		},
 		{
+			{"Bayati", 13, {1,0,19,3,17,4,5,9,0,3,9,5,7}, {4,4,5,6,5,8,4,7,7,3,3,1,1}, 
+				{1.0f,1.0f,0.5,0.5,0.5,0.5,0.5,0.5,0.4,0.4,0.4,0.2,0.2,0.1}, 
+				//0                             1                             2                             3                             4                             5                            6                             7                             8                                9                             10                            11                                             
+				{{1,1,1,1,1,0,1,1,0,0,1,1,1,1},{1,1,0,1,1,0,1,1,0,0,1,1,0,0},{1,0,1,1,0,0,1,1,0,1,0,0,1,0},{1,1,1,1,0,0,0,0,0,0,0,0,0,0},{1,1,0,1,1,1,1,0,0,0,0,0,0,1},{0,0,0,0,1,1,0,0,0,0,1,0,0,0},{1,1,1,0,1,0,1,1,0,0,0,0,0,0},{1,1,1,0,0,0,1,1,1,1,0,0,0,0},{0,0,0,0,0,0,1,1,0,0,0,0,0,0},{0,0,1,0,0,0,0,1,0,1,0,0,0,0},{1,1,0,0,0,1,0,0,0,0,1,1,0,0},{1,1,0,0,0,0,0,0,0,0,1,1,0,0},{1,1,1,0,0,0,0,0,0,0,0,0,1,1},{1,1,1,0,1,0,0,0,0,0,0,0,1,1}},
+				2,{4,1},{1,4},{2,2}
+			},
 			{"Bayati Shuri", 5, {5,4,1,0,7}, {4,8,7,7,4}, 
-				{{1.0f,1.0f,0.5,0.0,0.5,0.5},{1.0f,1.0f,0.5,0.4,0.3,0.3},{1.0f,1.0f,0.5,0.4,0.3,0.3},{0.0f,1.0f,0.5,0.4,0.3,0.3},{1.0f,0.0f,0.5,0.4,0.3,0.3},{1.0f,0.0f,0.5,0.4,0.3,0.3}}, 
-				{{1,1,1,0,0,0},{1,1,1,1,1,1},{1,1,1,0,0,0},{0,1,0,1,1,0},{0,1,0,1,1,0},{0,1,0,0,0,1}} }
+				{1.0f,1.0f,0.5,0.5,0.5,0.5}, 
+				{{1,1,1,0,0,0},{1,1,1,1,1,1},{1,1,1,0,0,0},{0,1,0,1,1,0},{0,1,0,1,1,0},{0,1,0,0,0,0}},
+				2,{4,5},{1,4},{2,2}
+			},
+			{"Husayni", 4, {24,0,1,3}, {5,4,4,6}, 
+				{1.0f,1.0f,0.5,0.4,0.4}, 
+				{{1,1,1,1,1},{1,1,1,1,1},{1,1,1,0,0},{1,1,0,1,1},{1,1,0,1,1}},
+				2,{4,24},{1,5},{2,2}
+			}
+		},
+		{
+			{"Hijaz", 6, {1,0,5,2,19,4}, {4,4,8,4,6,1}, 
+				{1.0f,1.0f,1.0,0.5,0.5,0.5,0.5}, 
+				{{1,1,1,1,1,1,1},{1,1,1,1,1,0,1},{1,1,1,1,1,0,1},{1,1,1,1,0,1,0},{1,1,1,0,1,1,0},{1,0,0,1,1,1,0},{1,1,1,0,0,0,1}},
+				2,{5,1},{1,4},{2,2}
+			},
+			{"Hijazkar", 7, {22,19,1,2,1,0,25}, {1,8,8,4,4,4,4}, 
+				{1.0f,1.0f,1.0,0.3,0.6,0.6,0.4,0.4}, 
+				//0                 1                 2                 3                 4                 5                 6                 7 
+				{{1,0,1,0,0,0,0,0},{0,1,1,0,0,0,0,0},{1,1,1,0,1,0,0,0},{0,0,0,1,1,0,0,1},{1,1,1,1,1,1,1,0},{1,1,0,0,1,1,1,0},{0,0,0,0,1,1,1,0},{0,0,0,1,1,0,1,1}},
+				2,{5,2},{1,4},{2,2}
+			},
+			{"Zanjaran", 6, {3,5,18,1,2,19}, {4,8,6,4,4,8}, 
+				{1.0f,1.0f,1.0,0.5,0.5,0.5,0.5}, 
+				{{1,1,1,0,1,1,1},{1,1,1,1,1,1,0},{1,1,1,1,0,0,1},{0,1,1,1,0,0,0},{1,1,0,0,1,1,0},{1,1,0,0,1,1,1},{1,0,1,0,0,1,1}},
+				2,{5,3},{1,4},{2,2}
+			}
+		},
+		{
+			{"Kurd", 6, {1,0,3,4,6,5}, {4,4,6,8,8,1}, 
+				{1.0f,1.0f,0.5,0.5,0.5,0.5,0.5}, 
+				{{1,1,1,1,0,1,1},{1,1,1,1,0,1,1},{1,1,1,0,1,0,1},{1,1,0,1,0,1,0},{0,1,1,0,1,1,0},{1,1,0,1,1,1,0},{1,1,1,0,0,0,1}},
+				2,{6,1},{1,4},{2,2}
+			},
+			{"Hijazkar Kurd", 5, {1,0,2,6,19}, {4,4,4,8,8}, 
+				{1.0f,1.0f,0.5,0.5,0.5,0.5}, 
+				{{1,1,0,0,0,0},{1,1,1,1,1,0},{0,1,1,1,0,0},{0,1,1,1,0,1},{0,1,0,0,1,1},{0,0,0,1,1,1}},
+				2,{6,1},{1,4},{2,2}
+			},
+			{"Kurd 1950s exp", 10, {1,6,1,13,14,15,5,3,0,4}, {4,6,1,1,1,1,1,4,4,5},
+				{1.0f,1.0f,0.5,0.5,0.5,0.4,0.4,0.3,0.2,0.2,0.1}, 
+				//0                       1                       2                       3                       4                       5                       6                       7                       8                       9                       10                                                                         
+				{{1,1,1,1,1,1,1,1,0,1,0},{1,1,1,0,0,0,0,1,1,0,0},{1,1,1,0,0,1,0,0,0,0,0},{1,0,0,1,0,0,0,0,0,0,1},{1,0,0,0,1,1,0,0,0,0,0},{1,0,1,0,1,1,0,0,0,0,0},{1,0,0,0,0,0,1,0,0,0,0},{0,1,1,0,0,0,0,0,0,0,0},{1,1,1,1,1,1,0,0,1,1,0},{1,1,0,0,0,0,0,0,0,1,1},{0,0,0,1,0,0,0,0,0,1,1}},
+				2,{6,1},{1,4},{2,2}
+			}
+		},
+		{
+			{"Saba", 10, {5,3,17,2,7,4,3,9,1,0}, {3,6,3,6,8,1,3,3,4,4}, 
+				{1.0f,1.0f,1.0,0.5,0.5,0.4,0.4,0.3,0.2,0.2,0.2}, 
+				//0                       1                     2                       3                       4                       5                       6                       7                       8                       9                       10                                                                         
+				{{1,1,1,0,1,1,1,1,1,0,0},{1,1,1,1,1,0,0,0,0,0},{1,1,1,1,1,0,1,0,0,1,0},{0,1,1,1,0,0,1,0,0,0,0},{0,1,1,0,1,1,0,0,0,0,0},{1,1,0,0,1,1,0,0,0,0,0},{1,0,1,0,0,0,1,1,1,1,1},{1,0,0,1,0,0,1,1,1,0,0},{1,0,0,0,0,0,1,1,1,1,0},{0,0,1,0,0,0,1,0,1,1,1},{0,0,0,0,0,1,1,0,0,1,1}},
+				3,{7,5,3},{1,3,6},{2,2,2}
+			}
+		},
+		{
+			{"Huzam", 8, {5,0,8,4,16,1,11,21}, {3,6,8,3,3,3,1,1}, 
+				{1.0f,1.0f,1.0,0.5,0.5,0.5,0.4,0.4,0.4}, 
+				//0                   1                   2                   3                   4                   5                   6                   7                 
+				{{1,1,1,1,1,1,1,1,1},{1,1,1,0,1,1,1,0,0},{1,1,1,1,0,1,0,0,0},{1,0,1,1,0,0,0,0,0},{1,1,0,0,1,0,0,0,0},{1,1,1,0,0,1,1,1,0},{1,1,0,0,0,1,1,0,0},{1,0,0,0,0,0,1,1,0},{1,0,0,0,0,0,0,0,0}},
+				3,{8,5,0},{1,3,6},{2,2,2}
+			},
+			{"Sikah", 5, {0,16,1,5,8}, {6,3,3,3,8},
+				{1.0f,1.0f,1.0,0.5,0.5,0.5}, 
+				{{1,0,1,1,1,1},{0,1,1,1,0,1},{1,1,1,1,0,0},{1,0,1,1,0,0},{1,0,0,0,0,0},{1,1,0,0,0,0}},
+				3,{8,16,0},{1,3,6},{2,2,2}
+			},
+			{"'Iraq", 7, {4,1,5,7,0,8,4}, {3,6,3,3,6,8,10}, 
+				{1.0f,1.0f,0.8,0.4,0.4,0.4,0.4,0.2}, 
+				{{1,1,0,1,0,0,1,0},{1,1,1,1,1,1,0,1},{0,1,1,1,0,1,0,1},{0,1,0,1,0,1,0,0},{0,1,0,0,1,0,0,0},{0,0,0,1,0,1,1,1},{1,0,0,0,0,1,1,1},{0,1,1,0,0,1,1,1}},
+				3,{8,4,0},{1,3,6},{2,2,2}
+  			},
+			{"Bastanikar", 8, {7,5,3,2,5,4,0,8}, {3,5,8,8,3,3,6,8}, 
+				{1.0f,1.0f,0.8,0.5,0.5,0.5,0.5,0.5}, 
+				//0                   1                   2                   3                  4                5                   6                   7
+				{{1,1,0,0,0,1,1,1,1},{1,1,1,1,0,1,1,0,0},{0,1,1,1,1,0,0,0,0},{0,0,1,1,1,0,0,0,0},{1,1,0,0,0,1,1,1,0},{1,1,0,0,0,1,1,0,0},{1,0,0,0,0,0,0,1,1},{1,0,0,0,0,0,0,1,1}},
+				3,{8,7,5},{1,3,5},{2,2,2}
+			},
+			{"Awj 'Iraq", 5, {8,4,0,5,4}, {8,10,6,3,3}, 
+				{1.0f,1.0f,0.5,0.5,0.5,0.5}, 
+				{{1,1,0,0,1,1},{1,1,1,1,0,0},{0,1,1,1,0,0},{0,1,1,1,1,0},{1,0,0,1,1,1},{1,0,0,0,1,1}},
+				3,{8,5,8},{1,3,6},{2,2,2}
+			}
+		},
+		{
+			{"Jiharkah", 6, {5,1,16,23,1,20}, {5,5,5,1,2,1}, 
+				{1.0f,1.0f,0.5,0.5,0.5,0.5}, 
+				{{1,1,1,1,1,1,1},{1,1,1,0,0,0,0},{1,1,1,1,1,0,0},{1,0,1,1,1,1,0,0},{1,0,1,1,1,0,0},{1,0,0,0,0,1,0},{1,0,0,0,0,0,1}},
+				2,{9,16},{1,5},{2,2}
+			}			
+		},
+		{
+			{"Sazkar", 5, {16,1,5,8,0}, {5,5,5,3,8}, 
+				{1.0f,1.0f,0.5,0.4,0.3,0.3}, 
+				{{1,1,1,1,1,1},{1,1,1,1,0,1},{1,1,1,1,1,0},{1,1,1,1,1,0},{1,0,1,1,1,0},{1,1,0,0,0,1}},
+				2,{10,16},{1,5},{2,2}
+			}
+		},
+		{
+			{"Musta'ar", 6, {1,0,16,8,5,8}, {3,6,3,8,3,1}, 
+				{1.0f,1.0f,0.5,0.5,0.5,0.5,0.5}, 
+				{{1,1,1,0,0,0,1},{1,1,0,1,0,1,0},{1,1,1,1,1,0,0},{0,1,1,1,0,1,0},{0,0,1,0,1,0,1},{0,1,0,1,0,1,1},{1,0,0,0,1,1,1}},
+				3,{11,1,0},{1,3,6},{2,2,2}
+			}
+		},
+		{
+			{"Nahawand Murassa", 6, {24,5,4,6,17,24}, {1,4,5,5,5,8}, 
+				{1.0f,1.0f,0.5,0.5,0.5,0.5}, 
+				{{1,1,1,0,0,0,1},{1,1,0,1,1,0,0},{1,0,1,0,0,0,1},{0,1,0,0,1,1,0,0},{0,1,0,1,1,0,0},{0,0,0,0,0,1,1},{1,0,1,0,0,1,1}},
+				2,{24,5},{1,4},{2,2}
+			}
+		},
+		{
+			{"Athar Kurd", 7, {19,14,2,1,14,6,6}, {5,1,1,1,5,5,1}, 
+				{1.0f,1.0f,0.5,0.5,0.4,0.4,0.4}, 
+				//0                 1                 2                 3                 4                 5                 6                 7 
+				{{1,1,1,1,1,1,1,1},{1,1,0,1,0,1,1,0},{1,0,1,0,0,1,0,1},{1,0,0,1,1,0,0,0},{1,0,0,1,1,1,1,0},{1,1,1,0,0,1,1,0},{1,1,0,0,0,1,1,0},{1,0,1,0,0,0,0,1}},
+				2,{13,19},{1,5},{2,2}
+			}
+		},
+		{
+			{"Saba Zamzam", 7, {5,2,3,17,6,13,1}, {3,6,6,3,1,1,4}, 
+				{1.0f,1.0f,0.5,0.5,0.4,0.4,0.4}, 
+				//0                 1                 2                 3                 4                 5                 6                 7 
+				{{1,1,1,0,0,1,1,0},{1,1,1,1,1,0,0,0},{1,1,1,1,0,0,0,0},{1,1,1,1,0,1,0,1},{0,1,0,1,1,0,0,0},{1,0,0,1,0,1,1,1},{1,0,0,0,0,1,1,0},{0,0,0,1,0,0,0,1}},
+				3,{14,5,3},{1,3,6},{2,2,2}
+			}
+		},
+		{
+			{"Lami", 3, {6,1,2}, {4,4,4}, 
+				{1.0f,1.0f,0.5,0.5}, 
+				{{1,1,1,1},{1,1,1,0},{1,1,1,1},{1,0,1,1}},
+				2,{15,6},{1,4},{2,2}
+			}
 		}
 	};
+
+	Jins jins[MAX_JINS];
+	Maqam maqams[MAX_FAMILIES][MAX_MAQAM];
    
-
-	const char* maqamNames[MAX_FAMILIES][MAX_MAQAM] = {
-		{"Mahur" , "Nairuz" , "Rast" , "Suznak" , "Yakah"},
-		{"Farahfaza", "Nahawand", "Nahawand Murassah", "‘Ushaq Masri" , "Sultani Yakah"},
-		{"Athar Kurd", "Nawa Athar", "Nikriz" , "Hisar"},
-		{"Ajam","Jiharkah","Shawq Afza","Ajam Ushayran"},
-		{"Bayatayn" , "Bayati" , "Bayati Shuri" , "Husayni" , "Nahfat" , "Huseini Ushayran"},
-		{"Hijaz" , "Hijaz Kar" , "Shad ‘Araban" , "Shahnaz" , "Suzidil" , "Zanjaran" , "Hijazain"},
-		{"Kurd" , "Hijaz Kar Kurd", "Lami"},
-		{"Saba" , "Saba Zamzam" },
-		{"Bastah Nikar", "Huzam", "‘Iraq" , "Musta‘ar", "Rahat al-Arwah" , "Sikah" , "Sikah Baladi"}
-	};
-
-	
 	
 	//const char* arabicScaleNames[MAX_JINS] = {"عجم","بياتي","حجاز","كرد","نهاوند","نكريز","راست","صبا","سيكاه"};
 	
-	dsp::SchmittTrigger clockTrigger,modulateTrigger,resetScaleTrigger,traditionalTonicsTrigger,pitchRandomnessGaussianTrigger,noteActiveTrigger[MAX_JINS_NOTES],lowerJinsActiveTrigger, upperAjnasActiveTrigger[MAX_UPPER_AJNAS]; 
+	dsp::SchmittTrigger clockTrigger,modulateJinsTrigger,resetMaqamTrigger,resetJinsTrigger,maqamScaleModeTrigger,pitchRandomnessGaussianTrigger,noteActiveTrigger[MAX_JINS_NOTES],ajnasActiveTrigger[MAX_AJNAS_IN_SAYR+1]; 
 	dsp::PulseGenerator noteChangePulse,jinsChangedPulse;
 	GaussianNoiseGenerator _gauss;
     
  
-    bool noteActive[MAX_COMPLETE_SCALE_SIZE] = {false};
-    float noteInitialProbability[MAX_COMPLETE_SCALE_SIZE] = {0.0f};
-	float actualNoteProbability[MAX_COMPLETE_SCALE_SIZE] = {0.0};
+    bool noteActive[MAX_JINS_NOTES] = {false};
+    float noteInitialProbability[MAX_JINS_NOTES] = {0.0f};
+	float actualNoteProbability[MAX_JINS_NOTES] = {0.0};
 	
+	bool maqamScaleMode = false; 
+	bool maqamScaleModeChanged = false;
 
-	int currentUpperAjnas[MAX_UPPER_AJNAS] = {0};
-	int currentUpperAjnasOverlap[MAX_UPPER_AJNAS] = {0};
-    bool currentAjnasStatus[MAX_UPPER_AJNAS+1] = {0};
-    bool currentAjnasActive[MAX_UPPER_AJNAS+1] = {1,1,1,1,1,1,1};
-    float currentAjnasWeighting[MAX_UPPER_AJNAS+1] = {0};
-	float actualAjnasProbability[MAX_UPPER_AJNAS+1] = {0};
-	
+
+	int currentAnjas[MAX_AJNAS_IN_SAYR+1] = {0};
+	int currentAnjasOverlap[MAX_AJNAS_IN_SAYR+1] = {0};
+    bool currentAjnasInUse[MAX_AJNAS_IN_SAYR+1] = {0};
+    bool currentAjnasActive[MAX_AJNAS_IN_SAYR+1] = {1,1,1,1,1,1,1,1,1,1,1,1,1,1};
+    float currentAjnasWeighting[MAX_AJNAS_IN_SAYR+1] = {0};
+	float actualAjnasProbability[MAX_AJNAS_IN_SAYR+1] = {0};
+	int numberOfScaleAjnas;
+	int currentScaleAjnas[MAX_AJNAS_IN_SCALE];
+	int currentScaleAjnasOverlap[MAX_AJNAS_IN_SCALE];
+	int currentScaleAjnasDirection[MAX_AJNAS_IN_SCALE];
+
+	bool triggerDelayEnabled = false;
+	float triggerDelay[TRIGGER_DELAY_SAMPLES] = {0};
+	int triggerDelayIndex = 0;
+
     int octave = 0;
     int spread = 0;
 	float upperSpread = 0.0;
@@ -246,6 +429,7 @@ struct ProbablyNoteArabic : Module {
 	int probabilityNote = 0;
 	float lastQuantizedCV = 0;
 	bool resetTriggered = false;
+	bool resetMaqamTriggered = false;
 	int lastNote = -1;
 	int lastSpread = -1;
 	int lastSlant = -1;
@@ -265,62 +449,59 @@ struct ProbablyNoteArabic : Module {
 	int jinsIndex = 0;
 	int lastJinsIndex = -1;
 
-	Jins currentJins;
 	Jins rootJins;
+	Jins currentJins;
 	Maqam currentMaqam;
 
-
-	bool lowerJinsActive;
-	bool upperAjnasActive[MAX_UPPER_AJNAS];
+	bool ajnasActive[MAX_AJNAS_IN_SAYR+1];
 	int numberActiveAjnas = 0;
+
 
 	int numberMainTones;
 	int numberLowerTones;
 	int numberExtendedTones;
+	int numberAllTones;
+	int tonicPosition;
 	int ghammazPosition;
-	float currentIntonation[MAX_COMPLETE_SCALE_SIZE];
-	float currentDefaultWeighting[MAX_COMPLETE_SCALE_SIZE];	
+	float currentIntonation[MAX_JINS_NOTES];
+	float currentWeighting[MAX_JINS_NOTES];	
 	int numberMaqams;
 	int numberTonics;
 	int availableTonics[MAX_NOTES];
-
-
-
-	std::string lastPath;
     
 
 	ProbablyNoteArabic() {
 		// Configure the module
 		config(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS, NUM_LIGHTS);
-		configParam(ProbablyNoteArabic::SPREAD_PARAM, 0.0, 7.0, 0.0,"Spread");
+		configParam(ProbablyNoteArabic::SPREAD_PARAM, 0.0, 4.0, 0.0,"Spread");
         configParam(ProbablyNoteArabic::SPREAD_CV_ATTENUVERTER_PARAM, -1.0, 1.0, 0.0,"Spread CV Attenuation" ,"%",0,100);
 		configParam(ProbablyNoteArabic::SLANT_PARAM, -1.0, 1.0, 0.0,"Slant");
         configParam(ProbablyNoteArabic::SLANT_CV_ATTENUVERTER_PARAM, -1.0, 1.0, 0.0,"Slant CV Attenuation" ,"%",0,100);
 		configParam(ProbablyNoteArabic::FOCUS_PARAM, 0.0, 1.0, 0.0,"Focus");
 		configParam(ProbablyNoteArabic::FOCUS_CV_ATTENUVERTER_PARAM, -1.0, 1.0, 0.0,"Focus CV Attenuation");
 		configParam(ProbablyNoteArabic::FAMILY_PARAM, 0.0, (float)MAX_FAMILIES-1, 0.0,"Family (Root Jins)");
-        configParam(ProbablyNoteArabic::FAMILY_CV_ATTENUVERTER_PARAM, -1.0, 1.0, 0.0,"Family CV Attenuation","%",0,100);
-		configParam(ProbablyNoteArabic::MAQAM_PARAM, 0.0, 8.0, 0.0,"Maqam");
-        configParam(ProbablyNoteArabic::MAQAM_CV_ATTENUVERTER_PARAM, -1.0, 1.0, 0.0,"Maqam CV Attenuation","%",0,100);
+		configParam(ProbablyNoteArabic::MAQAM_PARAM, 0.0, 1.0, 0.0,"Maqam");
 		
         
 		configParam(ProbablyNoteArabic::TONIC_PARAM, 0.0, 2.0, 0.0,"Tonic");
-        configParam(ProbablyNoteArabic::TONIC_CV_ATTENUVERTER_PARAM, -1.0, 1.0, 0.0,"Tonic CV Attenuation","%",0,100); 
 		configParam(ProbablyNoteArabic::OCTAVE_PARAM, -4.0, 4.0, 0.0,"Octave");
         configParam(ProbablyNoteArabic::OCTAVE_CV_ATTENUVERTER_PARAM, -1.0, 1.0, 0.0,"Octave CV Attenuation","%",0,100);
 		configParam(ProbablyNoteArabic::PITCH_RANDOMNESS_PARAM, 0.0, 10.0, 0.0,"Randomize Pitch Amount"," Cents");
         configParam(ProbablyNoteArabic::PITCH_RANDOMNESS_CV_ATTENUVERTER_PARAM, -1.0, 1.0, 0.0,"Randomize Pitch Amount CV Attenuation","%",0,100);
 		
-		
+
+		configParam(ProbablyNoteArabic::NOTE_WEIGHT_SCALING_PARAM, 0.0, 1.0, 0.0,"Note Weight Scaling");
+		configParam(ProbablyNoteArabic::JINS_WEIGHT_SCALING_PARAM, 0.0, 1.0, 0.0,"Jins Weight Scaling");
+
 
         srand(time(NULL));
 
-        for(int i=0;i<MAX_UPPER_AJNAS;i++) {
-			configParam(ProbablyNoteArabic::UPPER_AJNAS_ACTIVE_PARAM + i, 0.0, 1.0, 0.0,"Upper Jins Active");
-			configParam(ProbablyNoteArabic::UPPER_AJNAS_WEIGHT_PARAM + i, 0.0, 1.0, 0.0,"Upper Jins Weight");
+        for(int i=0;i<MAX_AJNAS_IN_SAYR+1;i++) { //Should probably be max + 1
+			configParam(ProbablyNoteArabic::AJNAS_ACTIVE_PARAM + i, 0.0, 1.0, 0.0,"Jins Active");
+			configParam(ProbablyNoteArabic::AJNAS_WEIGHT_PARAM + i, 0.0, 1.0, 0.0,"Jins Weight");
 		}
 
-        for(int i=0;i<MAX_COMPLETE_SCALE_SIZE;i++) {
+        for(int i=0;i<MAX_JINS_NOTES;i++) {
             configParam(ProbablyNoteArabic::NOTE_ACTIVE_PARAM + i, 0.0, 1.0, 0.0,"Note Active");		
             configParam(ProbablyNoteArabic::NOTE_WEIGHT_PARAM + i, 0.0, 1.0, 0.0,"Note Weight");		
         }
@@ -335,17 +516,17 @@ struct ProbablyNoteArabic : Module {
 		pq->defaultValue = defaultValue;		
 	}
 
-    float lerp(float v0, float v1, float t) {
+    double lerp(double v0, double v1, float t) {
         return (1 - t) * v0 + t * v1;
     }
 
     int weightedProbability(float *weights,int weightCount, float scaling,float randomIn) {
-        float weightTotal = 0.0f;
-		float linearWeight, logWeight, weight;
+        double weightTotal = 0.0f;
+		double linearWeight, logWeight, weight;
             
         for(int i = 0;i < weightCount; i++) {
 			linearWeight = weights[i];
-			logWeight = std::log10(weights[i]*10 + 1);
+			logWeight = (std::pow(10,weights[i]) - 1) / 10.0;
 			weight = lerp(linearWeight,logWeight,scaling);
             weightTotal += weight;
         }
@@ -355,10 +536,10 @@ struct ProbablyNoteArabic : Module {
 			return 0;
 
         int chosenWeight = -1;        
-        float rnd = randomIn * weightTotal;
+        double rnd = randomIn * weightTotal;
         for(int i = 0;i < weightCount;i++ ) {
 			linearWeight = weights[i];
-			logWeight = std::log10(weights[i]*10 + 1);
+			logWeight = (std::pow(10,weights[i]) - 1) / 10.0;
 			weight = lerp(linearWeight,logWeight,scaling);
 
             if(rnd < weight) {
@@ -389,8 +570,29 @@ struct ProbablyNoteArabic : Module {
 		return offsetNote;
 	}
 
+	int ensureActiveJins(int jins, bool *anjasUsed, bool *anjasStatus,int anjasCount ) {
+		if(anjasStatus[jins] && anjasUsed[jins])
+			return jins;
+		int offsetJins=jins;
+		bool jinsOk = false;
+		int jinsSearched = 0;
+		do {
+			offsetJins = (offsetJins + 1) % anjasCount;
+			jinsSearched +=1;
+			if(anjasStatus[offsetJins] && anjasUsed[offsetJins] ) {
+				jinsOk = true;
+			}
+		} while(!jinsOk && jinsSearched < anjasCount);
+		return jinsOk ? offsetJins : -1;
+	}
+
+
 	json_t *dataToJson() override {
 		json_t *rootJ = json_object();
+
+		json_object_set_new(rootJ, "triggerDelayEnabled", json_integer((bool) triggerDelayEnabled));
+		json_object_set_new(rootJ, "maqamScaleMode", json_integer((bool) maqamScaleMode));
+		json_object_set_new(rootJ, "pitchRandomGaussian", json_integer((bool) pitchRandomGaussian));
 
 		
 
@@ -403,13 +605,55 @@ struct ProbablyNoteArabic : Module {
 				strcat(buf, ".");
 				sprintf(notebuf, "%i", j);
 				strcat(buf, notebuf);
-				//json_object_set_new(rootJ, buf, json_real((float) scaleNoteWeighting[i][j]));
+				json_object_set_new(rootJ, buf, json_real((float) jins[i].Weighting[j]));
 			}
 		}
+
+
+		for(int i=0;i<MAX_FAMILIES;i++) {			
+			for(int j=0;j<jins[i].NumberMaqams;j++) {
+				for(int k=0;k<=maqams[i][j].NumberAjnasInSayr;k++) {
+					char buf[100];
+					char notebuf[100];
+					strcpy(buf, "ajnasWeight-"); 
+					strcat(buf, maqams[i][j].Name);
+					strcat(buf, ".");
+					sprintf(notebuf, "%i", k);
+					strcat(buf, notebuf);
+					json_object_set_new(rootJ, buf, json_real((float) maqams[i][j].AjnasWeighting[k]));
+				}
+			}
+		}
+
+		for(int i=0;i<MAX_AJNAS_IN_SAYR+1;i++) {
+			char buf[100];
+			char notebuf[100];
+			strcpy(buf, "ajnasActive-"); 
+			sprintf(notebuf, "%i", i);
+			strcat(buf, notebuf);
+			json_object_set_new(rootJ, buf, json_integer((bool) currentAjnasActive[i]));			
+		}
+
 		return rootJ;
 	};
 
 	void dataFromJson(json_t *rootJ) override {
+
+
+		json_t *ctTd = json_object_get(rootJ, "triggerDelayEnabled");
+		if (ctTd)
+			triggerDelayEnabled = json_integer_value(ctTd);
+
+		json_t *ctMs = json_object_get(rootJ, "maqamScaleMode");
+		if (ctMs)
+			maqamScaleMode = json_integer_value(ctMs);
+		json_t *ctRg = json_object_get(rootJ, "pitchRandomGaussian");
+		if (ctRg)
+			pitchRandomGaussian = json_integer_value(ctRg);
+
+
+
+
 		for(int i=0;i<MAX_JINS;i++) {
 			for(int j=0;j<MAX_JINS_NOTES;j++) {
 				char buf[100];
@@ -421,30 +665,77 @@ struct ProbablyNoteArabic : Module {
 				strcat(buf, notebuf);
 				json_t *sumJ = json_object_get(rootJ, buf);
 				if (sumJ) {
-					//scaleNoteWeighting[i][j] = json_real_value(sumJ);
+					jins[i].Weighting[j] = json_real_value(sumJ);
 				}
 			}
-		}		
+		}
+
+		for(int i=0;i<MAX_FAMILIES;i++) {
+			for(int j=0;j<jins[i].NumberMaqams;j++) {
+				for(int k=0;k<=maqams[i][j].NumberAjnasInSayr;k++) {
+					char buf[100];
+					char notebuf[100];
+					strcpy(buf, "ajnasWeight-"); 
+					strcat(buf, maqams[i][j].Name);
+					strcat(buf, ".");
+					sprintf(notebuf, "%i", k);
+					strcat(buf, notebuf);
+					json_t *sumJ = json_object_get(rootJ, buf);
+					if (sumJ) {
+						maqams[i][j].AjnasWeighting[k] = json_real_value(sumJ);
+					}
+				}
+			}
+		}
+
+		for(int i=0;i<MAX_AJNAS_IN_SAYR+1;i++) {
+			char buf[100];
+			char notebuf[100];
+			strcpy(buf, "ajnasActive-"); 
+			sprintf(notebuf, "%i", i);
+			strcat(buf, notebuf);
+			json_t *sumJ = json_object_get(rootJ, buf);
+			if (sumJ) {
+				currentAjnasActive[i] = json_integer_value(sumJ);
+			}
+		}
+
 	}
 	
 
 	void process(const ProcessArgs &args) override {
 	
-		if (resetScaleTrigger.process(params[RESET_SCALE_PARAM].getValue())) {
+		if (resetMaqamTrigger.process(params[RESET_MAQAM_PARAM].getValue())) {
+			resetTriggered = true;	
+			resetMaqamTriggered = true;		
+			maqams[family][maqamIndex] = defaultMaqams[family][maqamIndex];
+			for(int i=0;i<MAX_AJNAS_IN_SAYR+1;i++) {
+				currentAjnasActive[i] = true;
+			}
+		}
+
+		if (resetJinsTrigger.process(params[RESET_JINS_PARAM].getValue())) {
 			resetTriggered = true;			
-			//for(int j=0;j<MAX_NOTES;j++) {
-				// scaleNoteWeighting[scale][j] = defaultScaleNoteWeighting[scale][j];
-				// scaleNoteStatus[scale][j] = defaultScaleNoteStatus[scale][j];
-				// currentScaleNoteWeighting[j] = defaultScaleNoteWeighting[scale][j];
-				// currentScaleNoteStatus[j] =	defaultScaleNoteStatus[scale][j];		
-			//}					
-		}	
+			if(!maqamScaleMode) {
+				int jinsId = currentAnjas[jinsIndex]; 
+				jins[jinsId] = defaultJins[jinsId];
+			} else {
+				for(int i=0;i<numberOfScaleAjnas;i++) {
+					jins[currentScaleAjnas[i]] = defaultJins[currentScaleAjnas[i]];	
+				}
+			}
+		}
 
 		if (pitchRandomnessGaussianTrigger.process(params[PITCH_RANDOMNESS_GAUSSIAN_PARAM].getValue())) {
 			pitchRandomGaussian = !pitchRandomGaussian;
 		}		
 		lights[PITCH_RANDOMNESS_GAUSSIAN_LIGHT].value = pitchRandomGaussian;
 
+		if (maqamScaleModeTrigger.process(params[MAQAM_SCALE_MODE_PARAM].getValue())) {
+			maqamScaleMode = !maqamScaleMode;
+			maqamScaleModeChanged = true;
+		}		
+		lights[MAQAM_SCALE_MODE_LIGHT].value = maqamScaleMode;
 
 
         spread = clamp(params[SPREAD_PARAM].getValue() + (inputs[SPREAD_INPUT].getVoltage() * params[SPREAD_CV_ATTENUVERTER_PARAM].getValue()),0.0f,15.0f);
@@ -453,18 +744,16 @@ struct ProbablyNoteArabic : Module {
 
         focus = clamp(params[FOCUS_PARAM].getValue() + (inputs[FOCUS_INPUT].getVoltage() / 10.0f * params[FOCUS_CV_ATTENUVERTER_PARAM].getValue()),0.0f,1.0f);
 
-		family = clamp(params[FAMILY_PARAM].getValue() + (inputs[FAMILY_PARAM].getVoltage() * MAX_FAMILIES / 10.0 * params[FAMILY_CV_ATTENUVERTER_PARAM].getValue()),0.0,MAX_FAMILIES);
+		family = clamp(params[FAMILY_PARAM].getValue() + (inputs[FAMILY_PARAM].getVoltage() * MAX_FAMILIES / 10.0),0.0,MAX_FAMILIES);
 		if(family != lastFamily) {
 
 			rootJins = jins[family]; 
-			ghammazPosition = rootJins.GhammazPosition;			
 			numberTonics = rootJins.NumberTonics;
 			numberMaqams = rootJins.NumberMaqams;
 
 			std::copy(rootJins.AvailableTonics,rootJins.AvailableTonics+numberTonics,availableTonics);
 
-
-			reConfigParam(MAQAM_PARAM,0,(float)(numberMaqams-1),0);
+			reConfigParam(MAQAM_PARAM,0,std::max((float)(numberMaqams-1 + .01),0.0f),0);
 			maqamIndex = 0;
 			lastMaqamIndex = -1; //Force update;
 
@@ -482,133 +771,198 @@ struct ProbablyNoteArabic : Module {
 			lastFamily = family;
 		}
 
-		maqamIndex = clamp(params[MAQAM_PARAM].getValue() + (inputs[MAQAM_INPUT].getVoltage() * MAX_MAQAM / 10.0 * params[MAQAM_CV_ATTENUVERTER_PARAM].getValue()),0.0,11.0f);
-		if(maqamIndex != lastMaqamIndex) {
+		maqamIndex = clamp(params[MAQAM_PARAM].getValue() + (inputs[MAQAM_INPUT].getVoltage() * MAX_MAQAM / 10.0),0.0,11.0f);
+		if(maqamIndex != lastMaqamIndex || maqamScaleModeChanged || resetMaqamTriggered) {
 			currentMaqam = maqams[family][maqamIndex];
 
-			numberActiveAjnas = currentMaqam.NumberUpperAnjas;
-			std::copy(currentMaqam.UpperAjnas,currentMaqam.UpperAjnas+MAX_UPPER_AJNAS,currentUpperAjnas);
-			std::copy(currentMaqam.OverlapPoint,currentMaqam.OverlapPoint+MAX_UPPER_AJNAS,currentUpperAjnasOverlap);
+			numberActiveAjnas = currentMaqam.NumberAjnasInSayr;
+			std::copy(currentMaqam.AjnasInSayr,currentMaqam.AjnasInSayr+MAX_AJNAS_IN_SAYR,currentAnjas+1);
+			std::copy(currentMaqam.SayrOverlapPoint,currentMaqam.SayrOverlapPoint+MAX_AJNAS_IN_SAYR,currentAnjasOverlap+1);
+			std::copy(currentMaqam.AjnasWeighting,currentMaqam.AjnasWeighting+MAX_AJNAS_IN_SAYR+1,currentAjnasWeighting);
+
+			currentAnjas[0] = family;
+			currentAnjasOverlap[0] = 1;
+
+			numberOfScaleAjnas = currentMaqam.NumberAjnasInScale;
+			std::copy(currentMaqam.AjnasInScale,currentMaqam.AjnasInScale+MAX_AJNAS_IN_SAYR,currentScaleAjnas);
+			std::copy(currentMaqam.ScaleOverlapPoint,currentMaqam.ScaleOverlapPoint+MAX_AJNAS_IN_SAYR,currentScaleAjnasOverlap);
+			std::copy(currentMaqam.AscendingDescending,currentMaqam.AscendingDescending+MAX_AJNAS_IN_SAYR,currentScaleAjnasDirection);
 			
+			if(!maqamScaleMode) {
+				reConfigParam(CURRENT_JINS_PARAM,0,(float)(numberActiveAjnas),0);        
+				reConfigParam(SPREAD_PARAM,0.0,4.0,0);
+			} else {
+				reConfigParam(CURRENT_JINS_PARAM,0,0.1,0);
+				reConfigParam(SPREAD_PARAM,0.0,3.0,0);
+			}
+
 			jinsIndex = 0;
 			lastJinsIndex = -1; // Force reload of jins status and weighting
+			params[CURRENT_JINS_PARAM].setValue(jinsIndex);
 
 			lastMaqamIndex = maqamIndex;
 		}
 
-		//Process Modulations
-		if(modulateTrigger.process(params[MODULATE_PARAM].getValue() + inputs[MODULATION_TRIGGER_INPUT].getVoltage())) {
-			if(lowerJinsActive) {
-				actualAjnasProbability[0] = params[LOWER_JINS_WEIGHT_PARAM].getValue(); // need to include cv input
-			} else {
-				actualAjnasProbability[0] = 0;
-			}
-
-			for(int i=0;i<numberActiveAjnas;i++) {
-				if(upperAjnasActive[i]) {	
-					actualAjnasProbability[i+1] = params[UPPER_AJNAS_WEIGHT_PARAM+i].getValue(); // need to include cv input
+		//Process Jins Modulations
+		if(modulateJinsTrigger.process(params[MODULATE_JINS_PARAM].getValue() + inputs[MODULATE_JINS_TRIGGER_INPUT].getVoltage()) && !maqamScaleMode) {
+			for(int i=0;i<numberActiveAjnas+1;i++) {
+				if(ajnasActive[i]) {						
+					actualAjnasProbability[i] = clamp(params[AJNAS_WEIGHT_PARAM+i].getValue() + (inputs[AJNAS_WEIGHT_INPUT+i].getVoltage() / 10.0f),0.0f,1.0f);
 				} else {
-					actualAjnasProbability[i+1] = 0;
+					actualAjnasProbability[i] = 0;
 				}
 			}
-
-			// if(inputs[EXTERNAL_RANDOM_INPUT].isConnected()) {
-			// 	rnd = inputs[EXTERNAL_RANDOM_INPUT].getVoltage() / 10.0f;
-			// }	
 
 			bool jinsChanged = false;
 
 			do {
 				float rnd = ((float) rand()/RAND_MAX);
-				jinsIndex = weightedProbability(actualAjnasProbability, numberActiveAjnas+1, params[WEIGHT_SCALING_PARAM].getValue(),rnd);				
-				jinsChanged = jinsIndex != lastJinsIndex;
-				jinsChanged = true;
-			} while(!jinsChanged);										
+				if(inputs[EXTERNAL_RANDOM_JINS_INPUT].isConnected()) {
+					rnd = inputs[EXTERNAL_RANDOM_JINS_INPUT].getVoltage() / 10.0f;
+				}	
+				jinsIndex = weightedProbability(actualAjnasProbability, numberActiveAjnas+1, params[JINS_WEIGHT_SCALING_PARAM].getValue(),rnd);				
+				jinsChanged = jinsIndex != lastJinsIndex;				
+			} while(!jinsChanged);			
+
+			params[CURRENT_JINS_PARAM].setValue(jinsIndex);							
 		}
-		
+
+				
 
 		if(inputs[JINS_SELECT_INPUT].isConnected()) {
-			jinsIndex = clamp((int)inputs[JINS_SELECT_INPUT].getVoltage(),0,numberActiveAjnas); //Might need to add 1
+			jinsIndex = clamp((int)inputs[JINS_SELECT_INPUT].getVoltage(0),0,numberActiveAjnas+1); 
+			params[CURRENT_JINS_PARAM].setValue(jinsIndex);							
 		}
 
-		if(jinsIndex != lastJinsIndex) {
-			currentJins = jins[jinsIndex == 0 ? family : currentUpperAjnas[jinsIndex-1]];
+		jinsIndex = params[CURRENT_JINS_PARAM].getValue();						
+								
+		//Add code to check if parameter got set to inactive jins
 
-			std::copy(currentMaqam.AjnasWeighting[jinsIndex],currentMaqam.AjnasWeighting[jinsIndex]+MAX_UPPER_AJNAS+1,currentAjnasWeighting);
-			std::copy(currentMaqam.AjnasUsed[jinsIndex],currentMaqam.AjnasUsed[jinsIndex]+MAX_UPPER_AJNAS+1,currentAjnasStatus);
-			
+		if(jinsIndex != lastJinsIndex || maqamScaleModeChanged || resetTriggered) {
+			currentJins = jins[currentAnjas[jinsIndex]];
 
-			for(int i=0;i<numberActiveAjnas;i++) {
-				upperAjnasActive[i] = currentAjnasStatus[i+1] && currentAjnasActive[i+1];	
-				params[UPPER_AJNAS_WEIGHT_PARAM+i].setValue(currentAjnasWeighting[i+1]);
-			}
-			for(int i=numberActiveAjnas;i<MAX_UPPER_AJNAS;i++) {
-				upperAjnasActive[i] = false;	
-				params[UPPER_AJNAS_WEIGHT_PARAM+i].setValue(0.0);
-			}
-
-			lowerJinsActive =currentAjnasStatus[0];
-			params[LOWER_JINS_WEIGHT_PARAM].setValue(currentAjnasWeighting[0]);
-
+			tonicPosition = currentJins.TonicPosition;			
+			ghammazPosition = currentJins.GhammazPosition;			
 
 			numberMainTones = currentJins.NumberMainTones;
 			numberLowerTones = currentJins.NumberLowerTones;
 			numberExtendedTones = currentJins.NumberExtendedTones;
-			// std::copy(currentJins.Intonation,currentJins.Intonation+MAX_JINS_NOTES,currentIntonation);
-			// std::copy(currentJins.DefaultWeighting,currentJins.DefaultWeighting+MAX_JINS_NOTES,currentDefaultWeighting);
+			numberAllTones = numberLowerTones + numberMainTones + numberExtendedTones;
 
-			for(int i=0;i<MAX_COMPLETE_SCALE_SIZE;i++) {
-				if(3-rootJins.NumberLowerTones > i) {
-					noteActive[i] = 0;
-					currentDefaultWeighting[i] = 0.0f;
-				} else if(jinsIndex > 0 && i >= 2 + currentMaqam.OverlapPoint[jinsIndex-1] && i < 2 + currentMaqam.OverlapPoint[jinsIndex-1] + currentJins.NumberMainTones ) {			
-					noteActive[i] = 1;	
-					currentDefaultWeighting[i] = currentJins.DefaultWeighting[i - (2 + currentMaqam.OverlapPoint[jinsIndex-1]) + currentJins.NumberLowerTones];	
-					currentIntonation[i] = rootJins.Intonation[i - (2 + currentMaqam.OverlapPoint[jinsIndex-1]) + currentJins.NumberLowerTones];			
-				} else if(i < 3 + rootJins.NumberMainTones) {
-					noteActive[i+3-rootJins.NumberLowerTones] = 1;
-					currentDefaultWeighting[i+3-rootJins.NumberLowerTones] = rootJins.DefaultWeighting[i];	
-					currentIntonation[i+3-rootJins.NumberLowerTones] = rootJins.Intonation[i];
-				} else if(jinsIndex == 0 && i < 3 + rootJins.NumberLowerTones + rootJins.NumberLowerTones + rootJins.NumberExtendedTones) {
-					noteActive[i+3-rootJins.NumberLowerTones] = 1;
-					currentDefaultWeighting[i+3-rootJins.NumberLowerTones] = rootJins.DefaultWeighting[i];	
-					currentIntonation[i+3-rootJins.NumberLowerTones] = rootJins.Intonation[i];			
-				} else {
-					noteActive[i] = 0;
-					currentDefaultWeighting[i] = 0.0f;
-				} 
+			if(!maqamScaleMode) {
+				std::copy(currentMaqam.AjnasUsed[jinsIndex],currentMaqam.AjnasUsed[jinsIndex]+MAX_AJNAS_IN_SAYR+1,currentAjnasInUse);
 
-			}
+				for(int i=0;i<numberActiveAjnas+1;i++) {
+					ajnasActive[i] = currentAjnasInUse[i] && currentAjnasActive[i];	
+					params[AJNAS_WEIGHT_PARAM+i].setValue(currentAjnasWeighting[i]);
+				}
+				for(int i=numberActiveAjnas+1;i<MAX_AJNAS_IN_SAYR+1;i++) {
+					ajnasActive[i] = false;	
+					params[AJNAS_WEIGHT_PARAM+i].setValue(0.0);
+				}
 
+				float overlapIntonationAdjustment = 0.0;
+				int overlap = currentAnjasOverlap[jinsIndex] - 1;	
+				if(overlap >= SCALE_SIZE) { // If an octave jins
+					overlap -=SCALE_SIZE;
+					overlapIntonationAdjustment = 1200.0;
+				}	  
+				overlapIntonationAdjustment += rootJins.Intonation[rootJins.NumberLowerTones + overlap];
 
+				int buttonOffset = MAX_JINS_NOTES - numberAllTones;
+				for(int i=0;i<MAX_JINS_NOTES;i++) {
+					if(i >= buttonOffset) {			
+						noteActive[i] = 1;	
+						currentWeighting[i] = currentJins.Weighting[i - buttonOffset];	
+						currentIntonation[i] = currentJins.Intonation[i - buttonOffset] + overlapIntonationAdjustment;					
+					} else {
+						noteActive[i] = 0;
+						currentWeighting[i] = 0.0f;
+					} 
+				}
+			} else {				
+				//Set lower 2 notes to inactive as they are not in 7 note scale
+				for(int j=0;j<2;j++) {						
+					noteActive[j] = false;	
+					currentWeighting[j] = 0;	
+				}
+				float overlapIntonationAdjustment = 0.0f;	
+				for(int i=0;i<numberOfScaleAjnas;i++) {
+					ajnasActive[i] = true;
+					params[AJNAS_WEIGHT_PARAM+i].setValue(1);
+					if(currentScaleAjnasDirection[i] !=1) {//1 is descending
+						Jins scaleJins = jins[currentScaleAjnas[i]];	
+						int overlap = currentScaleAjnasOverlap[i] - 1; 				
+						if(i > 0) {
+							Jins previousScaleJins = jins[currentScaleAjnas[i-1]];	
+							int lastOverlap = currentScaleAjnasOverlap[i-1] - 1; 				
+							overlapIntonationAdjustment += previousScaleJins.Intonation[previousScaleJins.NumberLowerTones + overlap - lastOverlap];
+						}				
+						for(int j=overlap;j<SCALE_SIZE;j++) {						
+							noteActive[j+2] = true;	
+							currentWeighting[j+2] = scaleJins.Weighting[j - overlap + scaleJins.NumberLowerTones];	
+							currentIntonation[j+2] = scaleJins.Intonation[j - overlap + scaleJins.NumberLowerTones] + overlapIntonationAdjustment;
+						}
+					}
+				}
+				for(int i=numberOfScaleAjnas;i<MAX_AJNAS_IN_SAYR+1;i++) {
+					ajnasActive[i] = false;
+					params[AJNAS_WEIGHT_PARAM+i].setValue(0);					
+				}
+			}			
 		}
 
-        int tonicIndex = clamp(params[TONIC_PARAM].getValue() + (inputs[TONIC_INPUT].getVoltage() * (float)numberTonics / 10.0 * params[TONIC_CV_ATTENUVERTER_PARAM].getValue()),0.0f,(float)numberTonics);
+        int tonicIndex = clamp(params[TONIC_PARAM].getValue() + (inputs[TONIC_INPUT].getVoltage() * (float)numberTonics / 10.0),0.0f,(float)numberTonics);
 		tonic = availableTonics[tonicIndex];
 		
         octave = clamp(params[OCTAVE_PARAM].getValue() + (inputs[OCTAVE_INPUT].getVoltage() * 0.4 * params[OCTAVE_CV_ATTENUVERTER_PARAM].getValue()),-4.0f,4.0f);
 
 	
         double noteIn = inputs[NOTE_INPUT].getVoltage();
-        double octaveIn = std::floor(noteIn);
-        double fractionalValue = noteIn - octaveIn;
-        double lastDif = 1.0f;    
 		float octaveAdjust = 0.0;
-        for(int i = 0;i<MAX_COMPLETE_SCALE_SIZE;i++) {            
-			double currentDif = std::abs((i / (float)MAX_NOTES) - fractionalValue);
-			if(currentDif < lastDif) {
-				lastDif = currentDif;
-				currentNote = (i+numberLowerTones-tonic) % (numberLowerTones + numberMainTones + numberExtendedTones);
-				if(currentNote < 0)
-					currentNote += numberLowerTones + numberMainTones + numberExtendedTones;
-			}            
-        }
-		if(currentNote < numberLowerTones)
-			octaveAdjust = 1;
+		double octaveIn = 0.0;
+
+		if(!maqamScaleMode) {
+			noteIn = clamp(noteIn,-1.0,0.9999f);
+
+			octaveIn = std::floor(noteIn);
+			double fractionalValue = noteIn - octaveIn;
+			double lastDif = 1.0f;    
+			for(int i = 0;i<SCALE_SIZE;i++) {            
+				double currentDif = std::abs((whiteKeys[i] / 1200.0) - fractionalValue);
+				if(currentDif < lastDif) {
+					lastDif = currentDif;
+					currentNote = i;
+				}            
+			}
+
+			switch ((int)octaveIn) {
+				case -1 : 
+					currentNote = clamp(currentNote-4,std::min(3-numberLowerTones,2),2) + (MAX_JINS_NOTES - numberAllTones) - (3-numberLowerTones);
+					octaveAdjust = 1;
+					break;
+				case 0 :
+					currentNote = clamp(currentNote,0, numberMainTones + numberExtendedTones - 1) + numberLowerTones + (MAX_JINS_NOTES - numberAllTones);
+					break;
+				break;				
+			}
+			
+		} else {
+			octaveIn = std::floor(noteIn);
+			double fractionalValue = noteIn - octaveIn;
+			double lastDif = 1.0f;    
+			for(int i = 0;i<SCALE_SIZE;i++) {            
+				double currentDif = std::abs((whiteKeys[i] / 1200.0) - fractionalValue);
+				if(currentDif < lastDif) {
+					lastDif = currentDif;
+					currentNote = i+2;
+				}            
+			}
+		}
 
 
-		if(lastNote != currentNote || lastSpread != spread || lastSlant != slant || lastFocus != focus) {
-			for(int i = 0; i<MAX_COMPLETE_SCALE_SIZE;i++) {
+		if(lastNote != currentNote || lastSpread != spread || lastSlant != slant || lastFocus != focus || maqamScaleModeChanged) {
+			for(int i = 0; i<MAX_JINS_NOTES;i++) {
 				noteInitialProbability[i] = 0.0;
 			}
 			noteInitialProbability[currentNote] = 1.0;
@@ -618,8 +972,16 @@ struct ProbablyNoteArabic : Module {
 			for(int i=1;i<=spread;i++) {
 				int noteAbove = (currentNote + i);
 				int noteBelow = (currentNote - i);
+				if(maqamScaleMode) {
+					noteAbove = (currentNote + i) % MAX_JINS_NOTES;
+					if(noteAbove < 2)
+						noteAbove += 2;					
+					noteBelow = currentNote - i;
+					if(noteBelow < 2)
+						noteBelow += SCALE_SIZE;					
+				}
 
-				if(noteAbove < MAX_COMPLETE_SCALE_SIZE) {
+				if(noteAbove < MAX_JINS_NOTES) {
 					float upperInitialProbability = lerp(1.0,lerp(0.1,1.0,focus),(float)i/(float)spread); 
 					noteInitialProbability[noteAbove] = i <= upperSpread ? upperInitialProbability : 0.0f;	
 				}			
@@ -638,91 +1000,87 @@ struct ProbablyNoteArabic : Module {
 	
 	
 		//Process weights
-		if(jinsIndex != lastJinsIndex || resetTriggered) {
+		if(jinsIndex != lastJinsIndex || maqamScaleModeChanged || resetTriggered) {
 
-			for(int i=0;i<MAX_JINS_NOTES;i++) {
-				// currentScaleNoteWeighting[i] = scaleNoteWeighting[scale][i];
-				// currentScaleNoteStatus[i] = scaleNoteStatus[scale][i];
-				//noteActive[i] = currentScaleNoteStatus[i];
-				//noteScaleProbability[i] = currentScaleNoteWeighting[i];
-			}	
-
-			
-			for(int i=0;i<MAX_COMPLETE_SCALE_SIZE;i++) {				
-				params[NOTE_WEIGHT_PARAM + i].setValue(currentDefaultWeighting[i]);
+				
+			for(int i=0;i<MAX_JINS_NOTES;i++) {				
+				params[NOTE_WEIGHT_PARAM + i].setValue(currentWeighting[i]);
 			}	
 
 			lastTonic = tonic;
-			lastJinsIndex = jinsIndex;
+			lastJinsIndex = jinsIndex;		
+			maqamScaleModeChanged = false;	
 			resetTriggered = false;
+			resetMaqamTriggered = false;
 		}
 
-		if (lowerJinsActiveTrigger.process(params[LOWER_JINS_ACTIVE_PARAM].getValue())) {
-			lowerJinsActive = !lowerJinsActive;
-		}
-
-		if(lowerJinsActive) {
-			lights[LOWER_JINS_ACTIVE_LIGHT].value = clamp(params[LOWER_JINS_WEIGHT_PARAM].getValue() + (inputs[LOWER_JINS_WEIGHT_INPUT].getVoltage() / 10.0f),0.0f,1.0f);;    
-			lights[LOWER_JINS_ACTIVE_LIGHT+1].value = 0;    
-		}
-		else { 
-			lights[LOWER_JINS_ACTIVE_LIGHT].value = 0;    
-			lights[LOWER_JINS_ACTIVE_LIGHT+1].value = 1;    
-		}
-
-        for(int i=0;i<MAX_UPPER_AJNAS;i++) {
-			if(i < numberActiveAjnas) {
-				if (upperAjnasActiveTrigger[i].process(params[UPPER_AJNAS_ACTIVE_PARAM+i].getValue())) {
-					upperAjnasActive[i] = !upperAjnasActive[i];
+		int jinsId = !maqamScaleMode ? currentAnjas[jinsIndex] : currentScaleAjnas[jinsIndex]; 
+        for(int i=0;i<MAX_AJNAS_IN_SAYR+1;i++) {
+			if(i < numberActiveAjnas+1) {
+				if (ajnasActiveTrigger[i].process(params[AJNAS_ACTIVE_PARAM+i].getValue())) {
+					ajnasActive[i] = !ajnasActive[i];
+					currentAjnasActive[i] = !currentAjnasActive[i];
 				}
 			}
 
-			if(upperAjnasActive[i]) {
-	            lights[UPPER_AJNAS_ACTIVE_LIGHT+i*2].value = clamp(params[UPPER_AJNAS_WEIGHT_PARAM+i].getValue() + (inputs[UPPER_AJNAS_WEIGHT_INPUT+i].getVoltage() / 10.0f),0.0f,1.0f);;    
-				lights[UPPER_AJNAS_ACTIVE_LIGHT+(i*2)+1].value = 0;    
+			maqams[family][maqamIndex].AjnasWeighting[i] = params[AJNAS_WEIGHT_PARAM+i].getValue();
+			maqams[family][maqamIndex].AjnasUsed[jinsIndex][i] = ajnasActive[i];
+			if(ajnasActive[i]) {
+	            lights[AJNAS_ACTIVE_LIGHT+i*2].value = clamp(params[AJNAS_WEIGHT_PARAM+i].getValue() + (inputs[AJNAS_WEIGHT_INPUT+i].getVoltage() / 10.0f),0.0f,1.0f);  
+				lights[AJNAS_ACTIVE_LIGHT+(i*2)+1].value = 0;    
 			}
 			else { 
-				lights[UPPER_AJNAS_ACTIVE_LIGHT+(i*2)].value = 0;    
-				lights[UPPER_AJNAS_ACTIVE_LIGHT+(i*2)+1].value = 1;    
+				lights[AJNAS_ACTIVE_LIGHT+(i*2)].value = 0;    
+				lights[AJNAS_ACTIVE_LIGHT+(i*2)+1].value = 1;    
 			}
 		}
 
-        for(int i=0;i<MAX_COMPLETE_SCALE_SIZE;i++) {
-            if (noteActiveTrigger[i].process( params[NOTE_ACTIVE_PARAM+i].getValue())) {
+		int buttonOffset = MAX_JINS_NOTES - numberAllTones; 
+        for(int i=0;i<MAX_JINS_NOTES;i++) {
+            if (i >= buttonOffset && noteActiveTrigger[i].process(params[NOTE_ACTIVE_PARAM+i].getValue())) {
                 noteActive[i] = !noteActive[i];
-            }
-
+            }			
 			float userProbability;
 			if(noteActive[i]) {
 	            userProbability = clamp(params[NOTE_WEIGHT_PARAM+i].getValue() + (inputs[NOTE_WEIGHT_INPUT+i].getVoltage() / 10.0f),0.0f,1.0f);    
 				lights[NOTE_ACTIVE_LIGHT+(i*2)].value = userProbability;    
 				lights[NOTE_ACTIVE_LIGHT+(i*2)+1].value = 0;    
+				jins[jinsId].Weighting[i-buttonOffset] = params[NOTE_WEIGHT_PARAM+i].getValue();
 			}
 			else { 
 				userProbability = 0.0;
 				lights[NOTE_ACTIVE_LIGHT+(i*2)].value = 0;    
 				lights[NOTE_ACTIVE_LIGHT+(i*2)+1].value = 1;    
+				jins[jinsId].Weighting[i-buttonOffset] = 0.0;
 			}
-
+			
 			actualNoteProbability[i] = noteInitialProbability[i] * userProbability; 
+			outputs[CURRENT_JINS_OUTPUT].setVoltage(jinsIndex);
         }
 
-		if( inputs[TRIGGER_INPUT].active ) {
-			if (clockTrigger.process(inputs[TRIGGER_INPUT].value) ) {		
+		if(inputs[TRIGGER_INPUT].active) {
+
+			float currentTriggerInput = inputs[TRIGGER_INPUT].getVoltage();
+			triggerDelay[triggerDelayIndex] = currentTriggerInput;
+			int delayedIndex = (triggerDelayIndex + 1) % TRIGGER_DELAY_SAMPLES;
+			float triggerInputValue = triggerDelayEnabled ? triggerDelay[delayedIndex] : currentTriggerInput;
+			triggerDelayIndex = delayedIndex;
+
+			if (clockTrigger.process(triggerInputValue) ) {		
 				float rnd = ((float) rand()/RAND_MAX);
 				if(inputs[EXTERNAL_RANDOM_INPUT].isConnected()) {
 					rnd = inputs[EXTERNAL_RANDOM_INPUT].getVoltage() / 10.0f;
 				}	
 			
-				int randomNote = weightedProbability(actualNoteProbability,MAX_COMPLETE_SCALE_SIZE,params[WEIGHT_SCALING_PARAM].getValue(),rnd);
+				int randomNote = weightedProbability(actualNoteProbability,MAX_JINS_NOTES,params[NOTE_WEIGHT_SCALING_PARAM].getValue(),rnd);
 				if(randomNote == -1) { //Couldn't find a note, so find first active
 					bool noteOk = false;
 					int notesSearched = 0;
 					randomNote = currentNote; 
 					do {
-						randomNote = (randomNote + 1) % MAX_COMPLETE_SCALE_SIZE;
+						randomNote = (randomNote + 1) % MAX_JINS_NOTES;
 						notesSearched +=1;
-						noteOk = noteActive[randomNote] || notesSearched >= MAX_COMPLETE_SCALE_SIZE;
+						noteOk = noteActive[randomNote] || notesSearched >= MAX_JINS_NOTES;
 					} while(!noteOk);
 				}
 
@@ -731,10 +1089,6 @@ struct ProbablyNoteArabic : Module {
 
 				double quantitizedNoteCV;
 				int notePosition = randomNote;
-				if(notePosition < 0) {
-					notePosition += MAX_COMPLETE_SCALE_SIZE;
-					octaveAdjust -=1;
-				}
 
 
 				float pitchRandomness = 0;
@@ -752,19 +1106,12 @@ struct ProbablyNoteArabic : Module {
 				}
 
 
-				quantitizedNoteCV =(currentJins.Intonation[notePosition] / 1200.0) + (tonic /12.0); 
-				//Add offset if an upper Jins
-				if(jinsIndex > 0) {
-					 int upperJinsOverlapPosition = currentUpperAjnasOverlap[jinsIndex-1];
-					 int positionInRootJins = rootJins.NumberLowerTones + upperJinsOverlapPosition - 1; //Subtract 1 since intonations are 0 indexed
-
-					 float noteCVOffset = (rootJins.Intonation[positionInRootJins] / 1200.0);
-					 quantitizedNoteCV += noteCVOffset;
-				}
+				//quantitizedNoteCV =(currentIntonation[notePosition] / 1200.0) + (maqamScaleMode ? 0.0 : (tonic /12.0)); 
+				quantitizedNoteCV =(currentIntonation[notePosition] / 1200.0) + (tonic /12.0); 
 				quantitizedNoteCV += octaveIn + octave + octaveAdjust; 
 				outputs[QUANT_OUTPUT].setVoltage(quantitizedNoteCV + pitchRandomness);
 				outputs[WEIGHT_OUTPUT].setVoltage(clamp((params[NOTE_WEIGHT_PARAM+randomNote].getValue() + (inputs[NOTE_WEIGHT_INPUT+randomNote].getVoltage() / 10.0f) * 10.0f),0.0f,10.0f));
-				outputs[CURRENT_JINS_OUTPUT].setVoltage(jinsIndex);
+				
 				if(lastQuantizedCV != quantitizedNoteCV) {
 					noteChangePulse.trigger(1e-3);	
 					lastQuantizedCV = quantitizedNoteCV;
@@ -784,11 +1131,22 @@ struct ProbablyNoteArabic : Module {
 
 void ProbablyNoteArabic::onReset() {
 	clockTrigger.reset();
-	// for(int i = 0;i<MAX_SCALES;i++) {
-	// 	for(int j=0;j<MAX_NOTES;j++) {
-	// 		//scaleNoteWeighting[i][j] = defaultScaleNoteWeighting[i][j];
-	// 	}
-	// }
+
+	triggerDelayEnabled = false;
+	for(int i=0;i<TRIGGER_DELAY_SAMPLES;i++) {
+		triggerDelay[i] = 0.0f;
+	}
+
+	for(int i=0;i<MAX_JINS;i++) {
+		jins[i] = defaultJins[i];
+	}
+	for(int i = 0;i<MAX_FAMILIES;i++) {
+		for(int j=0;j<MAX_MAQAM;j++) {
+			maqams[i][j] = defaultMaqams[i][j];
+		}
+	}
+
+	resetTriggered = true;
 }
 
 
@@ -801,16 +1159,17 @@ struct ProbablyNoteArabicDisplay : TransparentWidget {
 
 	ProbablyNoteArabicDisplay() {
 		font = APP->window->loadFont(asset::plugin(pluginInstance, "res/fonts/DejaVuSansMono.ttf"));
+		//font = APP->window->loadFont(asset::plugin(pluginInstance, "res/fonts/ARABIAN KNIGHT.ttf"));
 	}
 
 
     void drawTonic(const DrawArgs &args, Vec pos, int tonic) {
 		nvgFontSize(args.vg, 9);
 		nvgFontFaceId(args.vg, font->handle);
-		nvgTextLetterSpacing(args.vg, -1);
+		nvgTextLetterSpacing(args.vg, -0.5);
 
 		char text[128];
-		nvgFillColor(args.vg, nvgRGBA(0x00, 0xff, 0x00, 0xff));
+		nvgFillColor(args.vg, nvgRGBA(0x4a, 0xc3, 0x27, 0xff));
 		snprintf(text, sizeof(text), "%s", module->noteNames[tonic]);
 		nvgTextAlign(args.vg,NVG_ALIGN_LEFT);
 		nvgText(args.vg, pos.x, pos.y, text, NULL);
@@ -819,9 +1178,9 @@ struct ProbablyNoteArabicDisplay : TransparentWidget {
     void drawMaqam(const DrawArgs &args, Vec pos) {
 		nvgFontSize(args.vg, 9);
 		nvgFontFaceId(args.vg, font->handle);
-		nvgTextLetterSpacing(args.vg, -1);
+		nvgTextLetterSpacing(args.vg, -0.5);
 
-		nvgFillColor(args.vg, nvgRGBA(0x00, 0xff, 0x00, 0xff));
+		nvgFillColor(args.vg, nvgRGBA(0x4a, 0xc3, 0x27, 0xff));
 		char text[128];
 		snprintf(text, sizeof(text), "%s", module->currentMaqam.Name);
 		nvgText(args.vg, pos.x, pos.y, text, NULL);
@@ -830,55 +1189,98 @@ struct ProbablyNoteArabicDisplay : TransparentWidget {
     void drawFamily(const DrawArgs &args, Vec pos) {
 		nvgFontSize(args.vg, 9);
 		nvgFontFaceId(args.vg, font->handle);
-		nvgTextLetterSpacing(args.vg, -1);
+		nvgTextLetterSpacing(args.vg, -0.5);
 
-		nvgFillColor(args.vg, nvgRGBA(0x00, 0xff, 0x00, 0xff));
+		nvgFillColor(args.vg, nvgRGBA(0x4a, 0xc3, 0x27, 0xff));
 		char text[128];
 		snprintf(text, sizeof(text), "%s", module->rootJins.Name);
 	
 		nvgText(args.vg, pos.x, pos.y, text, NULL);
 	}
 
-    void drawUpperAjnas(const DrawArgs &args, Vec pos, int numberUpperAnjas, int *upperAjnas) {
+    void drawAjnas(const DrawArgs &args, bool scaleMode, int numberUpperAnjas, int *upperAjnas,int *overlapPoint, int numberScaleAnjas, int *scaleAjnas,int *scaleOverlapPoint) {
 
-		float jinsPosition[MAX_UPPER_AJNAS][3] = {
-			{150,135,NVG_ALIGN_LEFT},
-			{186,150,NVG_ALIGN_CENTER},
-			{202,220,NVG_ALIGN_LEFT},
-			{152,248,NVG_ALIGN_LEFT},
-			{81,220,NVG_ALIGN_RIGHT},
-			{92,151,NVG_ALIGN_CENTER}
-		};
+		//Draw Boxes first
+		for(int i = 0;i<MAX_AJNAS_IN_SAYR+1;i++) {
+			nvgStrokeWidth(args.vg, 1.0);
+			nvgStrokeColor(args.vg, nvgRGBA(0x99, 0x99, 0x99, 0xff));
+			nvgFillColor(args.vg, nvgRGBA(0x10, 0x10, 0x15, 0xff));
 
+			//Jins Name
+			nvgBeginPath(args.vg);
+			nvgRect(args.vg,66,i*17+129,75,11);
+			nvgClosePath(args.vg);		
+			nvgStroke(args.vg);
+			nvgFill(args.vg);
+
+			//Overlap
+			nvgBeginPath(args.vg);
+			nvgRect(args.vg,145,i*17+129,15,11);
+			nvgClosePath(args.vg);		
+			nvgStroke(args.vg);
+			nvgFill(args.vg);
+		}
 
 		nvgFontSize(args.vg, 9);
 		nvgFontFaceId(args.vg, font->handle);
-		nvgTextLetterSpacing(args.vg, -1);
+		nvgTextLetterSpacing(args.vg, -0.5);
 
-		nvgFillColor(args.vg, nvgRGBA(0x00, 0xff, 0x00, 0xff));
+		nvgFillColor(args.vg, nvgRGBA(0x4a, 0xc3, 0x27, 0xff));
 		char text[128];
-		for(int i=0;i<numberUpperAnjas;i++) {
-			if(upperAjnas[i] >= 0) {
-				snprintf(text, sizeof(text), "%s", module->jins[upperAjnas[i]].Name);
-				float x= jinsPosition[i][0];
-				float y= jinsPosition[i][1];
-				int align = (int)jinsPosition[i][2];
 
-				nvgTextAlign(args.vg,align);
+		if(!scaleMode) { 
+			for(int i=0;i<numberUpperAnjas+1;i++) {
+				snprintf(text, sizeof(text), "%s", module->jins[upperAjnas[i]].Name);
+				float x= 68;
+				float y= i*17+137;
+
+				nvgTextAlign(args.vg,NVG_ALIGN_LEFT);
 				nvgText(args.vg, x, y, text, NULL);
-			}
+				
+				x= 157;
+				snprintf(text, sizeof(text), "%i", overlapPoint[i]);
+				nvgTextAlign(args.vg,NVG_ALIGN_RIGHT);
+				nvgText(args.vg, x, y, text, NULL);
+			} 
+		} else {
+			for(int i=0;i<numberScaleAnjas;i++) {
+				snprintf(text, sizeof(text), "%s", module->jins[scaleAjnas[i]].Name);
+				float x= 68;
+				float y= i*17+137;
+
+				nvgTextAlign(args.vg,NVG_ALIGN_LEFT);
+				nvgText(args.vg, x, y, text, NULL);
+				
+				x= 157;
+				snprintf(text, sizeof(text), "%i", scaleOverlapPoint[i]);
+				nvgTextAlign(args.vg,NVG_ALIGN_RIGHT);
+				nvgText(args.vg, x, y, text, NULL);
+			} 
 		}
 	}
 
 
-	void drawNoteRange(const DrawArgs &args, float *noteInitialProbability, int numberMainTones, int numberLowerTones) 
+	void drawNoteRange(const DrawArgs &args, bool scaleMode, float *noteInitialProbability, int numberLowerTones,int numberMainTones,int numberExtendedTones, int tonicPosition, int ghammazPosition) 
 	{		
 		
-		// Draw indicator
-		for(int i = 0; i<MAX_COMPLETE_SCALE_SIZE;i++) {
-			
+		nvgFontSize(args.vg, 9);
+		nvgFontFaceId(args.vg, font->handle);
+		nvgTextLetterSpacing(args.vg, -0.5);
 
-			int actualTarget = (i ) % MAX_COMPLETE_SCALE_SIZE;
+		
+		int buttonOffset = 9 - (numberLowerTones + numberMainTones + numberExtendedTones);
+		if(scaleMode) {
+			buttonOffset = 2;
+			numberLowerTones = 0;
+		}
+		int tonicIndex = numberLowerTones + buttonOffset + tonicPosition - 1;
+		int ghammazIndex = numberLowerTones + buttonOffset + ghammazPosition +  - 1;
+
+
+		// Draw indicator
+		for(int i = 0; i<MAX_JINS_NOTES;i++) {
+		
+			int actualTarget = (i ) % MAX_JINS_NOTES;
 
 			float opacity = noteInitialProbability[actualTarget] * 255;
 			nvgFillColor(args.vg, nvgRGBA(0xff, 0xff, 0x20, (int)opacity));
@@ -886,150 +1288,76 @@ struct ProbablyNoteArabicDisplay : TransparentWidget {
 				nvgFillColor(args.vg, nvgRGBA(0x20, 0xff, 0x20, (int)opacity));
 			}
 
-			float y = 263;
-			float x = (i*23)+3;
-			float width = 23;
-
-			if(i < 3) {
-				y = 273;
-				if(i == 0) {
-					x = 5;
-					width = 22;
-				}
-			} else if (i >= 3) {
-				y = 268;
-				if (i == 15) {
-					//width = 27;
-				}
-			}
+			float y = 310 - (i*23);
+			float x = 173;
+			float width = 21;
 
 			nvgBeginPath(args.vg);
-			nvgRect(args.vg,x,y,width,21);
+			nvgRect(args.vg,x,y,width,23);
 			nvgFill(args.vg);
+			nvgClosePath(args.vg);
+
+			if(i == tonicIndex) {
+				nvgStrokeColor(args.vg, nvgRGBA(0xff, 0xff, 0xff, 0xff));
+				nvgStrokeWidth(args.vg,0.5);
+				nvgBeginPath(args.vg);
+				nvgRect(args.vg,x-10,y+8,8,8);
+				nvgStroke(args.vg);
+
+				nvgFillColor(args.vg, nvgRGBA(0xff, 0xff, 0xff, 0xff));
+				char text[128];
+				snprintf(text, sizeof(text), "%s", "T");
+				nvgText(args.vg, x-8.5, y+15, text, NULL);
+			}
+
+			if(i == ghammazIndex && ghammazIndex != tonicIndex) {
+				nvgStrokeWidth(args.vg,0.5);
+				nvgBeginPath(args.vg);
+				nvgCircle(args.vg,x-6,y+12,4);
+				nvgStroke(args.vg);
+
+				nvgFillColor(args.vg, nvgRGBA(0xff, 0xff, 0xff, 0xff));
+				char text[128];
+				snprintf(text, sizeof(text), "%s", "G");
+				nvgText(args.vg, x-8.5, y+15, text, NULL);
+			}
 
 		}
 	}
 
-	void drawCurrentJins(const DrawArgs &args, int jinsIndex) 
-	{		
-
-		// Draw indicator
-		for(int i = 0; i<MAX_UPPER_AJNAS;i++) {
-			const float rotate90 = (M_PI) / 2.0;		
-			//float opacity = noteInitialProbability[actualTarget] * 255;
-			bool jinsUsed = module->currentAjnasStatus[i+1]; //should be +1	
-
-			if(jinsUsed) {
-				nvgFillColor(args.vg, nvgRGBA(0xff, 0xff, 0x20, 0xbF));
-				if(i == jinsIndex - 1) {
-					nvgFillColor(args.vg, nvgRGBA(0x20, 0xff, 0x20, 0xcf));
+	void drawCurrentJins(const DrawArgs &args, int jinsIndex,int numberScaleAjnas, int *scaleDirection, bool scaleMode) 
+	{					
+		if(!scaleMode) {
+			// Draw indicator for current Jins
+			float y = 125 + (jinsIndex*17);
+			float x = 4;
+			float width = 20;
+			nvgFillColor(args.vg, nvgRGBA(0x20, 0xff, 0x20, 0xff));
+			nvgBeginPath(args.vg);
+			nvgRect(args.vg,x,y,width,17);
+			nvgFill(args.vg);			
+		} else {
+			//Draw indicator for Ajnas in scale
+			for(int i=0;i<numberScaleAjnas;i++) {
+				float y = 125 + (i*17);
+				float x = 4;
+				float width = 20;
+				switch(scaleDirection[i]) {
+					case 0: //Ascending
+						nvgFillColor(args.vg, nvgRGBA(0xff, 0xff, 0x20, 0xff));
+						break;
+					case 1: //Descending
+						nvgFillColor(args.vg, nvgRGBA(0x20, 0xff, 0xff, 0xff));
+						break;
+					case 2: //Both
+						nvgFillColor(args.vg, nvgRGBA(0x20, 0xff, 0x20, 0xff));
+						break;
 				}
-			} else 
-			{
-				nvgFillColor(args.vg, nvgRGBA(0x00, 0x00, 0x00, 0x00));
-			}
-			double startDegree = (M_PI * 2.0 * ((double)i - 0.5) / MAX_UPPER_AJNAS) - rotate90;
-			double endDegree = (M_PI * 2.0 * ((double)i + 0.5) / MAX_UPPER_AJNAS) - rotate90;
-			
-
-			nvgBeginPath(args.vg);
-			nvgArc(args.vg,140,190.5,65.0,startDegree,endDegree,NVG_CW);
-			double x= cos(endDegree) * 65.0 + 140.0;
-			double y= sin(endDegree) * 65.0 + 190.5;
-			nvgLineTo(args.vg,x,y);
-			nvgArc(args.vg,140,190.5,47.0,endDegree,startDegree,NVG_CCW);
-			nvgClosePath(args.vg);		
-			nvgFill(args.vg);
-		
+				nvgBeginPath(args.vg);
+				nvgRect(args.vg,x,y,width,17);
+				nvgFill(args.vg);		
+			}	
 		}
-
-		if(jinsIndex == 0) {
-			nvgFillColor(args.vg, nvgRGBA(0x20, 0xff, 0x20, 0x4f));
-			nvgBeginPath(args.vg);
-			nvgRect(args.vg,6,240,58,22);
-			nvgClosePath(args.vg);		
-			nvgFill(args.vg);
-		}
-
-
-		nvgStrokeWidth(args.vg, 1.0);
-		nvgStrokeColor(args.vg, nvgRGBA(0x99, 0x99, 0x99, 0xff));
-		nvgBeginPath(args.vg);
-		nvgRect(args.vg,148,127,40,10);
-		nvgClosePath(args.vg);		
-		nvgStroke(args.vg);
-
-		nvgFillColor(args.vg, nvgRGBA(0x00, 0x00, 0x00, 0xff));
-		nvgBeginPath(args.vg);
-		nvgRect(args.vg,149,128,38,8);
-		nvgClosePath(args.vg);		
-		nvgFill(args.vg);
-
-		nvgStrokeWidth(args.vg, 1.0);
-		nvgStrokeColor(args.vg, nvgRGBA(0x99, 0x99, 0x99, 0xff));
-		nvgBeginPath(args.vg);
-		nvgRect(args.vg,168,142,40,10);
-		nvgClosePath(args.vg);		
-		nvgStroke(args.vg);
-
-		nvgFillColor(args.vg, nvgRGBA(0x00, 0x00, 0x00, 0xff));
-		nvgBeginPath(args.vg);
-		nvgRect(args.vg,169,143,38,8);
-		nvgClosePath(args.vg);		
-		nvgFill(args.vg);
-
-		nvgStrokeWidth(args.vg, 1.0);
-		nvgStrokeColor(args.vg, nvgRGBA(0x99, 0x99, 0x99, 0xff));
-		nvgBeginPath(args.vg);
-		nvgRect(args.vg,199,213,40,10);
-		nvgClosePath(args.vg);		
-		nvgStroke(args.vg);
-
-		nvgFillColor(args.vg, nvgRGBA(0x00, 0x00, 0x00, 0xff));
-		nvgBeginPath(args.vg);
-		nvgRect(args.vg,200,214,38,8);
-		nvgClosePath(args.vg);		
-		nvgFill(args.vg);
-
-		nvgStrokeWidth(args.vg, 1.0);
-		nvgStrokeColor(args.vg, nvgRGBA(0x99, 0x99, 0x99, 0xff));
-		nvgBeginPath(args.vg);
-		nvgRect(args.vg,150,241,40,10);
-		nvgClosePath(args.vg);		
-		nvgStroke(args.vg);
-
-		nvgFillColor(args.vg, nvgRGBA(0x00, 0x00, 0x00, 0xff));
-		nvgBeginPath(args.vg);
-		nvgRect(args.vg,151,242,38,8);
-		nvgClosePath(args.vg);		
-		nvgFill(args.vg);
-
-		nvgStrokeWidth(args.vg, 1.0);
-		nvgStrokeColor(args.vg, nvgRGBA(0x99, 0x99, 0x99, 0xff));
-		nvgBeginPath(args.vg);
-		nvgRect(args.vg,43,213,40,10);
-		nvgClosePath(args.vg);		
-		nvgStroke(args.vg);
-
-		nvgFillColor(args.vg, nvgRGBA(0x00, 0x00, 0x00, 0xff));
-		nvgBeginPath(args.vg);
-		nvgRect(args.vg,44,214,38,8);
-		nvgClosePath(args.vg);		
-		nvgFill(args.vg);
-
-		nvgStrokeWidth(args.vg, 1.0);
-		nvgStrokeColor(args.vg, nvgRGBA(0x99, 0x99, 0x99, 0xff));
-		nvgBeginPath(args.vg);
-		nvgRect(args.vg,73,144,40,10);
-		nvgClosePath(args.vg);		
-		nvgStroke(args.vg);
-
-		nvgFillColor(args.vg, nvgRGBA(0x00, 0x00, 0x00, 0xff));
-		nvgBeginPath(args.vg);
-		nvgRect(args.vg,74,145,38,8);
-		nvgClosePath(args.vg);		
-		nvgFill(args.vg);
-
 
 	}
 
@@ -1041,20 +1369,20 @@ struct ProbablyNoteArabicDisplay : TransparentWidget {
 		if(module->lastFamily == -1  || module->lastMaqamIndex == -1)
 			return;
 
-		drawFamily(args, Vec(10,82));
-		drawMaqam(args, Vec(10,158));
-		drawTonic(args, Vec(135,72), module->tonic);
-		drawCurrentJins(args,module->jinsIndex);
-		drawNoteRange(args, module->noteInitialProbability, module->currentJins.NumberMainTones, module->currentJins.NumberLowerTones);
-		drawUpperAjnas(args, Vec(105,138), module->numberActiveAjnas, module->currentUpperAjnas);
+		drawFamily(args, Vec(9,82));
+		drawMaqam(args, Vec(90,82));
+		drawTonic(args, Vec(245,82), module->tonic);
+		drawCurrentJins(args,module->jinsIndex,module->numberOfScaleAjnas,module->currentScaleAjnasDirection,module->maqamScaleMode);
+		drawNoteRange(args,module->maqamScaleMode, module->noteInitialProbability, module->currentJins.NumberLowerTones,module->currentJins.NumberMainTones,module->currentJins.NumberExtendedTones,module->currentJins.TonicPosition,  module->currentJins.GhammazPosition);
+		drawAjnas(args,module->maqamScaleMode,module->numberActiveAjnas, module->currentAnjas,module->currentAnjasOverlap,module->numberOfScaleAjnas,module->currentScaleAjnas,module->currentScaleAjnasOverlap);
 	}
 };
 
 struct ProbablyNoteArabicWidget : ModuleWidget {
-	PortWidget* inputs[MAX_COMPLETE_SCALE_SIZE];
-	ParamWidget* weightParams[MAX_COMPLETE_SCALE_SIZE];
-	ParamWidget* noteOnParams[MAX_COMPLETE_SCALE_SIZE];
-	LightWidget* lights[MAX_COMPLETE_SCALE_SIZE];  
+	PortWidget* inputs[MAX_JINS_NOTES];
+	ParamWidget* weightParams[MAX_JINS_NOTES];
+	ParamWidget* noteOnParams[MAX_JINS_NOTES];
+	LightWidget* lights[MAX_JINS_NOTES];  
 
 
 	ProbablyNoteArabicWidget(ProbablyNoteArabic *module) {
@@ -1075,340 +1403,116 @@ struct ProbablyNoteArabicWidget : ModuleWidget {
 		addChild(createWidget<ScrewSilver>(Vec(RACK_GRID_WIDTH - 12, RACK_GRID_HEIGHT - RACK_GRID_WIDTH)));
 		addChild(createWidget<ScrewSilver>(Vec(box.size.x - 2 * RACK_GRID_WIDTH + 12, RACK_GRID_HEIGHT - RACK_GRID_WIDTH)));
 
-
-
-		addInput(createInput<FWPortInSmall>(Vec(5, 345), module, ProbablyNoteArabic::NOTE_INPUT));
-		addInput(createInput<FWPortInSmall>(Vec(30, 345), module, ProbablyNoteArabic::TRIGGER_INPUT));
-		addInput(createInput<FWPortInSmall>(Vec(55, 345), module, ProbablyNoteArabic::EXTERNAL_RANDOM_INPUT));
-		addInput(createInput<FWPortInSmall>(Vec(82, 345), module, ProbablyNoteArabic::MODULATION_TRIGGER_INPUT));
-		addInput(createInput<FWPortInSmall>(Vec(108, 345), module, ProbablyNoteArabic::JINS_SELECT_INPUT));
-
         addParam(createParam<RoundSmallFWSnapKnob>(Vec(18,25), module, ProbablyNoteArabic::SPREAD_PARAM));			
-        addParam(createParam<RoundReallySmallFWKnob>(Vec(44,51), module, ProbablyNoteArabic::SPREAD_CV_ATTENUVERTER_PARAM));			
-		addInput(createInput<FWPortInSmall>(Vec(46, 29), module, ProbablyNoteArabic::SPREAD_INPUT));
+        addParam(createParam<RoundReallySmallFWKnob>(Vec(44,50), module, ProbablyNoteArabic::SPREAD_CV_ATTENUVERTER_PARAM));			
+		addInput(createInput<FWPortInSmall>(Vec(46, 28), module, ProbablyNoteArabic::SPREAD_INPUT));
 
-        addParam(createParam<RoundSmallFWKnob>(Vec(78,25), module, ProbablyNoteArabic::SLANT_PARAM));			
-        addParam(createParam<RoundReallySmallFWKnob>(Vec(104,51), module, ProbablyNoteArabic::SLANT_CV_ATTENUVERTER_PARAM));			
-		addInput(createInput<FWPortInSmall>(Vec(106, 29), module, ProbablyNoteArabic::SLANT_INPUT));
+        addParam(createParam<RoundSmallFWKnob>(Vec(93,25), module, ProbablyNoteArabic::SLANT_PARAM));			
+        addParam(createParam<RoundReallySmallFWKnob>(Vec(119,49), module, ProbablyNoteArabic::SLANT_CV_ATTENUVERTER_PARAM));			
+		addInput(createInput<FWPortInSmall>(Vec(121, 29), module, ProbablyNoteArabic::SLANT_INPUT));
 
 		addParam(createParam<RoundSmallFWKnob>(Vec(168, 25), module, ProbablyNoteArabic::FOCUS_PARAM));
-        addParam(createParam<RoundReallySmallFWKnob>(Vec(194,51), module, ProbablyNoteArabic::FOCUS_CV_ATTENUVERTER_PARAM));			
+        addParam(createParam<RoundReallySmallFWKnob>(Vec(194,49), module, ProbablyNoteArabic::FOCUS_CV_ATTENUVERTER_PARAM));			
 		addInput(createInput<FWPortInSmall>(Vec(196, 29), module, ProbablyNoteArabic::FOCUS_INPUT));
+
+		addParam(createParam<RoundSmallFWSnapKnob>(Vec(243,25), module, ProbablyNoteArabic::OCTAVE_PARAM));			
+        addParam(createParam<RoundReallySmallFWKnob>(Vec(269,49), module, ProbablyNoteArabic::OCTAVE_CV_ATTENUVERTER_PARAM));			
+		addInput(createInput<FWPortInSmall>(Vec(271, 29), module, ProbablyNoteArabic::OCTAVE_INPUT));
 
 
         addParam(createParam<RoundSmallFWSnapKnob>(Vec(8,86), module, ProbablyNoteArabic::FAMILY_PARAM));			
-        addParam(createParam<RoundReallySmallFWKnob>(Vec(34,112), module, ProbablyNoteArabic::FAMILY_CV_ATTENUVERTER_PARAM));			
 		addInput(createInput<FWPortInSmall>(Vec(36, 90), module, ProbablyNoteArabic::FAMILY_INPUT));
 
-        addParam(createParam<RoundSmallFWSnapKnob>(Vec(8,161), module, ProbablyNoteArabic::MAQAM_PARAM));			
-        addParam(createParam<RoundReallySmallFWKnob>(Vec(34,187), module, ProbablyNoteArabic::MAQAM_CV_ATTENUVERTER_PARAM));			
-		addInput(createInput<FWPortInSmall>(Vec(36, 165), module, ProbablyNoteArabic::MAQAM_INPUT));
+        addParam(createParam<RoundSmallFWSnapKnob>(Vec(88,86), module, ProbablyNoteArabic::MAQAM_PARAM));			
+		addInput(createInput<FWPortInSmall>(Vec(116, 90), module, ProbablyNoteArabic::MAQAM_INPUT));
+		addParam(createParam<TL1105>(Vec(139, 97), module, ProbablyNoteArabic::RESET_MAQAM_PARAM));
+
+        addParam(createParam<RoundSmallFWSnapKnob>(Vec(168,86), module, ProbablyNoteArabic::CURRENT_JINS_PARAM));	
+		addInput(createInput<FWPortInSmall>(Vec(196, 90), module, ProbablyNoteArabic::JINS_SELECT_INPUT));
+		addParam(createParam<TL1105>(Vec(219, 97), module, ProbablyNoteArabic::RESET_JINS_PARAM));
 
 
+		addParam(createParam<RoundSmallFWSnapKnob>(Vec(243,86), module, ProbablyNoteArabic::TONIC_PARAM));			
+		addInput(createInput<FWPortInSmall>(Vec(271, 90), module, ProbablyNoteArabic::TONIC_INPUT));
 
-        addParam(createParam<RoundSmallFWSnapKnob>(Vec(128,76), module, ProbablyNoteArabic::TONIC_PARAM));			
-        addParam(createParam<RoundReallySmallFWKnob>(Vec(154,102), module, ProbablyNoteArabic::TONIC_CV_ATTENUVERTER_PARAM));			
-		addInput(createInput<FWPortInSmall>(Vec(156, 80), module, ProbablyNoteArabic::TONIC_INPUT));
-
-        addParam(createParam<RoundSmallFWSnapKnob>(Vec(188,86), module, ProbablyNoteArabic::OCTAVE_PARAM));			
-        addParam(createParam<RoundReallySmallFWKnob>(Vec(214,112), module, ProbablyNoteArabic::OCTAVE_CV_ATTENUVERTER_PARAM));			
-		addInput(createInput<FWPortInSmall>(Vec(216, 90), module, ProbablyNoteArabic::OCTAVE_INPUT));
-
-		addParam(createParam<RoundSmallFWKnob>(Vec(248,86), module, ProbablyNoteArabic::PITCH_RANDOMNESS_PARAM));			
-        addParam(createParam<RoundReallySmallFWKnob>(Vec(274,112), module, ProbablyNoteArabic::PITCH_RANDOMNESS_CV_ATTENUVERTER_PARAM));			
-		addInput(createInput<FWPortInSmall>(Vec(276, 90), module, ProbablyNoteArabic::PITCH_RANDOMNESS_INPUT));
-		addParam(createParam<LEDButton>(Vec(250, 120), module, ProbablyNoteArabic::PITCH_RANDOMNESS_GAUSSIAN_PARAM));
-		addChild(createLight<LargeLight<BlueLight>>(Vec(251.5, 121.5), module, ProbablyNoteArabic::PITCH_RANDOMNESS_GAUSSIAN_LIGHT));
+		        	
 
 
-
-		addParam(createParam<TL1105>(Vec(15, 117), module, ProbablyNoteArabic::RESET_SCALE_PARAM));
-		addParam(createParam<CKD6>(Vec(76, 85), module, ProbablyNoteArabic::MODULATE_PARAM));
-
-
-        addParam(createParam<RoundReallySmallFWKnob>(Vec(28,241), module, ProbablyNoteArabic::LOWER_JINS_WEIGHT_PARAM));				
-		addInput(createInput<FWPortInReallySmall>(Vec(50,244), module, ProbablyNoteArabic::LOWER_JINS_WEIGHT_INPUT));
-		addParam(createParam<LEDButton>(Vec(8, 241), module, ProbablyNoteArabic::LOWER_JINS_ACTIVE_PARAM));
-		addChild(createLight<LargeLight<GreenRedLight>>(Vec(9.5, 242.5), module, ProbablyNoteArabic::LOWER_JINS_ACTIVE_LIGHT));
-
-		for(int i=0;i<MAX_UPPER_AJNAS;i++) {
-			double position = 2.0 * M_PI / MAX_UPPER_AJNAS * i  - M_PI / 2.0; // Rotate 90 degrees
-
-			double x= cos(position) * 34.0 + 130.0;
-			double y= sin(position) * 34.0 + 180.5;
-
-			//Rotate inputs 1 degrees
-			addParam(createParam<RoundReallySmallFWKnob>(Vec(x,y), module, ProbablyNoteArabic::UPPER_AJNAS_WEIGHT_PARAM+i));			
-			x= cos(position + (M_PI / 180.0 * 1.0)) * 16.0 + 134.0;
-			y= sin(position + (M_PI / 180.0 * 1.0)) * 16.0 + 185.0;
-			addInput(createInput<FWPortInReallySmall>(Vec(x, y), module, ProbablyNoteArabic::UPPER_AJNAS_WEIGHT_INPUT+i));
-
-			//Rotate buttons 1 degrees
-			x= cos(position - (M_PI / 180.0 * 1.0)) * 56.0 + 131.0;
-			y= sin(position - (M_PI / 180.0 * 1.0)) * 56.0 + 181.0;
-			addParam(createParam<LEDButton>(Vec(x, y), module, ProbablyNoteArabic::UPPER_AJNAS_ACTIVE_PARAM+i));
-			addChild(createLight<LargeLight<GreenRedLight>>(Vec(x+1.5, y+1.5), module, ProbablyNoteArabic::UPPER_AJNAS_ACTIVE_LIGHT+i*2));
+		//Upper Ajnas
+		for(int i=0;i<MAX_AJNAS_IN_SAYR+1;i++) {
+			float x = 5;
+			float y = i * 17 + 125;
+			addParam(createParam<LEDButton>(Vec(x, y), module, ProbablyNoteArabic::AJNAS_ACTIVE_PARAM+i));
+			addChild(createLight<LargeLight<GreenRedLight>>(Vec(x+1.5, y+1.5), module, ProbablyNoteArabic::AJNAS_ACTIVE_LIGHT+i*2));
+			addParam(createParam<RoundExtremelySmallFWKnob>(Vec(x + 20,y+2), module, ProbablyNoteArabic::AJNAS_WEIGHT_PARAM+i));			
+			addInput(createInput<FWPortInReallySmall>(Vec(x + 40, y+4), module, ProbablyNoteArabic::AJNAS_WEIGHT_INPUT+i));
 
 		}
 
-
-
-//Move able
-		PortWidget* weightInput;
-		ParamWidget* weightParam;
-		ParamWidget* noteOnParam;
-		LightWidget* noteOnLight;
-
-
-		noteOnParam = createParam<LEDButton>(Vec(6, 275), module, ProbablyNoteArabic::NOTE_ACTIVE_PARAM+0);
-		noteOnParams[0] = noteOnParam;
-		addParam(noteOnParam);
-		noteOnLight = createLight<LargeLight<GreenRedLight>>(Vec(7.5, 276.5), module, ProbablyNoteArabic::NOTE_ACTIVE_LIGHT+0); 
-		lights[0] = noteOnLight;
-		addChild(noteOnLight);
-		weightParam = createParam<RoundReallySmallFWKnob>(Vec(5,295), module, ProbablyNoteArabic::NOTE_WEIGHT_PARAM+0);
-		weightParams[0] = weightParam;
-		addParam(weightParam);		
-		weightInput = createInput<FWPortInReallySmall>(Vec(9, 318), module, ProbablyNoteArabic::NOTE_WEIGHT_INPUT+0);
-		inputs[0] = weightInput;	
-		addInput(weightInput);
-
-		noteOnParam = createParam<LEDButton>(Vec(29, 275), module, ProbablyNoteArabic::NOTE_ACTIVE_PARAM+1);
-		noteOnParams[1] = noteOnParam;
-		addParam(noteOnParam);
-		noteOnLight = createLight<LargeLight<GreenRedLight>>(Vec(30.5, 276.5), module, ProbablyNoteArabic::NOTE_ACTIVE_LIGHT+2); 
-		lights[1] = noteOnLight;
-		addChild(noteOnLight);
-		weightParam = createParam<RoundReallySmallFWKnob>(Vec(28,295), module, ProbablyNoteArabic::NOTE_WEIGHT_PARAM+1);
-		weightParams[1] = weightParam;
-		addParam(weightParam);		
-		weightInput = createInput<FWPortInReallySmall>(Vec(32, 318), module, ProbablyNoteArabic::NOTE_WEIGHT_INPUT+1);
-		inputs[1] = weightInput;	
-		addInput(weightInput);
-
-		noteOnParam = createParam<LEDButton>(Vec(52, 275), module, ProbablyNoteArabic::NOTE_ACTIVE_PARAM+2);
-		noteOnParams[2] = noteOnParam;
-		addParam(noteOnParam);
-		noteOnLight = createLight<LargeLight<GreenRedLight>>(Vec(53.5, 276.5), module, ProbablyNoteArabic::NOTE_ACTIVE_LIGHT+4); 
-		lights[2] = noteOnLight;
-		addChild(noteOnLight);
-		weightParam = createParam<RoundReallySmallFWKnob>(Vec(51,295), module, ProbablyNoteArabic::NOTE_WEIGHT_PARAM+2);
-		weightParams[2] = weightParam;
-		addParam(weightParam);		
-		weightInput = createInput<FWPortInReallySmall>(Vec(55, 318), module, ProbablyNoteArabic::NOTE_WEIGHT_INPUT+2);
-		inputs[2] = weightInput;	
-		addInput(weightInput);
-
-		noteOnParam = createParam<LEDButton>(Vec(75, 270), module, ProbablyNoteArabic::NOTE_ACTIVE_PARAM+3);
-		noteOnParams[3] = noteOnParam;
-		addParam(noteOnParam);
-		noteOnLight = createLight<LargeLight<GreenRedLight>>(Vec(76.5, 271.5), module, ProbablyNoteArabic::NOTE_ACTIVE_LIGHT+6); 
-		lights[3] = noteOnLight;
-		addChild(noteOnLight);
-		weightParam = createParam<RoundReallySmallFWKnob>(Vec(74,290), module, ProbablyNoteArabic::NOTE_WEIGHT_PARAM+3);
-		weightParams[3] = weightParam;
-		addParam(weightParam);		
-		weightInput = createInput<FWPortInReallySmall>(Vec(78, 313), module, ProbablyNoteArabic::NOTE_WEIGHT_INPUT+3);
-		inputs[3] = weightInput;	
-		addInput(weightInput);
-
-		noteOnParam = createParam<LEDButton>(Vec(98, 270), module, ProbablyNoteArabic::NOTE_ACTIVE_PARAM+4);
-		noteOnParams[4] = noteOnParam;
-		addParam(noteOnParam);
-		noteOnLight = createLight<LargeLight<GreenRedLight>>(Vec(99.5, 271.5), module, ProbablyNoteArabic::NOTE_ACTIVE_LIGHT+8); 
-		lights[4] = noteOnLight;
-		addChild(noteOnLight);
-		weightParam = createParam<RoundReallySmallFWKnob>(Vec(97,290), module, ProbablyNoteArabic::NOTE_WEIGHT_PARAM+4);
-		weightParams[4] = weightParam;
-		addParam(weightParam);		
-		weightInput = createInput<FWPortInReallySmall>(Vec(101, 313), module, ProbablyNoteArabic::NOTE_WEIGHT_INPUT+4);
-		inputs[4] = weightInput;	
-		addInput(weightInput);
-
-
-		noteOnParam = createParam<LEDButton>(Vec(121, 270), module, ProbablyNoteArabic::NOTE_ACTIVE_PARAM+5);
-		noteOnParams[5] = noteOnParam;
-		addParam(noteOnParam);
-		noteOnLight = createLight<LargeLight<GreenRedLight>>(Vec(122.5, 271.5), module, ProbablyNoteArabic::NOTE_ACTIVE_LIGHT+10); 
-		lights[5] = noteOnLight;
-		addChild(noteOnLight);
-		weightParam = createParam<RoundReallySmallFWKnob>(Vec(120,290), module, ProbablyNoteArabic::NOTE_WEIGHT_PARAM+5);
-		weightParams[5] = weightParam;
-		addParam(weightParam);		
-		weightInput = createInput<FWPortInReallySmall>(Vec(124, 313), module, ProbablyNoteArabic::NOTE_WEIGHT_INPUT+5);
-		inputs[5] = weightInput;	
-		addInput(weightInput);
-
-		noteOnParam = createParam<LEDButton>(Vec(144, 270), module, ProbablyNoteArabic::NOTE_ACTIVE_PARAM+6);
-		noteOnParams[6] = noteOnParam;
-		addParam(noteOnParam);
-		noteOnLight = createLight<LargeLight<GreenRedLight>>(Vec(145.5, 271.5), module, ProbablyNoteArabic::NOTE_ACTIVE_LIGHT+12); 
-		lights[6] = noteOnLight;
-		addChild(noteOnLight);
-		weightParam = createParam<RoundReallySmallFWKnob>(Vec(143,290), module, ProbablyNoteArabic::NOTE_WEIGHT_PARAM+6);
-		weightParams[6] = weightParam;
-		addParam(weightParam);		
-		weightInput = createInput<FWPortInReallySmall>(Vec(147, 313), module, ProbablyNoteArabic::NOTE_WEIGHT_INPUT+6);
-		inputs[6] = weightInput;	
-		addInput(weightInput);
-
-		noteOnParam = createParam<LEDButton>(Vec(167, 270), module, ProbablyNoteArabic::NOTE_ACTIVE_PARAM+7);
-		noteOnParams[7] = noteOnParam;
-		addParam(noteOnParam);
-		noteOnLight = createLight<LargeLight<GreenRedLight>>(Vec(168.5, 271.5), module, ProbablyNoteArabic::NOTE_ACTIVE_LIGHT+14); 
-		lights[7] = noteOnLight;
-		addChild(noteOnLight);
-		weightParam = createParam<RoundReallySmallFWKnob>(Vec(166,290), module, ProbablyNoteArabic::NOTE_WEIGHT_PARAM+7);
-		weightParams[7] = weightParam;
-		addParam(weightParam);		
-		weightInput = createInput<FWPortInReallySmall>(Vec(170, 313), module, ProbablyNoteArabic::NOTE_WEIGHT_INPUT+7);
-		inputs[7] = weightInput;	
-		addInput(weightInput);
-
-		noteOnParam = createParam<LEDButton>(Vec(190, 265), module, ProbablyNoteArabic::NOTE_ACTIVE_PARAM+8);
-		noteOnParams[8] = noteOnParam;
-		addParam(noteOnParam);
-		noteOnLight = createLight<LargeLight<GreenRedLight>>(Vec(191.5, 266.5), module, ProbablyNoteArabic::NOTE_ACTIVE_LIGHT+16); 
-		lights[8] = noteOnLight;
-		addChild(noteOnLight);
-		weightParam = createParam<RoundReallySmallFWKnob>(Vec(189,285), module, ProbablyNoteArabic::NOTE_WEIGHT_PARAM+8);
-		weightParams[8] = weightParam;
-		addParam(weightParam);		
-		weightInput = createInput<FWPortInReallySmall>(Vec(193, 308), module, ProbablyNoteArabic::NOTE_WEIGHT_INPUT+8);
-		inputs[8] = weightInput;	
-		addInput(weightInput);
-
-		noteOnParam = createParam<LEDButton>(Vec(213, 265), module, ProbablyNoteArabic::NOTE_ACTIVE_PARAM+9);
-		noteOnParams[9] = noteOnParam;
-		addParam(noteOnParam);
-		noteOnLight = createLight<LargeLight<GreenRedLight>>(Vec(214.5, 266.5), module, ProbablyNoteArabic::NOTE_ACTIVE_LIGHT+18); 
-		lights[9] = noteOnLight;
-		addChild(noteOnLight);
-		weightParam = createParam<RoundReallySmallFWKnob>(Vec(212,285), module, ProbablyNoteArabic::NOTE_WEIGHT_PARAM+9);
-		weightParams[9] = weightParam;
-		addParam(weightParam);		
-		weightInput = createInput<FWPortInReallySmall>(Vec(216, 308), module, ProbablyNoteArabic::NOTE_WEIGHT_INPUT+9);
-		inputs[9] = weightInput;	
-		addInput(weightInput);
-
-		noteOnParam = createParam<LEDButton>(Vec(236, 265), module, ProbablyNoteArabic::NOTE_ACTIVE_PARAM+10);
-		noteOnParams[10] = noteOnParam;
-		addParam(noteOnParam);
-		noteOnLight = createLight<LargeLight<GreenRedLight>>(Vec(237.5, 266.5), module, ProbablyNoteArabic::NOTE_ACTIVE_LIGHT+20); 
-		lights[10] = noteOnLight;
-		addChild(noteOnLight);
-		weightParam = createParam<RoundReallySmallFWKnob>(Vec(235,285), module, ProbablyNoteArabic::NOTE_WEIGHT_PARAM+10);
-		weightParams[10] = weightParam;
-		addParam(weightParam);		
-		weightInput = createInput<FWPortInReallySmall>(Vec(239, 308), module, ProbablyNoteArabic::NOTE_WEIGHT_INPUT+10);
-		inputs[10] = weightInput;	
-		addInput(weightInput);
-
-		noteOnParam = createParam<LEDButton>(Vec(259, 260), module, ProbablyNoteArabic::NOTE_ACTIVE_PARAM+11);
-		noteOnParams[11] = noteOnParam;
-		addParam(noteOnParam);
-		noteOnLight = createLight<LargeLight<GreenRedLight>>(Vec(260.5, 261.5), module, ProbablyNoteArabic::NOTE_ACTIVE_LIGHT+22); 
-		lights[11] = noteOnLight;
-		addChild(noteOnLight);
-		weightParam = createParam<RoundReallySmallFWKnob>(Vec(258,280), module, ProbablyNoteArabic::NOTE_WEIGHT_PARAM+11);
-		weightParams[11] = weightParam;
-		addParam(weightParam);		
-		weightInput = createInput<FWPortInReallySmall>(Vec(262, 303), module, ProbablyNoteArabic::NOTE_WEIGHT_INPUT+11);
-		inputs[11] = weightInput;	
-		addInput(weightInput);
-
-		noteOnParam = createParam<LEDButton>(Vec(282, 260), module, ProbablyNoteArabic::NOTE_ACTIVE_PARAM+12);
-		noteOnParams[12] = noteOnParam;
-		addParam(noteOnParam);
-		noteOnLight = createLight<LargeLight<GreenRedLight>>(Vec(283.5, 261.5), module, ProbablyNoteArabic::NOTE_ACTIVE_LIGHT+24); 
-		lights[12] = noteOnLight;
-		addChild(noteOnLight);
-		weightParam = createParam<RoundReallySmallFWKnob>(Vec(281,280), module, ProbablyNoteArabic::NOTE_WEIGHT_PARAM+12);
-		weightParams[12] = weightParam;
-		addParam(weightParam);		
-		weightInput = createInput<FWPortInReallySmall>(Vec(285, 303), module, ProbablyNoteArabic::NOTE_WEIGHT_INPUT+12);
-		inputs[12] = weightInput;	
-		addInput(weightInput);
-
-		noteOnParam = createParam<LEDButton>(Vec(305, 260), module, ProbablyNoteArabic::NOTE_ACTIVE_PARAM+13);
-		noteOnParams[13] = noteOnParam;
-		addParam(noteOnParam);
-		noteOnLight = createLight<LargeLight<GreenRedLight>>(Vec(306.5, 261.5), module, ProbablyNoteArabic::NOTE_ACTIVE_LIGHT+26); 
-		lights[13] = noteOnLight;
-		addChild(noteOnLight);
-		weightParam = createParam<RoundReallySmallFWKnob>(Vec(304,280), module, ProbablyNoteArabic::NOTE_WEIGHT_PARAM+13);
-		weightParams[13] = weightParam;
-		addParam(weightParam);		
-		weightInput = createInput<FWPortInReallySmall>(Vec(308, 303), module, ProbablyNoteArabic::NOTE_WEIGHT_INPUT+13);
-		inputs[13] = weightInput;	
-		addInput(weightInput);
-
-		noteOnParam = createParam<LEDButton>(Vec(328, 260), module, ProbablyNoteArabic::NOTE_ACTIVE_PARAM+14);
-		noteOnParams[14] = noteOnParam;
-		addParam(noteOnParam);
-		noteOnLight = createLight<LargeLight<GreenRedLight>>(Vec(329.5, 261.5), module, ProbablyNoteArabic::NOTE_ACTIVE_LIGHT+28); 
-		lights[14] = noteOnLight;
-		addChild(noteOnLight);
-		weightParam = createParam<RoundReallySmallFWKnob>(Vec(327,280), module, ProbablyNoteArabic::NOTE_WEIGHT_PARAM+14);
-		weightParams[14] = weightParam;
-		addParam(weightParam);		
-		weightInput = createInput<FWPortInReallySmall>(Vec(331, 303), module, ProbablyNoteArabic::NOTE_WEIGHT_INPUT+14);
-		inputs[14] = weightInput;	
-		addInput(weightInput);
-
-		noteOnParam = createParam<LEDButton>(Vec(351, 260), module, ProbablyNoteArabic::NOTE_ACTIVE_PARAM+15);
-		noteOnParams[15] = noteOnParam;
-		addParam(noteOnParam);
-		noteOnLight = createLight<LargeLight<GreenRedLight>>(Vec(352.5, 261.5), module, ProbablyNoteArabic::NOTE_ACTIVE_LIGHT+30); 
-		lights[15] = noteOnLight;
-		addChild(noteOnLight);
-		weightParam = createParam<RoundReallySmallFWKnob>(Vec(350,280), module, ProbablyNoteArabic::NOTE_WEIGHT_PARAM+15);
-		weightParams[15] = weightParam;
-		addParam(weightParam);		
-		weightInput = createInput<FWPortInReallySmall>(Vec(354, 303), module, ProbablyNoteArabic::NOTE_WEIGHT_INPUT+15);
-		inputs[15] = weightInput;	
-		addInput(weightInput);
-
-
-
-		addParam(createParam<RoundReallySmallFWKnob>(Vec(322,97), module, ProbablyNoteArabic::WEIGHT_SCALING_PARAM));		
-
-		addOutput(createOutput<FWPortInSmall>(Vec(355, 345),  module, ProbablyNoteArabic::QUANT_OUTPUT));
-		addOutput(createOutput<FWPortInSmall>(Vec(328, 345),  module, ProbablyNoteArabic::WEIGHT_OUTPUT));
-		addOutput(createOutput<FWPortInSmall>(Vec(300, 345),  module, ProbablyNoteArabic::NOTE_CHANGE_OUTPUT));
-		addOutput(createOutput<FWPortInSmall>(Vec(275, 345),  module, ProbablyNoteArabic::CURRENT_JINS_OUTPUT));
-
-	}
-
-
-	// int NumberMainTones;
-	// int NumberLowerTones;
-	// int NumberExtendedTones;
-
-	void step() override {
-		if (module) {
-			int jinsIndex = (((ProbablyNoteArabic*)module)->jinsIndex);
-			for(int i = 0; i < MAX_COMPLETE_SCALE_SIZE; i++) {							
-				if(jinsIndex > 0 && i >= 2 + (((ProbablyNoteArabic*)module)->currentMaqam.OverlapPoint[jinsIndex-1]) && i < 2 + (((ProbablyNoteArabic*)module)->currentMaqam.OverlapPoint[jinsIndex-1]) + (((ProbablyNoteArabic*)module)->currentJins.NumberMainTones)) {
-					noteOnParams[i]->box.pos.y = 265;
-					lights[i]->box.pos.y = 266.5;
-					weightParams[i]->box.pos.y = 285;
-					inputs[i]->box.pos.y = 308;
-				} else if(i > 2) {
-					noteOnParams[i]->box.pos.y = 270;
-					lights[i]->box.pos.y = 271.5;
-					weightParams[i]->box.pos.y = 290;
-					inputs[i]->box.pos.y = 313;
-				} else {
-					noteOnParams[i]->box.pos.y = 275;
-					lights[i]->box.pos.y = 276.5;
-					weightParams[i]->box.pos.y = 295;
-					inputs[i]->box.pos.y = 318;
-				}
-			}
+		for(int i=0;i<MAX_JINS_NOTES;i++) {
+			addParam(createParam<LEDButton>(Vec(175, 312 - i*23), module, ProbablyNoteArabic::NOTE_ACTIVE_PARAM+i));
+			addChild(createLight<LargeLight<GreenRedLight>>(Vec(176.5, 313.5 - i*23), module, ProbablyNoteArabic::NOTE_ACTIVE_LIGHT+i*2));
+			addParam(createParam<RoundReallySmallFWKnob>(Vec(195,310 - i*23), module, ProbablyNoteArabic::NOTE_WEIGHT_PARAM+i));		
+			addInput(createInput<FWPortInReallySmall>(Vec(219, 314 - i*23), module, ProbablyNoteArabic::NOTE_WEIGHT_INPUT+i));
 		}
-		Widget::step();
+
+		addParam(createParam<LEDButton>(Vec(264, 126), module, ProbablyNoteArabic::MAQAM_SCALE_MODE_PARAM));
+		addChild(createLight<LargeLight<BlueLight>>(Vec(265.5, 127.5), module, ProbablyNoteArabic::MAQAM_SCALE_MODE_LIGHT));
+
+
+		addParam(createParam<RoundReallySmallFWKnob>(Vec(245,166), module, ProbablyNoteArabic::JINS_WEIGHT_SCALING_PARAM));		
+		addParam(createParam<RoundReallySmallFWKnob>(Vec(285,166), module, ProbablyNoteArabic::NOTE_WEIGHT_SCALING_PARAM));		
+
+		addParam(createParam<RoundSmallFWKnob>(Vec(250,205), module, ProbablyNoteArabic::PITCH_RANDOMNESS_PARAM));			
+        addParam(createParam<RoundReallySmallFWKnob>(Vec(275,230), module, ProbablyNoteArabic::PITCH_RANDOMNESS_CV_ATTENUVERTER_PARAM));			
+		addInput(createInput<FWPortInSmall>(Vec(278, 209), module, ProbablyNoteArabic::PITCH_RANDOMNESS_INPUT));
+		addParam(createParam<LEDButton>(Vec(252, 237), module, ProbablyNoteArabic::PITCH_RANDOMNESS_GAUSSIAN_PARAM));
+		addChild(createLight<LargeLight<GreenLight>>(Vec(253.5, 238.5), module, ProbablyNoteArabic::PITCH_RANDOMNESS_GAUSSIAN_LIGHT));
+
+		addInput(createInput<FWPortInSmall>(Vec(240, 275), module, ProbablyNoteArabic::EXTERNAL_RANDOM_JINS_INPUT));
+		addParam(createParam<TL1105>(Vec(270, 275), module, ProbablyNoteArabic::MODULATE_JINS_PARAM));
+		addInput(createInput<FWPortInSmall>(Vec(290, 275), module, ProbablyNoteArabic::MODULATE_JINS_TRIGGER_INPUT));
+
+
+		addInput(createInput<FWPortInSmall>(Vec(240, 313), module, ProbablyNoteArabic::EXTERNAL_RANDOM_INPUT));
+		addInput(createInput<FWPortInSmall>(Vec(265, 313), module, ProbablyNoteArabic::TRIGGER_INPUT));
+		addInput(createInput<FWPortInSmall>(Vec(290, 313), module, ProbablyNoteArabic::NOTE_INPUT));
+
+
+
+		addOutput(createOutput<FWPortInSmall>(Vec(290, 346),  module, ProbablyNoteArabic::QUANT_OUTPUT));
+		addOutput(createOutput<FWPortInSmall>(Vec(263, 346),  module, ProbablyNoteArabic::WEIGHT_OUTPUT));
+		addOutput(createOutput<FWPortInSmall>(Vec(237, 346),  module, ProbablyNoteArabic::NOTE_CHANGE_OUTPUT));
+		addOutput(createOutput<FWPortInSmall>(Vec(210, 346),  module, ProbablyNoteArabic::CURRENT_JINS_OUTPUT));
+
 	}
+
+	struct TriggerDelayItem : MenuItem {
+		ProbablyNoteArabic *module;
+		void onAction(const event::Action &e) override {
+			module->triggerDelayEnabled = !module->triggerDelayEnabled;
+		}
+		void step() override {
+			text = "Trigger Delay";
+			rightText = (module->triggerDelayEnabled) ? "✔" : "";
+		}
+	};
+
+	
+	
+	void appendContextMenu(Menu *menu) override {
+		MenuLabel *spacerLabel = new MenuLabel();
+		menu->addChild(spacerLabel);
+
+		ProbablyNoteArabic *module = dynamic_cast<ProbablyNoteArabic*>(this->module);
+		assert(module);
+
+		TriggerDelayItem *triggerDelayItem = new TriggerDelayItem();
+		triggerDelayItem->module = module;
+		menu->addChild(triggerDelayItem);
+
+	}
+		
 };
 
 

@@ -20,7 +20,8 @@
 struct SeedsOfChangeGateExpander : Module {
 	enum ParamIds {
 		GATE_PROBABILITY_1_PARAM,
-		NUM_PARAMS = GATE_PROBABILITY_1_PARAM + NBOUT
+		GATE_PROBABILITY_1_CV_ATTENUVERTER = GATE_PROBABILITY_1_PARAM + NBOUT,
+		NUM_PARAMS = GATE_PROBABILITY_1_CV_ATTENUVERTER + NBOUT
 	};
 	enum InputIds {
 		GATE_PROBABILITY_1_INPUT,
@@ -50,6 +51,7 @@ struct SeedsOfChangeGateExpander : Module {
 		config(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS, NUM_LIGHTS);
 		for (int i=0; i<NBOUT; i++) {
 			configParam(SeedsOfChangeGateExpander::GATE_PROBABILITY_1_PARAM + i, 0.0, 1.0, 0.0,"Gate Probability","%",0,100);
+			configParam(SeedsOfChangeGateExpander::GATE_PROBABILITY_1_CV_ATTENUVERTER + i, -1.0, 1.0, 0.0,"Gate Probability CV Attenuverter","%",0,100);
 		}
 
 		leftExpander.producerMessage = producerMessage;
@@ -100,14 +102,7 @@ struct SeedsOfChangeGateExpander : Module {
 
 		if (clockTrigger.process(clockInput)) {
 			for (int i=0; i<NBOUT; i++) {
-
-				float prob = 1.0;
-				if (inputs[GATE_PROBABILITY_1_INPUT + i].active) {
-					prob = inputs[GATE_PROBABILITY_1_INPUT + i].value / 10.0f;
-					prob = prob > 1.0 ? 1.0 : (prob < 0.0 ? 0.0 : prob ); 
-				} else {
-					prob = params[GATE_PROBABILITY_1_PARAM + i].value;
-				}
+				float prob = clamp(params[GATE_PROBABILITY_1_PARAM + i].value + (inputs[GATE_PROBABILITY_1_INPUT + i].active ? inputs[GATE_PROBABILITY_1_INPUT + i].value / 10.0f * params[GATE_PROBABILITY_1_CV_ATTENUVERTER + i].value : 0.0),0.0f,1.0f);
 				outbuffer[i] = genrand_real() < prob ? 10.0 : 0;
 			}
 		} 
@@ -247,8 +242,9 @@ struct SeedsOfChangeGateExpanderWidget : ModuleWidget {
 
 		for (int i=0; i<NBOUT; i++) {
 			addParam(createParam<RoundReallySmallFWKnob>(Vec(4, 44 + i*26.5), module, SeedsOfChangeGateExpander::GATE_PROBABILITY_1_PARAM + i));
-			addInput(createInput<FWPortInSmall>(Vec(30, 45 + i*26.5), module, SeedsOfChangeGateExpander::GATE_PROBABILITY_1_INPUT + i));			
-			addOutput(createOutput<FWPortInSmall>(Vec(64, 45 + i*26.5),  module, SeedsOfChangeGateExpander::GATE_1_OUTPUT + i));
+			addParam(createParam<RoundExtremelySmallFWKnob>(Vec(42, 45 + i*26.5), module, SeedsOfChangeGateExpander::GATE_PROBABILITY_1_CV_ATTENUVERTER + i));
+			addInput(createInput<FWPortInReallySmall>(Vec(28, 47 + i*26.5), module, SeedsOfChangeGateExpander::GATE_PROBABILITY_1_INPUT + i));				
+			addOutput(createOutput<FWPortOutSmall>(Vec(64, 45 + i*26.5),  module, SeedsOfChangeGateExpander::GATE_1_OUTPUT + i));
 		}
 	}
 };

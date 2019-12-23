@@ -25,7 +25,10 @@ struct SeedsOfChange : Module {
 		MULTIPLY_1_PARAM,
 		OFFSET_1_PARAM = MULTIPLY_1_PARAM + NBOUT,
 		GATE_PROBABILITY_1_PARAM = OFFSET_1_PARAM + NBOUT,
-		NUM_PARAMS = GATE_PROBABILITY_1_PARAM + NBOUT
+		MULTIPLY_1_CV_ATTENUVERTER = GATE_PROBABILITY_1_PARAM + NBOUT,
+		OFFSET_1_CV_ATTENUVERTER = MULTIPLY_1_CV_ATTENUVERTER + NBOUT,
+		GATE_PROBABILITY_1_CV_ATTENUVERTER = OFFSET_1_CV_ATTENUVERTER + NBOUT,
+		NUM_PARAMS = GATE_PROBABILITY_1_CV_ATTENUVERTER + NBOUT
 	};
 	enum InputIds {
 		SEED_INPUT,
@@ -71,7 +74,10 @@ struct SeedsOfChange : Module {
 		for (int i=0; i<NBOUT; i++) {
 			configParam(SeedsOfChange::MULTIPLY_1_PARAM + i, 0.0f, 10.0f, 10.0f, "Multiply");			
 			configParam(SeedsOfChange::OFFSET_1_PARAM + i, -10.0f, 10.0f, 0.0f,"Offset");			
+			configParam(SeedsOfChange::MULTIPLY_1_CV_ATTENUVERTER + i, -1.0, 1.0, 0.0,"Multiply CV Attenuverter","%",0,100);
+			configParam(SeedsOfChange::OFFSET_1_CV_ATTENUVERTER + i, -1.0, 1.0, 0.0,"Offset CV Attenuverter","%",0,100);
 			configParam(SeedsOfChange::GATE_PROBABILITY_1_PARAM + i, 0.0, 1.0, 0.0,"Gate Probability","%",0,100);
+			configParam(SeedsOfChange::GATE_PROBABILITY_1_CV_ATTENUVERTER + i, -1.0, 1.0, 0.0,"Gate Probability CV Attenuverter","%",0,100);
 		}
 
 		rightExpander.producerMessage = producerMessage;
@@ -111,27 +117,21 @@ struct SeedsOfChange : Module {
 					float mult=params[MULTIPLY_1_PARAM+i].value;
 					float off=params[OFFSET_1_PARAM+i].value;
 					if (inputs[MULTIPLY_1_INPUT + i].active) {
-						mult = mult * inputs[MULTIPLY_1_INPUT + i].value / 10.0f;
+						mult = mult + (inputs[MULTIPLY_1_INPUT + i].value / 10.0f * params[MULTIPLY_1_CV_ATTENUVERTER + i].value);
 					}
-					mult = mult < 0.0 ? 0.0 : mult;
-					mult = mult > 10.0 ? 10.0 : mult;
+					mult = clamp(mult,0.0,10.0);
 					if (inputs[OFFSET_1_INPUT + i].active) {
-						off = off + inputs[OFFSET_1_INPUT + i].value ;
+						off = off + (inputs[OFFSET_1_INPUT + i].value * params[OFFSET_1_CV_ATTENUVERTER + i].value);
 					}
 
 					float initialRandomNumber = gaussianMode ? normal_number() : genrand_real();					
-					//outbuffer[i] = clamp((float)(initialRandomNumber * mult + off - mult*.5),-10.0f, 10.0f);
+					
 					outbuffer[i] = clamp((float)(initialRandomNumber * mult + off),-10.0f, 10.0f);
 
 					
 
-					float prob = 1.0;
-					if (inputs[GATE_PROBABILITY_1_INPUT + i].active) {
-						prob = inputs[GATE_PROBABILITY_1_INPUT + i].value / 10.0f;
-						prob = prob > 1.0 ? 1.0 : (prob < 0.0 ? 0.0 : prob ); 
-					} else {
-						prob = params[GATE_PROBABILITY_1_PARAM + i].value;
-					}
+					float prob = clamp(params[GATE_PROBABILITY_1_PARAM + i].value + (inputs[GATE_PROBABILITY_1_INPUT + i].active ? inputs[GATE_PROBABILITY_1_INPUT + i].value / 10.0f * params[GATE_PROBABILITY_1_CV_ATTENUVERTER + i].value : 0.0),0.0f,1.0f);
+					
 					outbuffer[i+NBOUT] = genrand_real() < prob ? 10.0 : 0;
 				}
 			} 
@@ -314,15 +314,18 @@ struct SeedsOfChangeWidget : ModuleWidget {
 
 
 		for (int i=0; i<NBOUT; i++) {
-			addParam(createParam<RoundReallySmallFWKnob>(Vec(4,125 + i * 30), module, SeedsOfChange::MULTIPLY_1_PARAM + i));			
-			addInput(createInput<FWPortInSmall>(Vec(28, 126 + i * 30), module, SeedsOfChange::MULTIPLY_1_INPUT + i));						
-			addParam(createParam<RoundReallySmallFWKnob>(Vec(50,125 + i * 30), module, SeedsOfChange::OFFSET_1_PARAM + i));			
-			addInput(createInput<FWPortInSmall>(Vec(73, 126 + i * 30), module, SeedsOfChange::OFFSET_1_INPUT + i));
-			addOutput(createOutput<FWPortInSmall>(Vec(97, 126 + i * 30),  module, SeedsOfChange::CV_1_OUTPUT+i));
+			addParam(createParam<RoundReallySmallFWKnob>(Vec(4,125 + i * 32), module, SeedsOfChange::MULTIPLY_1_PARAM + i));			
+			addParam(createParam<RoundExtremelySmallFWKnob>(Vec(27, 140 + i*32), module, SeedsOfChange::MULTIPLY_1_CV_ATTENUVERTER + i));
+			addInput(createInput<FWPortInReallySmall>(Vec(28, 126 + i * 32), module, SeedsOfChange::MULTIPLY_1_INPUT + i));						
+			addParam(createParam<RoundReallySmallFWKnob>(Vec(50,125 + i * 32), module, SeedsOfChange::OFFSET_1_PARAM + i));			
+			addParam(createParam<RoundExtremelySmallFWKnob>(Vec(72, 140 + i*32), module, SeedsOfChange::OFFSET_1_CV_ATTENUVERTER + i));
+			addInput(createInput<FWPortInReallySmall>(Vec(73, 126 + i * 32), module, SeedsOfChange::OFFSET_1_INPUT + i));
+			addOutput(createOutput<FWPortInSmall>(Vec(97, 126 + i * 32),  module, SeedsOfChange::CV_1_OUTPUT+i));
 
-			addParam(createParam<RoundReallySmallFWKnob>(Vec(4, 260 + i*25), module, SeedsOfChange::GATE_PROBABILITY_1_PARAM + i));
-			addInput(createInput<FWPortInSmall>(Vec(30, 260 + i*25), module, SeedsOfChange::GATE_PROBABILITY_1_INPUT + i));			
-			addOutput(createOutput<FWPortInSmall>(Vec(97, 260 + i*25),  module, SeedsOfChange::GATE_1_OUTPUT + i));
+			addParam(createParam<RoundReallySmallFWKnob>(Vec(4, 264 + i*24), module, SeedsOfChange::GATE_PROBABILITY_1_PARAM + i));
+			addInput(createInput<FWPortInReallySmall>(Vec(30, 268 + i*24), module, SeedsOfChange::GATE_PROBABILITY_1_INPUT + i));			
+			addParam(createParam<RoundExtremelySmallFWKnob>(Vec(48, 266 + i*24), module, SeedsOfChange::GATE_PROBABILITY_1_CV_ATTENUVERTER + i));
+			addOutput(createOutput<FWPortOutSmall>(Vec(97, 265 + i*24),  module, SeedsOfChange::GATE_1_OUTPUT + i));
 		}
 	}
 };

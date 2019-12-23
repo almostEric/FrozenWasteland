@@ -43,6 +43,19 @@
 			"tags": ["VCA"]
 		},
 		{
+		  "slug": "DrunkenRampage",
+		  "name": "Runken Rampage",
+		  "description": "Probalistic Dual ramp generator. Inspired by Befaco Rampage.",
+		  "tags": [
+			"Function Generator",
+			"Logic",
+			"Slew Limiter",
+			"Envelope Follower",
+			"Dual",
+			"Random"
+		  ]
+		},
+		{
 			"slug": "EverlastingGlottalStopper",
 			"name": "Everlasting Glottal Stopper",
 			"description": "Vocal Tract simulating VCO",
@@ -53,6 +66,12 @@
 			"name": "Hair Pick",
 			"description": "64 Tap Rhythmic Comb Filter",
 			"tags": ["VCF"]
+		},
+		{
+			"slug": "JustAPhaser",
+			"name": "Just A Phaser",
+			"description": "Advanced Phaser",
+			"tags": ["Phaser"]
 		},
 		{
 			"slug": "LissajousLFO",
@@ -87,13 +106,13 @@
 		{
 			"slug": "ProbablyNoteArabic",
 			"name": "Probably Note - Arabic",
-			"description": "Probabilistic Quantizer using Arabic maqams",
+			"description": "Probabilistic Quantizer using Arabic maqams, ajnas and sayrs",
 			"tags": ["Quantizer","Random"]
 		},
 		{
 			"slug": "ProbablyNoteBP",
 			"name": "Probably Note - Bohlen Pierce",
-			"description": "Probabilistic Quantizer using Bohlen Pierce tuning",
+			"description": "Probabilistic Quantizer using Bohlen Pierce scales and tuning",
 			"tags": ["Quantizer","Random"]
 		},
 		{
@@ -119,6 +138,12 @@
 			"name": "QAR - Probability",
 			"description": "Add Randomness to QAR Rhythms",
 			"tags": ["Expander","Random"]
+		},
+		{
+			"slug": "QARWarpedSpaceExpander",
+			"name": "QAR - Warped Space",
+			"description": "Make your QAR Rhythms explore non-linear space",
+			"tags": ["Expander"]
 		},
 		{
 			"slug": "QuantussyCell",

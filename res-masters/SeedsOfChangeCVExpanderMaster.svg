@@ -75,7 +75,7 @@
      inkscape:cy="217.1601"
      guidetolerance="10"
      gridtolerance="10"
-     inkscape:cx="-94.398929"
+     inkscape:cx="-103.06099"
      showgrid="false"
      id="namedview10"
      pagecolor="#ffffff"
@@ -207,16 +207,14 @@
          style="stroke:#909290;stroke-width:0.97299999" /></g></g><text
      xml:space="preserve"
      style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:13.33333302px;line-height:1.25;font-family:Homenaje;-inkscape-font-specification:'Homenaje Bold';text-align:start;letter-spacing:0px;word-spacing:0px;text-anchor:start;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.99999994"
-     x="301.57855"
+     x="301.70801"
      y="218.63867"
      id="text3885"><tspan
        sodipodi:role="line"
-       x="301.57855"
+       x="301.70801"
        y="218.63867"
        style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:14.66666698px;font-family:Homenaje;-inkscape-font-specification:'Homenaje Bold';text-align:start;text-anchor:start;stroke-width:0.99999994"
-       id="tspan1013">SEEDS <tspan
-   style="font-size:12px"
-   id="tspan1309">OF</tspan> CHANGE</tspan></text>
+       id="tspan1013">SoC</tspan></text>
 <g
      aria-label="Frozen Wasteland"
      style="font-style:normal;font-weight:normal;font-size:3.52777767px;line-height:1.25;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#00a3f2;fill-opacity:1;stroke:none;stroke-width:0.26458332"
@@ -289,23 +287,23 @@
      xml:space="preserve"
      style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:8px;line-height:1.25;font-family:Homenaje;-inkscape-font-specification:'Homenaje Bold';letter-spacing:0px;word-spacing:0px;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.99999994"
      x="379.15601"
-     y="246.944"
+     y="228.944"
      id="text5443-7-5-4-4-7"><tspan
        sodipodi:role="line"
        id="tspan5441-1-6-2-3-5"
        x="379.15601"
-       y="246.944"
+       y="228.944"
        style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:8px;font-family:Homenaje;-inkscape-font-specification:'Homenaje Bold';stroke-width:0.99999994">CV OUT</tspan></text>
 <text
      xml:space="preserve"
      style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:8px;line-height:1.25;font-family:Homenaje;-inkscape-font-specification:'Homenaje Bold';letter-spacing:0px;word-spacing:0px;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.99999994"
      x="293.996"
-     y="246.944"
+     y="228.944"
      id="text5443-7-5-4-4-7-7"><tspan
        sodipodi:role="line"
        id="tspan5441-1-6-2-3-5-6"
        x="293.996"
-       y="246.944"
+       y="228.944"
        style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:8px;font-family:Homenaje;-inkscape-font-specification:'Homenaje Bold';stroke-width:0.99999994">MULTIPLY</tspan></text>
 <flowRoot
      xml:space="preserve"
@@ -323,22 +321,22 @@
      xml:space="preserve"
      style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:8px;line-height:1.25;font-family:Homenaje;-inkscape-font-specification:'Homenaje Bold';letter-spacing:0px;word-spacing:0px;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.99999994"
      x="343.15601"
-     y="246.944"
+     y="228.944"
      id="text5443-7-5-4-4-7-7-7"><tspan
        sodipodi:role="line"
        id="tspan5441-1-6-2-3-5-6-0"
        x="343.15601"
-       y="246.944"
+       y="228.944"
        style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:8px;font-family:Homenaje;-inkscape-font-specification:'Homenaje Bold';stroke-width:0.99999994">OFFSET</tspan></text>
 <text
      xml:space="preserve"
      style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:13.33333302px;line-height:1.25;font-family:Homenaje;-inkscape-font-specification:'Homenaje Bold';text-align:start;letter-spacing:0px;word-spacing:0px;text-anchor:start;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.99999994"
-     x="317.28116"
-     y="230.46686"
+     x="327.41061"
+     y="218.46686"
      id="text3885-4"><tspan
        sodipodi:role="line"
-       x="317.28116"
-       y="230.46686"
+       x="327.41061"
+       y="218.46686"
        style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:12px;font-family:Homenaje;-inkscape-font-specification:'Homenaje Bold';text-align:start;text-anchor:start;stroke-width:0.99999994"
        id="tspan1013-3">CV EXPANDER</tspan></text>
 </svg>

@@ -21,7 +21,9 @@ struct SeedsOfChangeCVExpander : Module {
 	enum ParamIds {
 		MULTIPLY_1_PARAM,
 		OFFSET_1_PARAM = MULTIPLY_1_PARAM + NBOUT,		
-		NUM_PARAMS = OFFSET_1_PARAM + NBOUT
+		MULTIPLY_1_CV_ATTENUVERTER = MULTIPLY_1_PARAM + NBOUT,
+		OFFSET_1_CV_ATTENUVERTER = MULTIPLY_1_CV_ATTENUVERTER + NBOUT,
+		NUM_PARAMS = OFFSET_1_CV_ATTENUVERTER + NBOUT
 	};
 	enum InputIds {
 		MULTIPLY_1_INPUT, 
@@ -52,7 +54,9 @@ struct SeedsOfChangeCVExpander : Module {
 		config(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS, NUM_LIGHTS);
 		for (int i=0; i<NBOUT; i++) {
 			configParam(SeedsOfChangeCVExpander::MULTIPLY_1_PARAM + i, 0.0f, 10.0f, 10.0f, "Multiply");			
-			configParam(SeedsOfChangeCVExpander::OFFSET_1_PARAM + i, -10.0f, 10.0f, 0.0f,"Offset");						
+			configParam(SeedsOfChangeCVExpander::OFFSET_1_PARAM + i, -10.0f, 10.0f, 0.0f,"Offset");		
+			configParam(SeedsOfChangeCVExpander::MULTIPLY_1_CV_ATTENUVERTER + i, -1.0, 1.0, 0.0,"Multiply CV Attenuverter","%",0,100);
+			configParam(SeedsOfChangeCVExpander::OFFSET_1_CV_ATTENUVERTER + i, -1.0, 1.0, 0.0,"Offset CV Attenuverter","%",0,100);				
 		}
 
 		leftExpander.producerMessage = producerMessage;
@@ -105,12 +109,11 @@ struct SeedsOfChangeCVExpander : Module {
 				float mult=params[MULTIPLY_1_PARAM+i].value;
 				float off=params[OFFSET_1_PARAM+i].value;
 				if (inputs[MULTIPLY_1_INPUT + i].active) {
-					mult = mult * inputs[MULTIPLY_1_INPUT + i].value / 10.0f;
+					mult = mult + (inputs[MULTIPLY_1_INPUT + i].value / 10.0f * params[MULTIPLY_1_CV_ATTENUVERTER + i].value);
 				}
-				mult = mult < 0.0 ? 0.0 : mult;
-				mult = mult > 10.0 ? 10.0 : mult;
+				mult = clamp(mult,0.0,10.0);
 				if (inputs[OFFSET_1_INPUT + i].active) {
-					off = off + inputs[OFFSET_1_INPUT + i].value ;
+					off = off + (inputs[OFFSET_1_INPUT + i].value * params[OFFSET_1_CV_ATTENUVERTER + i].value);
 				}
 
 				float initialRandomNumber = gaussianMode ? normal_number() : genrand_real();					
@@ -250,11 +253,13 @@ struct SeedsOfChangeCVExpanderWidget : ModuleWidget {
 
 
 		for (int i=0; i<NBOUT; i++) {
-			addParam(createParam<RoundReallySmallFWKnob>(Vec(4,44 + i * 26.5), module, SeedsOfChangeCVExpander::MULTIPLY_1_PARAM + i));			
-			addInput(createInput<FWPortInSmall>(Vec(28, 45 + i * 26.5), module, SeedsOfChangeCVExpander::MULTIPLY_1_INPUT + i));						
-			addParam(createParam<RoundReallySmallFWKnob>(Vec(50,44 + i * 26.5), module, SeedsOfChangeCVExpander::OFFSET_1_PARAM + i));			
-			addInput(createInput<FWPortInSmall>(Vec(73, 45 + i * 26.5), module, SeedsOfChangeCVExpander::OFFSET_1_INPUT + i));
-			addOutput(createOutput<FWPortInSmall>(Vec(97, 45 + i * 26.5),  module, SeedsOfChangeCVExpander::CV_1_OUTPUT+i));
+			addParam(createParam<RoundReallySmallFWKnob>(Vec(4,28 + i * 28), module, SeedsOfChangeCVExpander::MULTIPLY_1_PARAM + i));			
+			addParam(createParam<RoundExtremelySmallFWKnob>(Vec(34,38 + i * 28), module, SeedsOfChangeCVExpander::MULTIPLY_1_CV_ATTENUVERTER + i));			
+			addInput(createInput<FWPortInReallySmall>(Vec(26, 28 + i * 28), module, SeedsOfChangeCVExpander::MULTIPLY_1_INPUT + i));						
+			addParam(createParam<RoundReallySmallFWKnob>(Vec(50,28 + i * 28), module, SeedsOfChangeCVExpander::OFFSET_1_PARAM + i));			
+			addParam(createParam<RoundExtremelySmallFWKnob>(Vec(80,38 + i * 28), module, SeedsOfChangeCVExpander::OFFSET_1_CV_ATTENUVERTER + i));			
+			addInput(createInput<FWPortInReallySmall>(Vec(72, 28 + i * 28), module, SeedsOfChangeCVExpander::OFFSET_1_INPUT + i));
+			addOutput(createOutput<FWPortOutSmall>(Vec(97, 29 + i * 28),  module, SeedsOfChangeCVExpander::CV_1_OUTPUT+i));
 		}
 	}
 };
