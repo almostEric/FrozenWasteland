@@ -3,7 +3,7 @@
 	"name": "Frozen Wasteland",
 	"version": "1.10.0",
 	"author": "almostEric",
-	"license": "GPLv3",
+	"license": "GPL-3.0-only",
 	"authorEmail": "almostEric@frozenwastelandmodules.com",
 	"pluginUrl": "https://github.com/almostEric/FrozenWasteland/blob/master/README.md",
 	"authorUrl": "https://vcvrack.com/",
