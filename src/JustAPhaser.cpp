@@ -166,7 +166,7 @@ struct JustAPhaser : Module {
 	float feedbackOut[MAX_CHANNELS];
 	float feedbackIn[MAX_CHANNELS] = {0.0,0.0};
 
-	float lastFc[MAX_STAGES][MAX_CHANNELS] = {0.0,0.0};
+	float lastFc[MAX_STAGES][MAX_CHANNELS];
 
 	float lastResonance = 0.0;
 
@@ -316,7 +316,7 @@ struct JustAPhaser : Module {
 
 		float steroPhase = params[STEREO_PHASE_PARAM].getValue();
 		for(int c=0;c<MAX_CHANNELS;c++) {
-			float lfoValue;
+			float lfoValue = 0.0;
 			if (inputs[EXTERNAL_MOD_INPUT_L+c].active) {
 				lfoValue = (inputs[EXTERNAL_MOD_INPUT_L+c].getVoltage() / 5.0) - 1.0;
 			} else {
