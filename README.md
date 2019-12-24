@@ -189,20 +189,14 @@ A collection of unusual plugins that will add a certain coolness to your patches
 - Weighting changes the overall weighting from linear (0%) to logarithmic (100%). 
 - A more detailed manual will be available soon
 
+## Probably Not(e) - Bohlen Pierce
 ![Probably Not(e) - Bohlen Pierce](./doc/pnbp.png)
 
 - Same basic features a Probable Not(e)
 - Based on the Bohelen Pierce tuning system which uses a 3:1 "tritave" divided into 13 notes instead of the traditional 2:1 octave with 12 notes
 - For reference: https://en.wikipedia.org/wiki/Bohlen%E2%80%93Pierce_scale
 
-![PN - Chord Expander](./doc/pnce.png)
-- Expander for Probably Note (original version only for now)
-- The Quant output of Probably Not(e) becomes polyphonic when expander added
-- This will not generate every chord that is possible, but it can create very musical sounding ones.
-- Generates 4 note chords based on the root of the current PN note and using notes within the key/scale.
-- Dissonance probablilty controls whether notes are randomly diminished or augmented.
-- Suspension controls whether the III of scale gets changed to suspended II or IV.
-
+## Probably Not(e) - Arabic
 ![Probably Not(e) - Arabic](./doc/pna.png)
 - Another probabilistic quantizer based on Arabic scales (or more accurately, Arabic jins and maqams)
 - This module is based on the work of Johnny Farraj and Sami Abu Shumays. Their book Inside Arabic Music is very highly recommended (and will help understanding how this module works)
@@ -211,6 +205,16 @@ A collection of unusual plugins that will add a certain coolness to your patches
 - Use the octave control to change octaves if needed (multi octave melodies are rare in Arabic music)
 - use the tonic control to change which key the Maqam is played in (the tonic is limited to realistic values for the Maqam)
 - Either use the Jins control to modulate, or even better use the modulate trigger input to use the probability to pick the next jins
+
+## Probably Not(e) - Chord Expander
+![PN - Chord Expander](./doc/pnce.png)
+- Expander for Probably Note (original version only for now)
+- The Quant output of Probably Not(e) becomes polyphonic when expander added
+- This will not generate every chord that is possible, but it can create very musical sounding ones.
+- Generates 4 note chords based on the root of the current PN note and using notes within the key/scale.
+- Dissonance probablilty controls whether notes are randomly diminished or augmented.
+- Suspension controls whether the III of scale gets changed to suspended II or IV.
+
 
 ## Quad Algorithmic Rhythm
 
