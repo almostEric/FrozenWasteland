@@ -179,13 +179,9 @@ A collection of unusual plugins that will add a certain coolness to your patches
 - If Octave Wrap is enabled, notes will stay within the Note In's octave (so a B could would be 11 half-steps above a C), if Octave Wrap is off, the notes will be near the original value
 - Octave control allows shifting of the output
 - The Shift control moves the weightings of the active notes up or down - this can be used to move between modes within a scale (ie c major to a minor)
-<<<<<<< HEAD
 - If v/Oct is enabled the Key inputs use a 1v/Oct scaling so the key can follow other quanitizers or MIDI keyboards
 - Shift has 3 modes, with the light off, the shift is 1V - per note shift (+ or -). Blue is a v/Oct of scaling where the shift is relative to the key. 
   Green is v/Oct where the note is absolute (so 0V will shift to C)
-=======
-- If v/Oct is enabled the Shift Weight and Key inputs uses a 1v/Oct scaling so the shift can follow other quanitizers
->>>>>>> 22d44430b4ce22957cce6c3e130228ff7d015bfa
 - Intonation: off = Equal Temperment, Green = Just Intonation, Blue = Pythagorean tuning
 - Intonation has a trigger input that switches between equal and whatever intonation was selected
 - Weight outputs the current notes probability weight so it can be used to affect other modules
@@ -258,7 +254,7 @@ When they are connected this way, the Clock, Mute and Reset signals, and Eoc out
 
 ## QAR Groove Expander
 
-![QAR Groove Expander](./doc/qarg.png)
+![QAR Groove Expander](./doc/QARG.png)
 
 - Expander Module for Quad Algorithmic Rhythm
 - Allows creating patterns that move steps before and after the beat.
@@ -275,7 +271,7 @@ When they are connected this way, the Clock, Mute and Reset signals, and Eoc out
 
 ## QAR Probability Expander
 
-![QAR Probability Expander](./doc/qarp.png)
+![QAR Probability Expander](./doc/QARP.png)
 
 - Expander Module for Quad Algorithmic Rhythm
 - Allows controlling probability on a step by step basis.
