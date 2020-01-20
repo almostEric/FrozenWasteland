@@ -12,6 +12,7 @@ extern Model *modelBPMLFOPhaseExpander;
 extern Model *modelDamianLillard;
 extern Model *modelDrunkenRampage;
 extern Model *modelEverlastingGlottalStopper;
+extern Model *modelTheGardener;
 extern Model *modelHairPick;
 extern Model *modelJustAPhaser;
 extern Model *modelLissajousLFO;

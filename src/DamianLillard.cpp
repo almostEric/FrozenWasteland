@@ -56,9 +56,9 @@ struct DamianLillard : Module {
 	DamianLillard() {
 		config(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS, NUM_LIGHTS);
 
-		configParam(FREQ_1_CUTOFF_PARAM, 0, 1.0, .25,"Cutoff Frequency 1","Hz",560,15);
-		configParam(FREQ_2_CUTOFF_PARAM, 0, 1.0, .5,"Cutoff Frequency 2","Hz",560,15);
-		configParam(FREQ_3_CUTOFF_PARAM, 0, 1.0, .75,"Cutoff Frequency 3","Hz",560,15);
+		configParam(FREQ_1_CUTOFF_PARAM, 0, 0.5, .25,"Cutoff Frequency 1","Hz",560,15);
+		configParam(FREQ_2_CUTOFF_PARAM, 0.25, 0.75, .5,"Cutoff Frequency 2","Hz",560,15);
+		configParam(FREQ_3_CUTOFF_PARAM, 0.5, 1.0, .75,"Cutoff Frequency 3","Hz",560,15);
 		configParam(FREQ_1_CV_ATTENUVERTER_PARAM, -1.0, 1.0, 0,"Cutoff Frequency 1 CV Attenuation","%",0,100);
 		configParam(FREQ_2_CV_ATTENUVERTER_PARAM, -1.0, 1.0, 0,"Cutoff Frequency 2 CV Attenuation","%",0,100);
 		configParam(FREQ_3_CV_ATTENUVERTER_PARAM, -1.0, 1.0, 0,"Cutoff Frequency 3 CV Attenuation","%",0,100);
@@ -73,66 +73,80 @@ struct DamianLillard : Module {
 		filterParams[7].setMode(StateVariableFilterParams<T>::Mode::HiPass);
 
 		for (int i = 0; i < numFilters; ++i) {
-	        filterParams[i].setQ(0.707); 	
+	        filterParams[i].setQ(0.5); 	
 	        filterParams[i].setFreq(T(.1));
 	    }
 	}
 
-	void process(const ProcessArgs &args) override;
+	void reConfigParam (int paramId, float minValue, float maxValue, float defaultValue) {
+		ParamQuantity *pq = paramQuantities[paramId];
+		pq->minValue = minValue;
+		pq->maxValue = maxValue;
+		pq->defaultValue = defaultValue;		
+	}
+
+
+	void process(const ProcessArgs &args) override {
+		
+		float signalIn = inputs[SIGNAL_IN].getVoltage();
+		float out = 0.0;
+
+		const float minCutoff = 15.0;
+		const float maxCutoff = 8400.0;
+
+		reConfigParam(FREQ_1_CUTOFF_PARAM, 0, params[FREQ_1_CUTOFF_PARAM+1].getValue(), .25);
+		reConfigParam(FREQ_2_CUTOFF_PARAM, params[FREQ_1_CUTOFF_PARAM+0].getValue(), params[FREQ_1_CUTOFF_PARAM+2].getValue(), .5);
+		reConfigParam(FREQ_3_CUTOFF_PARAM, params[FREQ_1_CUTOFF_PARAM+1].getValue(), 1.0, .75);
+
+		
+		for (int i=0; i<FREQUENCIES;i++) {
+			float cutoffExp = params[FREQ_1_CUTOFF_PARAM+i].getValue() + inputs[FREQ_1_CUTOFF_INPUT+i].getVoltage() * params[FREQ_1_CV_ATTENUVERTER_PARAM+i].getValue() / 10.0f; //I'm reducing range of CV to make it more useful
+			cutoffExp = clamp(cutoffExp, 0.0f, 1.0f);
+			freq[i] = minCutoff * powf(maxCutoff / minCutoff, cutoffExp);
+
+			//Prevent band overlap
+			if(i > 0 && freq[i] < lastFreq[i-1]) {
+				freq[i] = lastFreq[i-1]+1;
+			}
+			if(i<FREQUENCIES-1 && freq[i] > lastFreq[i+1]) {
+				freq[i] = lastFreq[i+1]-1;
+			}
+
+			if(freq[i] != lastFreq[i]) {
+				float Fc = freq[i] / args.sampleRate;
+				if(i==0) 
+					filterParams[0].setFreq(T(Fc));
+				if(i==2) 
+					filterParams[7].setFreq(T(Fc));
+				filterParams[i*2 + 1].setFreq(T(Fc));
+				filterParams[i*2 + 2].setFreq(T(Fc));
+				lastFreq[i] = freq[i];
+			}
+		}
+
+		output[0] = StateVariableFilter<T>::run(StateVariableFilter<T>::run(signalIn, filterStates[0], filterParams[0]), filterStates[1], filterParams[1]);
+		output[1] = StateVariableFilter<T>::run(StateVariableFilter<T>::run(signalIn, filterStates[2], filterParams[2]), filterStates[3], filterParams[3]);
+		output[2] = StateVariableFilter<T>::run(StateVariableFilter<T>::run(signalIn, filterStates[4], filterParams[4]), filterStates[5], filterParams[5]);
+		output[3] = StateVariableFilter<T>::run(StateVariableFilter<T>::run(signalIn, filterStates[6], filterParams[6]), filterStates[7], filterParams[7]);
+
+		for(int i=0; i<BANDS; i++) {		
+			outputs[BAND_1_OUTPUT+i].setVoltage(output[i]);
+
+			if(inputs[BAND_1_RETURN_INPUT+i].isConnected()) {
+				out += inputs[BAND_1_RETURN_INPUT+i].getVoltage();
+			} else {
+				out += output[i];
+			}
+		}
+
+		outputs[MIX_OUTPUT].setVoltage(out / 2.0); 
+		
+	}
+
+
 };
 
-void DamianLillard::process(const ProcessArgs &args) {
 	
-	float signalIn = inputs[SIGNAL_IN].getVoltage()/5;
-	float out = 0.0;
-
-	const float minCutoff = 15.0;
-	const float maxCutoff = 8400.0;
-	
-	for (int i=0; i<FREQUENCIES;i++) {
-		float cutoffExp = params[FREQ_1_CUTOFF_PARAM+i].getValue() + inputs[FREQ_1_CUTOFF_INPUT+i].getVoltage() * params[FREQ_1_CV_ATTENUVERTER_PARAM+i].getValue() / 10.0f; //I'm reducing range of CV to make it more useful
-		cutoffExp = clamp(cutoffExp, 0.0f, 1.0f);
-		freq[i] = minCutoff * powf(maxCutoff / minCutoff, cutoffExp);
-
-		//Prevent band overlap
-		if(i > 0 && freq[i] < lastFreq[i-1]) {
-			freq[i] = lastFreq[i-1]+1;
-		}
-		if(i<FREQUENCIES-1 && freq[i] > lastFreq[i+1]) {
-			freq[i] = lastFreq[i+1]-1;
-		}
-
-		if(freq[i] != lastFreq[i]) {
-			float Fc = freq[i] / args.sampleRate;
-			if(i==0) 
-				filterParams[0].setFreq(T(Fc));
-			if(i==2) 
-				filterParams[7].setFreq(T(Fc));
-			filterParams[i*2 + 1].setFreq(T(Fc));
-			filterParams[i*2 + 2].setFreq(T(Fc));
-			lastFreq[i] = freq[i];
-		}
-	}
-
-	output[0] = StateVariableFilter<T>::run(StateVariableFilter<T>::run(signalIn, filterStates[0], filterParams[0]), filterStates[1], filterParams[1]) * 5;
-	output[1] = StateVariableFilter<T>::run(StateVariableFilter<T>::run(signalIn, filterStates[2], filterParams[2]), filterStates[3], filterParams[3]) * 5;
-	output[2] = StateVariableFilter<T>::run(StateVariableFilter<T>::run(signalIn, filterStates[4], filterParams[4]), filterStates[5], filterParams[5]) * 5;
-	output[3] = StateVariableFilter<T>::run(StateVariableFilter<T>::run(signalIn, filterStates[6], filterParams[6]), filterStates[7], filterParams[7]) * 5;
-
-	for(int i=0; i<BANDS; i++) {		
-		outputs[BAND_1_OUTPUT+i].setVoltage(output[i]);
-
-		if(inputs[BAND_1_RETURN_INPUT+i].isConnected()) {
-			out += inputs[BAND_1_RETURN_INPUT+i].getVoltage();
-		} else {
-			out += output[i];
-		}
-	}
-
-	outputs[MIX_OUTPUT].setVoltage(out / 2.0); 
-	
-}
-
 
 struct DamianLillardBandDisplay : TransparentWidget {
 	DamianLillard *module;

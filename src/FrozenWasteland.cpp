@@ -20,6 +20,7 @@ void init(rack::Plugin *p) {
 	p->addModel(modelDamianLillard);
 	p->addModel(modelDrunkenRampage);
 	p->addModel(modelEverlastingGlottalStopper);
+	p->addModel(modelTheGardener);
 	p->addModel(modelHairPick);
 	p->addModel(modelJustAPhaser);
 	p->addModel(modelLissajousLFO);

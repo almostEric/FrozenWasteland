@@ -20,7 +20,7 @@
 struct SeedsOfChange : Module {
 	enum ParamIds {
 		SEED_PARAM,
-		RESET_PARAM,
+		RESEED_PARAM,
 		DISTRIBUTION_PARAM,
 		MULTIPLY_1_PARAM,
 		OFFSET_1_PARAM = MULTIPLY_1_PARAM + NBOUT,
@@ -32,7 +32,7 @@ struct SeedsOfChange : Module {
 	};
 	enum InputIds {
 		SEED_INPUT,
-		RESET_INPUT,
+		RESEED_INPUT,
 		CLOCK_INPUT,
 		DISTRIBUTION_INPUT,
 		MULTIPLY_1_INPUT, 
@@ -47,7 +47,8 @@ struct SeedsOfChange : Module {
 	};
 	enum LightIds {
 		DISTRIBUTION_GAUSSIAN_LIGHT,
-		NUM_LIGHTS
+		SEED_LOADED_LIGHT,
+		NUM_LIGHTS = SEED_LOADED_LIGHT + 2,
 	};
 
 
@@ -58,10 +59,10 @@ struct SeedsOfChange : Module {
 	float consumerMessage[4] = {};// this module must read from here
 	float producerMessage[4] = {};// mother will write into here
 	int seed;
-	float clockValue,resetValue,distributionValue;
+	float clockValue,reseedValue,distributionValue;
 
 
-	dsp::SchmittTrigger resetTrigger,clockTrigger,distributionModeTrigger; 
+	dsp::SchmittTrigger reseedTrigger,clockTrigger,distributionModeTrigger; 
 
 	bool gaussianMode = false;
 
@@ -69,7 +70,7 @@ struct SeedsOfChange : Module {
 		// Configure the module
 		config(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS, NUM_LIGHTS);
 		configParam(SeedsOfChange::SEED_PARAM, 0.0, 9999.0, 0.0,"Seed");
-		configParam(SeedsOfChange::RESET_PARAM, 0.0, 1.0, 0.0);
+		configParam(SeedsOfChange::RESEED_PARAM, 0.0, 1.0, 0.0);
 		configParam(SeedsOfChange::DISTRIBUTION_PARAM, 0.0, 1.0, 0.0,"Distribution");
 		for (int i=0; i<NBOUT; i++) {
 			configParam(SeedsOfChange::MULTIPLY_1_PARAM + i, 0.0f, 10.0f, 10.0f, "Multiply");			
@@ -104,12 +105,15 @@ struct SeedsOfChange : Module {
 		
 		lights[DISTRIBUTION_GAUSSIAN_LIGHT].value = gaussianMode;
 		
-        float resetInput = inputs[RESET_INPUT].getVoltage();
-		resetInput += params[RESET_PARAM].getValue(); 		
+        float reseedInput = inputs[RESEED_INPUT].getVoltage();
+		reseedInput += params[RESEED_PARAM].getValue(); 		
 
-        if (resetTrigger.process(resetInput) ) {
-            init_genrand((unsigned long)(inputs[SEED_INPUT].isConnected() ? inputs[SEED_INPUT].getVoltage()*999.9 : params[SEED_PARAM].getValue()));
+		seed = inputs[SEED_INPUT].isConnected() ? inputs[SEED_INPUT].getVoltage()*999.9 : params[SEED_PARAM].getValue();
+        if (reseedTrigger.process(reseedInput) ) {
+			init_genrand((unsigned long)(seed));
         } 
+		lights[SEED_LOADED_LIGHT].value = seed == latest_seed;
+		lights[SEED_LOADED_LIGHT+1].value = seed != latest_seed;
 
 		if( inputs[CLOCK_INPUT].active ) {
 			if (clockTrigger.process(inputs[CLOCK_INPUT].value) ) {
@@ -150,7 +154,7 @@ struct SeedsOfChange : Module {
 			
 			messageToExpander[0] = latest_seed; 
 			messageToExpander[1] = inputs[CLOCK_INPUT].getVoltage(); 
-			messageToExpander[2] = resetInput; 
+			messageToExpander[2] = reseedInput; 
 			messageToExpander[3] = gaussianMode; 
 			rightExpander.module->leftExpander.messageFlipRequested = true;						
 		}					
@@ -168,7 +172,7 @@ void SeedsOfChange::onReset() {
 		outbuffer[i] = 0;
 		outbuffer[i+NBOUT] = 0;
 	}
-	resetTrigger.reset();
+	reseedTrigger.reset();
 	clockTrigger.reset();
 }
 
@@ -302,11 +306,12 @@ struct SeedsOfChangeWidget : ModuleWidget {
 
         addParam(createParam<RoundReallySmallFWKnob>(Vec(28,31), module, SeedsOfChange::SEED_PARAM));			
 		addInput(createInput<FWPortInSmall>(Vec(4, 33), module, SeedsOfChange::SEED_INPUT));
+		addChild(createLight<LargeLight<GreenRedLight>>(Vec(100, 33), module, SeedsOfChange::SEED_LOADED_LIGHT));
 
 		addInput(createInput<FWPortInSmall>(Vec(4, 63), module, SeedsOfChange::CLOCK_INPUT));
 
-        addParam(createParam<TL1105>(Vec(100, 94), module, SeedsOfChange::RESET_PARAM));
-		addInput(createInput<FWPortInSmall>(Vec(80, 93), module, SeedsOfChange::RESET_INPUT));
+        addParam(createParam<TL1105>(Vec(100, 94), module, SeedsOfChange::RESEED_PARAM));
+		addInput(createInput<FWPortInSmall>(Vec(80, 93), module, SeedsOfChange::RESEED_INPUT));
 
 		addParam(createParam<LEDButton>(Vec(25, 92), module, SeedsOfChange::DISTRIBUTION_PARAM));
 		addChild(createLight<LargeLight<BlueLight>>(Vec(26.5, 93.5), module, SeedsOfChange::DISTRIBUTION_GAUSSIAN_LIGHT));
