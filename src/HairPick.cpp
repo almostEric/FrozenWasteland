@@ -352,7 +352,7 @@ struct HPStatusDisplay : TransparentWidget {
 	
 
 	HPStatusDisplay() {
-		fontNumbers = APP->window->loadFont(asset::plugin(pluginInstance, "res/fonts/01 Digit.ttf"));
+		fontNumbers = APP->window->loadFont(asset::plugin(pluginInstance, "res/fonts/SUBWT___.ttf"));
 		fontText = APP->window->loadFont(asset::plugin(pluginInstance, "res/fonts/DejaVuSansMono.ttf"));
 
 	}
@@ -362,9 +362,10 @@ struct HPStatusDisplay : TransparentWidget {
 	void drawDivision(const DrawArgs &args, Vec pos, int division) {
 		nvgFontSize(args.vg, 20);
 		nvgFontFaceId(args.vg, fontNumbers->handle);
-		nvgTextLetterSpacing(args.vg, -2);
+		nvgTextLetterSpacing(args.vg, -1);
 
-		nvgFillColor(args.vg, nvgRGBA(0x00, 0xff, 0x00, 0xff));
+		//nvgFillColor(args.vg, nvgRGBA(0x00, 0xff, 0x00, 0xff));
+		nvgFillColor(args.vg, nvgRGBA(0x4a, 0xc3, 0x27, 0xff));
 		char text[128];
 		snprintf(text, sizeof(text), "%s", module->divisionNames[division]);
 		nvgText(args.vg, pos.x, pos.y, text, NULL);
@@ -373,9 +374,10 @@ struct HPStatusDisplay : TransparentWidget {
 	void drawDelayTime(const DrawArgs &args, Vec pos, float delayTime) {
 		nvgFontSize(args.vg, 28);
 		nvgFontFaceId(args.vg, fontNumbers->handle);
-		nvgTextLetterSpacing(args.vg, -2);
+		nvgTextLetterSpacing(args.vg, -1);
 
-		nvgFillColor(args.vg, nvgRGBA(0x00, 0xff, 0x00, 0xff));
+		//nvgFillColor(args.vg, nvgRGBA(0x00, 0xff, 0x00, 0xff));
+		nvgFillColor(args.vg, nvgRGBA(0x4a, 0xc3, 0x27, 0xff));
 		char text[128];
 		snprintf(text, sizeof(text), "%6.0f", delayTime*1000);	
 		nvgText(args.vg, pos.x, pos.y, text, NULL);
@@ -386,7 +388,8 @@ struct HPStatusDisplay : TransparentWidget {
 		nvgFontFaceId(args.vg, fontText->handle);
 		nvgTextLetterSpacing(args.vg, -2);
 
-		nvgFillColor(args.vg, nvgRGBA(0x00, 0xff, 0x00, 0xff));
+		//nvgFillColor(args.vg, nvgRGBA(0x00, 0xff, 0x00, 0xff));
+		nvgFillColor(args.vg, nvgRGBA(0x4a, 0xc3, 0x27, 0xff));
 		char text[128];
 		snprintf(text, sizeof(text), "%s", module->combPatternNames[patternType]);
 		nvgText(args.vg, pos.x, pos.y, text, NULL);
@@ -410,7 +413,8 @@ struct HPStatusDisplay : TransparentWidget {
 		nvgFontFaceId(args.vg, fontText->handle);
 		nvgTextLetterSpacing(args.vg, -2);
 
-		nvgFillColor(args.vg, nvgRGBA(0x00, 0xff, 0x00, 0xff));
+		//nvgFillColor(args.vg, nvgRGBA(0x00, 0xff, 0x00, 0xff));
+		nvgFillColor(args.vg, nvgRGBA(0x4a, 0xc3, 0x27, 0xff));
 		char text[128];
 		snprintf(text, sizeof(text), "%s", module->feedbackTypeNames[feedbackType]);
 		nvgText(args.vg, pos.x, pos.y, text, NULL);

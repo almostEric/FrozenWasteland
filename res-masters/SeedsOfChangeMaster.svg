@@ -75,7 +75,7 @@
      inkscape:cy="217.1601"
      guidetolerance="10"
      gridtolerance="10"
-     inkscape:cx="-94.398929"
+     inkscape:cx="-97.58091"
      showgrid="false"
      id="namedview10"
      pagecolor="#ffffff"
@@ -227,7 +227,7 @@
        id="tspan5441-1-6"
        x="371.01425"
        y="296"
-       style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:8px;font-family:Homenaje;-inkscape-font-specification:'Homenaje Bold';stroke-width:0.99999994">RESET</tspan></text>
+       style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:8px;font-family:Homenaje;-inkscape-font-specification:'Homenaje Bold';stroke-width:0.99999994">RESEED</tspan></text>
 <text
      xml:space="preserve"
      style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:8px;line-height:1.25;font-family:Homenaje;-inkscape-font-specification:'Homenaje Bold';letter-spacing:0px;word-spacing:0px;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.99999994"
@@ -374,15 +374,7 @@
          x="-24.395185"
          y="40.058399"
          style="font-size:8px;" /></flowRegion><flowPara
-       id="flowPara2230" /></flowRoot><path
-     inkscape:connector-curvature="0"
-     style="fill:#b1b1b1;fill-opacity:1;stroke-width:0.4688884"
-     d="m 336.5,235 h 44 v 22 h -44 z"
-     id="rect4735-3" /><path
-     inkscape:connector-curvature="0"
-     style="fill:#323232;fill-opacity:1;stroke-width:0.4367888"
-     d="m 337.5,236 h 42 v 20 h -42 z"
-     id="rect4735" /><text
+       id="flowPara2230" /></flowRoot><text
      xml:space="preserve"
      style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:8px;line-height:1.25;font-family:Homenaje;-inkscape-font-specification:'Homenaje Bold';letter-spacing:0px;word-spacing:0px;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.99999994"
      x="343.15601"
@@ -404,4 +396,14 @@
        x="289.06799"
        y="236"
        style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:8px;font-family:Homenaje;-inkscape-font-specification:'Homenaje Bold';stroke-width:0.99999994">SEED</tspan></text>
-</svg>
+<g
+     id="g1411"
+     transform="translate(6,-38.2612)"><path
+       id="rect4735-3-2"
+       d="m 331.5,272.2612 h 44 v 22 h -44 z"
+       style="fill:#b1b1b1;fill-opacity:1;stroke-width:0.4688884"
+       inkscape:connector-curvature="0" /><path
+       id="rect4735-7"
+       d="m 332.5,273.2612 h 42 v 20 h -42 z"
+       style="fill:#323232;fill-opacity:1;stroke-width:0.4367888"
+       inkscape:connector-curvature="0" /></g></svg>

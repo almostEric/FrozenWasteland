@@ -393,14 +393,14 @@ struct BPMLFO2ProgressDisplay : TransparentWidget {
 	
 
 	BPMLFO2ProgressDisplay() {
-		font = APP->window->loadFont(asset::plugin(pluginInstance, "res/fonts/01 Digit.ttf"));
+		font = APP->window->loadFont(asset::plugin(pluginInstance, "res/fonts/SUBWT___.ttf"));
 	}
 
 
 	void drawWaveShape(const DrawArgs &args, int waveshape, float skew, float waveslope) 
 	{
 		// Draw wave shape
-		nvgStrokeColor(args.vg, nvgRGBA(0xff, 0xff, 0x20, 0xff));	
+		nvgStrokeColor(args.vg, nvgRGBA(0xff, 0xff, 0x20, 0xff));
 		nvgStrokeWidth(args.vg, 1.0);
 
 		nvgBeginPath(args.vg);
@@ -433,22 +433,26 @@ struct BPMLFO2ProgressDisplay : TransparentWidget {
 	void drawMultiplier(const DrawArgs &args, Vec pos, float multiplier) {
 		nvgFontSize(args.vg, 14);
 		nvgFontFaceId(args.vg, font->handle);
-		nvgTextLetterSpacing(args.vg, -1);
+		nvgTextLetterSpacing(args.vg, 0);
 
-		nvgFillColor(args.vg, nvgRGBA(0x00, 0xff, 0x00, 0xff));
+		//nvgFillColor(args.vg, nvgRGBA(0x00, 0xff, 0x00, 0xff));
+		nvgFillColor(args.vg, nvgRGBA(0x4a, 0xc3, 0x27, 0xff));
 		char text[128];
 		snprintf(text, sizeof(text), " % 3.0f", multiplier);
+		nvgTextAlign(args.vg,NVG_ALIGN_RIGHT);
 		nvgText(args.vg, pos.x, pos.y, text, NULL);
 	}
 
 	void drawDivision(const DrawArgs &args, Vec pos, float division) {
 		nvgFontSize(args.vg, 14);
 		nvgFontFaceId(args.vg, font->handle);
-		nvgTextLetterSpacing(args.vg, -1);
+		nvgTextLetterSpacing(args.vg, 0);
 
-		nvgFillColor(args.vg, nvgRGBA(0x00, 0xff, 0x00, 0xff));
+		//nvgFillColor(args.vg, nvgRGBA(0x00, 0xff, 0x00, 0xff));
+		nvgFillColor(args.vg, nvgRGBA(0x4a, 0xc3, 0x27, 0xff));
 		char text[128];
 		snprintf(text, sizeof(text), " % 3.0f", division);
+		nvgTextAlign(args.vg,NVG_ALIGN_RIGHT);
 		nvgText(args.vg, pos.x, pos.y, text, NULL);
 	}
 
@@ -457,8 +461,8 @@ struct BPMLFO2ProgressDisplay : TransparentWidget {
 			return;	
 		drawWaveShape(args,module->waveshape, module->skew, module->waveSlope);
 		drawProgress(args,module->waveshape, module->skew, module->waveSlope, module->oscillator.progress());
-		drawMultiplier(args, Vec(2, 48), module->multiplier);
-		drawDivision(args, Vec(68, 48), module->division);
+		drawMultiplier(args, Vec(38, 47), module->multiplier);
+		drawDivision(args, Vec(104, 47), module->division);
 	}
 };
 

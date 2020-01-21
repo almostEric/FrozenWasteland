@@ -259,17 +259,19 @@ struct SeedsOfChangeSeedDisplay : TransparentWidget {
 	std::shared_ptr<Font> font;
 
 	SeedsOfChangeSeedDisplay() {
-		font = APP->window->loadFont(asset::plugin(pluginInstance, "res/fonts/01 Digit.ttf"));
+		font = APP->window->loadFont(asset::plugin(pluginInstance, "res/fonts/SUBWT___.ttf"));
 	}
 
 	void drawSeed(const DrawArgs &args, Vec pos, int seed) {
-		nvgFontSize(args.vg, 12);
+		nvgFontSize(args.vg, 14);
 		nvgFontFaceId(args.vg, font->handle);
-		nvgTextLetterSpacing(args.vg, -1);
+		nvgTextLetterSpacing(args.vg, 0);
 
-		nvgFillColor(args.vg, nvgRGBA(0x00, 0xff, 0x00, 0xff));
+		//nvgFillColor(args.vg, nvgRGBA(0x00, 0xff, 0x00, 0xff));
+		nvgFillColor(args.vg, nvgRGBA(0x4a, 0xc3, 0x27, 0xff));
 		char text[128];
 		snprintf(text, sizeof(text), " %i", seed);
+		nvgTextAlign(args.vg,NVG_ALIGN_RIGHT);
 		nvgText(args.vg, pos.x, pos.y, text, NULL);
 	}
 
@@ -290,7 +292,7 @@ struct SeedsOfChangeWidget : ModuleWidget {
 		{
 			SeedsOfChangeSeedDisplay *display = new SeedsOfChangeSeedDisplay();
 			display->module = module;
-			display->box.pos = Vec(57, 46);
+			display->box.pos = Vec(96, 44);
 			display->box.size = Vec(box.size.x-31, 51);
 			addChild(display);
 		}

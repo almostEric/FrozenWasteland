@@ -11,6 +11,7 @@
 #include <fstream>
 #include <string>
 
+#define POLYPHONY 16
 #define MAX_NOTES 12
 #define MAX_SCALES 12
 #define MAX_TEMPERMENTS 3

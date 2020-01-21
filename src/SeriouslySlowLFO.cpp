@@ -247,7 +247,7 @@ struct SSLFOProgressDisplay : TransparentWidget {
 
 
 	SSLFOProgressDisplay() {
-		font = APP->window->loadFont(asset::plugin(pluginInstance, "res/fonts/01 Digit.ttf"));
+		font = APP->window->loadFont(asset::plugin(pluginInstance, "res/fonts/SUBWT___.ttf"));
 	}
 
 	void drawProgress(const DrawArgs &args, float phase)
@@ -272,12 +272,14 @@ struct SSLFOProgressDisplay : TransparentWidget {
 	void drawDuration(const DrawArgs &args, Vec pos, float duration) {
 		nvgFontSize(args.vg, 28);
 		nvgFontFaceId(args.vg, font->handle);
-		nvgTextLetterSpacing(args.vg, -2);
+		nvgTextLetterSpacing(args.vg, -1);
 
-		nvgFillColor(args.vg, nvgRGBA(0x00, 0xff, 0x00, 0xff));
+		//nvgFillColor(args.vg, nvgRGBA(0x00, 0xff, 0x00, 0xff));
+		nvgFillColor(args.vg, nvgRGBA(0x4a, 0xc3, 0x27, 0xff));
 		char text[128];
 		snprintf(text, sizeof(text), " % #6.1f", duration);
-		nvgText(args.vg, pos.x + 40, pos.y, text, NULL);
+		nvgTextAlign(args.vg,NVG_ALIGN_RIGHT);
+		nvgText(args.vg, pos.x + 135, pos.y, text, NULL);
 	}
 
 	void draw(const DrawArgs &args) override {

@@ -55,7 +55,7 @@
      inkscape:pageshadow="2"
      inkscape:zoom="7.9999999"
      inkscape:cx="-0.056389525"
-     inkscape:cy="144.5719"
+     inkscape:cy="274.5719"
      inkscape:document-units="px"
      inkscape:current-layer="layer1"
      showgrid="false"
@@ -63,10 +63,10 @@
      fit-margin-left="0"
      fit-margin-right="0"
      fit-margin-bottom="0"
-     inkscape:window-width="4800"
-     inkscape:window-height="2644"
-     inkscape:window-x="-16"
-     inkscape:window-y="-16"
+     inkscape:window-width="3840"
+     inkscape:window-height="2115"
+     inkscape:window-x="-13"
+     inkscape:window-y="-13"
      inkscape:window-maximized="1"
      units="px"
      inkscape:measure-start="115.25,330.25"
@@ -334,21 +334,21 @@
          y="100.11585"
          style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:2.11666656px;font-family:Homenaje;-inkscape-font-specification:'Homenaje Bold';stroke-width:0.26458332">90°</tspan></text>
     <g
-       id="g7045">
+       id="g1445">
       <rect
          y="58.855671"
          x="36.204647"
          height="4.7625003"
-         width="9.5250006"
+         width="9.5927334"
          id="rect6948-0"
-         style="fill:#999999;fill-opacity:1;stroke-width:0.10016956" />
+         style="fill:#999999;fill-opacity:1;stroke-width:0.10052509" />
       <rect
          y="59.120251"
          x="36.520828"
          height="4.2333336"
          width="8.9958334"
          id="rect4735-6"
-         style="fill:#141414;fill-opacity:1;stroke-width:0.09300231" />
+         style="fill:#323232;fill-opacity:1;stroke-width:0.09300231" />
     </g>
     <text
        xml:space="preserve"
@@ -425,20 +425,23 @@
            height="70.25"
            x="-16.5"
            y="272.25" /></flowRegion><flowPara
-         id="flowPara3940" /></flowRoot>    <rect
-       style="fill:#999999;fill-opacity:1;stroke-width:0.10016956"
-       id="rect6948-0-2"
-       width="9.5250006"
-       height="4.7625003"
-       x="53.799442"
-       y="58.855671" />
-    <rect
-       style="fill:#141414;fill-opacity:1;stroke-width:0.09300231"
-       id="rect4735-6-8"
-       width="8.9958334"
-       height="4.2333336"
-       x="54.115623"
-       y="59.120251" />
+         id="flowPara3940" /></flowRoot>    <g
+       id="g1449">
+      <rect
+         y="58.855671"
+         x="53.865585"
+         height="4.7625003"
+         width="9.5250006"
+         id="rect6948-0-2"
+         style="fill:#999999;fill-opacity:1;stroke-width:0.10016956" />
+      <rect
+         y="59.120251"
+         x="54.115623"
+         height="4.2333336"
+         width="8.9958334"
+         id="rect4735-6-8"
+         style="fill:#323232;fill-opacity:1;stroke-width:0.09300231" />
+    </g>
     <text
        xml:space="preserve"
        style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:3.52773356px;line-height:1.25;font-family:Homenaje;-inkscape-font-specification:Homenaje;letter-spacing:0px;word-spacing:0px;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.26458004"

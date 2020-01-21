@@ -55,7 +55,7 @@
      inkscape:pageshadow="2"
      inkscape:zoom="6.8403277"
      inkscape:cx="-101.85638"
-     inkscape:cy="172.8175"
+     inkscape:cy="266.38027"
      inkscape:document-units="px"
      inkscape:current-layer="layer1"
      showgrid="false"
@@ -63,10 +63,10 @@
      fit-margin-left="0"
      fit-margin-right="0"
      fit-margin-bottom="0"
-     inkscape:window-width="4800"
-     inkscape:window-height="2644"
-     inkscape:window-x="-16"
-     inkscape:window-y="-16"
+     inkscape:window-width="3840"
+     inkscape:window-height="2115"
+     inkscape:window-x="-13"
+     inkscape:window-y="-13"
      inkscape:window-maximized="1"
      units="px" />
   <metadata
@@ -350,8 +350,7 @@
            x="-10.130577"
            y="261.53427" /></flowRegion><flowPara
          id="flowPara2177" /></flowRoot>    <g
-       transform="translate(-1.7133318e-6)"
-       id="g5045">
+       id="g1062">
       <rect
          y="58.855671"
          x="36.204647"
@@ -365,25 +364,24 @@
          height="4.2333336"
          width="8.9958334"
          id="rect4735-6"
-         style="fill:#141414;fill-opacity:1;stroke-width:0.09300231" />
+         style="fill:#323232;fill-opacity:1;stroke-width:0.09300231" />
     </g>
     <g
-       transform="translate(17.59479)"
-       id="g5045-6">
+       id="g1066">
       <rect
          y="58.855671"
-         x="36.204647"
+         x="53.799438"
          height="4.7625003"
          width="9.5250006"
          id="rect6948-0-8"
          style="fill:#999999;fill-opacity:1;stroke-width:0.10016956" />
       <rect
          y="59.120251"
-         x="36.520828"
+         x="54.11562"
          height="4.2333336"
          width="8.9958334"
          id="rect4735-6-8"
-         style="fill:#141414;fill-opacity:1;stroke-width:0.09300231" />
+         style="fill:#323232;fill-opacity:1;stroke-width:0.09300231" />
     </g>
     <text
        xml:space="preserve"

@@ -154,15 +154,16 @@ struct DamianLillardBandDisplay : TransparentWidget {
 	std::shared_ptr<Font> font;
 
 	DamianLillardBandDisplay() {
-		font = APP->window->loadFont(asset::plugin(pluginInstance, "res/fonts/01 Digit.ttf"));
+		font = APP->window->loadFont(asset::plugin(pluginInstance, "res/fonts/SUBWT___.ttf"));
 	}
 
 	void drawFrequency(const DrawArgs &args, Vec pos, float cutoffFrequency) {
 		nvgFontSize(args.vg, 13);
 		nvgFontFaceId(args.vg, font->handle);
-		nvgTextLetterSpacing(args.vg, -2);
+		nvgTextLetterSpacing(args.vg, 0);
 
-		nvgFillColor(args.vg, nvgRGBA(0x00, 0xff, 0x00, 0xff));
+		//nvgFillColor(args.vg, nvgRGBA(0x00, 0xff, 0x00, 0xff));
+		nvgFillColor(args.vg, nvgRGBA(0x4a, 0xc3, 0x27, 0xff));
 		char text[128];
 		snprintf(text, sizeof(text), " % 4.0f", cutoffFrequency);
 		nvgTextAlign(args.vg,NVG_ALIGN_RIGHT);
@@ -174,7 +175,7 @@ struct DamianLillardBandDisplay : TransparentWidget {
 			return;
 
 		for(int i=0;i<FREQUENCIES;i++) {
-			drawFrequency(args, Vec(i * 50.0, box.size.y - 75), module->freq[i]);
+			drawFrequency(args, Vec(i * 50.0, box.size.y - 77), module->freq[i]);
 		}
 	}
 };

@@ -323,7 +323,7 @@ struct BPMLFOPhaseDisplay : TransparentWidget {
 
 	BPMLFOPhaseDisplay() {
 		//font = APP->window->loadFont(asset::plugin(pluginInstance, "res/fonts/Sudo.ttf"));
-		font = APP->window->loadFont(asset::plugin(pluginInstance, "res/fonts/01 Digit.ttf"));
+		font = APP->window->loadFont(asset::plugin(pluginInstance, "res/fonts/SUBWT___.ttf"));
 	}
 
 	void draw(const DrawArgs &args) override {
@@ -334,7 +334,8 @@ struct BPMLFOPhaseDisplay : TransparentWidget {
 		nvgStrokeWidth(args.vg, 2);
 		nvgTextLetterSpacing(args.vg, 0);
 		nvgTextAlign(args.vg, NVG_ALIGN_CENTER);
-		nvgFillColor(args.vg, nvgRGBA(0x00, 0xff, 0x00, 0xff));
+		//nvgFillColor(args.vg, nvgRGBA(0x00, 0xff, 0x00, 0xff));
+		nvgFillColor(args.vg, nvgRGBA(0x4a, 0xc3, 0x27, 0xff));
 		//static const int portX0[4] = {20, 63, 106, 149};
 		for (int i=0; i < module->phaseDivision; i++) {
 			char fVal[10];

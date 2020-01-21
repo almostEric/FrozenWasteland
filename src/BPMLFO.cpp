@@ -299,7 +299,7 @@ struct BPMLFOProgressDisplay : TransparentWidget {
 	
 
 	BPMLFOProgressDisplay() {
-		font = APP->window->loadFont(asset::plugin(pluginInstance, "res/fonts/01 Digit.ttf"));
+		font = APP->window->loadFont(asset::plugin(pluginInstance, "res/fonts/SUBWT___.ttf"));
 	}
 
 	void drawProgress(const DrawArgs &args, float phase) 
@@ -309,7 +309,8 @@ struct BPMLFOProgressDisplay : TransparentWidget {
 		float endArc = (phase * M_PI * 2) - rotate90;
 
 		// Draw indicator
-		nvgFillColor(args.vg, nvgRGBA(0xff, 0xff, 0x20, 0xff));
+		//nvgFillColor(args.vg, nvgRGBA(0xff, 0xff, 0x20, 0xff));
+		nvgFillColor(args.vg, nvgRGBA(0x4a, 0xc3, 0x27, 0xff));
 		{
 			nvgBeginPath(args.vg);
 			nvgArc(args.vg,60,124,25,startArc,endArc,NVG_CW);
@@ -322,22 +323,26 @@ struct BPMLFOProgressDisplay : TransparentWidget {
 	void drawMultiplier(const DrawArgs &args, Vec pos, float multiplier) {
 		nvgFontSize(args.vg, 14);
 		nvgFontFaceId(args.vg, font->handle);
-		nvgTextLetterSpacing(args.vg, -1);
+		nvgTextLetterSpacing(args.vg, 0);
 
-		nvgFillColor(args.vg, nvgRGBA(0x00, 0xff, 0x00, 0xff));
+		//nvgFillColor(args.vg, nvgRGBA(0x00, 0xff, 0x00, 0xff));
+		nvgFillColor(args.vg, nvgRGBA(0x4a, 0xc3, 0x27, 0xff));
 		char text[128];
 		snprintf(text, sizeof(text), " % 3.0f", multiplier);
+		nvgTextAlign(args.vg,NVG_ALIGN_RIGHT);
 		nvgText(args.vg, pos.x, pos.y, text, NULL);
 	}
 
 	void drawDivision(const DrawArgs &args, Vec pos, float division) {
 		nvgFontSize(args.vg, 14);
 		nvgFontFaceId(args.vg, font->handle);
-		nvgTextLetterSpacing(args.vg, -1);
+		nvgTextLetterSpacing(args.vg, 0);
 
-		nvgFillColor(args.vg, nvgRGBA(0x00, 0xff, 0x00, 0xff));
+		//nvgFillColor(args.vg, nvgRGBA(0x00, 0xff, 0x00, 0xff));
+		nvgFillColor(args.vg, nvgRGBA(0x4a, 0xc3, 0x27, 0xff));
 		char text[128];
 		snprintf(text, sizeof(text), " % 3.0f", division);
+		nvgTextAlign(args.vg,NVG_ALIGN_RIGHT);
 		nvgText(args.vg, pos.x, pos.y, text, NULL);
 	}
 
@@ -346,8 +351,8 @@ struct BPMLFOProgressDisplay : TransparentWidget {
 			return;
 
 		drawProgress(args,module->oscillator.progress());
-		drawMultiplier(args, Vec(2, 48), module->multiplier);
-		drawDivision(args, Vec(68, 48), module->division);
+		drawMultiplier(args, Vec(38, 47), module->multiplier);
+		drawDivision(args, Vec(104, 47), module->division);
 	}
 };
 
