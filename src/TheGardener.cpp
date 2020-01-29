@@ -2,7 +2,8 @@
 #include "ui/knobs.hpp"
 #include "ui/ports.hpp"
 
-
+#define MAX_DELAY 10
+#define VCV_POLYPHONY 16
 
 struct TheGardener : Module {
 
@@ -11,6 +12,7 @@ struct TheGardener : Module {
         NUMBER_STEPS_RESEED_CV_ATTENUVERTER_PARAM,
 		NUMBER_STEPS_NEW_SEED_PARAM,
         NUMBER_STEPS_NEW_SEED_CV_ATTENUVERTER_PARAM,
+		SEED_PROCESS_DELAY_COMPENSATION_PARAM,
 		NUM_PARAMS
 	};
 
@@ -43,74 +45,122 @@ struct TheGardener : Module {
 	dsp::PulseGenerator reseedPulse, newSeedPulse;
     int reseedSteps, newSeedSteps;
 	int reseedCount, newSeedCount;
-	float reseedProgress, newSeedProgress;
+	float reseedProgress = 0, newSeedProgress = 0;
 	float clockIn;
-	float seedIn;
-	float newSeedOut;
-	bool reseedTriggered = false;
+	float seedIn[VCV_POLYPHONY];
+	float newSeedOut[VCV_POLYPHONY];
+	bool resetTriggered = false;
+	bool reseedNeeded = false;
+	bool newSeedNeeded = false;
+	int sampleDelayCount = 0;
+	int sampleDelay = 0;
 
+	int nbrChannels = 0;
+	bool polyModeDetected = false;
+
+	float delayedClockOut;
+	float clockDelayLine[MAX_DELAY+1];
+	int delayIndex = 0;
 	
+
 	TheGardener() {
 		config(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS, NUM_LIGHTS);
 		
         
-        configParam(NUMBER_STEPS_RESEED_PARAM, 1.0, 128.0, 1.0,"Reseed Division");
+        configParam(NUMBER_STEPS_RESEED_PARAM, 1.0, 999.0, 1.0,"Reseed Division");
         configParam(NUMBER_STEPS_RESEED_CV_ATTENUVERTER_PARAM, -1.0, 1.0, 0.0,"Reseed Division CV Attenuation","%",0,100);
 
-        configParam(NUMBER_STEPS_NEW_SEED_PARAM, 1.0f, 128.0, 1.0,"New Seed S&H Division");
+        configParam(NUMBER_STEPS_NEW_SEED_PARAM, 1.0f, 999.0, 1.0,"New Seed S&H Division");
         configParam(NUMBER_STEPS_NEW_SEED_CV_ATTENUVERTER_PARAM, -1.0, 1.0, 0.0,"New Seed S&H Division CV Attenuation","%",0,100);
+
+        configParam(SEED_PROCESS_DELAY_COMPENSATION_PARAM, 0.0, 10.0, 0.0,"Seed Process Delay Compensation");
 
 
 		reseedCount = 0;
 		newSeedCount = 0;
 
-	
+		//Clear out delay
+		for(int i=0;i<=MAX_DELAY;i++) {
+			clockDelayLine[i] = 0.0;
+		}	
 	}
 
 	void process(const ProcessArgs &args) override {
+		sampleDelay = params[SEED_PROCESS_DELAY_COMPENSATION_PARAM].getValue();
         reseedSteps = params[NUMBER_STEPS_RESEED_PARAM].getValue() + inputs[NUMBER_STEPS_RESEED_CV_INPUT].getVoltage() * params[NUMBER_STEPS_RESEED_CV_ATTENUVERTER_PARAM].getValue() / 10.0f; 
         newSeedSteps = params[NUMBER_STEPS_NEW_SEED_PARAM].getValue() + inputs[NUMBER_STEPS_NEW_SEED_CV_INPUT].getVoltage() * params[NUMBER_STEPS_NEW_SEED_CV_ATTENUVERTER_PARAM].getValue() / 10.0f; 
 			
-		seedIn = inputs[SEED_INPUT].getVoltage();
-		reseedTriggered = false;
+		nbrChannels = inputs[SEED_INPUT].getChannels();
+		polyModeDetected = nbrChannels > 1;
+		for(int i=0;i<nbrChannels;i++) {
+			seedIn[i] = inputs[SEED_INPUT].getVoltage(i);
+		}
 
 		if (resetTrigger.process(inputs[RESET_INPUT].getVoltage())) {
 			reseedCount = 0;
 			newSeedCount = 0;
 			reseedProgress = 0.0;
 			newSeedProgress = 0.0;
+			resetTriggered = true;				
 		}
 
 		clockIn = inputs[CLOCK_INPUT].getVoltage();
+		clockDelayLine[(delayIndex + sampleDelay + (polyModeDetected ? 1 : 0)) % MAX_DELAY] = clockIn;
+		delayedClockOut = clockDelayLine[delayIndex];
+		delayIndex = (delayIndex+1) % MAX_DELAY;
+
+
 		if (clockTrigger.process(clockIn)) {
+			if(reseedCount >= reseedSteps || resetTriggered) {
+				reseedCount = 0;
+				reseedNeeded = true;
+				sampleDelayCount = 0;
+			}
+			
+			if(newSeedCount >= newSeedSteps || resetTriggered) {
+				newSeedPulse.trigger(1e-3);
+				reseedNeeded = true;
+				newSeedNeeded = true;
+				newSeedCount = 0;
+				sampleDelayCount = 0;
+			}
+			resetTriggered = false;
+
 			reseedCount +=1;
 			newSeedCount +=1;
 
 			reseedProgress = (float)reseedCount / reseedSteps;
 			newSeedProgress = (float)newSeedCount / newSeedSteps;
 
-			if(reseedCount >= reseedSteps) {
-				reseedPulse.trigger(1e-3);
-				reseedCount = 0;
-				reseedTriggered = true;				
-			}
-			
-			if(newSeedCount >= newSeedSteps) {
-				newSeedOut = seedIn;
-				newSeedPulse.trigger(1e-3);
-				reseedPulse.trigger(1e-3);
-				newSeedCount = 0;
-				reseedTriggered = true;				
-			}
+		}
 
+
+		if(sampleDelayCount >= sampleDelay) {
+			if(newSeedNeeded) {
+				for(int i=0;i<nbrChannels;i++) {
+					newSeedOut[i] = seedIn[i];
+				}
+				newSeedNeeded = false;
+			}
+			if(reseedNeeded && (!polyModeDetected || sampleDelayCount >= sampleDelay+1)) {
+				reseedPulse.trigger(1e-3);
+				reseedNeeded = false;
+			}
+			if(!newSeedNeeded && !reseedNeeded)
+				sampleDelayCount = 0;
 		}
 
 			
-		outputs[CLOCK_OUTPUT].setVoltage(clockIn);		
+		outputs[CLOCK_OUTPUT].setVoltage(delayedClockOut);		
 		outputs[RESEED_OUTPUT].setVoltage(reseedPulse.process(1.0 / args.sampleRate) ? 10.0 : 0);				
 		outputs[NEW_SEED_TRIGGER_OUTPUT].setVoltage(newSeedPulse.process(1.0 / args.sampleRate) ? 10.0 : 0);		
 
-		outputs[SEED_OUTPUT].setVoltage(newSeedOut);		
+		outputs[SEED_OUTPUT].setChannels(nbrChannels);
+		for(int i=0;i<nbrChannels;i++) {
+			outputs[SEED_OUTPUT].setVoltage(newSeedOut[i],i);	
+		}	
+
+		sampleDelayCount +=1;
 
 	}
 
@@ -197,7 +247,10 @@ struct TheGardenerWidget : ModuleWidget {
         addParam(createParam<RoundReallySmallFWKnob>(Vec(94, 90), module, TheGardener::NUMBER_STEPS_NEW_SEED_CV_ATTENUVERTER_PARAM));
 	
 	   
-        addInput(createInput<FWPortInSmall>(Vec(10, 155), module, TheGardener::RESET_INPUT));
+		addParam(createParam<RoundSmallFWSnapKnob>(Vec(14, 308), module, TheGardener::SEED_PROCESS_DELAY_COMPENSATION_PARAM));
+
+
+        addInput(createInput<FWPortInSmall>(Vec(14, 155), module, TheGardener::RESET_INPUT));
         
 		addInput(createInput<FWPortInSmall>(Vec(14, 212), module, TheGardener::CLOCK_INPUT));
         addOutput(createOutput<FWPortOutSmall>(Vec(75, 212), module, TheGardener::CLOCK_OUTPUT));

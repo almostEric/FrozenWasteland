@@ -1,3 +1,8 @@
+### 1.11.0
+- New Modile: The Gardener
+- Bug fixes to Seeds of Change
+- Damian Lillard works a little better, more work to be done
+
 ### 1.10.0 (2019-12-23)
 - New Modules: Probably Not(e) - Arabic, Drunken Rampage, Just a Phase(r) and QAR - Warped Space Expander
 - Added Random Pitch Variability to Probably Not(e) and Probably Note(e) - Bohlen-Pierce

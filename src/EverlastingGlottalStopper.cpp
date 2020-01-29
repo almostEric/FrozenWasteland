@@ -1,5 +1,6 @@
 #include "FrozenWasteland.hpp"
 #include "ui/knobs.hpp"
+#include "ui/ports.hpp"
 #include "dsp-noise/noise.hpp"
 #include "filters/biquad.h"
 
@@ -23,7 +24,8 @@ struct EverlastingGlottalStopper : Module {
 		FM_INPUT,		
 		TIME_OPEN_INPUT,		
 		TIME_CLOSED_INPUT,	
-		BREATHINESS_INPUT,	
+		BREATHINESS_INPUT,
+		DEEMPHASIS_FILTER_INPUT,
 		NUM_INPUTS
 	};
 	enum OutputIds {
@@ -31,13 +33,16 @@ struct EverlastingGlottalStopper : Module {
 		NUM_OUTPUTS
 	};
 	enum LightIds {
-		LEARN_LIGHT,
+		DEEMPHASIS_FILTER_LIGHT,
 		NUM_LIGHTS
 	};
 
 	Biquad* deemphasisFilter;
 	GaussianNoiseGenerator _gauss;
 	float phase = 0.0;
+	bool demphasisFilterActive = false;
+
+	dsp::SchmittTrigger demphasisFilterTrigger; 
 
 	EverlastingGlottalStopper() {
 		config(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS, NUM_LIGHTS);
@@ -85,16 +90,22 @@ inline float quadraticBipolarEG(float x) {
 
 void EverlastingGlottalStopper::process(const ProcessArgs &args) {
 	
+	if (demphasisFilterTrigger.process(params[DEEMPHASIS_FILTER_PARAM].getValue() || inputs[DEEMPHASIS_FILTER_INPUT].getVoltage())) {
+		demphasisFilterActive = !demphasisFilterActive;		
+	}
+	lights[DEEMPHASIS_FILTER_LIGHT].value = demphasisFilterActive;
 
 	float pitch = params[FREQUENCY_PARAM].getValue();	
 	float pitchCv = 12.0f * inputs[PITCH_INPUT].getVoltage();
+	float fm = 0;
 	if (inputs[FM_INPUT].isConnected()) {
-		pitchCv += dsp::quadraticBipolar(params[FM_CV_ATTENUVERTER_PARAM].getValue()) * 12.0f * inputs[FM_INPUT].getVoltage();
+		//pitchCv += dsp::quadraticBipolar(params[FM_CV_ATTENUVERTER_PARAM].getValue()) * 12.0f * inputs[FM_INPUT].getVoltage();
+		fm = params[FM_CV_ATTENUVERTER_PARAM].getValue() * inputs[FM_INPUT].getVoltage() * 1000.0;
 	}
 
 	pitch += pitchCv;
 		// Note C4
-	float freq = 261.626f * powf(2.0f, pitch / 12.0f);
+	float freq = (261.626f * powf(2.0f, pitch / 12.0f)) + fm;
 
 	//float pitch = params[FREQUENCY_PARAM].getValue() + inputs[FM_INPUT].getVoltage() * params[FM_CV_ATTENUVERTER_PARAM].getValue();	
 	//float freq = powf(2.0, pitch);
@@ -117,7 +128,7 @@ void EverlastingGlottalStopper::process(const ProcessArgs &args) {
 	float noise = _gauss.next() / 5.0 * noiseLevel * HanningWindow(phase);
 
 	out = out + noise;
-	if(params[DEEMPHASIS_FILTER_PARAM].getValue()) {
+	if(demphasisFilterActive) {
 		out = deemphasisFilter->process(out);
 	}
 
@@ -136,28 +147,33 @@ struct EverlastingGlottalStopperWidget : ModuleWidget {
 		
 		
 
-		addParam(createParam<RoundHugeFWKnob>(Vec(54, 60), module, EverlastingGlottalStopper::FREQUENCY_PARAM));
-		addParam(createParam<RoundFWKnob>(Vec(15, 215), module, EverlastingGlottalStopper::TIME_OPEN_PARAM));
-		addParam(createParam<RoundFWKnob>(Vec(68, 215), module, EverlastingGlottalStopper::TIME_CLOSED_PARAM));
-		addParam(createParam<RoundFWKnob>(Vec(120, 215), module, EverlastingGlottalStopper::BREATHINESS_PARAM));
-		addParam(createParam<RoundSmallFWKnob>(Vec(108, 162), module, EverlastingGlottalStopper::FM_CV_ATTENUVERTER_PARAM));
-		addParam(createParam<RoundSmallFWKnob>(Vec(17, 275), module, EverlastingGlottalStopper::TIME_OPEN_CV_ATTENUVERTER_PARAM));
-		addParam(createParam<RoundSmallFWKnob>(Vec(70, 275), module, EverlastingGlottalStopper::TIME_CLOSED_CV_ATTENUVERTER_PARAM));
-		addParam(createParam<RoundSmallFWKnob>(Vec(123, 275), module, EverlastingGlottalStopper::BREATHINESS_CV_ATTENUVERTER_PARAM));
-		//addParam(createParam<CKSS>(Vec(123, 300), module, EverlastingGlottalStopper::DEEMPHASIS_FILTER_PARAM));
+		addParam(createParam<RoundFWKnob>(Vec(44, 60), module, EverlastingGlottalStopper::FREQUENCY_PARAM));
+		addParam(createParam<RoundSmallFWKnob>(Vec(12, 180), module, EverlastingGlottalStopper::TIME_OPEN_PARAM));
+		addParam(createParam<RoundSmallFWKnob>(Vec(52, 180), module, EverlastingGlottalStopper::TIME_CLOSED_PARAM));
+		addParam(createParam<RoundSmallFWKnob>(Vec(86, 180), module, EverlastingGlottalStopper::BREATHINESS_PARAM));
+		addParam(createParam<RoundReallySmallFWKnob>(Vec(88, 132), module, EverlastingGlottalStopper::FM_CV_ATTENUVERTER_PARAM));
+		addParam(createParam<RoundReallySmallFWKnob>(Vec(12, 228), module, EverlastingGlottalStopper::TIME_OPEN_CV_ATTENUVERTER_PARAM));
+		addParam(createParam<RoundReallySmallFWKnob>(Vec(52, 228), module, EverlastingGlottalStopper::TIME_CLOSED_CV_ATTENUVERTER_PARAM));
+		addParam(createParam<RoundReallySmallFWKnob>(Vec(88, 228), module, EverlastingGlottalStopper::BREATHINESS_CV_ATTENUVERTER_PARAM));
+		
 
-		addInput(createInput<PJ301MPort>(Vec(30, 134), module, EverlastingGlottalStopper::PITCH_INPUT));
-		addInput(createInput<PJ301MPort>(Vec(108, 134), module, EverlastingGlottalStopper::FM_INPUT));
-		addInput(createInput<PJ301MPort>(Vec(17, 247), module, EverlastingGlottalStopper::TIME_OPEN_INPUT));
-		addInput(createInput<PJ301MPort>(Vec(70, 247), module, EverlastingGlottalStopper::TIME_CLOSED_INPUT));
-		addInput(createInput<PJ301MPort>(Vec(123, 247), module, EverlastingGlottalStopper::BREATHINESS_INPUT));
+		addParam(createParam<LEDButton>(Vec(15, 275), module, EverlastingGlottalStopper::DEEMPHASIS_FILTER_PARAM));
+		addChild(createLight<LargeLight<BlueLight>>(Vec(16.5, 276.5), module, EverlastingGlottalStopper::DEEMPHASIS_FILTER_LIGHT));
+		addInput(createInput<FWPortInSmall>(Vec(38, 275), module, EverlastingGlottalStopper::DEEMPHASIS_FILTER_INPUT));
 
-		addOutput(createOutput<PJ301MPort>(Vec(71, 330), module, EverlastingGlottalStopper::VOICE_OUTPUT));
 
-		addChild(createWidget<ScrewSilver>(Vec(RACK_GRID_WIDTH-12, 0)));
-		addChild(createWidget<ScrewSilver>(Vec(box.size.x - 2 * RACK_GRID_WIDTH + 12, 0)));
-		addChild(createWidget<ScrewSilver>(Vec(RACK_GRID_WIDTH-12, RACK_GRID_HEIGHT - RACK_GRID_WIDTH)));
-		addChild(createWidget<ScrewSilver>(Vec(box.size.x - 2 * RACK_GRID_WIDTH + 12, RACK_GRID_HEIGHT - RACK_GRID_WIDTH)));
+		addInput(createInput<FWPortInSmall>(Vec(24, 110), module, EverlastingGlottalStopper::PITCH_INPUT));
+		addInput(createInput<FWPortInSmall>(Vec(90, 110), module, EverlastingGlottalStopper::FM_INPUT));
+		addInput(createInput<FWPortInSmall>(Vec(14, 207), module, EverlastingGlottalStopper::TIME_OPEN_INPUT));
+		addInput(createInput<FWPortInSmall>(Vec(54, 207), module, EverlastingGlottalStopper::TIME_CLOSED_INPUT));
+		addInput(createInput<FWPortInSmall>(Vec(89, 207), module, EverlastingGlottalStopper::BREATHINESS_INPUT));
+
+		addOutput(createOutput<FWPortOutSmall>(Vec(52, 330), module, EverlastingGlottalStopper::VOICE_OUTPUT));
+
+		// addChild(createWidget<ScrewSilver>(Vec(RACK_GRID_WIDTH-12, 0)));
+		// addChild(createWidget<ScrewSilver>(Vec(box.size.x - 2 * RACK_GRID_WIDTH + 12, 0)));
+		// addChild(createWidget<ScrewSilver>(Vec(RACK_GRID_WIDTH-12, RACK_GRID_HEIGHT - RACK_GRID_WIDTH)));
+		// addChild(createWidget<ScrewSilver>(Vec(box.size.x - 2 * RACK_GRID_WIDTH + 12, RACK_GRID_HEIGHT - RACK_GRID_WIDTH)));
 	}
 };
 
