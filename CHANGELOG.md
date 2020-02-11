@@ -1,5 +1,10 @@
-### 1.11.0
-- New Modile: The Gardener
+### 1.12.0 (2019-02-11)
+- Massive performance improvements on Portland Weather and Hair Pick
+- Probably Not(e) and Probably Not(e) Bohlen-Pierce are now polyphonic
+- Removed dependencies on a bunch of 3rd party libraries
+
+### 1.11.0 (2019-01-11)
+- New Module: The Gardener
 - Bug fixes to Seeds of Change
 - Damian Lillard works a little better, more work to be done
 

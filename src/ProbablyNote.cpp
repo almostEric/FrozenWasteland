@@ -138,16 +138,16 @@ struct ProbablyNote : Module {
 
 	
 	dsp::SchmittTrigger clockTrigger,resetScaleTrigger,octaveWrapAroundTrigger,tempermentActiveTrigger,tempermentTrigger,shiftScalingTrigger,keyScalingTrigger,pitchRandomnessGaussianTrigger,noteActiveTrigger[MAX_NOTES]; 
-	dsp::PulseGenerator noteChangePulse;
+	dsp::PulseGenerator noteChangePulse[POLYPHONY];
     GaussianNoiseGenerator _gauss;
  
     bool octaveWrapAround = false;
     bool noteActive[MAX_NOTES] = {false};
     float noteScaleProbability[MAX_NOTES] = {0.0f};
-    float noteInitialProbability[MAX_NOTES] = {0.0f};
+    float noteInitialProbability[POLYPHONY][MAX_NOTES] = {0.0f}; /// NEEDS POLY
     float currentScaleNoteWeighting[MAX_NOTES] = {0.0};
     bool currentScaleNoteStatus[MAX_NOTES] = {false};
-    float actualProbability[MAX_NOTES] = {0.0};
+    float actualProbability[POLYPHONY][MAX_NOTES] = {0.0}; /// NEEDS POLY
 	int controlIndex[MAX_NOTES] = {0};
 
 
@@ -170,11 +170,12 @@ struct ProbablyNote : Module {
 	float lowerSpread = 0.0;
 	float slant = 0;
 	float focus = 0; 
-	int currentNote = 0;
-	int probabilityNote = 0;
-	double lastQuantizedCV = 0.0;
+	int currentNote[POLYPHONY] = {0};   /// NEEDS POLY
+	int probabilityNote[POLYPHONY] = {0}; /// NEEDS POLY
+	double lastQuantizedCV[POLYPHONY] = {0.0}; /// NEEDS POLY
 	bool resetTriggered = false;
-	int lastNote = -1;
+	int lastNote[POLYPHONY] = {-1}; /// NEEDS POLY?
+	bool noteChange = false; // True if any of the input notes has changed
 	int lastSpread = -1;
 	float lastSlant = -1;
 	float lastFocus = -1;
@@ -196,6 +197,7 @@ struct ProbablyNote : Module {
 	float externalSuspensionRandom = 0.0;
 
 	int fifthOffset,seventhOffset,thirdOffset;
+	int currentPolyphony = 1;
     
 
 	ProbablyNote() {
@@ -512,41 +514,55 @@ struct ProbablyNote : Module {
 		
         octave = clamp(params[OCTAVE_PARAM].getValue() + (inputs[OCTAVE_INPUT].getVoltage() * 0.4 * params[OCTAVE_CV_ATTENUVERTER_PARAM].getValue()),-4.0f,4.0f);
 
-        double noteIn = inputs[NOTE_INPUT].getVoltage();
-        double octaveIn = std::floor(noteIn);
-        double fractionalValue = noteIn - octaveIn;
-        double lastDif = 1.0f;    
-        for(int i = 0;i<MAX_NOTES;i++) {            
-			double currentDif = std::abs((i / 12.0) - fractionalValue);
-			if(currentDif < lastDif) {
-				lastDif = currentDif;
-				currentNote = i;
-			}            
-        }
+		currentPolyphony = inputs[NOTE_INPUT].getChannels();
 
-		if(lastNote != currentNote || lastSpread != spread || lastSlant != slant || lastFocus != focus) {
-			for(int i = 0; i<MAX_NOTES;i++) {
-				noteInitialProbability[i] = 0.0;
+		outputs[NOTE_CHANGE_OUTPUT].setChannels(currentPolyphony);
+		outputs[WEIGHT_OUTPUT].setChannels(currentPolyphony);
+
+		noteChange = false;
+		double octaveIn[POLYPHONY];
+		for(int channel = 0;channel<currentPolyphony;channel++) {
+			double noteIn = inputs[NOTE_INPUT].getVoltage(channel);
+			octaveIn[channel] = std::floor(noteIn);
+			double fractionalValue = noteIn - octaveIn[channel];
+			double lastDif = 1.0f;    
+			for(int i = 0;i<MAX_NOTES;i++) {            
+				double currentDif = std::abs((i / 12.0) - fractionalValue);
+				if(currentDif < lastDif) {
+					lastDif = currentDif;
+					currentNote[channel] = i;
+				}            
 			}
-			noteInitialProbability[currentNote] = 1.0;
+			if(currentNote[channel] != lastNote[channel]) {
+				noteChange = true;
+				lastNote[channel] = currentNote[channel];
+			}
+		}
+
+		if(noteChange || lastSpread != spread || lastSlant != slant || lastFocus != focus) {
+
 			upperSpread = std::ceil((float)spread * std::min(slant+1.0,1.0));
 			lowerSpread = std::ceil((float)spread * std::min(1.0-slant,1.0));
 
+			for(int channel = 0;channel<currentPolyphony;channel++) {
+				for(int i = 0; i<MAX_NOTES;i++) {
+					noteInitialProbability[channel][i] = 0.0;
+				}
+				noteInitialProbability[channel][currentNote[channel]] = 1.0;
 			
+				for(int i=1;i<=spread;i++) {
+					int noteAbove = (currentNote[channel] + i) % MAX_NOTES;
+					int noteBelow = (currentNote[channel] - i);
+					if(noteBelow < 0)
+						noteBelow +=MAX_NOTES;
 
-			for(int i=1;i<=spread;i++) {
-				int noteAbove = (currentNote + i) % MAX_NOTES;
-				int noteBelow = (currentNote - i);
-				if(noteBelow < 0)
-                    noteBelow +=MAX_NOTES;
+					float upperInitialProbability = lerp(1.0,lerp(0.1,1.0,focus),(float)i/(float)spread); 
+					float lowerInitialProbability = lerp(1.0,lerp(0.1,1.0,focus),(float)i/(float)spread); 
 
-				float upperInitialProbability = lerp(1.0,lerp(0.1,1.0,focus),(float)i/(float)spread); 
-				float lowerInitialProbability = lerp(1.0,lerp(0.1,1.0,focus),(float)i/(float)spread); 
-
-				noteInitialProbability[noteAbove] = i <= upperSpread ? upperInitialProbability : 0.0f;				
-				noteInitialProbability[noteBelow] = i <= lowerSpread ? lowerInitialProbability : 0.0f;				
+					noteInitialProbability[channel][noteAbove] = i <= upperSpread ? upperInitialProbability : 0.0f;				
+					noteInitialProbability[channel][noteBelow] = i <= lowerSpread ? lowerInitialProbability : 0.0f;				
+				}
 			}
-			lastNote = currentNote;
 			lastSpread = spread;
 			lastSlant = slant;
 			lastFocus = focus;
@@ -664,7 +680,9 @@ struct ProbablyNote : Module {
 				lights[NOTE_ACTIVE_LIGHT+i*2+1].value = 1;    	
 			}
 
-			actualProbability[actualTarget] = noteInitialProbability[actualTarget] * userProbability; 
+			for(int channel = 0; channel < currentPolyphony; channel++) {
+				actualProbability[channel][actualTarget] = noteInitialProbability[channel][actualTarget] * userProbability; 
+			}
 
 			if(useCircleLayout) {
 				int scalePosition = controlIndex[controlOffset] - key;
@@ -685,141 +703,150 @@ struct ProbablyNote : Module {
 			float triggerInputValue = triggerDelayEnabled ? triggerDelay[delayedIndex] : currentTriggerInput;
 			triggerDelayIndex = delayedIndex;
 
-			if (clockTrigger.process(triggerInputValue) ) {		
-				float rnd = ((float) rand()/RAND_MAX);
-				if(inputs[EXTERNAL_RANDOM_INPUT].isConnected()) {
-					rnd = inputs[EXTERNAL_RANDOM_INPUT].getVoltage() / 10.0f;
-				}	
-			
-				int randomNote = weightedProbability(actualProbability,params[WEIGHT_SCALING_PARAM].getValue(), rnd);
-				if(randomNote == -1) { //Couldn't find a note, so find first active
-					bool noteOk = false;
-					int notesSearched = 0;
-					randomNote = currentNote; 
-					do {
-						randomNote = (randomNote + 1) % MAX_NOTES;
-						notesSearched +=1;
-						noteOk = noteActive[randomNote] || notesSearched >= MAX_NOTES;
-					} while(!noteOk);
-				}
-
-
-				probabilityNote = randomNote;
-				float octaveAdjust = 0.0;
-				if(!octaveWrapAround) {
-					if(randomNote > currentNote && randomNote - currentNote > upperSpread)
-						octaveAdjust = -1.0;
-					if(randomNote < currentNote && currentNote - randomNote > lowerSpread)
-						octaveAdjust = 1.0;
-				}
-
-				float pitchRandomness = 0;
-				float randomRange = clamp(params[PITCH_RANDOMNESS_PARAM].getValue() + (inputs[PITCH_RANDOMNESS_INPUT].getVoltage() * params[PITCH_RANDOMNESS_CV_ATTENUVERTER_PARAM].getValue()),0.0,10.0);
-				if(pitchRandomGaussian) {
-					bool gaussOk = false; // don't want values that are beyond our mean
-					float gaussian;
-					do {
-						gaussian= _gauss.next();
-						gaussOk = gaussian >= -1 && gaussian <= 1;
-					} while (!gaussOk);
-					pitchRandomness = (2.0 - gaussian) * randomRange / 1200.0;
-				} else {
-					pitchRandomness = (1.0 - ((double) rand()/RAND_MAX)) * randomRange / 600.0;
-				}
-
-
-				double quantitizedNoteCV = quantizedCVValue(randomNote,key,alternateIntonationActive ? currentIntonation : 0);
-				quantitizedNoteCV += octaveIn + octave + octaveAdjust;
+			if (clockTrigger.process(triggerInputValue) ) {
+				for(int channel=0;channel<currentPolyphony;channel++) {
+					float rnd = ((float) rand()/RAND_MAX);
+					if(inputs[EXTERNAL_RANDOM_INPUT].isConnected()) {
+						int randomPolyphony = inputs[EXTERNAL_RANDOM_INPUT].getChannels(); //Use as many random channels as possible
+						int randomChannel = channel;
+						if(randomPolyphony <= channel) {
+							randomChannel = randomPolyphony - 1;
+						}
+						rnd = inputs[EXTERNAL_RANDOM_INPUT].getVoltage(randomChannel) / 10.0f;
+					}	
 				
-				
-				//Chord Stuff
-				if(!generateChords) { 
-					outputs[QUANT_OUTPUT].setChannels(1);
-					outputs[QUANT_OUTPUT].setVoltage(quantitizedNoteCV + pitchRandomness,0);
-				} else {
-					outputs[QUANT_OUTPUT].setChannels(4);
-					outputs[QUANT_OUTPUT].setVoltage(quantitizedNoteCV + pitchRandomness,0);
+					int randomNote = weightedProbability(actualProbability[channel],params[WEIGHT_SCALING_PARAM].getValue(), rnd);
+					if(randomNote == -1) { //Couldn't find a note, so find first active
+						bool noteOk = false;
+						int notesSearched = 0;
+						randomNote = currentNote[channel]; 
+						do {
+							randomNote = (randomNote + 1) % MAX_NOTES;
+							notesSearched +=1;
+							noteOk = noteActive[randomNote] || notesSearched >= MAX_NOTES;
+						} while(!noteOk);
+					}
 
-					float rndDissonance5 = ((float) rand()/RAND_MAX);
-					if(externalDissonance5Random != -1)
-						rndDissonance5 = externalDissonance5Random;
 
-					float rndDissonance7 = ((float) rand()/RAND_MAX);
-					if(externalDissonance7Random != -1)
-						rndDissonance7 = externalDissonance7Random;
+					probabilityNote[channel] = randomNote;
 
-					float rndSuspension = ((float) rand()/RAND_MAX);
-					if(externalSuspensionRandom != -1)
-						rndSuspension = externalSuspensionRandom;
-					//float rndInversion = ((float) rand()/RAND_MAX);
+					float octaveAdjust = 0.0;
+					if(!octaveWrapAround) {
+						if(randomNote > currentNote[channel] && randomNote - currentNote[channel] > upperSpread)
+							octaveAdjust = -1.0;
+						if(randomNote < currentNote[channel] && currentNote[channel] - randomNote > lowerSpread)
+							octaveAdjust = 1.0;
+					}
 
-					int secondNote = nextActiveNote(randomNote,2);					
-					if(rndSuspension < suspensionProbability) {
-						float secondOrFourth = ((float) rand()/RAND_MAX);
-						if(secondOrFourth > 0.5) {
-							thirdOffset = 1;
-							secondNote = nextActiveNote(randomNote,3);
+					float pitchRandomness = 0;
+					float randomRange = clamp(params[PITCH_RANDOMNESS_PARAM].getValue() + (inputs[PITCH_RANDOMNESS_INPUT].getVoltage() * params[PITCH_RANDOMNESS_CV_ATTENUVERTER_PARAM].getValue()),0.0,10.0);
+					if(pitchRandomGaussian) {
+						bool gaussOk = false; // don't want values that are beyond our mean
+						float gaussian;
+						do {
+							gaussian= _gauss.next();
+							gaussOk = gaussian >= -1 && gaussian <= 1;
+						} while (!gaussOk);
+						pitchRandomness = (2.0 - gaussian) * randomRange / 1200.0;
+					} else {
+						pitchRandomness = (1.0 - ((double) rand()/RAND_MAX)) * randomRange / 600.0;
+					}
+
+
+					double quantitizedNoteCV = quantizedCVValue(randomNote,key,alternateIntonationActive ? currentIntonation : 0);
+					quantitizedNoteCV += octaveIn[channel] + octave + octaveAdjust;
+					
+					
+					//Chord Stuff
+					if(!generateChords || currentPolyphony > 1) { 
+						outputs[QUANT_OUTPUT].setChannels(currentPolyphony);
+						outputs[QUANT_OUTPUT].setVoltage(quantitizedNoteCV + pitchRandomness,channel);
+					} else {
+						outputs[QUANT_OUTPUT].setChannels(4);
+						outputs[QUANT_OUTPUT].setVoltage(quantitizedNoteCV + pitchRandomness,0);
+
+						float rndDissonance5 = ((float) rand()/RAND_MAX);
+						if(externalDissonance5Random != -1)
+							rndDissonance5 = externalDissonance5Random;
+
+						float rndDissonance7 = ((float) rand()/RAND_MAX);
+						if(externalDissonance7Random != -1)
+							rndDissonance7 = externalDissonance7Random;
+
+						float rndSuspension = ((float) rand()/RAND_MAX);
+						if(externalSuspensionRandom != -1)
+							rndSuspension = externalSuspensionRandom;
+						//float rndInversion = ((float) rand()/RAND_MAX);
+
+						int secondNote = nextActiveNote(randomNote,2);					
+						if(rndSuspension < suspensionProbability) {
+							float secondOrFourth = ((float) rand()/RAND_MAX);
+							if(secondOrFourth > 0.5) {
+								thirdOffset = 1;
+								secondNote = nextActiveNote(randomNote,3);
+							} else {
+								thirdOffset =-1;
+								secondNote = nextActiveNote(randomNote,1);
+							}					
 						} else {
-							thirdOffset =-1;
-							secondNote = nextActiveNote(randomNote,1);
-						}					
-					} else {
-						thirdOffset = 0;
-					}
-					int secondNoteOctave = 0;
-					if(secondNote < randomNote) {
-						secondNoteOctave +=1;
+							thirdOffset = 0;
+						}
+						int secondNoteOctave = 0;
+						if(secondNote < randomNote) {
+							secondNoteOctave +=1;
+						}
+
+						int thirdNote = nextActiveNote(randomNote,4);
+						if(rndDissonance5 < dissonance5Prbability) {
+							float flatOrSharp = ((float) rand()/RAND_MAX);
+							fifthOffset = -1;
+							if(flatOrSharp > 0.5) {
+								fifthOffset = 1;
+							}
+							thirdNote = (thirdNote + fifthOffset) % MAX_NOTES;
+							if(thirdNote < 0)
+								thirdNote += MAX_NOTES;
+						} else {
+							fifthOffset = 0;
+						}
+						int thirdNoteOctave = 0;
+						if(thirdNote < randomNote) {
+							thirdNoteOctave +=1;
+						}
+
+						int fourthNote = nextActiveNote(randomNote,6);
+						if(rndDissonance7 < dissonance7Prbability) {
+							float flatOrSharp = ((float) rand()/RAND_MAX);
+							seventhOffset = -1;
+							if(flatOrSharp > 0.5) {
+								seventhOffset = 1;
+							}
+							fourthNote = (fourthNote + seventhOffset) % MAX_NOTES;
+							if(fourthNote < 0)
+								fourthNote += MAX_NOTES;
+						} else {
+							seventhOffset = 0;
+						}
+						int fourthNoteOctave = 0;
+						if(fourthNote < randomNote) {
+							fourthNoteOctave +=1;
+						}
+				
+						outputs[QUANT_OUTPUT].setVoltage((double)secondNote/12.0 + octaveIn[0] + octave + octaveAdjust + secondNoteOctave,1);
+						outputs[QUANT_OUTPUT].setVoltage((double)thirdNote/12.0 + octaveIn[0] + octave + octaveAdjust + thirdNoteOctave,2);
+						outputs[QUANT_OUTPUT].setVoltage((double)fourthNote/12.0 + octaveIn[0] + octave + octaveAdjust + fourthNoteOctave,3);
 					}
 
-					int thirdNote = nextActiveNote(randomNote,4);
-					if(rndDissonance5 < dissonance5Prbability) {
-						float flatOrSharp = ((float) rand()/RAND_MAX);
-						fifthOffset = -1;
-						if(flatOrSharp > 0.5) {
-							fifthOffset = 1;
-						}
-						thirdNote = (thirdNote + fifthOffset) % MAX_NOTES;
-						if(thirdNote < 0)
-							thirdNote += MAX_NOTES;
-					} else {
-						fifthOffset = 0;
-					}
-					int thirdNoteOctave = 0;
-					if(thirdNote < randomNote) {
-						thirdNoteOctave +=1;
-					}
-
-					int fourthNote = nextActiveNote(randomNote,6);
-					if(rndDissonance7 < dissonance7Prbability) {
-						float flatOrSharp = ((float) rand()/RAND_MAX);
-						seventhOffset = -1;
-						if(flatOrSharp > 0.5) {
-							seventhOffset = 1;
-						}
-						fourthNote = (fourthNote + seventhOffset) % MAX_NOTES;
-						if(fourthNote < 0)
-							fourthNote += MAX_NOTES;
-					} else {
-						seventhOffset = 0;
-					}
-					int fourthNoteOctave = 0;
-					if(fourthNote < randomNote) {
-						fourthNoteOctave +=1;
-					}
-			
-					outputs[QUANT_OUTPUT].setVoltage((double)secondNote/12.0 + octaveIn + octave + octaveAdjust + secondNoteOctave,1);
-					outputs[QUANT_OUTPUT].setVoltage((double)thirdNote/12.0 + octaveIn + octave + octaveAdjust + thirdNoteOctave,2);
-					outputs[QUANT_OUTPUT].setVoltage((double)fourthNote/12.0 + octaveIn + octave + octaveAdjust + fourthNoteOctave,3);
+					outputs[WEIGHT_OUTPUT].setVoltage(clamp((params[NOTE_WEIGHT_PARAM+randomNote].getValue() + (inputs[NOTE_WEIGHT_INPUT+randomNote].getVoltage() / 10.0f) * 10.0f),0.0f,10.0f),channel);
+					if(lastQuantizedCV[channel] != quantitizedNoteCV) {
+						noteChangePulse[channel].trigger();	
+						lastQuantizedCV[channel] = quantitizedNoteCV;
+					}        
 				}
-
-				outputs[WEIGHT_OUTPUT].setVoltage(clamp((params[NOTE_WEIGHT_PARAM+randomNote].getValue() + (inputs[NOTE_WEIGHT_INPUT+randomNote].getVoltage() / 10.0f) * 10.0f),0.0f,10.0f));
-				if(lastQuantizedCV != quantitizedNoteCV) {
-					noteChangePulse.trigger();	
-					lastQuantizedCV = quantitizedNoteCV;
-				}        
-
 			}
-			outputs[NOTE_CHANGE_OUTPUT].setVoltage(noteChangePulse.process(1.0 / args.sampleRate) ? 10.0 : 0);
+			for(int channel=0;channel<currentPolyphony;channel++) {
+				outputs[NOTE_CHANGE_OUTPUT].setVoltage(noteChangePulse[channel].process(1.0 / args.sampleRate) ? 10.0 : 0, channel);
+			}
 		
 		}
 
@@ -931,7 +958,7 @@ struct ProbablyNoteWidget : ModuleWidget {
 
 			float opacity = noteInitialProbability[i] * 255;
 			nvgFillColor(args.vg, nvgRGBA(0xff, 0xff, 0x20, (int)opacity));
-			if(i == module->probabilityNote) {
+			if(i == module->probabilityNote[0]) {
 				nvgFillColor(args.vg, nvgRGBA(0x20, 0xff, 0x20, (int)opacity));
 			}
 			switch(i) {
@@ -1121,7 +1148,7 @@ struct ProbablyNoteWidget : ModuleWidget {
 
 			float opacity = noteInitialProbability[actualTarget] * 255;
 			nvgFillColor(args.vg, nvgRGBA(0xff, 0xff, 0x20, (int)opacity));
-			if(actualTarget == module->probabilityNote) {
+			if(actualTarget == module->probabilityNote[0]) {
 				nvgFillColor(args.vg, nvgRGBA(0x20, 0xff, 0x20, (int)opacity));
 			}
 
@@ -1165,9 +1192,9 @@ struct ProbablyNoteWidget : ModuleWidget {
 		drawKey(args, Vec(74,82), module->lastKey, module->transposedKey);
 		//drawOctave(args, Vec(66, 280), module->octave);
 		if(module->useCircleLayout) {
-			drawNoteRangeCircular(args, module->noteInitialProbability, module->key);
+			drawNoteRangeCircular(args, module->noteInitialProbability[0], module->key);
 		} else {
-			drawNoteRangeNormal(args, module->noteInitialProbability);
+			drawNoteRangeNormal(args, module->noteInitialProbability[0]);
 		}
 	}
 };

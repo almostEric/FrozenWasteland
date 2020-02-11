@@ -1,16 +1,14 @@
 #include "FrozenWasteland.hpp"
+#include "dsp-delay/delayLine.cpp"
 #include "ui/knobs.hpp"
 #include "ui/ports.hpp"
-#include "frame.h"
-#include "granular_delay.h"
-#include "samplerate.h"
 #include "ringbuffer.hpp"
 #include "StateVariableFilter.h"
 #include "filters/Compressor.hpp"
 #include <iostream>
+#include <time.h>
 
 #define HISTORY_SIZE (1<<22)
-#define MAX_GRAIN_SIZE (1<<16)	
 #define NUM_TAPS 16
 #define MAX_GRAINS 4
 #define CHANNELS 2
@@ -125,6 +123,13 @@ struct PortlandWeather : Module {
 		COMPRESSION_ADAPTIVE,
 		NUM_COMPRESSION_MODES
 	};
+	enum ParameterGroups {
+		STACKING_AND_MUTING_GROUP,
+		LEVELS_AND_PANNING_GROUP,
+		FILTERING_GROUP,
+		PITCH_SHIFTING_GROUP,
+		NUM_PARAMETER_GROUPS
+	};
 
 	Compressor compressor[CHANNELS];
 
@@ -145,16 +150,7 @@ struct PortlandWeather : Module {
 		//compressionMode = newMode;
 	}
 
-	// void changeCompressorSampleRate (float nSampleRate) {
-
-	// 	if (compressionMode == COMPRESSION_HARD) {
-	// 		// reset to hard compression
-	// 		for (uint8_t i = 0; i < CHANNELS; i++) {
-	// 			compressor[i].setCoefficients(1.0f, 30.0f, 5.0f, 20.0f, sampleRate);
-	// 		}
-	// 	}
-	// }
-
+	
 	inline float limit (float in, uint8_t which) {
 		if (compressionMode == COMPRESSION_NONE) {
 			return in;
@@ -215,6 +211,7 @@ struct PortlandWeather : Module {
 	float feedbackPitch[CHANNELS] = {0.0f,0.0f};
 	float feedbackDetune[CHANNELS] = {0.0f,0.0f};
 	float delayTime[NUM_TAPS+CHANNELS];
+	float lastDelayTime[NUM_TAPS+CHANNELS];
 	
 
 	float testDelay = 0.0f;
@@ -244,16 +241,9 @@ struct PortlandWeather : Module {
 	bool secondClockReceived = false;
 
 	
-	
-	FrozenWasteland::MultiTapDoubleRingBuffer<FloatFrame, HISTORY_SIZE,NUM_TAPS+CHANNELS> historyBuffer;
+	MultiTapDelayLine<FloatFrame, NUM_TAPS+CHANNELS> delayLine;
 	FrozenWasteland::ReverseRingBuffer<float, HISTORY_SIZE> reverseHistoryBuffer[CHANNELS];
-	FrozenWasteland::DoubleRingBuffer<FloatFrame, 16> outBuffer[NUM_TAPS+CHANNELS]; 
-	FloatFrame pitchShiftBuffer[NUM_TAPS+CHANNELS][MAX_GRAINS][MAX_GRAIN_SIZE];
-	
-	SRC_STATE *src[NUM_TAPS+CHANNELS];
-
-	GranularDelayPitchShift granularPitchShift[NUM_TAPS + CHANNELS][MAX_GRAINS]; // Each tap, plus each channel gets up to 4 grains
-	
+	GranularPitchShifter granularPitchShift[NUM_TAPS + CHANNELS]; // Each tap, plus each channel 
 	
 	FloatFrame lastFeedback = {0.0f,0.0f};
 
@@ -270,7 +260,7 @@ struct PortlandWeather : Module {
 
 		configParam(CLOCK_DIV_PARAM, 0, DIVISIONS-1, 0,"Divisions");
 		configParam(TIME_PARAM, 0.0f, 10.0f, 0.350f,"Time"," ms",0,16000);
-		//configParam(GRID_PARAM, 0.001f, 10.0f, 0.350f);
+		
 
 		configParam(GROOVE_TYPE_PARAM, 0.0f, 15.0f, 0.0f,"Groove Type");
 		configParam(GROOVE_AMOUNT_PARAM, 0.0f, 1.0f, 1.0f,"Groove Amount","%",0,100);
@@ -287,16 +277,10 @@ struct PortlandWeather : Module {
 		configParam(FEEDBACK_L_DETUNE_PARAM, -99.0f, 99.0f, 0.0f,"Feedback L Detune", " cents");
 		configParam(FEEDBACK_R_DETUNE_PARAM, -99.0f, 99.0f, 0.0f,"Feedback R Detune", " cents");
 
-		//configParam(GRAIN_QUANTITY_PARAM, 1, 4, 1,"# Grains");
-		//configParam(GRAIN_SIZE_PARAM, 8, 11, 11);
-		//configParam(GRAIN_SIZE_PARAM, 0.0f, 1.0f, 1.0f,"Grain Size");
-		
-
+	
 		configParam(CLEAR_BUFFER_PARAM, 0.0f, 1.0f, 0.0f);
 
-
-		configParam(REVERSE_PARAM, 0.0f, 1.0f, 0.0f);
-		
+		configParam(REVERSE_PARAM, 0.0f, 1.0f, 0.0f);		
 		configParam(PING_PONG_PARAM, 0.0f, 1.0f, 0.0f);
 
 		configParam(COMPRESSION_MODE_PARAM, 0.0f, 1.0f, 0.0f);
@@ -327,7 +311,7 @@ struct PortlandWeather : Module {
 
 		
 		float sampleRate = APP->engine->getSampleRate();
-		//sampleRate = APP->engine->getSampleRate();
+		
 
 		for (int i = 0; i < NUM_TAPS; ++i) {
 			tapMuted[i] = false;
@@ -342,21 +326,9 @@ struct PortlandWeather : Module {
 	        filterParams[i].setFreq(T(800.0f / sampleRate));
 			delayTime[i] = 0.0f;
 
-			src[i] = src_new(SRC_SINC_FASTEST, 2, NULL);
-
-			for(int j=0;j<MAX_GRAINS;j++) {
-	    	 	granularPitchShift[i][j].Init((float*) pitchShiftBuffer[i][j],((float)j)/MAX_GRAINS);
-			}
 	    }	
-		for(int i=0;i<CHANNELS;i++) {
-			src[NUM_TAPS+i] = src_new(SRC_SINC_FASTEST, 2, NULL);
 
-			for(int j=0;j<MAX_GRAINS;j++) {
-				granularPitchShift[i+NUM_TAPS][j].Init((float*) pitchShiftBuffer[i+NUM_TAPS][j],((float)j)/MAX_GRAINS);
-			}
-
-			compressor[i].setCoefficients(1.0f, 30.0f, 5.0f, 20.0f, sampleRate);
-		}
+		srand(time(NULL));
 	}
 
 
@@ -368,8 +340,6 @@ struct PortlandWeather : Module {
 		json_object_set_new(rootJ, "reverse", json_integer((int) reverse));
 
 		json_object_set_new(rootJ, "compressionMode", json_integer((int) compressionMode));
-
-		json_object_set_new(rootJ, "grainCount", json_integer((int) grainCount));
 
 		json_object_set_new(rootJ, "grainSize", json_real((float) grainSize));
 
@@ -404,11 +374,6 @@ struct PortlandWeather : Module {
 			compressionMode = json_integer_value(sumCM);			
 		}
 
-		json_t *sumGc = json_object_get(rootJ, "grainCount");
-		if (sumGc) {
-			grainCount = json_integer_value(sumGc);			
-		}
-
 		json_t *sumGs = json_object_get(rootJ, "grainSize");
 		if (sumGs) {
 			grainSize = json_real_value(sumGs);			
@@ -441,7 +406,7 @@ struct PortlandWeather : Module {
 	void process(const ProcessArgs &args) override {
 
 		if (clearBufferTrigger.process(params[CLEAR_BUFFER_PARAM].getValue())) {
-			historyBuffer.clear();
+			delayLine.clear();
 		}
  
 
@@ -575,17 +540,11 @@ struct PortlandWeather : Module {
 		}	
 
 		// Push dry sample into history buffer
-		if (!historyBuffer.full(NUM_TAPS-1)) {
-			historyBuffer.push(dryToUse);
-		}
-
-
-		
+		delayLine.write(dryToUse);
 
 		FloatFrame wet = {0.0f, 0.0f}; // This is the mix of delays and input that is outputed
 		FloatFrame feedbackValue = {0.0f, 0.0f}; // This is the output of a tap that gets sent back to input
-		float activeTapCount = 0.0f; // This will be used to normalize output
-		
+				
 		for(int tap = 0; tap < NUM_TAPS;tap++) { 
 
 			// Stacking
@@ -613,71 +572,27 @@ struct PortlandWeather : Module {
 			
 			// Compute delay from base and groove
 			float delay = baseDelay / NUM_TAPS * lerp(tapGroovePatterns[0][delayTap],tapGroovePatterns[tapGroovePattern][delayTap],grooveAmount); //Balance between straight time and groove
-			
-			
+						
 			delayTime[tap] = (delay + delayMod); 
-
-			// if(tap == 0) { //TEST CODE
-			// 	testDelay = duration;
-			// }
-
-			float index = delayTime[tap] * sampleRate;
-			if(index > 0)
-			{
-				// How many samples do we need consume to catch up?
-				float consume = index - historyBuffer.size(tap);		
-
-				if (outBuffer[tap].empty()) {
-					
-					double ratio = 1.f;
-					if (std::fabs(consume) >= 16.f) {
-						ratio = std::pow(10.f, clamp(consume / 10000.f, -1.f, 1.f)) ;
-					}
-													
-
-					SRC_DATA srcData;
-					srcData.data_in = (const float*) historyBuffer.startData(tap);
-					srcData.data_out = (float*) outBuffer[tap].endData();
-					srcData.input_frames = std::min((int) historyBuffer.size(tap), 16);
-					srcData.output_frames = outBuffer[tap].capacity();
-					srcData.end_of_input = false;
-					srcData.src_ratio = ratio;
-					src_process(src[tap], &srcData);
-					historyBuffer.startIncr(tap,srcData.input_frames_used);
-					outBuffer[tap].endIncr(srcData.output_frames_gen);
-				}
+			if(delayTime[tap] != lastDelayTime[tap]) {
+				float index = delayTime[tap] * sampleRate;
+				delayLine.setDelayTime(tap,index);
+				lastDelayTime[tap] = delayTime[tap];
 			}
 			
-			FloatFrame initialOutput = {0.0f, 0.0f};
 			FloatFrame wetTap = {0.0f, 0.0f};
-			if (!outBuffer[tap].empty()) {
-				initialOutput = outBuffer[tap].shift();
-			}
+
+			//Get Delay Tap Output
+			FloatFrame initialOutput = delayLine.getTap(tap);
 		
-			
-			for(int k=0;k<MAX_GRAINS;k++) {
-				FloatFrame pitchShiftOut = initialOutput;
-				granularPitchShift[tap][k].set_ratio(SemitonesToRatio(pitch));
-				granularPitchShift[tap][k].set_size(grainSize);
+			granularPitchShift[tap].setRatio(SemitonesToRatio(pitch));
+			granularPitchShift[tap].setSize(grainSize);
 
-				bool useTriangleWindow = grainCount != 4;
-				granularPitchShift[tap][k].Process(&pitchShiftOut,useTriangleWindow); 
+			FloatFrame pitchShiftOut = granularPitchShift[tap].process(initialOutput,true); 
 				
-				if(k == 0) {
-					wetTap.l +=pitchShiftOut.l; //First one always use
-					wetTap.r +=pitchShiftOut.r; //First one always use
-				} else if (k == 2 && grainCount >= 2) {
-					wetTap.l +=pitchShiftOut.l; //Use middle grain for 2
-					wetTap.r +=pitchShiftOut.r; //Use middle grain for 2
-				} else if (k != 2 && grainCount == 3) {
-					wetTap.l +=pitchShiftOut.l; //Use them all
-					wetTap.r +=pitchShiftOut.r; //Use them all
-				}
-			}
-			wetTap.l = wetTap.l;	
-			wetTap.r = wetTap.r;		        	
+			wetTap.l +=pitchShiftOut.l;
+			wetTap.r +=pitchShiftOut.r;
 					
-
 			// Muting
 			if(params[MUTE_TRIGGER_MODE_PARAM].getValue() == GATE_TRIGGE_MODE && inputs[TAP_MUTE_CV_INPUT+tap].isConnected()) {
 				tapMuted[tap] = inputs[TAP_MUTE_CV_INPUT+tap].getVoltage() > 0.0f;
@@ -685,9 +600,6 @@ struct PortlandWeather : Module {
 			//Button (or trigger) can override input
 			if (mutingTrigger[tap].process(params[TAP_MUTE_PARAM+tap].getValue() + (inputs[TAP_MUTE_CV_INPUT+tap].isConnected() && params[MUTE_TRIGGER_MODE_PARAM].getValue() == TRIGGER_TRIGGER_MODE ? inputs[TAP_MUTE_CV_INPUT+tap].getVoltage() : 0))) {
 				tapMuted[tap] = !tapMuted[tap];
-				// if(!tapMuted[tap]) {
-				// 	activeTapCount +=1.0f;
-				// }
 			}			
 
 			//Each tap - channel has its own filter
@@ -761,7 +673,6 @@ struct PortlandWeather : Module {
 
 			//Pull feedback time off of normal tap time
 			if(feedbackTap[channel] != NUM_TAPS ) {
-
 				
 				if(feedbackTap[channel] == NUM_TAPS+1) {
 					//External feedback time
@@ -777,45 +688,20 @@ struct PortlandWeather : Module {
 					delay = delayTime[delayTap] + slip; 
 				}
 			
-
 				float index = delay * sampleRate;
-				if(index > 0)
-				{
-					// How many samples do we need consume to catch up?
-					float consume = index - historyBuffer.size(NUM_TAPS+channel);		
-
-					if (outBuffer[NUM_TAPS+channel].empty()) {
-										
-						double ratio = 1.f;
-						if (std::fabs(consume) >= 16.f) {
-							ratio = std::pow(10.f, clamp(consume / 10000.f, -1.f, 1.f)) ; 
-						}
-														
-						SRC_DATA srcData;
-						srcData.data_in = (const float*) historyBuffer.startData(NUM_TAPS+channel);
-						srcData.data_out = (float*) outBuffer[NUM_TAPS+channel].endData();
-						srcData.input_frames = std::min((int) historyBuffer.size(NUM_TAPS+channel), 16);
-						srcData.output_frames = outBuffer[NUM_TAPS+channel].capacity();
-						srcData.end_of_input = false;
-						srcData.src_ratio = ratio;
-						src_process(src[NUM_TAPS+channel], &srcData);
-						historyBuffer.startIncr(NUM_TAPS+channel,srcData.input_frames_used);
-						outBuffer[NUM_TAPS+channel].endIncr(srcData.output_frames_gen);
-					}
+				if(index > 0  && index != lastDelayTime[NUM_TAPS+channel] ) {
+					delayLine.setDelayTime(NUM_TAPS+channel,index);
 				}
 
-				if (!outBuffer[NUM_TAPS+channel].empty()) {
-					FloatFrame tempOutput = outBuffer[NUM_TAPS+channel].shift();
-					if(channel == 0) {
-						initialFBOutput.l = tempOutput.l; 
-					} else {
-						initialFBOutput.r = tempOutput.r;
-					}					
-				}				
+				FloatFrame tempOutput = delayLine.getTap(NUM_TAPS+channel);
+				if(channel == 0) {
+					initialFBOutput.l = tempOutput.l; 
+				} else {
+					initialFBOutput.r = tempOutput.r;
+				}								
 			}
 
 			if(feedbackTap[channel] == NUM_TAPS) { //This would be the All Taps setting
-				//float feedbackScaling = 4.0f; // Trying to make full feedback not, well feedback
 				delay = delayTime[NUM_TAPS-1]; // last tap
 				if(channel == 0) {
 					initialFBOutput.l = wet.l; 
@@ -823,58 +709,34 @@ struct PortlandWeather : Module {
 					initialFBOutput.r = wet.r;
 				}
 			}
-
-			
-		
+					
 			//Set reverse size = delay of feedback
 			reverseHistoryBuffer[channel].setDelaySize((delay) * sampleRate);			
-
-		
-
 			
 			float pitch,detune;
 			pitch = feedbackPitch[channel];
 			detune = feedbackDetune[channel];
 			pitch += detune/100.0f; 
 
-			FloatFrame pitchShiftedFB = {0.0f,0.0f};
-			for(int k=0;k<MAX_GRAINS;k++) {
-				FloatFrame pitchShiftOut = initialFBOutput;
-				granularPitchShift[NUM_TAPS+channel][k].set_ratio(SemitonesToRatio(pitch));
-				granularPitchShift[NUM_TAPS+channel][k].set_size(grainSize);
+			FloatFrame pitchShiftedFB = {0.0f,0.0f};			
+			granularPitchShift[NUM_TAPS+channel].setRatio(SemitonesToRatio(pitch));
+			granularPitchShift[NUM_TAPS+channel].setSize(grainSize);
 
-				bool useTriangleWindow = grainCount != 4;
-				granularPitchShift[NUM_TAPS+channel][k].Process(&pitchShiftOut,useTriangleWindow); 
+			FloatFrame pitchShiftOut = granularPitchShift[NUM_TAPS+channel].process(initialFBOutput,true); 
 				
-				if(k == 0) {
-					pitchShiftedFB.l +=pitchShiftOut.l; //First one always use
-					pitchShiftedFB.r +=pitchShiftOut.r; //First one always use
-				} else if (k == 2 && grainCount >= 2) {
-					pitchShiftedFB.l +=pitchShiftOut.l; //Use middle grain for 2
-					pitchShiftedFB.r +=pitchShiftOut.r; //Use middle grain for 2
-				} else if (k != 2 && grainCount == 3) {
-					pitchShiftedFB.l +=pitchShiftOut.l; //Use them all
-					pitchShiftedFB.r +=pitchShiftOut.r; //Use them all
-				}
-			}
-
+			pitchShiftedFB.l +=pitchShiftOut.l; 
+			pitchShiftedFB.r +=pitchShiftOut.r;
+			
 			if(channel == 0) {
-				feedbackValue.l = pitchShiftedFB.l; 
-				//feedbackValue.l = initialFBOutput.l; 
+				feedbackValue.l = pitchShiftedFB.l; 				
 			} else {
-				feedbackValue.r = pitchShiftedFB.r;
-				//feedbackValue.r = initialFBOutput.r;
+				feedbackValue.r = pitchShiftedFB.r;				
 			}
 		}
+	
 		
-		//activeTapCount = 16.0f;
-		//wet = wet / activeTapCount * sqrt(activeTapCount);	
-			
-		
-
 
 		//Apply global filtering
-		// TODO Stop setting cutoff all the time
 		float color = clamp(params[FEEDBACK_TONE_PARAM].getValue() + inputs[FEEDBACK_TONE_INPUT].getVoltage() / 10.0f, 0.0f, 1.0f);
 
 		if(color != lastColor) {
@@ -926,6 +788,60 @@ struct PortlandWeather : Module {
 		outputs[OUT_R_OUTPUT].setVoltage(outR);
 
 	}
+
+
+	void randomizeParameters(int parameterGroup) {
+		float rnd;
+		switch(parameterGroup) {
+			case STACKING_AND_MUTING_GROUP :
+				for(int tap = 0; tap < NUM_TAPS;tap++) {
+					rnd = ((float) rand()/RAND_MAX);
+					tapMuted[tap] = rnd > 0.5;
+					rnd = ((float) rand()/RAND_MAX);
+					tapStacked[tap] = rnd > 0.5;
+				}
+				break;
+			case LEVELS_AND_PANNING_GROUP :
+				for(int tap = 0; tap < NUM_TAPS;tap++) {
+					rnd = ((float) rand()/RAND_MAX);
+					params[TAP_MIX_PARAM+tap].setValue(rnd);
+					rnd = ((float) rand()/RAND_MAX);
+					params[TAP_PAN_PARAM+tap].setValue(rnd);
+				}
+				break;
+			case FILTERING_GROUP :
+				for(int tap = 0; tap < NUM_TAPS;tap++) {
+					rnd = ((float) rand()/RAND_MAX) * 4.5;
+					params[TAP_FILTER_TYPE_PARAM+tap].setValue((int)rnd);
+					rnd = ((float) rand()/RAND_MAX);
+					params[TAP_FC_PARAM+tap].setValue(rnd);
+					rnd = ((float) rand()/RAND_MAX);
+					params[TAP_Q_PARAM+tap].setValue(rnd);
+				}
+				break;
+			case PITCH_SHIFTING_GROUP :
+				for(int tap = 0; tap < NUM_TAPS;tap++) {
+					rnd = ((float) rand()/RAND_MAX) * 48 - 24;
+					params[TAP_PITCH_SHIFT_PARAM+tap].setValue(rnd);
+					rnd = ((float) rand()/RAND_MAX) * 198 - 99;
+					params[TAP_DETUNE_PARAM+tap].setValue(rnd);
+				}
+				break;
+
+		}
+
+	}
+
+	void onReset() override {
+		reverse = false;
+		pingPong = false;
+		compressionMode = COMPRESSION_NONE;
+		for(int tap = 0; tap < NUM_TAPS;tap++) {
+			tapMuted[tap] = false;
+			tapStacked[tap] = false;
+		}
+	}
+
 };
 
 
@@ -1252,6 +1168,14 @@ struct PortlandWeatherWidget : ModuleWidget {
 		}
 	};
 
+	struct RandomizeParamsItem : MenuItem {
+		PortlandWeather *module;
+		int parameterGroup;
+		void onAction(const event::Action &e) override {		
+			module->randomizeParameters(parameterGroup);
+		}		
+	};
+
 	
 	
 	void appendContextMenu(Menu *menu) override {
@@ -1261,35 +1185,33 @@ struct PortlandWeatherWidget : ModuleWidget {
 		PortlandWeather *module = dynamic_cast<PortlandWeather*>(this->module);
 		assert(module);
 
-		MenuLabel *themeLabel = new MenuLabel();
-		themeLabel->text = "Grain Count";
-		menu->addChild(themeLabel);
+		// MenuLabel *themeLabel = new MenuLabel();
+		// themeLabel->text = "Grain Count";
+		// menu->addChild(themeLabel);
 
-		GrainCountItem *grainCount1Item = new GrainCountItem();
-		grainCount1Item->text = "1";// 
-		grainCount1Item->module = module;
-		grainCount1Item->grainCount= 1;
-		menu->addChild(grainCount1Item);
+		// GrainCountItem *grainCount1Item = new GrainCountItem();
+		// grainCount1Item->text = "1";// 
+		// grainCount1Item->module = module;
+		// grainCount1Item->grainCount= 1;
+		// menu->addChild(grainCount1Item);
 
-		GrainCountItem *grainCount2Item = new GrainCountItem();
-		grainCount2Item->text = "2";// 
-		grainCount2Item->module = module;
-		grainCount2Item->grainCount= 2;
-		menu->addChild(grainCount2Item);
+		// GrainCountItem *grainCount2Item = new GrainCountItem();
+		// grainCount2Item->text = "2";// 
+		// grainCount2Item->module = module;
+		// grainCount2Item->grainCount= 2;
+		// menu->addChild(grainCount2Item);
 
-		GrainCountItem *grainCount3Item = new GrainCountItem();
-		grainCount3Item->text = "4";// 
-		grainCount3Item->module = module;
-		grainCount3Item->grainCount= 3;
-		menu->addChild(grainCount3Item);
+		// GrainCountItem *grainCount3Item = new GrainCountItem();
+		// grainCount3Item->text = "4";// 
+		// grainCount3Item->module = module;
+		// grainCount3Item->grainCount= 3;
+		// menu->addChild(grainCount3Item);
 
-		GrainCountItem *grainCount4Item = new GrainCountItem();
-		grainCount4Item->text = "Raw";// 
-		grainCount4Item->module = module;
-		grainCount4Item->grainCount= 4;
-		menu->addChild(grainCount4Item);
-
-		menu->addChild(new MenuLabel());// empty line
+		// GrainCountItem *grainCount4Item = new GrainCountItem();
+		// grainCount4Item->text = "Raw";// 
+		// grainCount4Item->module = module;
+		// grainCount4Item->grainCount= 4;
+		// menu->addChild(grainCount4Item);
 		
 		MenuLabel *settingsLabel = new MenuLabel();
 		settingsLabel->text = "Grain Size";
@@ -1319,6 +1241,37 @@ struct PortlandWeatherWidget : ModuleWidget {
 		grainSize4Item->module = module;
 		grainSize4Item->grainSize= 1.0f;
 		menu->addChild(grainSize4Item);
+
+		menu->addChild(new MenuLabel());// empty line
+
+		MenuLabel *randomLabel = new MenuLabel();
+		randomLabel->text = "Randomize";
+		menu->addChild(randomLabel);
+
+		RandomizeParamsItem *randomizeStackMuteItem = new RandomizeParamsItem();
+		randomizeStackMuteItem->text = "Stacking & Muting";
+		randomizeStackMuteItem->parameterGroup = module->STACKING_AND_MUTING_GROUP;
+		randomizeStackMuteItem->module = module;
+		menu->addChild(randomizeStackMuteItem);
+
+		RandomizeParamsItem *randomizeVolPanItem = new RandomizeParamsItem();
+		randomizeVolPanItem->text = "Level & Panning";
+		randomizeVolPanItem->parameterGroup = module->LEVELS_AND_PANNING_GROUP;
+		randomizeVolPanItem->module = module;
+		menu->addChild(randomizeVolPanItem);
+
+		RandomizeParamsItem *randomizeFilteringItem = new RandomizeParamsItem();
+		randomizeFilteringItem->text = "Filtering";
+		randomizeFilteringItem->parameterGroup = module->FILTERING_GROUP;
+		randomizeFilteringItem->module = module;
+		menu->addChild(randomizeFilteringItem);
+
+		RandomizeParamsItem *randomizePitchItem = new RandomizeParamsItem();
+		randomizePitchItem->text = "Pitch Shifting"; 
+		randomizePitchItem->parameterGroup = module->PITCH_SHIFTING_GROUP;
+		randomizePitchItem->module = module;
+		menu->addChild(randomizePitchItem);
+
 
 		// DelayDisplayNoteItem *ddnItem = createMenuItem<DelayDisplayNoteItem>("Display delay values in notes", CHECKMARK(module->displayDelayNoteMode));
 		// ddnItem->module = module;
