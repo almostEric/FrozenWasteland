@@ -144,10 +144,10 @@ struct ProbablyNote : Module {
     bool octaveWrapAround = false;
     bool noteActive[MAX_NOTES] = {false};
     float noteScaleProbability[MAX_NOTES] = {0.0f};
-    float noteInitialProbability[POLYPHONY][MAX_NOTES] = {0.0f}; /// NEEDS POLY
-    float currentScaleNoteWeighting[MAX_NOTES] = {0.0};
+    float noteInitialProbability[POLYPHONY][MAX_NOTES] = {0.0f};
+    float currentScaleNoteWeighting[MAX_NOTES] = {0.0f};
     bool currentScaleNoteStatus[MAX_NOTES] = {false};
-    float actualProbability[POLYPHONY][MAX_NOTES] = {0.0}; /// NEEDS POLY
+    float actualProbability[POLYPHONY][MAX_NOTES] = {0.0f};
 	int controlIndex[MAX_NOTES] = {0};
 
 

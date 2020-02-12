@@ -139,9 +139,9 @@ struct ProbablyNoteBP : Module {
     bool noteActive[MAX_NOTES] = {false};
     float noteScaleProbability[MAX_NOTES] = {0.0f};
     float noteInitialProbability[POLYPHONY][MAX_NOTES] = {0.0f};
-    float currentScaleNoteWeighting[MAX_NOTES] = {0.0};
+    float currentScaleNoteWeighting[MAX_NOTES] = {0.0f};
 	bool currentScaleNoteStatus[MAX_NOTES] = {false};
-	float actualProbability[POLYPHONY][MAX_NOTES] = {0.0};
+	float actualProbability[POLYPHONY][MAX_NOTES] = {0.0f};
 	int controlIndex[MAX_NOTES] = {0};
 
 	bool triggerDelayEnabled = false;
@@ -165,7 +165,7 @@ struct ProbablyNoteBP : Module {
 	float focus = 0; 
 	int currentNote[POLYPHONY] = {0};
 	int probabilityNote[POLYPHONY] = {0};
-	double lastQuantizedCV[POLYPHONY] = {0};
+	double lastQuantizedCV[POLYPHONY] = {0.0};
 	bool noteChange = false;
 	bool resetTriggered = false;
 	int lastNote[POLYPHONY] = {-1};
