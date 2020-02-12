@@ -138,10 +138,10 @@ struct ProbablyNoteBP : Module {
     bool tritaveWrapAround = false;
     bool noteActive[MAX_NOTES] = {false};
     float noteScaleProbability[MAX_NOTES] = {0.0f};
-    float noteInitialProbability[POLYPHONY][MAX_NOTES] = {0.0f};
+    float noteInitialProbability[POLYPHONY][MAX_NOTES] = {{0.0f}};
     float currentScaleNoteWeighting[MAX_NOTES] = {0.0f};
 	bool currentScaleNoteStatus[MAX_NOTES] = {false};
-	float actualProbability[POLYPHONY][MAX_NOTES] = {0.0f};
+	float actualProbability[POLYPHONY][MAX_NOTES] = {{0.0f}};
 	int controlIndex[MAX_NOTES] = {0};
 
 	bool triggerDelayEnabled = false;
