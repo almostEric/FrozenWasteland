@@ -72,7 +72,7 @@ struct DelayLine {
 template <int WINDOW_SIZE>
 struct InterpolatedDelay {
 
-    FloatFrame DelayBuffer[WINDOW_SIZE] = {0.0f,0.0f};
+    FloatFrame DelayBuffer[WINDOW_SIZE] = {{0.0f,0.0f}};
 	int writePtr = 0;
 	FloatFrame accumulator = {0.0,0.0};
 
@@ -117,7 +117,7 @@ struct InterpolatedDelay {
 template <typename T, int N>
 struct MultiTapDelayLine {
 
-    T DelayBuffer[DELAY_LINE_SIZE] = {0.0f, 0.0f};
+    T DelayBuffer[DELAY_LINE_SIZE] = {{0.0f, 0.0f}};
     int readPtr[N] = {0}; // read ptr
 	int desiredReadPtr[N] = {0};
     int writePtr = 0; // write ptr
