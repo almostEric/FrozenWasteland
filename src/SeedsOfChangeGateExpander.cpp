@@ -21,7 +21,9 @@ struct SeedsOfChangeGateExpander : Module {
 	enum ParamIds {
 		GATE_PROBABILITY_1_PARAM,
 		GATE_PROBABILITY_1_CV_ATTENUVERTER = GATE_PROBABILITY_1_PARAM + NBOUT,
-		NUM_PARAMS = GATE_PROBABILITY_1_CV_ATTENUVERTER + NBOUT
+		GATE_MODE_PARAM = GATE_PROBABILITY_1_CV_ATTENUVERTER+ NBOUT,
+		NUM_PARAMS = GATE_MODE_PARAM + NBOUT
+
 	};
 	enum InputIds {
 		GATE_PROBABILITY_1_INPUT,
@@ -32,7 +34,8 @@ struct SeedsOfChangeGateExpander : Module {
 		NUM_OUTPUTS = GATE_1_OUTPUT + NBOUT
 	};
 	enum LightIds {
-		NUM_LIGHTS
+		GATE_MODE_LIGHT,
+		NUM_LIGHTS = GATE_MODE_LIGHT + NBOUT
 	};
 
 	float outbuffer[NBOUT];
@@ -42,7 +45,8 @@ struct SeedsOfChangeGateExpander : Module {
 	float producerMessage[4] = {};// mother will write into here
 
 	
-	dsp::SchmittTrigger resetTrigger,clockTrigger,distributionModeTrigger; 
+	dsp::SchmittTrigger resetTrigger,clockTrigger,distributionModeTrigger,gateModeTrigger[NBOUT]; 
+	dsp::PulseGenerator gatePulse[NBOUT];
 
 	bool gaussianMode = false;
 
@@ -66,6 +70,37 @@ struct SeedsOfChangeGateExpander : Module {
 	int latest_seed = 0;
 	float resetInput, clockInput;
 	float normal_number();
+	bool gateMode[NBOUT] = {false};
+
+
+	json_t *dataToJson() override {
+		json_t *rootJ = json_object();
+		
+		for(int i=0;i<NBOUT;i++) {
+			char buf[100];
+			char notebuf[100];
+			strcpy(buf, "gateMode-");
+			sprintf(notebuf, "%i", i);
+			strcat(buf, notebuf);
+			json_object_set_new(rootJ, buf, json_integer((bool) gateMode[i]));
+		}
+		return rootJ;
+	};
+
+	void dataFromJson(json_t *rootJ) override {
+		for(int i=0;i<NBOUT;i++) {
+			char buf[100];
+			char notebuf[100];
+			strcpy(buf, "gateMode-");
+			sprintf(notebuf, "%i", i);
+			strcat(buf, notebuf);
+			json_t *sumJ = json_object_get(rootJ, buf);
+			if (sumJ) {
+				gateMode[i] = json_integer_value(sumJ);
+			}
+		}		
+	}
+
 
 	void process(const ProcessArgs &args) override {
 	
@@ -104,11 +139,26 @@ struct SeedsOfChangeGateExpander : Module {
 			for (int i=0; i<NBOUT; i++) {
 				float prob = clamp(params[GATE_PROBABILITY_1_PARAM + i].value + (inputs[GATE_PROBABILITY_1_INPUT + i].active ? inputs[GATE_PROBABILITY_1_INPUT + i].value / 10.0f * params[GATE_PROBABILITY_1_CV_ATTENUVERTER + i].value : 0.0),0.0f,1.0f);
 				outbuffer[i] = genrand_real() < prob ? 10.0 : 0;
+				if(outbuffer[i]) {
+					gatePulse[i].trigger();
+				}
 			}
 		} 
 		
 		for (int i=0; i<NBOUT; i++) {
-			outputs[GATE_1_OUTPUT+i].value = outbuffer[i] ? clockInput : 0;
+			if (gateModeTrigger[i].process(params[GATE_MODE_PARAM+i].getValue())) {
+				gateMode[i] = !gateMode[i];
+    	    } 
+			lights[GATE_MODE_LIGHT+i].value = gateMode[i];
+
+			float gateValue;
+			if(gateMode[i]) { // True is trigger mode
+				gateValue = gatePulse[i].process(1.0 / args.sampleRate) ? 10.0 : 0;
+			} else {
+				gateValue = outbuffer[i] ? clockInput : 0;;
+			}
+
+			outputs[GATE_1_OUTPUT+i].value = gateValue;
 		}								
 	}
 
@@ -244,7 +294,10 @@ struct SeedsOfChangeGateExpanderWidget : ModuleWidget {
 			addParam(createParam<RoundReallySmallFWKnob>(Vec(4, 44 + i*26.5), module, SeedsOfChangeGateExpander::GATE_PROBABILITY_1_PARAM + i));
 			addParam(createParam<RoundExtremelySmallFWKnob>(Vec(42, 45 + i*26.5), module, SeedsOfChangeGateExpander::GATE_PROBABILITY_1_CV_ATTENUVERTER + i));
 			addInput(createInput<FWPortInReallySmall>(Vec(28, 47 + i*26.5), module, SeedsOfChangeGateExpander::GATE_PROBABILITY_1_INPUT + i));				
-			addOutput(createOutput<FWPortOutSmall>(Vec(64, 45 + i*26.5),  module, SeedsOfChangeGateExpander::GATE_1_OUTPUT + i));
+			addParam(createParam<LEDButton>(Vec(59, 45 + i*26.5), module, SeedsOfChangeGateExpander::GATE_MODE_PARAM+i));
+			addChild(createLight<LargeLight<BlueLight>>(Vec(60.5, 46.5 + i*26.5), module, SeedsOfChangeGateExpander::GATE_MODE_LIGHT+i));
+
+			addOutput(createOutput<FWPortOutSmall>(Vec(79, 45 + i*26.5),  module, SeedsOfChangeGateExpander::GATE_1_OUTPUT + i));
 		}
 	}
 };

@@ -16,14 +16,14 @@
    sodipodi:docname="SeedsOfChangeGateExpanderMaster.svg"
    x="0px"
    y="0px"
-   viewBox="283.5 206 90 380"
+   viewBox="283.5 206 105 380"
    enable-background="new 283.5 206 90 380"
    xml:space="preserve"
-   width="90"
+   width="105"
    height="380"><metadata
      id="metadata1113"><rdf:RDF><cc:Work
          rdf:about=""><dc:format>image/svg+xml</dc:format><dc:type
-           rdf:resource="http://purl.org/dc/dcmitype/StillImage" /><dc:title /></cc:Work></rdf:RDF></metadata><defs
+           rdf:resource="http://purl.org/dc/dcmitype/StillImage" /><dc:title></dc:title></cc:Work></rdf:RDF></metadata><defs
      id="defs1111"><linearGradient
        inkscape:collect="always"
        xlink:href="#linearGradient4047"
@@ -33,7 +33,7 @@
        x2="35.219627"
        y2="50.462322"
        gradientUnits="userSpaceOnUse"
-       gradientTransform="matrix(0.94338563,0,0,3.7850074,250.27432,14.999728)" /><linearGradient
+       gradientTransform="matrix(1.1006166,0,0,3.7850074,244.73672,14.999728)" /><linearGradient
        inkscape:collect="always"
        id="linearGradient4047"><stop
          style="stop-color:#202022;stop-opacity:1;"
@@ -47,8 +47,8 @@
          id="stop3389" /></linearGradient></defs><path
      inkscape:connector-curvature="0"
      id="path33493"
-     d="m 283.5,206 h 90 v 380 h -90 z m 0,0"
-     style="fill:url(#linearGradient4049);fill-opacity:1;fill-rule:nonzero;stroke:none;stroke-width:0.80954897"
+     d="m 283.5,206 h 105 v 380 h -105 z m 0,0"
+     style="fill:url(#linearGradient4049);fill-opacity:1;fill-rule:nonzero;stroke:none;stroke-width:0.87441283"
      inkscape:export-filename="/home/vortico/pics/tmp/LFOs.png"
      inkscape:export-xdpi="150.22649"
      inkscape:export-ydpi="150.22649" /><sodipodi:namedview
@@ -72,10 +72,10 @@
      inkscape:window-width="3840"
      inkscape:pageshadow="2"
      units="px"
-     inkscape:cy="121.34713"
+     inkscape:cy="255.69742"
      guidetolerance="10"
      gridtolerance="10"
-     inkscape:cx="-133.2898"
+     inkscape:cx="-34.294846"
      showgrid="false"
      id="namedview10"
      pagecolor="#ffffff"
@@ -207,11 +207,11 @@
          style="stroke:#909290;stroke-width:0.97299999" /></g></g><text
      xml:space="preserve"
      style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:13.33333302px;line-height:1.25;font-family:Homenaje;-inkscape-font-specification:'Homenaje Bold';text-align:start;letter-spacing:0px;word-spacing:0px;text-anchor:start;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.99999994"
-     x="284.70801"
+     x="292.40799"
      y="218.63867"
      id="text3885"><tspan
        sodipodi:role="line"
-       x="284.70801"
+       x="292.40799"
        y="218.63867"
        style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:14.66666698px;font-family:Homenaje;-inkscape-font-specification:'Homenaje Bold';text-align:start;text-anchor:start;stroke-width:0.99999994"
        id="tspan1013">SEEDS <tspan
@@ -220,12 +220,12 @@
 <text
      xml:space="preserve"
      style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:8px;line-height:1.25;font-family:Homenaje;-inkscape-font-specification:'Homenaje Bold';letter-spacing:0px;word-spacing:0px;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.99999994"
-     x="349.15601"
+     x="364.15601"
      y="247"
      id="text5443-7-5-4-0"><tspan
        sodipodi:role="line"
        id="tspan5441-1-6-2-7"
-       x="349.15601"
+       x="364.15601"
        y="247"
        style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:8px;font-family:Homenaje;-inkscape-font-specification:'Homenaje Bold';stroke-width:0.99999994">GATE</tspan></text>
 <text
@@ -254,24 +254,35 @@
        id="flowPara2230" /></flowRoot><text
      xml:space="preserve"
      style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:13.33333302px;line-height:1.25;font-family:Homenaje;-inkscape-font-specification:'Homenaje Bold';text-align:start;letter-spacing:0px;word-spacing:0px;text-anchor:start;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.99999994"
-     x="293.99942"
+     x="301.98401"
      y="230.2966"
      id="text3885-4"><tspan
        sodipodi:role="line"
-       x="293.99942"
+       x="301.98401"
        y="230.2966"
        style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:12px;font-family:Homenaje;-inkscape-font-specification:'Homenaje Bold';text-align:start;text-anchor:start;stroke-width:0.99999994"
        id="tspan1013-3">GATE EXPANDER</tspan></text>
 <text
      xml:space="preserve"
      style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:13.37363625px;line-height:1.25;font-family:Consolas;-inkscape-font-specification:'Consolas Bold';text-align:start;letter-spacing:0px;word-spacing:0px;text-anchor:start;fill:#00a3f2;fill-opacity:1;stroke:none;stroke-width:1.00302255"
-     x="319.33353"
+     x="326.83087"
      y="584.20056"
      id="text3885-7"
      transform="scale(1.0030227,0.99698641)"><tspan
        sodipodi:role="line"
        id="tspan3883-0"
-       x="319.33353"
+       x="326.83087"
        y="584.20056"
        style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-family:'Bradley Gratis';-inkscape-font-specification:'Bradley Gratis';text-align:start;text-anchor:start;fill:#00a3f2;fill-opacity:1;stroke-width:1.00302255">FW</tspan></text>
+<text
+     xml:space="preserve"
+     style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:8px;line-height:1.25;font-family:Homenaje;-inkscape-font-specification:'Homenaje Bold';letter-spacing:0px;word-spacing:0px;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.99999994"
+     x="342.996"
+     y="246.944"
+     id="text5443-7-5-4-0-8"><tspan
+       sodipodi:role="line"
+       id="tspan5441-1-6-2-7-2"
+       x="342.996"
+       y="246.944"
+       style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:8px;font-family:Homenaje;-inkscape-font-specification:'Homenaje Bold';stroke-width:0.99999994">MODE</tspan></text>
 </svg>

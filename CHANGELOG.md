@@ -1,3 +1,7 @@
+### 1.12.1 (2019-03-05)
+- Added Gate/Trigger Modes to Seeds of Change and SoC Gate Expander
+- Added Div Reset Mode to The Gardner
+
 ### 1.12.0 (2019-02-11)
 - Massive performance improvements on Portland Weather and Hair Pick
 - Probably Not(e) and Probably Not(e) Bohlen-Pierce are now polyphonic

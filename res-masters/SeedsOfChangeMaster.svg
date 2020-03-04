@@ -23,7 +23,7 @@
    height="380"><metadata
      id="metadata1113"><rdf:RDF><cc:Work
          rdf:about=""><dc:format>image/svg+xml</dc:format><dc:type
-           rdf:resource="http://purl.org/dc/dcmitype/StillImage" /><dc:title /></cc:Work></rdf:RDF></metadata><defs
+           rdf:resource="http://purl.org/dc/dcmitype/StillImage" /><dc:title></dc:title></cc:Work></rdf:RDF></metadata><defs
      id="defs1111"><linearGradient
        inkscape:collect="always"
        xlink:href="#linearGradient4047"
@@ -72,10 +72,10 @@
      inkscape:window-width="3840"
      inkscape:pageshadow="2"
      units="px"
-     inkscape:cy="217.1601"
+     inkscape:cy="188.87583"
      guidetolerance="10"
      gridtolerance="10"
-     inkscape:cx="-97.58091"
+     inkscape:cx="-28.461219"
      showgrid="false"
      id="namedview10"
      pagecolor="#ffffff"
@@ -406,4 +406,15 @@
        id="rect4735-7"
        d="m 332.5,273.2612 h 42 v 20 h -42 z"
        style="fill:#323232;fill-opacity:1;stroke-width:0.4367888"
-       inkscape:connector-curvature="0" /></g></svg>
+       inkscape:connector-curvature="0" /></g><text
+     xml:space="preserve"
+     style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:8px;line-height:1.25;font-family:Homenaje;-inkscape-font-specification:'Homenaje Bold';letter-spacing:0px;word-spacing:0px;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.99999994"
+     x="358.996"
+     y="467.944"
+     id="text5443-7-5-4-0-7"><tspan
+       sodipodi:role="line"
+       id="tspan5441-1-6-2-7-4"
+       x="358.996"
+       y="467.944"
+       style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:8px;font-family:Homenaje;-inkscape-font-specification:'Homenaje Bold';stroke-width:0.99999994">MODE</tspan></text>
+</svg>

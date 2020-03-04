@@ -13,6 +13,7 @@ struct TheGardener : Module {
 		NUMBER_STEPS_NEW_SEED_PARAM,
         NUMBER_STEPS_NEW_SEED_CV_ATTENUVERTER_PARAM,
 		SEED_PROCESS_DELAY_COMPENSATION_PARAM,
+		DIV_RESET_MODE_PARAM,
 		NUM_PARAMS
 	};
 
@@ -34,14 +35,15 @@ struct TheGardener : Module {
 	};
 
 	enum LightIds {
-		NUM_LIGHTS 
+		DIV_RESET_MODE_LIGHT,
+		NUM_LIGHTS = DIV_RESET_MODE_LIGHT + 3
 	};
 
 
 
 
 	
-	dsp::SchmittTrigger clockTrigger,resetTrigger;
+	dsp::SchmittTrigger clockTrigger,resetTrigger,resetModeTrigger;
 	dsp::PulseGenerator reseedPulse, newSeedPulse;
     int reseedSteps, newSeedSteps;
 	int reseedCount, newSeedCount;
@@ -49,6 +51,7 @@ struct TheGardener : Module {
 	float clockIn;
 	float seedIn[VCV_POLYPHONY];
 	float newSeedOut[VCV_POLYPHONY];
+	int divResetMode = 0;
 	bool resetTriggered = false;
 	bool reseedNeeded = false;
 	bool newSeedNeeded = false;
@@ -61,6 +64,22 @@ struct TheGardener : Module {
 	float delayedClockOut;
 	float clockDelayLine[MAX_DELAY+1];
 	int delayIndex = 0;
+
+
+	json_t *dataToJson() override {
+		json_t *rootJ = json_object();
+
+		json_object_set_new(rootJ, "divResetMode", json_integer((int) divResetMode));
+				
+		return rootJ;
+	};
+
+	void dataFromJson(json_t *rootJ) override {
+
+		json_t *ctTd = json_object_get(rootJ, "divResetMode");
+		if (ctTd)
+			divResetMode = json_integer_value(ctTd);	
+	}
 	
 
 	TheGardener() {
@@ -89,6 +108,11 @@ struct TheGardener : Module {
 		sampleDelay = params[SEED_PROCESS_DELAY_COMPENSATION_PARAM].getValue();
         reseedSteps = params[NUMBER_STEPS_RESEED_PARAM].getValue() + inputs[NUMBER_STEPS_RESEED_CV_INPUT].getVoltage() * params[NUMBER_STEPS_RESEED_CV_ATTENUVERTER_PARAM].getValue() / 10.0f; 
         newSeedSteps = params[NUMBER_STEPS_NEW_SEED_PARAM].getValue() + inputs[NUMBER_STEPS_NEW_SEED_CV_INPUT].getVoltage() * params[NUMBER_STEPS_NEW_SEED_CV_ATTENUVERTER_PARAM].getValue() / 10.0f; 
+
+		if (resetModeTrigger.process(params[DIV_RESET_MODE_PARAM].getValue())) {
+			divResetMode = (divResetMode + 1) % 2; //Two reset modes for now
+		}
+		lights[DIV_RESET_MODE_LIGHT+1].value = divResetMode == 1;
 			
 		nbrChannels = inputs[SEED_INPUT].getChannels();
 		polyModeDetected = nbrChannels > 1;
@@ -122,6 +146,9 @@ struct TheGardener : Module {
 				reseedNeeded = true;
 				newSeedNeeded = true;
 				newSeedCount = 0;
+				if(divResetMode == 1) {
+					reseedCount = 0;
+				}
 				sampleDelayCount = 0;
 			}
 			resetTriggered = false;
@@ -248,6 +275,9 @@ struct TheGardenerWidget : ModuleWidget {
 	
 	   
 		addParam(createParam<RoundSmallFWSnapKnob>(Vec(14, 308), module, TheGardener::SEED_PROCESS_DELAY_COMPENSATION_PARAM));
+
+		addParam(createParam<LEDButton>(Vec(65, 120), module, TheGardener::DIV_RESET_MODE_PARAM));
+		addChild(createLight<LargeLight<RedGreenBlueLight>>(Vec(66.5, 121.5), module, TheGardener::DIV_RESET_MODE_LIGHT));
 
 
         addInput(createInput<FWPortInSmall>(Vec(14, 155), module, TheGardener::RESET_INPUT));
