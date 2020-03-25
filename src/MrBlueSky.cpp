@@ -24,6 +24,7 @@ struct MrBlueSky : Module {
 		CARRIER_Q_CV_ATTENUVERTER_PARAM,
 		MODIFER_Q_CV_ATTENUVERTER_PARAM,
 		SHIFT_BAND_OFFSET_CV_ATTENUVERTER_PARAM,
+		MOD_INVERT_PARAM,
 		NUM_PARAMS
 	};
 	enum InputIds {
@@ -46,6 +47,7 @@ struct MrBlueSky : Module {
 	};
 	enum LightIds {
 		LEARN_LIGHT,
+		MOD_INVERT_LIGHT,
 		NUM_LIGHTS
 	};
 	Biquad* iFilter[2*BANDS];
@@ -56,10 +58,11 @@ struct MrBlueSky : Module {
 	float lastCarrierQ = 0;
 	float lastModQ = 0;
 
+	bool bandModInvert = false;
 	int bandOffset = 0;
 	int shiftIndex = 0;
 	int lastBandOffset = 0;
-	dsp::SchmittTrigger shiftLeftTrigger,shiftRightTrigger;
+	dsp::SchmittTrigger shiftLeftTrigger,shiftRightTrigger,modInvertTrigger;
 
 	MrBlueSky() {
 		config(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS, NUM_LIGHTS);
@@ -95,8 +98,23 @@ struct MrBlueSky : Module {
 	// void reset() override {
 	// 	bandOffset =0;
 	// }
+	json_t *dataToJson() override {
+		json_t *rootJ = json_object();
+		json_object_set_new(rootJ, "bandModInvert", json_integer((int) bandModInvert));
+
+		return rootJ;
+	}
+
+	void dataFromJson(json_t *rootJ) override {
+
+		json_t *sumJ = json_object_get(rootJ, "bandModInvert");
+		if (sumJ) {
+			bandModInvert = json_integer_value(sumJ);			
+		}				
+	}
 
 };
+
 
 void MrBlueSky::process(const ProcessArgs &args) {
 	// Band Offset Processing
@@ -126,6 +144,11 @@ void MrBlueSky::process(const ProcessArgs &args) {
 			}
 		}
 	}
+
+	if (modInvertTrigger.process(params[MOD_INVERT_PARAM].getValue())) {
+		bandModInvert = !bandModInvert;
+	}
+	lights[MOD_INVERT_LIGHT].value = bandModInvert;
 
 	bandOffset +=shiftIndex;
 	//Hack until I can do int clamping
@@ -185,11 +208,12 @@ void MrBlueSky::process(const ProcessArgs &args) {
 	}
 
 
-
+	float gainAdjustedModifierInput =inM*params[GMOD_PARAM].getValue();
+	float maxCoeff = 0.0;
 	//First process all the modifier bands
 	for(int i=0; i<BANDS; i++) {
 		float coeff = mem[i];
-		float peak = abs(iFilter[i+BANDS]->process(iFilter[i]->process(inM*params[GMOD_PARAM].getValue())));
+		float peak = abs(iFilter[i+BANDS]->process(iFilter[i]->process(gainAdjustedModifierInput)));
 		if (peak>coeff) {
 			coeff += slewAttack * shapeScale * (peak - coeff) / args.sampleRate;
 			if (coeff > peak)
@@ -202,22 +226,37 @@ void MrBlueSky::process(const ProcessArgs &args) {
 		}
 		peaks[i]=peak;
 		mem[i]=coeff;
+		if(coeff > maxCoeff) {
+			maxCoeff = coeff;
+		}
 		outputs[MOD_OUT+i].setVoltage(coeff * 5.0);
 	}
 
 	//Then process carrier bands. Mod bands are normalled to their matched carrier band unless an insert
 	for(int i=0; i<BANDS; i++) {
 		float coeff;
-		if(inputs[(CARRIER_IN+i+bandOffset) % BANDS].isConnected()) {
-			coeff = inputs[CARRIER_IN+i+bandOffset].getVoltage() / 5.0;
-		} else {
-			coeff = mem[(i+bandOffset) % BANDS];
+		int actualBand = i+bandOffset;
+		if (actualBand < 0) {
+			actualBand +=BANDS;
+		} else if (actualBand >= BANDS) {
+			actualBand -=BANDS;
+		}
+		if(inputs[CARRIER_IN+actualBand].isConnected()) {
+			coeff = inputs[CARRIER_IN+actualBand].getVoltage() / 5.0;
+		} else {			
+			coeff = mem[actualBand];
 		}
 
+		
+		if(bandModInvert) {
+			coeff = maxCoeff - coeff;
+		}
+		
 		float bandOut = cFilter[i+BANDS]->process(cFilter[i]->process(inC*params[GCARR_PARAM].getValue())) * coeff * params[BG_PARAM+i].getValue();
 		out += bandOut;
 	}
-	outputs[OUT].setVoltage(out * 5 * params[G_PARAM].getValue());
+	float makeupGain = bandModInvert ? 1.25 : 5.0;
+	outputs[OUT].setVoltage(out * makeupGain * params[G_PARAM].getValue());
 
 }
 
@@ -306,6 +345,10 @@ struct MrBlueSkyWidget : ModuleWidget {
 		addParam(createParam<RoundFWKnob>(Vec(40, 284), module, MrBlueSky::GMOD_PARAM));
 		addParam(createParam<RoundFWKnob>(Vec(120, 284), module, MrBlueSky::GCARR_PARAM));
 		addParam(createParam<RoundFWKnob>(Vec(207, 284), module, MrBlueSky::G_PARAM));
+		
+		addParam(createParam<LEDButton>(Vec(305, 289), module, MrBlueSky::MOD_INVERT_PARAM));
+		addChild(createLight<LargeLight<BlueLight>>(Vec(306.5, 290.5), module, MrBlueSky::MOD_INVERT_LIGHT));
+
 
 		addParam(createParam<RoundReallySmallFWKnob>(Vec(38, 238), module, MrBlueSky::ATTACK_CV_ATTENUVERTER_PARAM));
 		addParam(createParam<RoundReallySmallFWKnob>(Vec(98, 238), module, MrBlueSky::DECAY_CV_ATTENUVERTER_PARAM));

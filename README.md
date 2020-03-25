@@ -172,6 +172,12 @@ A collection of unusual plugins that will add a certain coolness to your patches
 - FB Send and Returns allow you to insert FX into the feedback loop
 - In Context Menu, the Grain Number and Grain Size control how the all the pitch shifters work. "RAW" is uses one grain sample but without the a triangle window
 
+## PW Tap Breakout Expander
+![Portland Weather Tap Breakout Expander](./doc/pwtb.png)
+
+- Allows individual processing of each delay tap of the Portland Weather module. Processed audio can be fed back into PW through the return inputs.
+
+
 ## Probably Not(e)
 
 ![Probably Not(e)](./doc/pn.png)

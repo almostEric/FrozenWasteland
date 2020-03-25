@@ -1,6 +1,8 @@
-### 1.12.1 (2019-03-05)
+### 1.12.1 (2019-03-25)
+- Added new module - Portland Weather Tab Breakout Expander
 - Added Gate/Trigger Modes to Seeds of Change and SoC Gate Expander
 - Added Div Reset Mode to The Gardner
+- Fixed bug in Mr. Blue Sky, added invert mode
 
 ### 1.12.0 (2019-02-11)
 - Massive performance improvements on Portland Weather and Hair Pick

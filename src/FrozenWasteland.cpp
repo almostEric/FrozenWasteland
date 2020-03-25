@@ -33,6 +33,7 @@ void init(rack::Plugin *p) {
 	p->addModel(modelProbablyNoteBP);
 	//p->addModel(modelProbablyNoteIndian);
 	p->addModel(modelPNChordExpander);
+	p->addModel(modelPWTapBreakoutExpander);
 	p->addModel(modelQuadAlgorithmicRhythm);
 	p->addModel(modelQARGrooveExpander);
 	p->addModel(modelQARProbabilityExpander);

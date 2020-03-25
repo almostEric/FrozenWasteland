@@ -134,6 +134,12 @@
 			"tags": ["Expander"]
 		},
 		{
+			"slug": "PWTapBreakoutExpander",
+			"name": "Portland Weather - Tap Breakout Expander",
+			"description": "Breaks out the individual taps of Portland Weather",
+			"tags": ["Expander"]
+		},
+		{
 			"slug": "QuadAlgorithmicRhythm",
 			"name": "Quad Algorithmic Rhythm Generator",
 			"description": "4 track Euclidean and Golumb Ruler Sequencer",

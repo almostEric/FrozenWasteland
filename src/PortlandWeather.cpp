@@ -131,6 +131,14 @@ struct PortlandWeather : Module {
 		NUM_PARAMETER_GROUPS
 	};
 
+	// Expander
+	float consumerMessage[NUM_TAPS * 4] = {};// this module must read from here
+	float producerMessage[NUM_TAPS * 4] = {};// mother will write into here
+	
+	float *expanderMessage;
+	float *messageToExpander;	
+			
+
 	Compressor compressor[CHANNELS];
 
 	uint8_t compressionMode = COMPRESSION_NONE;
@@ -309,7 +317,10 @@ struct PortlandWeather : Module {
 		configParam(STACK_TRIGGER_MODE_PARAM, 0.0f, 1.0f, 0.0f);
 		configParam(MUTE_TRIGGER_MODE_PARAM, 0.0f, 1.0f, 0.0f);
 
-		
+
+		leftExpander.producerMessage = producerMessage;
+		leftExpander.consumerMessage = consumerMessage;
+
 		float sampleRate = APP->engine->getSampleRate();
 		
 
@@ -327,6 +338,7 @@ struct PortlandWeather : Module {
 			delayTime[i] = 0.0f;
 
 	    }	
+
 
 		srand(time(NULL));
 	}
@@ -409,6 +421,15 @@ struct PortlandWeather : Module {
 			delayLine.clear();
 		}
  
+		bool rightExpanderPresent = rightExpander.module && rightExpander.module->model == modelPWTapBreakoutExpander;
+		if(rightExpanderPresent)
+		{			
+			expanderMessage = (float*)(rightExpander.module->leftExpander.consumerMessage);
+			messageToExpander = (float*)(rightExpander.module->leftExpander.producerMessage);	
+				
+		}
+
+
 
 		tapGroovePattern = (int)clamp(params[GROOVE_TYPE_PARAM].getValue() + (inputs[GROOVE_TYPE_CV_INPUT].isConnected() ?  inputs[GROOVE_TYPE_CV_INPUT].getVoltage() / 10.0f : 0.0f),0.0f,15.0);
 		grooveAmount = clamp(params[GROOVE_AMOUNT_PARAM].getValue() + (inputs[GROOVE_AMOUNT_CV_INPUT].isConnected() ? inputs[GROOVE_AMOUNT_CV_INPUT].getVoltage() / 10.0f : 0.0f),0.0f,1.0f);
@@ -655,6 +676,24 @@ struct PortlandWeather : Module {
 				wetTap.l = 0.0f;
 				wetTap.r = 0.0f;
 			} 
+
+			if(rightExpanderPresent)
+			{	
+
+				messageToExpander[tap] = wetTap.l;			
+				messageToExpander[NUM_TAPS + tap] = wetTap.r;			
+
+
+				bool isExpanderPortConnectedL = (bool)expanderMessage[tap];
+				if (isExpanderPortConnectedL) {
+					wetTap.l = expanderMessage[NUM_TAPS + tap];
+				}
+				bool isExpanderPortConnectedR = (bool)expanderMessage[NUM_TAPS * 2 + tap];
+				if (isExpanderPortConnectedR) {
+					wetTap.r = expanderMessage[NUM_TAPS * 3 + tap];
+				}
+			}
+
 
 			wet.l += wetTap.l;
 			wet.r += wetTap.r;

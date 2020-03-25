@@ -30,7 +30,7 @@
      id="namedview118"
      showgrid="true"
      inkscape:zoom="3.1500914"
-     inkscape:cx="-84.544162"
+     inkscape:cx="-29.62512"
      inkscape:cy="232.90494"
      inkscape:window-x="-13"
      inkscape:window-y="-13"
@@ -130,7 +130,7 @@
         <dc:format>image/svg+xml</dc:format>
         <dc:type
            rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
-        <dc:title />
+        <dc:title></dc:title>
       </cc:Work>
     </rdf:RDF>
   </metadata>
@@ -5375,4 +5375,15 @@
      d="m 96.068798,46.114666 h 11.758912 v 9.071165 H 96.068798 Z"
      id="rect51301"
      inkscape:connector-curvature="0" />
+  <text
+     xml:space="preserve"
+     style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:3.52777743px;line-height:1.25;font-family:Homenaje;-inkscape-font-specification:'Homenaje Bold';text-align:center;letter-spacing:0px;word-spacing:0px;text-anchor:middle;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.26458332"
+     x="83.167801"
+     y="75.67083"
+     id="text2148-3-0-7"><tspan
+       sodipodi:role="line"
+       id="tspan2146-3-4-8"
+       x="83.167801"
+       y="75.67083"
+       style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:2.82222223px;font-family:Homenaje;-inkscape-font-specification:'Homenaje Bold';fill:#ffffff;fill-opacity:1;stroke-width:0.26458332">INVERT</tspan></text>
 </svg>
