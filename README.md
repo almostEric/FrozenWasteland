@@ -101,6 +101,13 @@ A collection of unusual plugins that will add a certain coolness to your patches
 - Output 7: y1 * y2
 - Output 8: x1 * x2 * y1 * y2
 
+## Midichlorian
+
+![Midichlorian](./doc/midichlorian.png)
+- Allows VSTs in Host to play microtonal scales
+- Polyphonic CV input gets broken into a Polyphonic CV out for Host's CV input and a polyphonc Pitch Bend output for Host
+- Set Pitch Bend in VST to +/- 1 half step
+
 ## Mr. Blue Sky
 
 ![Mr. Blue Sky](./doc/mrbluesky.png)
@@ -151,6 +158,7 @@ A collection of unusual plugins that will add a certain coolness to your patches
 - Does not make pretty sounds, but can be a lot of fun.
 
 ## Portland Weather
+
 ![Portland Weather](./doc/pw.png)
 - Based on the rhythmic tap delay section of Intellijel/Cylonix Rainmaker
 
@@ -172,10 +180,13 @@ A collection of unusual plugins that will add a certain coolness to your patches
 - FB Send and Returns allow you to insert FX into the feedback loop
 - In Context Menu, the Grain Number and Grain Size control how the all the pitch shifters work. "RAW" is uses one grain sample but without the a triangle window
 
-## PW Tap Breakout Expander
-![Portland Weather Tap Breakout Expander](./doc/pwtb.png)
+## PW Algorithm Expander
 
-- Allows individual processing of each delay tap of the Portland Weather module. Processed audio can be fed back into PW through the return inputs.
+![Portland Weather - Algorithm Expander](./doc/pwae.png)
+
+- Create your own grooves for Portland weather's 16 delay taps.
+- Can use either Euclidean (yellow) or Golumb Ruler (blue) alogorithms
+- Chain the QAR Groove Expander, QAR Warped Space and the QAR Probability Expanders to create dynamic, shifting patterns
 
 
 ## Probably Not(e)

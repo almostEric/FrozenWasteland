@@ -14,6 +14,7 @@
 #define CHANNELS 2
 #define DIVISIONS 36
 #define NUM_GROOVES 16
+#define SMOOTHING 100 //# of samples
 
 
 struct PortlandWeather : Module {
@@ -100,7 +101,7 @@ struct PortlandWeather : Module {
 		PING_PONG_LIGHT,
 		REVERSE_LIGHT,
 		COMPRESSION_MODE_LIGHT,
-		TAP_MUTED_LIGHT = COMPRESSION_MODE_LIGHT+2,
+		TAP_MUTED_LIGHT = COMPRESSION_MODE_LIGHT+3,
 		TAP_STACKED_LIGHT = TAP_MUTED_LIGHT+NUM_TAPS,
 		FREQ_LIGHT = TAP_STACKED_LIGHT+NUM_TAPS,		
 		NUM_LIGHTS
@@ -132,13 +133,15 @@ struct PortlandWeather : Module {
 	};
 
 	// Expander
-	float consumerMessage[NUM_TAPS * 4] = {};// this module must read from here
-	float producerMessage[NUM_TAPS * 4] = {};// mother will write into here
-	
-	float *expanderMessage;
-	float *messageToExpander;	
-			
+	float consumerMessage[NUM_TAPS * 7 + 4] = {};// this module must read from here
+	float producerMessage[NUM_TAPS * 7 + 4] = {};// mother will write into here
 
+
+	float *expanderMessage;
+	float *messageToExpander;
+
+	bool usingAlgorithm = false;
+	
 	Compressor compressor[CHANNELS];
 
 	uint8_t compressionMode = COMPRESSION_NONE;
@@ -176,7 +179,7 @@ struct PortlandWeather : Module {
 
 	float sampleRate = 44100;
 
-	const char* grooveNames[NUM_GROOVES] = {"Straight","Swing","Hard Swing","Reverse Swing","Alternate Swing","Accelerando","Ritardando","Waltz Time","Half Swing","Roller Coaster","Quintuple","Random 1","Random 2","Random 3","Early Reflection","Late Reflection"};
+	const char* grooveNames[NUM_GROOVES+1] = {"Straight","Swing","Hard Swing","Reverse Swing","Alternate Swing","Accelerando","Ritardando","Waltz Time","Half Swing","Roller Coaster","Quintuple","Random 1","Random 2","Random 3","Early Reflection","Late Reflection"};
 	const float tapGroovePatterns[NUM_GROOVES][NUM_TAPS] = {
 		{1.0f,2.0f,3.0,4.0,5.0,6.0,7.0,8.0,9.0,10.0,11.0,12.0,13.0,14.0,15.0,16.0f}, // Straight time
 		{1.25,2.0,3.25,4.0,5.25,6.0,7.25,8.0,9.25,10.0,11.25,12.0,13.25,14.0,15.25,16.0}, // Swing
@@ -207,6 +210,8 @@ struct PortlandWeather : Module {
 	int grainCount = 3; //NOTE Should be 3
 	float grainSize = 0.5f; //Can be between 0 and 1			
 	bool tapMuted[NUM_TAPS];
+	bool lastTapMutedStatus[NUM_TAPS] = {0};
+	float lastTapSmoothPosition[NUM_TAPS] = {0};
 	bool tapStacked[NUM_TAPS];
 	int lastFilterType[NUM_TAPS];
 	float lastTapFc[NUM_TAPS];
@@ -220,6 +225,9 @@ struct PortlandWeather : Module {
 	float feedbackDetune[CHANNELS] = {0.0f,0.0f};
 	float delayTime[NUM_TAPS+CHANNELS];
 	float lastDelayTime[NUM_TAPS+CHANNELS];
+
+	float expanderDelayTime[NUM_TAPS] = {0.0f};
+	bool expanderMuteTaps[NUM_TAPS] = {0.0f};
 	
 
 	float testDelay = 0.0f;
@@ -421,16 +429,6 @@ struct PortlandWeather : Module {
 			delayLine.clear();
 		}
  
-		bool rightExpanderPresent = rightExpander.module && rightExpander.module->model == modelPWTapBreakoutExpander;
-		if(rightExpanderPresent)
-		{			
-			expanderMessage = (float*)(rightExpander.module->leftExpander.consumerMessage);
-			messageToExpander = (float*)(rightExpander.module->leftExpander.producerMessage);	
-				
-		}
-
-
-
 		tapGroovePattern = (int)clamp(params[GROOVE_TYPE_PARAM].getValue() + (inputs[GROOVE_TYPE_CV_INPUT].isConnected() ?  inputs[GROOVE_TYPE_CV_INPUT].getVoltage() / 10.0f : 0.0f),0.0f,15.0);
 		grooveAmount = clamp(params[GROOVE_AMOUNT_PARAM].getValue() + (inputs[GROOVE_AMOUNT_CV_INPUT].isConnected() ? inputs[GROOVE_AMOUNT_CV_INPUT].getVoltage() / 10.0f : 0.0f),0.0f,1.0f);
 
@@ -440,6 +438,38 @@ struct PortlandWeather : Module {
 		}
 		divisionf = clamp(divisionf,0.0f,35.0f);
 		division = (DIVISIONS-1) - int(divisionf); //TODO: Reverse Division Order
+
+		//bool rightExpanderPresent = (rightExpander.module && (rightExpander.module->model == modelPWTapBreakoutExpander || rightExpander.module->model == modelPWAlgorithmicExpander));
+		bool rightExpanderPresent = (rightExpander.module && (rightExpander.module->model == modelPWAlgorithmicExpander));
+		bool algorithmExpanderPresent = false;
+		if(rightExpanderPresent) {
+			expanderMessage = (float*)rightExpander.module->leftExpander.consumerMessage; 
+			messageToExpander = (float*)rightExpander.module->leftExpander.producerMessage;
+
+			algorithmExpanderPresent = (bool)expanderMessage[(NUM_TAPS * 7) + 3];
+
+		}
+		if(algorithmExpanderPresent)
+		{			
+			usingAlgorithm = true;
+			//Clock for algorithn
+			messageToExpander[NUM_TAPS * 7] = inputs[CLOCK_INPUT].getVoltage();
+			messageToExpander[NUM_TAPS * 7 + 1] = divisions[division];
+
+			//Get Delay Times
+			for(int tap=0;tap<NUM_TAPS;tap++) {
+				expanderDelayTime[tap] = expanderMessage[NUM_TAPS * 6 + tap];
+				expanderMuteTaps[tap] = (expanderDelayTime[tap] < 0);
+			}
+
+		} else { // make more sophisticated
+			usingAlgorithm = false;
+			for(int tap=0;tap<NUM_TAPS;tap++) {
+				expanderDelayTime[tap] = 0;
+				expanderMuteTaps[tap] = false;
+			}
+		}
+
 
 		timeElapsed += 1.0 / sampleRate;
 		if(inputs[CLOCK_INPUT].isConnected()) {
@@ -525,8 +555,8 @@ struct PortlandWeather : Module {
 		}
 
 
-		FloatFrame dryFrame;
-		FloatFrame inFrame;
+		FloatFrame dryFrame = {0.0, 0.0};
+		FloatFrame inFrame = {0.0, 0.0};
 		for(int channel = 0;channel < CHANNELS;channel++) {
 			// Get input to delay block
 			feedbackTap[channel] = (int)clamp(params[FEEDBACK_TAP_L_PARAM+channel].getValue() + (inputs[FEEDBACK_TAP_L_INPUT+channel].isConnected() ? (inputs[FEEDBACK_TAP_L_INPUT+channel].getVoltage() / 10.0f) : 0),0.0f,17.0);
@@ -536,11 +566,11 @@ struct PortlandWeather : Module {
 			float in = 0.0f;
 					
 			if(channel == 0) {
-				in = inputs[IN_L_INPUT].getVoltage();	
+				in = inputs[IN_L_INPUT].getVoltageSum();	
 				inFrame.l = in;
 				dryFrame.l = in + lastFeedback.l * feedbackAmount;
 			} else {
-				in = inputs[IN_R_INPUT].isConnected() ? inputs[IN_R_INPUT].getVoltage() : inputs[IN_L_INPUT].getVoltage();	
+				in = inputs[IN_R_INPUT].isConnected() ? inputs[IN_R_INPUT].getVoltageSum() : inputs[IN_L_INPUT].getVoltageSum();	
 				inFrame.r = in;
 				dryFrame.r = in + lastFeedback.r * feedbackAmount;
 			}				
@@ -593,6 +623,9 @@ struct PortlandWeather : Module {
 			
 			// Compute delay from base and groove
 			float delay = baseDelay / NUM_TAPS * lerp(tapGroovePatterns[0][delayTap],tapGroovePatterns[tapGroovePattern][delayTap],grooveAmount); //Balance between straight time and groove
+			if(expanderDelayTime[delayTap] > 0) {
+				delay = expanderDelayTime[delayTap];
+			}
 						
 			delayTime[tap] = (delay + delayMod); 
 			if(delayTime[tap] != lastDelayTime[tap]) {
@@ -614,7 +647,7 @@ struct PortlandWeather : Module {
 			wetTap.l +=pitchShiftOut.l;
 			wetTap.r +=pitchShiftOut.r;
 					
-			// Muting
+			// Muting			
 			if(params[MUTE_TRIGGER_MODE_PARAM].getValue() == GATE_TRIGGE_MODE && inputs[TAP_MUTE_CV_INPUT+tap].isConnected()) {
 				tapMuted[tap] = inputs[TAP_MUTE_CV_INPUT+tap].getVoltage() > 0.0f;
 			}
@@ -666,33 +699,54 @@ struct PortlandWeather : Module {
 			lastFilterType[tap] = tapFilterType;
 
 			
-
-
-			if(!tapMuted[tap])  {
-				float pan = clamp((params[TAP_PAN_PARAM+tap].getValue() + (inputs[TAP_PAN_CV_INPUT+tap].isConnected() ? (inputs[TAP_PAN_CV_INPUT+tap].getVoltage() / 10.0f) : 0)),0.0f,1.0f);
-				wetTap.l = wetTap.l * clamp(params[TAP_MIX_PARAM+tap].getValue() + (inputs[TAP_MIX_CV_INPUT+tap].isConnected() ? (inputs[TAP_MIX_CV_INPUT+tap].getVoltage() / 10.0f) : 0),0.0f,1.0f) * (1.0 - pan);
-				wetTap.r = wetTap.r * clamp(params[TAP_MIX_PARAM+tap].getValue() + (inputs[TAP_MIX_CV_INPUT+tap].isConnected() ? (inputs[TAP_MIX_CV_INPUT+tap].getVoltage() / 10.0f) : 0),0.0f,1.0f) * pan;
-			} else {
-				wetTap.l = 0.0f;
-				wetTap.r = 0.0f;
-			} 
-
-			if(rightExpanderPresent)
-			{	
-
-				messageToExpander[tap] = wetTap.l;			
-				messageToExpander[NUM_TAPS + tap] = wetTap.r;			
-
-
-				bool isExpanderPortConnectedL = (bool)expanderMessage[tap];
-				if (isExpanderPortConnectedL) {
-					wetTap.l = expanderMessage[NUM_TAPS + tap];
-				}
-				bool isExpanderPortConnectedR = (bool)expanderMessage[NUM_TAPS * 2 + tap];
-				if (isExpanderPortConnectedR) {
-					wetTap.r = expanderMessage[NUM_TAPS * 3 + tap];
-				}
+			bool tapCurrentlyMuted = tapMuted[tap] || expanderMuteTaps[tap];
+			if(tapCurrentlyMuted != lastTapMutedStatus[tap]) {
+				lastTapSmoothPosition[tap] = 0;
+				lastTapMutedStatus[tap] = tapCurrentlyMuted;
 			}
+			
+			float muteSmoothing = 1.0;
+			if(lastTapSmoothPosition[tap] < SMOOTHING) {
+				muteSmoothing = tapCurrentlyMuted ? lerp(1.0,0.0,lastTapSmoothPosition[tap]/SMOOTHING) : lerp(0.0,1.0,lastTapSmoothPosition[tap]/SMOOTHING);				
+				lastTapSmoothPosition[tap]++;
+			} else {
+				muteSmoothing = tapCurrentlyMuted ? 0.0 : 1.0;
+			}
+			
+
+			//if(!tapCurrentlyMuted)  {
+			float pan = clamp((params[TAP_PAN_PARAM+tap].getValue() + (inputs[TAP_PAN_CV_INPUT+tap].isConnected() ? (inputs[TAP_PAN_CV_INPUT+tap].getVoltage() / 10.0f) : 0)),0.0f,1.0f);
+			wetTap.l = wetTap.l * muteSmoothing * clamp(params[TAP_MIX_PARAM+tap].getValue() + (inputs[TAP_MIX_CV_INPUT+tap].isConnected() ? (inputs[TAP_MIX_CV_INPUT+tap].getVoltage() / 10.0f) : 0),0.0f,1.0f) * (1.0 - pan);
+			wetTap.r = wetTap.r * muteSmoothing * clamp(params[TAP_MIX_PARAM+tap].getValue() + (inputs[TAP_MIX_CV_INPUT+tap].isConnected() ? (inputs[TAP_MIX_CV_INPUT+tap].getVoltage() / 10.0f) : 0),0.0f,1.0f) * pan;
+			// } else {
+			// 	wetTap.l = 0.0f;
+			// 	wetTap.r = 0.0f;
+			// } 
+
+
+//Disabled due to audio rate expanders not working well
+// 			if(rightExpanderPresent && rightExpander.module->model == modelPWTapBreakoutExpander)
+// 			{	
+
+// // 				if(tap == 0) {	
+// // 					fprintf(stderr, "PW: ic1:%f    v1:%f   ic2:%f    v2:%f\n", expanderMessage[0],expanderMessage[16],expanderMessage[32],expanderMessage[48]);	
+// // //					assert(expanderMessage[1] == 0);
+// // 				}
+
+// 				//For Breakout
+// 				messageToExpander[tap] = wetTap.l;			
+// 				messageToExpander[NUM_TAPS + tap] = wetTap.r;			
+
+
+// 				bool isExpanderPortConnectedL = (bool)expanderMessage[(NUM_TAPS * 2) + tap];
+// 				if (isExpanderPortConnectedL) {
+// 					wetTap.l = expanderMessage[(NUM_TAPS * 3) + tap];
+// 				}
+// 				bool isExpanderPortConnectedR = (bool)expanderMessage[(NUM_TAPS * 4) + tap];
+// 				if (isExpanderPortConnectedR) {
+// 					wetTap.r = expanderMessage[(NUM_TAPS * 5) + tap];
+// 				}				
+// 			}
 
 
 			wet.l += wetTap.l;
@@ -700,7 +754,7 @@ struct PortlandWeather : Module {
 		
 
 			lights[TAP_STACKED_LIGHT+tap].value = tapStacked[tap];
-			lights[TAP_MUTED_LIGHT+tap].value = (tapMuted[tap]);	
+			lights[TAP_MUTED_LIGHT+tap].value = (tapMuted[tap] || expanderMuteTaps[tap]);	
 
 		}
 
@@ -878,6 +932,7 @@ struct PortlandWeather : Module {
 		for(int tap = 0; tap < NUM_TAPS;tap++) {
 			tapMuted[tap] = false;
 			tapStacked[tap] = false;
+			expanderDelayTime[tap] = 0;
 		}
 	}
 
@@ -939,14 +994,14 @@ struct PWStatusDisplay : TransparentWidget {
 		nvgText(args.vg, pos.x, pos.y, text, NULL);
 	}
 
-	void drawGrooveType(const DrawArgs &args, Vec pos, int grooveType) {
+	void drawGrooveType(const DrawArgs &args, Vec pos, int grooveType,bool usingAlgorithm) {
 		nvgFontSize(args.vg, 14);
 		nvgFontFaceId(args.vg, fontText->handle);
 		nvgTextLetterSpacing(args.vg, -2);
 
 		nvgFillColor(args.vg, nvgRGBA(0x00, 0xff, 0x00, 0xff));
 		char text[128];
-		snprintf(text, sizeof(text), "%s", module->grooveNames[grooveType]);
+		snprintf(text, sizeof(text), "%s", !usingAlgorithm ? module->grooveNames[grooveType] : "Algorithm");
 		nvgText(args.vg, pos.x, pos.y, text, NULL);
 	}
 
@@ -1039,7 +1094,7 @@ struct PWStatusDisplay : TransparentWidget {
 		drawDivision(args, Vec(100,65), module->division);
 		//drawDelayTime(args, Vec(82,65), module->testDelay);
 		drawDelayTime(args, Vec(82,127), module->baseDelay);
-		drawGrooveType(args, Vec(95,203), module->tapGroovePattern);
+		drawGrooveType(args, Vec(95,203), module->tapGroovePattern, module->usingAlgorithm);
 		drawFeedbackTaps(args, Vec(292,174), module->feedbackTap);
 		drawFeedbackPitch(args, Vec(292,254), module->feedbackPitch);
 		drawFeedbackDetune(args, Vec(292,295), module->feedbackDetune);
@@ -1224,34 +1279,6 @@ struct PortlandWeatherWidget : ModuleWidget {
 		PortlandWeather *module = dynamic_cast<PortlandWeather*>(this->module);
 		assert(module);
 
-		// MenuLabel *themeLabel = new MenuLabel();
-		// themeLabel->text = "Grain Count";
-		// menu->addChild(themeLabel);
-
-		// GrainCountItem *grainCount1Item = new GrainCountItem();
-		// grainCount1Item->text = "1";// 
-		// grainCount1Item->module = module;
-		// grainCount1Item->grainCount= 1;
-		// menu->addChild(grainCount1Item);
-
-		// GrainCountItem *grainCount2Item = new GrainCountItem();
-		// grainCount2Item->text = "2";// 
-		// grainCount2Item->module = module;
-		// grainCount2Item->grainCount= 2;
-		// menu->addChild(grainCount2Item);
-
-		// GrainCountItem *grainCount3Item = new GrainCountItem();
-		// grainCount3Item->text = "4";// 
-		// grainCount3Item->module = module;
-		// grainCount3Item->grainCount= 3;
-		// menu->addChild(grainCount3Item);
-
-		// GrainCountItem *grainCount4Item = new GrainCountItem();
-		// grainCount4Item->text = "Raw";// 
-		// grainCount4Item->module = module;
-		// grainCount4Item->grainCount= 4;
-		// menu->addChild(grainCount4Item);
-		
 		MenuLabel *settingsLabel = new MenuLabel();
 		settingsLabel->text = "Grain Size";
 		menu->addChild(settingsLabel);

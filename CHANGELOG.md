@@ -1,3 +1,9 @@
+### 1.13.0 (2019-04-28)
+- Added Portland Weather Algorithm Expander
+- Added Midichlorian
+- Minor bug fixes to PW and QAR
+- Removed PW Tap Breakout expander due to expander bus audio rate limitations
+
 ### 1.12.1 (2019-03-25)
 - Added new module - Portland Weather Tab Breakout Expander
 - Added Gate/Trigger Modes to Seeds of Change and SoC Gate Expander

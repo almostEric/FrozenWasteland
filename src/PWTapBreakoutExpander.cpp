@@ -28,38 +28,64 @@ struct PWTapBreakoutExpander : Module {
 
 	
 	// Expander
-	float consumerMessage[NUM_TAPS * 4] = {};// this module must read from here
-	float producerMessage[NUM_TAPS * 4] = {};// mother will write into here
+	float messageFromMaster[NUM_TAPS * 7 + 4] = {};// this module must read from here
+	float messageToMaster[NUM_TAPS * 7 + 4] = {};// mother will write into here
 	
 	
 	PWTapBreakoutExpander() {
 
 		config(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS, NUM_LIGHTS);
 
-		leftExpander.producerMessage = producerMessage;
-		leftExpander.consumerMessage = consumerMessage;
+		leftExpander.producerMessage = messageToMaster;
+		leftExpander.consumerMessage = messageFromMaster;
 		
 	}
 
 	void process(const ProcessArgs &args) override {
         
-		bool motherPresent = (leftExpander.module && leftExpander.module->model == modelPortlandWeather);
+		bool masterPresent = (leftExpander.module && leftExpander.module->model == modelPortlandWeather);
 		//lights[CONNECTED_LIGHT].value = motherPresent;
-		if (motherPresent) {
-			// To Mother			
+		if (masterPresent) {
+
+			//Initalize
+			// for (int i = 0; i < NUM_TAPS * 7 + 3; i++) {
+            //     messageToMaster[i] = 0.0;
+			// }
+
+            // To Master			
+            messageToMaster[NUM_TAPS * 7 + 2] = true; // Tap Breakout Expadner present 
             for (int i = 0; i < NUM_TAPS; i++) {
-				producerMessage[i] = inputs[TAP_PRE_FB_INPUT_L+i].isConnected();
-				producerMessage[NUM_TAPS + i] = inputs[TAP_PRE_FB_INPUT_L+i].getVoltage();
-				producerMessage[(NUM_TAPS * 2) + i] = inputs[TAP_PRE_FB_INPUT_R+i].isConnected();
-				producerMessage[NUM_TAPS * 3 + i] = inputs[TAP_PRE_FB_INPUT_R+i].getVoltage();
+				messageToMaster[(NUM_TAPS * 2) + i] = inputs[TAP_PRE_FB_INPUT_L+i].isConnected();
+				messageToMaster[(NUM_TAPS * 3) + i] = inputs[TAP_PRE_FB_INPUT_L+i].getVoltage();
+				messageToMaster[(NUM_TAPS * 4) + i] = inputs[TAP_PRE_FB_INPUT_R+i].isConnected();
+				messageToMaster[(NUM_TAPS * 5) + i] = inputs[TAP_PRE_FB_INPUT_R+i].getVoltage();
 			// From Mother	
-				outputs[TAP_OUTPUT_L+i].setVoltage(consumerMessage[i]);
-				outputs[TAP_OUTPUT_R+i].setVoltage(consumerMessage[NUM_TAPS+i]);
+				outputs[TAP_OUTPUT_L+i].setVoltage(messageFromMaster[i]);
+				outputs[TAP_OUTPUT_R+i].setVoltage(messageFromMaster[NUM_TAPS+i]);
 			}
 							
-			leftExpander.messageFlipRequested = true;
-		
+			// //If another expander is present, get its values (we can overwrite them)
+			// bool anotherExpanderPresent = (rightExpander.module && (rightExpander.module->model == modelPWAlgorithmicExpander));
+			// if(anotherExpanderPresent)
+			// {			
+			// 	float *message = (float*) rightExpander.module->leftExpander.consumerMessage;	
+
+			// 	//QAR Pass through left
+			// 	producerMessage[NUM_TAPS * 7 + 3] = message[NUM_TAPS * 7 + 3]; // Algorithm presebt
+			// 	for(int i = 0; i < NUM_TAPS; i++) {
+			// 		producerMessage[NUM_TAPS * 6 + i] = message[NUM_TAPS * 6 + i]; // Delay Times
+			// 	}
+
+			// 	//QAR Pass through right
+			// 	float *messageToSlave = (float*)(rightExpander.module->leftExpander.producerMessage);	
+			// 	messageToSlave[NUM_TAPS * 7 + 0] = consumerMessage[NUM_TAPS * 7 + 0]; //Clock
+			// 	messageToSlave[NUM_TAPS * 7 + 1] = consumerMessage[NUM_TAPS * 7 + 1]; //Division
+			// } 
+
+			leftExpander.messageFlipRequested = true;		
 		}		
+
+
 		
 	}	
 };
