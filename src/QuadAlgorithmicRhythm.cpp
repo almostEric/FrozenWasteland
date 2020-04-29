@@ -144,8 +144,8 @@ struct QuadAlgorithmicRhythm : Module {
 	};
 
 	// Expander
-	float consumerMessage[PASSTHROUGH_OFFSET + PASSTHROUGH_LEFT_VARIABLE_COUNT + PASSTHROUGH_RIGHT_VARIABLE_COUNT] = {};// this module must read from here
-	float producerMessage[PASSTHROUGH_OFFSET + PASSTHROUGH_LEFT_VARIABLE_COUNT + PASSTHROUGH_RIGHT_VARIABLE_COUNT] = {};// mother will write into here
+	float leftMessages[2][PASSTHROUGH_OFFSET + PASSTHROUGH_LEFT_VARIABLE_COUNT + PASSTHROUGH_RIGHT_VARIABLE_COUNT] = {};
+	float rightMessages[2][PASSTHROUGH_OFFSET + PASSTHROUGH_LEFT_VARIABLE_COUNT + PASSTHROUGH_RIGHT_VARIABLE_COUNT] = {};
 	
     int algorithnMatrix[TRACK_COUNT];
 	bool beatMatrix[TRACK_COUNT][MAX_STEPS];
@@ -271,8 +271,11 @@ struct QuadAlgorithmicRhythm : Module {
 		configParam(RESET_PARAM, 0.0, 1.0, 0.0);
 		configParam(MUTE_PARAM, 0.0, 1.0, 0.0);
 
-		leftExpander.producerMessage = producerMessage;
-		leftExpander.consumerMessage = consumerMessage;
+		leftExpander.producerMessage = leftMessages[0];
+		leftExpander.consumerMessage = leftMessages[1];
+
+		rightExpander.producerMessage = rightMessages[0];
+		rightExpander.consumerMessage = rightMessages[1];
 		
 		srand(time(NULL));
 		
@@ -291,9 +294,6 @@ struct QuadAlgorithmicRhythm : Module {
 			probabilityGroupTriggered[i] = PENDING_PGTS;
 			beatWarping[i] = 1.0;
 			beatWarpingPosition[i] = 8;
-
-
-
 
 			expanderOutputValue[i] = 0.0;
 			expanderAccentValue[i] = 0.0;
@@ -329,14 +329,14 @@ struct QuadAlgorithmicRhythm : Module {
 		&& (rightExpander.module->model == modelQuadAlgorithmicRhythm || rightExpander.module->model == modelQARProbabilityExpander || rightExpander.module->model == modelQARGrooveExpander || rightExpander.module->model == modelQARWarpedSpaceExpander));
 		if(rightExpanderPresent)
 		{			
-			float *message = (float*) rightExpander.module->leftExpander.consumerMessage;
-			slavedQARPresent = message[PASSTHROUGH_OFFSET];  // Slave QAR Exists flag
+			float *messagesFromExpander = (float*)rightExpander.consumerMessage;
+			slavedQARPresent = messagesFromExpander[PASSTHROUGH_OFFSET];  // Slave QAR Exists flag
 
 			if(slavedQARPresent) {			
 				for(int i = 0; i < TRACK_COUNT; i++) {
-					expanderOutputValue[i] = message[PASSTHROUGH_OFFSET + 1 + i * 3] ; 
-					expanderAccentValue[i] = message[PASSTHROUGH_OFFSET + 1 + i * 3 + 1] ; 
-					lastExpanderEocValue[i] = message[PASSTHROUGH_OFFSET + 1 + i * 3 + 2] ; 					
+					expanderOutputValue[i] = messagesFromExpander[PASSTHROUGH_OFFSET + 1 + i * 3] ; 
+					expanderAccentValue[i] = messagesFromExpander[PASSTHROUGH_OFFSET + 1 + i * 3 + 1] ; 
+					lastExpanderEocValue[i] = messagesFromExpander[PASSTHROUGH_OFFSET + 1 + i * 3 + 2] ; 					
 				}
 			}
 		}
@@ -356,30 +356,20 @@ struct QuadAlgorithmicRhythm : Module {
 		 || leftExpander.module->model == modelQARProbabilityExpander || leftExpander.module->model == modelQARGrooveExpander || leftExpander.module->model == modelQARWarpedSpaceExpander));
 		if(leftExpanderPresent)
 		{			
-			float *consumerMessage = (float*)leftExpander.consumerMessage;
-			masterQARPresent = consumerMessage[PASSTHROUGH_OFFSET + PASSTHROUGH_LEFT_VARIABLE_COUNT]; 
+			float *messagesFromMother = (float*)leftExpander.consumerMessage;
+			masterQARPresent = messagesFromMother[PASSTHROUGH_OFFSET + PASSTHROUGH_LEFT_VARIABLE_COUNT]; 
 
-			if(masterQARPresent) {
-			
-				expanderClockValue = consumerMessage[PASSTHROUGH_OFFSET + PASSTHROUGH_LEFT_VARIABLE_COUNT + 1] ; 
-				expanderResetValue = consumerMessage[PASSTHROUGH_OFFSET + PASSTHROUGH_LEFT_VARIABLE_COUNT + 2] ; 
-				expanderMuteValue = consumerMessage[PASSTHROUGH_OFFSET + PASSTHROUGH_LEFT_VARIABLE_COUNT + 3] ; 
+			if(masterQARPresent) {			
+				expanderClockValue = messagesFromMother[PASSTHROUGH_OFFSET + PASSTHROUGH_LEFT_VARIABLE_COUNT + 1] ; 
+				expanderResetValue = messagesFromMother[PASSTHROUGH_OFFSET + PASSTHROUGH_LEFT_VARIABLE_COUNT + 2] ; 
+				expanderMuteValue = messagesFromMother[PASSTHROUGH_OFFSET + PASSTHROUGH_LEFT_VARIABLE_COUNT + 3] ; 
 
 				for(int i = 0; i < TRACK_COUNT; i++) {				
-					expanderEocValue[i] = consumerMessage[PASSTHROUGH_OFFSET + PASSTHROUGH_LEFT_VARIABLE_COUNT + 4 + i] ; 
+					expanderEocValue[i] = messagesFromMother[PASSTHROUGH_OFFSET + PASSTHROUGH_LEFT_VARIABLE_COUNT + 4 + i] ; 
 				}
 			}
 		}
 
-		//if(slavedQARPresent)
-		//lights[IS_MASTER_LIGHT].value = slavedQARPresent;
-
-		//if(masterQARPresent)
-		//lights[IS_SLAVE_LIGHT].value = masterQARPresent;
-
-
-
-		
 
 		//Set startup state	
 		if(!initialized) {
@@ -657,7 +647,7 @@ struct QuadAlgorithmicRhythm : Module {
 		if(rightExpander.module && (rightExpander.module->model == modelQARProbabilityExpander || rightExpander.module->model == modelQARGrooveExpander || rightExpander.module->model == modelQARWarpedSpaceExpander))
 		{			
 			QARExpanderDisconnectReset = true;
-			float *message = (float*) rightExpander.module->leftExpander.consumerMessage;
+			float *messagesFromExpanders = (float*)rightExpander.consumerMessage;
 
 			//Process Probability Expander Stuff						
 			for(int i = 0; i < TRACK_COUNT; i++) {
@@ -666,8 +656,8 @@ struct QuadAlgorithmicRhythm : Module {
 					workingProbabilityMatrix[i][j] = 1;					
 				}
 
-				if(message[i] > 0) { // 0 is track not selected
-					bool useDivs = message[i] == 2; //2 is divs
+				if(messagesFromExpanders[i] > 0) { // 0 is track not selected
+					bool useDivs = messagesFromExpanders[i] == 2; //2 is divs
 					for(int j = 0; j < MAX_STEPS; j++) { // Assign probabilites and swing
 						int stepIndex = j;
 						bool stepFound = true;
@@ -687,8 +677,8 @@ struct QuadAlgorithmicRhythm : Module {
 						}
 						
 						if(stepFound) {
-							float probability = message[TRACK_LEVEL_PARAM_COUNT + (i * EXPANDER_MAX_STEPS) + j];
-							float probabilityMode = message[TRACK_LEVEL_PARAM_COUNT + (EXPANDER_MAX_STEPS * TRACK_COUNT) + (i * EXPANDER_MAX_STEPS) + j];
+							float probability = messagesFromExpanders[TRACK_LEVEL_PARAM_COUNT + (i * EXPANDER_MAX_STEPS) + j];
+							float probabilityMode = messagesFromExpanders[TRACK_LEVEL_PARAM_COUNT + (EXPANDER_MAX_STEPS * TRACK_COUNT) + (i * EXPANDER_MAX_STEPS) + j];
 							
 							workingProbabilityMatrix[i][stepIndex] = probability;
 							probabilityGroupModeMatrix[i][stepIndex] = probabilityMode;
@@ -709,15 +699,15 @@ struct QuadAlgorithmicRhythm : Module {
 					workingSwingMatrix[i][j] = 0.0;
 				}
 
-				if(message[TRACK_COUNT + i] > 0) { // 0 is track not selected
-					bool useDivs = message[TRACK_COUNT + i] == 2; //2 is divs
+				if(messagesFromExpanders[TRACK_COUNT + i] > 0) { // 0 is track not selected
+					bool useDivs = messagesFromExpanders[TRACK_COUNT + i] == 2; //2 is divs
 					trackSwingUsingDivs[i] = useDivs;
 
-					int grooveLength = (int)(message[TRACK_COUNT * 2 + i]);
-					bool useTrackLength = message[TRACK_COUNT * 3 + i];
+					int grooveLength = (int)(messagesFromExpanders[TRACK_COUNT * 2 + i]);
+					bool useTrackLength = messagesFromExpanders[TRACK_COUNT * 3 + i];
 
-					swingRandomness[i] = message[TRACK_COUNT * 4 + i];
-					useGaussianDistribution[i] = message[TRACK_COUNT * 5 + i];
+					swingRandomness[i] = messagesFromExpanders[TRACK_COUNT * 4 + i];
+					useGaussianDistribution[i] = messagesFromExpanders[TRACK_COUNT * 5 + i];
 
 					if(useTrackLength) {
 						grooveLength = stepsCount[i];
@@ -767,7 +757,7 @@ struct QuadAlgorithmicRhythm : Module {
 						}
 						
 						if(stepFound) {
-							float swing = message[TRACK_LEVEL_PARAM_COUNT + (EXPANDER_MAX_STEPS * TRACK_COUNT * 2) + (i * EXPANDER_MAX_STEPS) + workingBeatIndex];
+							float swing = messagesFromExpanders[TRACK_LEVEL_PARAM_COUNT + (EXPANDER_MAX_STEPS * TRACK_COUNT * 2) + (i * EXPANDER_MAX_STEPS) + workingBeatIndex];
 							workingSwingMatrix[i][stepIndex] = swing;						
 						} 
 						workingBeatIndex +=1;
@@ -784,9 +774,9 @@ struct QuadAlgorithmicRhythm : Module {
 					workingBeatWarpMatrix[i][j] = 1.0;
 				}
 
-				if(message[TRACK_COUNT * 6 + i] > 0) { // 0 is track not selected
-					beatWarping[i] = message[TRACK_COUNT * 7 + i];
-					beatWarpingPosition[i] = (int)message[TRACK_COUNT * 8 + i];
+				if(messagesFromExpanders[TRACK_COUNT * 6 + i] > 0) { // 0 is track not selected
+					beatWarping[i] = messagesFromExpanders[TRACK_COUNT * 7 + i];
+					beatWarpingPosition[i] = (int)messagesFromExpanders[TRACK_COUNT * 8 + i];
 					float trackStepCount = (float)stepsCount[i];
 					float stepsToSpread = (trackStepCount / 2.0)-1;
 					float fraction = 1.0/beatWarping[i];
@@ -799,11 +789,7 @@ struct QuadAlgorithmicRhythm : Module {
 							workingBeatWarpMatrix[i][actualBeat] = (2-fraction)*(fj-stepsToSpread-1.0)/stepsToSpread + (fraction*(trackStepCount-fj-1.0)/stepsToSpread); 						
 					}
 				}
-			}
-			
-			
-			
-			
+			}											
 		} else {
 			if(QARExpanderDisconnectReset) { //If QRE gets disconnected, reset warping, probability and swing
 				for(int i = 0; i < TRACK_COUNT; i++) {
@@ -931,29 +917,34 @@ struct QuadAlgorithmicRhythm : Module {
 			
 			
 			if(leftExpanderPresent) {
-				producerMessage[PASSTHROUGH_OFFSET + 1 + trackNumber * 3] = beatOutputValue; 
-				producerMessage[PASSTHROUGH_OFFSET + 1 + trackNumber * 3 + 1] = accentOutputValue;
-				producerMessage[PASSTHROUGH_OFFSET + 1 + trackNumber * 3 + 2] = rightExpanderPresent ? lastExpanderEocValue[trackNumber] : eocOutputValue; // If last QAR send Eoc Back, otherwise pass through
+				float *messagesToMother = (float*)leftExpander.module->rightExpander.producerMessage;
+				messagesToMother[PASSTHROUGH_OFFSET + 1 + trackNumber * 3] = beatOutputValue; 
+				messagesToMother[PASSTHROUGH_OFFSET + 1 + trackNumber * 3 + 1] = accentOutputValue;
+				messagesToMother[PASSTHROUGH_OFFSET + 1 + trackNumber * 3 + 2] = rightExpanderPresent ? lastExpanderEocValue[trackNumber] : eocOutputValue; // If last QAR send Eoc Back, otherwise pass through
 			} 
 			if(rightExpanderPresent) {
-				float *messageToSlave = (float*)(rightExpander.module->leftExpander.producerMessage);	
-				messageToSlave[PASSTHROUGH_OFFSET + PASSTHROUGH_LEFT_VARIABLE_COUNT + 4 + trackNumber] = eocOutputValue; 				
+				float *messageToExpander = (float*)(rightExpander.module->leftExpander.producerMessage);
+				messageToExpander[PASSTHROUGH_OFFSET + PASSTHROUGH_LEFT_VARIABLE_COUNT + 4 + trackNumber] = eocOutputValue; 				
 			}
 
 		}
 
 		//Send outputs to slaves if present		
 		if(rightExpanderPresent) {
-			float *messageToSlave = (float*)(rightExpander.module->leftExpander.producerMessage);
-			messageToSlave[PASSTHROUGH_OFFSET + PASSTHROUGH_LEFT_VARIABLE_COUNT] = true; // tell slave Master is present
-			messageToSlave[PASSTHROUGH_OFFSET + PASSTHROUGH_LEFT_VARIABLE_COUNT + 1] = clockInput; 
-			messageToSlave[PASSTHROUGH_OFFSET + PASSTHROUGH_LEFT_VARIABLE_COUNT + 2] = resetInput; 
-			messageToSlave[PASSTHROUGH_OFFSET + PASSTHROUGH_LEFT_VARIABLE_COUNT + 3] = muteInput; 				
+			float *messageToExpander = (float*)(rightExpander.module->leftExpander.producerMessage);
+			messageToExpander[PASSTHROUGH_OFFSET + PASSTHROUGH_LEFT_VARIABLE_COUNT] = true; // tell slave Master is present
+			messageToExpander[PASSTHROUGH_OFFSET + PASSTHROUGH_LEFT_VARIABLE_COUNT + 1] = clockInput; 
+			messageToExpander[PASSTHROUGH_OFFSET + PASSTHROUGH_LEFT_VARIABLE_COUNT + 2] = resetInput; 
+			messageToExpander[PASSTHROUGH_OFFSET + PASSTHROUGH_LEFT_VARIABLE_COUNT + 3] = muteInput; 	
+			
+			rightExpander.module->leftExpander.messageFlipRequested = true;			
 		}
 		
 		if(leftExpanderPresent) {
-			producerMessage[PASSTHROUGH_OFFSET] = true; //Tell Master that slave is present
-			leftExpander.messageFlipRequested = true;	
+			float *messagesToMother = (float*)leftExpander.module->rightExpander.producerMessage;
+			messagesToMother[PASSTHROUGH_OFFSET] = true; //Tell Master that slave is present
+			
+			leftExpander.module->rightExpander.messageFlipRequested = true;
 		} 			
 	}
 

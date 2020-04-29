@@ -49,8 +49,8 @@ struct QARWarpedSpaceExpander : Module {
 	const char* stepNames[MAX_STEPS] {"1","2","3","4","5","6","7","8","9","10","11","12","13","14","15","16","17","18"};
 
 	// Expander
-	float consumerMessage[PASSTHROUGH_OFFSET + PASSTHROUGH_LEFT_VARIABLE_COUNT + PASSTHROUGH_RIGHT_VARIABLE_COUNT] = {};// this module must read from here
-	float producerMessage[PASSTHROUGH_OFFSET + 1 + PASSTHROUGH_LEFT_VARIABLE_COUNT + PASSTHROUGH_RIGHT_VARIABLE_COUNT] = {};// mother will write into here
+	float leftMessages[2][PASSTHROUGH_OFFSET + PASSTHROUGH_LEFT_VARIABLE_COUNT + PASSTHROUGH_RIGHT_VARIABLE_COUNT] = {};
+	float rightMessages[2][PASSTHROUGH_OFFSET + PASSTHROUGH_LEFT_VARIABLE_COUNT + PASSTHROUGH_RIGHT_VARIABLE_COUNT] = {};
 
     float lerp(float v0, float v1, float t) {
 	  return (1 - t) * v0 + t * v1;
@@ -71,10 +71,12 @@ struct QARWarpedSpaceExpander : Module {
         configParam(WARP_POSITION_CV_ATTENUVETER_PARAM, -1.0, 1.0, 0.0,"Warp Position CV Attenuation","%",0,100);		
 
         
-		leftExpander.producerMessage = producerMessage;
-		leftExpander.consumerMessage = consumerMessage;
+		leftExpander.producerMessage = leftMessages[0];
+		leftExpander.consumerMessage = leftMessages[1];
 
-		
+		rightExpander.producerMessage = rightMessages[0];
+		rightExpander.consumerMessage = rightMessages[1];
+
         onReset();
 	}
 
@@ -117,36 +119,38 @@ struct QARWarpedSpaceExpander : Module {
 		//lights[CONNECTED_LIGHT].value = motherPresent;
 		if (motherPresent) {
 			// To Mother
-			float *producerMessage = (float*) leftExpander.producerMessage;
+			float *messagesFromMother = (float*)leftExpander.consumerMessage;
+			float *messagesToMother = (float*)leftExpander.module->rightExpander.producerMessage;
 
 			//Initalize
-			for (int i = 0; i < PASSTHROUGH_OFFSET + PASSTHROUGH_LEFT_VARIABLE_COUNT; i++) {
-                producerMessage[i] = 0.0;
+			for (int i = 0; i < PASSTHROUGH_OFFSET + PASSTHROUGH_LEFT_VARIABLE_COUNT + PASSTHROUGH_RIGHT_VARIABLE_COUNT; i++) {
+                messagesToMother[i] = 0.0;
 			}
 
 			//If another expander is present, get its values (we can overwrite them)
 			bool anotherExpanderPresent = (rightExpander.module && (rightExpander.module->model == modelQARWarpedSpaceExpander || rightExpander.module->model == modelQARProbabilityExpander || rightExpander.module->model == modelQARGrooveExpander || rightExpander.module->model == modelQuadAlgorithmicRhythm));
 			if(anotherExpanderPresent)
 			{			
-				float *message = (float*) rightExpander.module->leftExpander.consumerMessage;	
+				float *messagesFromExpander = (float*)rightExpander.consumerMessage;
+				float *messageToExpander = (float*)(rightExpander.module->leftExpander.producerMessage);
 
                 if(rightExpander.module->model == modelQARProbabilityExpander || rightExpander.module->model == modelQARGrooveExpander || rightExpander.module->model == modelQARWarpedSpaceExpander ) { // Get QRE values							
 					for(int i = 0; i < PASSTHROUGH_OFFSET; i++) {
-                        producerMessage[i] = message[i];
+                        messagesToMother[i] = messagesFromExpander[i];
 					}
 				}
 
 				//QAR Pass through left
 				for(int i = 0; i < PASSTHROUGH_LEFT_VARIABLE_COUNT; i++) {
-					producerMessage[PASSTHROUGH_OFFSET + i] = message[PASSTHROUGH_OFFSET + i];
+					messagesToMother[PASSTHROUGH_OFFSET + i] = messagesFromExpander[PASSTHROUGH_OFFSET + i];
 				}
 
 				//QAR Pass through right
-				float *messagesFromMother = (float*)leftExpander.consumerMessage;
-				float *messageToSlave = (float*)(rightExpander.module->leftExpander.producerMessage);	
 				for(int i = 0; i < PASSTHROUGH_RIGHT_VARIABLE_COUNT;i++) {
-					messageToSlave[PASSTHROUGH_OFFSET + PASSTHROUGH_LEFT_VARIABLE_COUNT + i] = messagesFromMother[PASSTHROUGH_OFFSET + PASSTHROUGH_LEFT_VARIABLE_COUNT + i];
+					messageToExpander[PASSTHROUGH_OFFSET + PASSTHROUGH_LEFT_VARIABLE_COUNT + i] = messagesFromMother[PASSTHROUGH_OFFSET + PASSTHROUGH_LEFT_VARIABLE_COUNT + i];
 				}	
+
+				rightExpander.module->leftExpander.messageFlipRequested = true;
 			}
 
 
@@ -154,16 +158,13 @@ struct QARWarpedSpaceExpander : Module {
             float warpPosition = clamp(params[WARP_POSITION_PARAM].getValue() + (inputs[WARP_POSITION_INPUT].isConnected() ? inputs[WARP_POSITION_INPUT].getVoltage() / 1.8 * params[WARP_POSITION_CV_ATTENUVETER_PARAM].getValue() : 0.0f),0.0f,17.0);
             for (int i = 0; i < TRACK_COUNT; i++) {
                 if(trackWarpSelected[i]) {
-                    producerMessage[TRACK_COUNT * 6 + i] = 1;
-                    producerMessage[TRACK_COUNT * 7 + i] = warpAmount;                    
-                    producerMessage[TRACK_COUNT * 8 + i] = warpPosition;                    
+                    messagesToMother[TRACK_COUNT * 6 + i] = 1;
+                    messagesToMother[TRACK_COUNT * 7 + i] = warpAmount;                    
+                    messagesToMother[TRACK_COUNT * 8 + i] = warpPosition;                    
 				} 
 			}
-		
-			// From Mother	
-			
-			
-			leftExpander.messageFlipRequested = true;
+					
+			leftExpander.module->rightExpander.messageFlipRequested = true;
 		
 		}		
 		
@@ -179,13 +180,7 @@ struct QARWarpedSpaceExpander : Module {
     void onReset() override {
 
 		for(int i =0;i<TRACK_COUNT;i++) {
-            //params[SWING_1_PARAM+i].setValue(0);
 			trackWarpSelected[i] = true;
-		}
-
-		for(int i = 0; i < PASSTHROUGH_LEFT_VARIABLE_COUNT + PASSTHROUGH_RIGHT_VARIABLE_COUNT; i++) {
-			producerMessage[MAX_STEPS * TRACK_COUNT * 2 + 1 + i] = 0;
-			consumerMessage[MAX_STEPS * TRACK_COUNT * 2 + 1 + i] = 0;
 		}
 	}
 };
@@ -250,14 +245,7 @@ struct QARWarpedSpaceExpanderWidget : ModuleWidget {
         addInput(createInput<FWPortInSmall>(Vec(57, 164), module, QARWarpedSpaceExpander::WARP_POSITION_INPUT));
         addParam(createParam<RoundSmallFWKnob>(Vec(54, 187), module, QARWarpedSpaceExpander::WARP_POSITION_CV_ATTENUVETER_PARAM));
 
-        
-        
-
-		//addChild(createLight<LargeLight<GreenLight>>(Vec(190, 284), module, QuadGrooveExpander::CONNECTED_LIGHT));
-
-		
-
-
+    
 	}
 };
 

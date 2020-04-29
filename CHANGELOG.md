@@ -1,3 +1,7 @@
+### 1.13.1 (2019-04-29)
+- Added Portland Weather Tap Breakout Expander back
+- Lots of bug fixes with chaining QARs and expanders. Got audio rate chaining working
+
 ### 1.13.0 (2019-04-28)
 - Added Portland Weather Algorithm Expander
 - Added Midichlorian

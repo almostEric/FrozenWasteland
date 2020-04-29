@@ -187,6 +187,14 @@ A collection of unusual plugins that will add a certain coolness to your patches
 - Create your own grooves for Portland weather's 16 delay taps.
 - Can use either Euclidean (yellow) or Golumb Ruler (blue) alogorithms
 - Chain the QAR Groove Expander, QAR Warped Space and the QAR Probability Expanders to create dynamic, shifting patterns
+- Can be chained after a Tap Breakout expander (but not before)
+
+## PW Tap Breakout Expander
+
+![Portland Weather - Tap Breakout Expander](./doc/pwtb.png)
+
+- Individual Send/Returns for each Tap of Portland Weather.
+- Algorithmic Expander can be chained after (but not before)
 
 
 ## Probably Not(e)

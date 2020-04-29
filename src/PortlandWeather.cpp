@@ -133,12 +133,7 @@ struct PortlandWeather : Module {
 	};
 
 	// Expander
-	float consumerMessage[NUM_TAPS * 7 + 4] = {};// this module must read from here
-	float producerMessage[NUM_TAPS * 7 + 4] = {};// mother will write into here
-
-
-	float *expanderMessage;
-	float *messageToExpander;
+	float rightMessages[2][NUM_TAPS * 7 + 4] = {};// this module must read from here
 
 	bool usingAlgorithm = false;
 	
@@ -225,6 +220,13 @@ struct PortlandWeather : Module {
 	float feedbackDetune[CHANNELS] = {0.0f,0.0f};
 	float delayTime[NUM_TAPS+CHANNELS];
 	float lastDelayTime[NUM_TAPS+CHANNELS];
+
+	float *tapLConnections;// index into correct page of messages from expander (avoid having separate buffers)
+	float *tapLReturns;// index into correct page of messages from expander (avoid having separate buffers)
+	float *tapRConnections;// index into correct page of messages from expander (avoid having separate buffers)
+	float *tapRReturns;// index into correct page of messages from expander (avoid having separate buffers)
+	float tapLSends[NUM_TAPS] = {0};
+	float tapRSends[NUM_TAPS] = {0};
 
 	float expanderDelayTime[NUM_TAPS] = {0.0f};
 	bool expanderMuteTaps[NUM_TAPS] = {0.0f};
@@ -326,8 +328,8 @@ struct PortlandWeather : Module {
 		configParam(MUTE_TRIGGER_MODE_PARAM, 0.0f, 1.0f, 0.0f);
 
 
-		leftExpander.producerMessage = producerMessage;
-		leftExpander.consumerMessage = consumerMessage;
+		rightExpander.producerMessage = rightMessages[0];
+		rightExpander.consumerMessage = rightMessages[1];
 
 		float sampleRate = APP->engine->getSampleRate();
 		
@@ -439,18 +441,24 @@ struct PortlandWeather : Module {
 		divisionf = clamp(divisionf,0.0f,35.0f);
 		division = (DIVISIONS-1) - int(divisionf); //TODO: Reverse Division Order
 
-		//bool rightExpanderPresent = (rightExpander.module && (rightExpander.module->model == modelPWTapBreakoutExpander || rightExpander.module->model == modelPWAlgorithmicExpander));
-		bool rightExpanderPresent = (rightExpander.module && (rightExpander.module->model == modelPWAlgorithmicExpander));
+		bool rightExpanderPresent = (rightExpander.module && (rightExpander.module->model == modelPWTapBreakoutExpander || rightExpander.module->model == modelPWAlgorithmicExpander));
 		bool algorithmExpanderPresent = false;
+		bool tapBreakoutPresent = false;
 		if(rightExpanderPresent) {
-			expanderMessage = (float*)rightExpander.module->leftExpander.consumerMessage; 
-			messageToExpander = (float*)rightExpander.module->leftExpander.producerMessage;
+			float *messagesFromExpander = (float*)rightExpander.consumerMessage;// could be invalid pointer when !expanderPresent, so read it only when expanderPresent
+			tapLConnections = &messagesFromExpander[NUM_TAPS * 2]; // contains 8 values of the returns from the aux panel
+			tapLReturns = &messagesFromExpander[NUM_TAPS * 3]; // contains 8 values of the returns from the aux panel
+			tapRConnections = &messagesFromExpander[NUM_TAPS * 4]; // contains 8 values of the returns from the aux panel
+			tapRReturns = &messagesFromExpander[NUM_TAPS * 5]; // contains 8 values of the returns from the aux panel
 
-			algorithmExpanderPresent = (bool)expanderMessage[(NUM_TAPS * 7) + 3];
+			tapBreakoutPresent = (bool)messagesFromExpander[(NUM_TAPS * 7) + 2];
+			algorithmExpanderPresent = (bool)messagesFromExpander[(NUM_TAPS * 7) + 3];
 
 		}
 		if(algorithmExpanderPresent)
 		{			
+			float *messagesFromExpander = (float*)rightExpander.consumerMessage;// could be invalid pointer when !expanderPresent, so read it only when expanderPresent
+			float *messageToExpander = (float*)(rightExpander.module->leftExpander.producerMessage);
 			usingAlgorithm = true;
 			//Clock for algorithn
 			messageToExpander[NUM_TAPS * 7] = inputs[CLOCK_INPUT].getVoltage();
@@ -458,7 +466,7 @@ struct PortlandWeather : Module {
 
 			//Get Delay Times
 			for(int tap=0;tap<NUM_TAPS;tap++) {
-				expanderDelayTime[tap] = expanderMessage[NUM_TAPS * 6 + tap];
+				expanderDelayTime[tap] = messagesFromExpander[NUM_TAPS * 6 + tap];
 				expanderMuteTaps[tap] = (expanderDelayTime[tap] < 0);
 			}
 
@@ -724,29 +732,20 @@ struct PortlandWeather : Module {
 			// } 
 
 
-//Disabled due to audio rate expanders not working well
-// 			if(rightExpanderPresent && rightExpander.module->model == modelPWTapBreakoutExpander)
-// 			{	
-
-// // 				if(tap == 0) {	
-// // 					fprintf(stderr, "PW: ic1:%f    v1:%f   ic2:%f    v2:%f\n", expanderMessage[0],expanderMessage[16],expanderMessage[32],expanderMessage[48]);	
-// // //					assert(expanderMessage[1] == 0);
-// // 				}
-
-// 				//For Breakout
-// 				messageToExpander[tap] = wetTap.l;			
-// 				messageToExpander[NUM_TAPS + tap] = wetTap.r;			
-
-
-// 				bool isExpanderPortConnectedL = (bool)expanderMessage[(NUM_TAPS * 2) + tap];
-// 				if (isExpanderPortConnectedL) {
-// 					wetTap.l = expanderMessage[(NUM_TAPS * 3) + tap];
-// 				}
-// 				bool isExpanderPortConnectedR = (bool)expanderMessage[(NUM_TAPS * 4) + tap];
-// 				if (isExpanderPortConnectedR) {
-// 					wetTap.r = expanderMessage[(NUM_TAPS * 5) + tap];
-// 				}				
-// 			}
+			if(tapBreakoutPresent)
+			{	
+				//For Breakout
+				tapLSends[tap] = wetTap.l;
+				tapRSends[tap] = wetTap.r;
+				bool isExpanderPortConnectedL =  (bool)tapLConnections[tap]; 
+				if (isExpanderPortConnectedL) {
+					wetTap.l =  tapLReturns[tap];  
+				}
+				bool isExpanderPortConnectedR = (bool)tapRConnections[tap]; 
+				if (isExpanderPortConnectedR) {
+					wetTap.r = tapRReturns[tap]; \
+				}				
+			}
 
 
 			wet.l += wetTap.l;
@@ -880,6 +879,15 @@ struct PortlandWeather : Module {
 		outputs[OUT_L_OUTPUT].setVoltage(outL);
 		outputs[OUT_R_OUTPUT].setVoltage(outR);
 
+		if(tapBreakoutPresent)
+		{	
+			float *messageToExpander = (float*)(rightExpander.module->leftExpander.producerMessage);
+			memcpy(&messageToExpander[0], &tapLSends, sizeof(float) * NUM_TAPS);
+			memcpy(&messageToExpander[NUM_TAPS], &tapRSends, sizeof(float) * NUM_TAPS);
+		}
+		if(tapBreakoutPresent || algorithmExpanderPresent) {
+			rightExpander.module->leftExpander.messageFlipRequested = true;
+		}
 	}
 
 
@@ -1336,20 +1344,7 @@ struct PortlandWeatherWidget : ModuleWidget {
 		randomizePitchItem->text = "Pitch Shifting"; 
 		randomizePitchItem->parameterGroup = module->PITCH_SHIFTING_GROUP;
 		randomizePitchItem->module = module;
-		menu->addChild(randomizePitchItem);
-
-
-		// DelayDisplayNoteItem *ddnItem = createMenuItem<DelayDisplayNoteItem>("Display delay values in notes", CHECKMARK(module->displayDelayNoteMode));
-		// ddnItem->module = module;
-		// menu->addChild(ddnItem);
-
-		// EmitResetItem *erItem = createMenuItem<EmitResetItem>("Reset when run is turned off", CHECKMARK(module->emitResetOnStopRun));
-		// erItem->module = module;
-		// menu->addChild(erItem);
-
-		// ResetHighItem *rhItem = createMenuItem<ResetHighItem>("Outputs reset high when not running", CHECKMARK(module->resetClockOutputsHigh));
-		// rhItem->module = module;
-		// menu->addChild(rhItem);
+		menu->addChild(randomizePitchItem);	
 	}
 
 };

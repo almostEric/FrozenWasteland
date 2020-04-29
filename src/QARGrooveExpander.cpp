@@ -61,8 +61,8 @@ struct QARGrooveExpander : Module {
 	const char* stepNames[MAX_STEPS] {"1","2","3","4","5","6","7","8","9","10","11","12","13","14","15","16","17","18"};
 
 	// Expander
-	float consumerMessage[PASSTHROUGH_OFFSET + PASSTHROUGH_LEFT_VARIABLE_COUNT + PASSTHROUGH_RIGHT_VARIABLE_COUNT] = {};// this module must read from here
-	float producerMessage[PASSTHROUGH_OFFSET + 1 + PASSTHROUGH_LEFT_VARIABLE_COUNT + PASSTHROUGH_RIGHT_VARIABLE_COUNT] = {};// mother will write into here
+	float leftMessages[2][PASSTHROUGH_OFFSET + PASSTHROUGH_LEFT_VARIABLE_COUNT + PASSTHROUGH_RIGHT_VARIABLE_COUNT] = {};
+	float rightMessages[2][PASSTHROUGH_OFFSET + PASSTHROUGH_LEFT_VARIABLE_COUNT + PASSTHROUGH_RIGHT_VARIABLE_COUNT] = {};
 
 	float grooveLength;
 
@@ -99,10 +99,12 @@ struct QARGrooveExpander : Module {
 		configParam(GROOVE_LENGTH_SAME_AS_TRACK_PARAM, 0.0, 1.0, 0.0);
 		configParam(RANDOM_DISTRIBUTION_PATTERN_PARAM, 0.0, 1.0, 0.0);
 
-		leftExpander.producerMessage = producerMessage;
-		leftExpander.consumerMessage = consumerMessage;
+		leftExpander.producerMessage = leftMessages[0];
+		leftExpander.consumerMessage = leftMessages[1];
 
-		
+		rightExpander.producerMessage = rightMessages[0];
+		rightExpander.consumerMessage = rightMessages[1];
+
         onReset();
 	}
 
@@ -181,36 +183,38 @@ struct QARGrooveExpander : Module {
 		//lights[CONNECTED_LIGHT].value = motherPresent;
 		if (motherPresent) {
 			// To Mother
-			float *producerMessage = (float*) leftExpander.producerMessage;
+			float *messagesFromMother = (float*)leftExpander.consumerMessage;
+			float *messagesToMother = (float*)leftExpander.module->rightExpander.producerMessage;
 
 			//Initalize
-			for (int i = 0; i < PASSTHROUGH_OFFSET + PASSTHROUGH_LEFT_VARIABLE_COUNT; i++) {
-                producerMessage[i] = 0.0;
+			for (int i = 0; i < PASSTHROUGH_OFFSET + PASSTHROUGH_LEFT_VARIABLE_COUNT + PASSTHROUGH_RIGHT_VARIABLE_COUNT; i++) {
+                messagesToMother[i] = 0.0;
 			}
 
 			//If another expander is present, get its values (we can overwrite them)
 			bool anotherExpanderPresent = (rightExpander.module && (rightExpander.module->model == modelQARGrooveExpander || rightExpander.module->model == modelQARProbabilityExpander || rightExpander.module->model == modelQARWarpedSpaceExpander || rightExpander.module->model == modelQuadAlgorithmicRhythm));
 			if(anotherExpanderPresent)
 			{			
-				float *message = (float*) rightExpander.module->leftExpander.consumerMessage;	
+				float *messagesFromExpander = (float*)rightExpander.consumerMessage;
+				float *messageToExpander = (float*)(rightExpander.module->leftExpander.producerMessage);
 
                 if(rightExpander.module->model == modelQARProbabilityExpander || rightExpander.module->model == modelQARGrooveExpander || rightExpander.module->model == modelQARWarpedSpaceExpander) { // Get QRE values							
 					for(int i = 0; i < PASSTHROUGH_OFFSET; i++) {
-                        producerMessage[i] = message[i];
+                        messagesToMother[i] = messagesFromExpander[i];
 					}
 				}
 
 				//QAR Pass through left
 				for(int i = 0; i < PASSTHROUGH_LEFT_VARIABLE_COUNT; i++) {
-					producerMessage[PASSTHROUGH_OFFSET + i] = message[PASSTHROUGH_OFFSET + i];
+					messagesToMother[PASSTHROUGH_OFFSET + i] = messagesFromExpander[PASSTHROUGH_OFFSET + i];
 				}
 
 				//QAR Pass through right
-				float *messagesFromMother = (float*)leftExpander.consumerMessage;
-				float *messageToSlave = (float*)(rightExpander.module->leftExpander.producerMessage);	
 				for(int i = 0; i < PASSTHROUGH_RIGHT_VARIABLE_COUNT;i++) {
-					messageToSlave[PASSTHROUGH_OFFSET + PASSTHROUGH_LEFT_VARIABLE_COUNT + i] = messagesFromMother[PASSTHROUGH_OFFSET + PASSTHROUGH_LEFT_VARIABLE_COUNT + i];
+					messageToExpander[PASSTHROUGH_OFFSET + PASSTHROUGH_LEFT_VARIABLE_COUNT + i] = messagesFromMother[PASSTHROUGH_OFFSET + PASSTHROUGH_LEFT_VARIABLE_COUNT + i];
 				}	
+
+				rightExpander.module->leftExpander.messageFlipRequested = true;
 			}
 
 
@@ -219,23 +223,20 @@ struct QARGrooveExpander : Module {
             float randomAmount = clamp(params[SWING_RANDOMNESS_PARAM].getValue() + (inputs[SWING_RANDOMNESS_INPUT].isConnected() ? inputs[SWING_RANDOMNESS_INPUT].getVoltage() / 10 * params[SWING_RANDOMNESS_CV_PARAM].getValue() : 0.0f),0.0,1.0f);
             for (int i = 0; i < TRACK_COUNT; i++) {
                 if(trackGrooveSelected[i]) {
-                    producerMessage[TRACK_COUNT + i] = stepsOrDivs ? 2 : 1;
-                    producerMessage[TRACK_COUNT * 2 + i] = grooveLength;
-                    producerMessage[TRACK_COUNT * 3 + i] = grooveIsTrackLength;
-                    producerMessage[TRACK_COUNT * 4 + i] = randomAmount;
-                    producerMessage[TRACK_COUNT * 5 + i] = gaussianDistribution;
+                    messagesToMother[TRACK_COUNT + i] = stepsOrDivs ? 2 : 1;
+                    messagesToMother[TRACK_COUNT * 2 + i] = grooveLength;
+                    messagesToMother[TRACK_COUNT * 3 + i] = grooveIsTrackLength;
+                    messagesToMother[TRACK_COUNT * 4 + i] = randomAmount;
+                    messagesToMother[TRACK_COUNT * 5 + i] = gaussianDistribution;
                     
     				for (int j = 0; j < MAX_STEPS; j++) {
                         float initialSwingAmount = clamp(params[STEP_1_SWING_AMOUNT_PARAM+j].getValue() + (inputs[STEP_1_SWING_AMOUNT_INPUT + j].isConnected() ? inputs[STEP_1_SWING_AMOUNT_INPUT + j].getVoltage() / 10 * params[STEP_1_SWING_CV_ATTEN_PARAM + j].getValue() : 0.0f),-0.5,0.5f);
-						producerMessage[TRACK_LEVEL_PARAM_COUNT + (MAX_STEPS * TRACK_COUNT * 2) + (i * MAX_STEPS) + j] = lerp(0,initialSwingAmount,grooveAmount);
+						messagesToMother[TRACK_LEVEL_PARAM_COUNT + (MAX_STEPS * TRACK_COUNT * 2) + (i * MAX_STEPS) + j] = lerp(0,initialSwingAmount,grooveAmount);
 					} 					 
 				} 
 			}
 		
-			// From Mother	
-			
-			
-			leftExpander.messageFlipRequested = true;
+			leftExpander.module->rightExpander.messageFlipRequested = true;
 		
 		}		
 		
@@ -255,13 +256,7 @@ struct QARGrooveExpander : Module {
         gaussianDistribution = false;
 
 		for(int i =0;i<TRACK_COUNT;i++) {
-            //params[SWING_1_PARAM+i].setValue(0);
 			trackGrooveSelected[i] = true;
-		}
-
-		for(int i = 0; i < PASSTHROUGH_LEFT_VARIABLE_COUNT + PASSTHROUGH_RIGHT_VARIABLE_COUNT; i++) {
-			producerMessage[MAX_STEPS * TRACK_COUNT * 2 + 1 + i] = 0;
-			consumerMessage[MAX_STEPS * TRACK_COUNT * 2 + 1 + i] = 0;
 		}
 	}
 };

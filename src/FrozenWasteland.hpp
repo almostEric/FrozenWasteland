@@ -27,7 +27,7 @@ extern Model *modelProbablyNoteBP;
 //extern Model *modelProbablyNoteIndian;
 extern Model *modelPNChordExpander;
 extern Model *modelPWAlgorithmicExpander;
-//extern Model *modelPWTapBreakoutExpander;
+extern Model *modelPWTapBreakoutExpander;
 extern Model *modelQuadAlgorithmicRhythm;
 extern Model *modelQARGrooveExpander;
 extern Model *modelQARProbabilityExpander;

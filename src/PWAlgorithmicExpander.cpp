@@ -59,9 +59,10 @@ struct PWAlgorithmicExpander : Module {
 	};
 
 	// Expander
-	float consumerMessage[MAX_STEPS * 7 + 4] = {};// this module must read from here
-	float producerMessage[MAX_STEPS * 7 + 4] = {};// mother will write into here
+    float leftMessages[2][MAX_STEPS * 7 + 4] = {};
+    float rightMessages[2][273] = {};
 	
+		
     int algorithnMatrix;
 	bool beatMatrix[MAX_STEPS];
 
@@ -147,9 +148,12 @@ struct PWAlgorithmicExpander : Module {
 		configParam(PAD_1_PARAM, 0.0, 15, 0.0,"Track 1 Step Padding");
         configParam(ALGORITHM_1_PARAM, 0.0, 1.0, 0.0);
 
-		leftExpander.producerMessage = producerMessage;
-		leftExpander.consumerMessage = consumerMessage;
+		leftExpander.producerMessage = leftMessages[0];
+		leftExpander.consumerMessage = leftMessages[1];
 		
+        rightExpander.producerMessage = rightMessages[0];
+		rightExpander.consumerMessage = rightMessages[1];
+
 		srand(time(NULL));
 		
 
@@ -193,12 +197,13 @@ struct PWAlgorithmicExpander : Module {
 		expanderClockValue = 0; 
 
 		//See if a master is passing through an expander
-		bool leftExpanderPresent = (leftExpander.module && (leftExpander.module->model == modelPortlandWeather));
+		bool leftExpanderPresent = (leftExpander.module && (leftExpander.module->model == modelPortlandWeather || leftExpander.module->model == modelPWTapBreakoutExpander));
 		if(leftExpanderPresent)
-		{			
-			float *consumerMessage = (float*)leftExpander.consumerMessage;
-            expanderClockValue = consumerMessage[MAX_STEPS * 7]; 
-            expanderClockDivision = consumerMessage[MAX_STEPS * 7 + 1];
+		{
+            float *messagesFromMother = (float*)leftExpander.consumerMessage;
+			
+			expanderClockValue = messagesFromMother[MAX_STEPS * 7]; 
+            expanderClockDivision = messagesFromMother[MAX_STEPS * 7 + 1];
 		}
         lights[CLOCK_LIGHT].value = expanderClockValue;
 
@@ -329,39 +334,12 @@ struct PWAlgorithmicExpander : Module {
             }
         }	
 
-		// float resetInput = inputs[RESET_INPUT].getVoltage();
-		// if(!inputs[RESET_INPUT].isConnected() && masterQARPresent) {
-		// 	resetInput = expanderResetValue;
-		// }
-		// resetInput += params[RESET_PARAM].getValue(); //RESET BUTTON ALWAYS WORKS		
-		// if(resetTrigger.process(resetInput)) {
-		// 	for(int trackNumber=0;trackNumber<4;trackNumber++)
-		// 	{
-		// 		beatIndex = -1;
-		// 		lastStepTime = 0;
-		// 		lastSwingDuration = 0; // Not sure about this
-		// 		expanderEocValue = 0; 
-		// 		lastExpanderEocValue = 0;		
-		// 		subBeatIndex = -1;
-		// 		swingRandomness = 0.0f;
-		// 		useGaussianDistribution = false;
-		// 		beatWarping = 1.0;
-		// 		beatWarpingPosition = 8;
-		// 	}
-		// 	timeElapsed = 0;
-		// 	firstClockReceived = false;
-		// 	duration = 0;
-		// 	setRunningState();
-		// }
-		
-
-		
 
 		//Get Expander Info
 		if(rightExpander.module && (rightExpander.module->model == modelQARProbabilityExpander || rightExpander.module->model == modelQARGrooveExpander || rightExpander.module->model == modelQARWarpedSpaceExpander))
 		{			
 			QARExpanderDisconnectReset = true;
-			float *message = (float*) rightExpander.module->leftExpander.consumerMessage;
+			float *messagesFromExpanders = (float*)rightExpander.consumerMessage;
 
 			//Process Probability Expander Stuff						
             probabilityGroupFirstStep = -1;
@@ -369,8 +347,8 @@ struct PWAlgorithmicExpander : Module {
                 workingProbabilityMatrix[j] = 1;					
             }
 
-            if(message[0] > 0) { // 0 is track not selected
-                bool useDivs = message[0] == 2; //2 is divs
+            if(messagesFromExpanders[0] > 0) { // 0 is track not selected
+                bool useDivs = messagesFromExpanders[0] == 2; //2 is divs
                 for(int j = 0; j < MAX_STEPS; j++) { // Assign probabilites and swing
                     int stepIndex = j;
                     bool stepFound = true;
@@ -390,8 +368,8 @@ struct PWAlgorithmicExpander : Module {
                     }
                     
                     if(stepFound) {
-                        float probability = message[TRACK_LEVEL_PARAM_COUNT + (0 * EXPANDER_MAX_STEPS) + j];
-                        float probabilityMode = message[TRACK_LEVEL_PARAM_COUNT + (EXPANDER_MAX_STEPS * TRACK_COUNT) + (0 * EXPANDER_MAX_STEPS) + j];
+                        float probability = messagesFromExpanders[TRACK_LEVEL_PARAM_COUNT + (0 * EXPANDER_MAX_STEPS) + j];
+                        float probabilityMode = messagesFromExpanders[TRACK_LEVEL_PARAM_COUNT + (EXPANDER_MAX_STEPS * TRACK_COUNT) + (0 * EXPANDER_MAX_STEPS) + j];
                         
                         workingProbabilityMatrix[stepIndex] = probability;
                         probabilityGroupModeMatrix[stepIndex] = probabilityMode;
@@ -411,15 +389,15 @@ struct PWAlgorithmicExpander : Module {
                 workingSwingMatrix[j] = 0.0;
             }
 
-            if(message[TRACK_COUNT + 0] > 0) { // 0 is track not selected
-                bool useDivs = message[TRACK_COUNT + 0] == 2; //2 is divs
+            if(messagesFromExpanders[TRACK_COUNT + 0] > 0) { // 0 is track not selected
+                bool useDivs = messagesFromExpanders[TRACK_COUNT + 0] == 2; //2 is divs
                 trackSwingUsingDivs = useDivs;
 
-                int grooveLength = (int)(message[TRACK_COUNT * 2 + 0]);
-                bool useTrackLength = message[TRACK_COUNT * 3 + 0];
+                int grooveLength = (int)(messagesFromExpanders[TRACK_COUNT * 2 + 0]);
+                bool useTrackLength = messagesFromExpanders[TRACK_COUNT * 3 + 0];
 
-                swingRandomness = message[TRACK_COUNT * 4 + 0];
-                useGaussianDistribution = message[TRACK_COUNT * 5 + 0];
+                swingRandomness = messagesFromExpanders[TRACK_COUNT * 4 + 0];
+                useGaussianDistribution = messagesFromExpanders[TRACK_COUNT * 5 + 0];
 
                 if(useTrackLength) {
                     grooveLength = stepsCount;
@@ -469,7 +447,7 @@ struct PWAlgorithmicExpander : Module {
                     }
                     
                     if(stepFound) {
-                        float swing = message[TRACK_LEVEL_PARAM_COUNT + (EXPANDER_MAX_STEPS * TRACK_COUNT * 2) + (0 * EXPANDER_MAX_STEPS) + workingBeatIndex];
+                        float swing = messagesFromExpanders[TRACK_LEVEL_PARAM_COUNT + (EXPANDER_MAX_STEPS * TRACK_COUNT * 2) + (0 * EXPANDER_MAX_STEPS) + workingBeatIndex];
                         workingSwingMatrix[stepIndex] = swing;						
                     } 
                     workingBeatIndex +=1;
@@ -485,9 +463,9 @@ struct PWAlgorithmicExpander : Module {
                 workingBeatWarpMatrix[j] = 1.0;
             }
 
-            if(message[TRACK_COUNT * 6 + 0] > 0) { // 0 is track not selected
-                beatWarping = message[TRACK_COUNT * 7 + 0];
-                beatWarpingPosition = (int)message[TRACK_COUNT * 8 + 0];
+            if(messagesFromExpanders[TRACK_COUNT * 6 + 0] > 0) { // 0 is track not selected
+                beatWarping = messagesFromExpanders[TRACK_COUNT * 7 + 0];
+                beatWarpingPosition = (int)messagesFromExpanders[TRACK_COUNT * 8 + 0];
                 float trackStepCount = (float)stepsCount;
                 float stepsToSpread = (trackStepCount / 2.0)-1;
                 float fraction = 1.0/beatWarping;
@@ -499,7 +477,9 @@ struct PWAlgorithmicExpander : Module {
                     else							
                         workingBeatWarpMatrix[actualBeat] = (2-fraction)*(fj-stepsToSpread-1.0)/stepsToSpread + (fraction*(trackStepCount-fj-1.0)/stepsToSpread); 						
                 }
-            }			
+            }
+
+            rightExpander.module->leftExpander.messageFlipRequested = true;			
 		} else {
 			if(QARExpanderDisconnectReset) { //If QRE gets disconnected, reset warping, probability and swing
                 subBeatIndex = 0;
@@ -568,12 +548,12 @@ struct PWAlgorithmicExpander : Module {
         }	
 
 		if(leftExpanderPresent) {
-            float *producerMessage = (float*) leftExpander.producerMessage;
-            producerMessage[MAX_STEPS * 7 + 3] = true; // Algorithm Expander present 
+            float *messagesToMother = (float*)leftExpander.module->rightExpander.producerMessage;
+            messagesToMother[MAX_STEPS * 7 + 3] = true; // Algorithm Expander present 
             for(int i=0;i<MAX_STEPS;i++) {                    
-                producerMessage[MAX_STEPS * 6 + i ] = expanderDelayTime[i]; 
+                messagesToMother[MAX_STEPS * 6 + i ] = expanderDelayTime[i]; 
             }
-			leftExpander.messageFlipRequested = true;	
+			leftExpander.module->rightExpander.messageFlipRequested = true;
 		} 			
 	}
 

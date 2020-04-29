@@ -47,8 +47,8 @@ struct QARProbabilityExpander : Module {
 	const char* stepNames[MAX_STEPS] {"1","2","3","4","5","6","7","8","9","10","11","12","13","14","15","16","17","18"};
 
 	// Expander
-	float consumerMessage[PASSTHROUGH_OFFSET + PASSTHROUGH_LEFT_VARIABLE_COUNT + PASSTHROUGH_RIGHT_VARIABLE_COUNT] = {};// this module must read from here
-	float producerMessage[PASSTHROUGH_OFFSET + 1 + PASSTHROUGH_LEFT_VARIABLE_COUNT + PASSTHROUGH_RIGHT_VARIABLE_COUNT] = {};// mother will write into here
+	float leftMessages[2][PASSTHROUGH_OFFSET + PASSTHROUGH_LEFT_VARIABLE_COUNT + PASSTHROUGH_RIGHT_VARIABLE_COUNT] = {};
+	float rightMessages[2][PASSTHROUGH_OFFSET + PASSTHROUGH_LEFT_VARIABLE_COUNT + PASSTHROUGH_RIGHT_VARIABLE_COUNT] = {};
 
 	
 	dsp::SchmittTrigger stepDivTrigger,trackProbabilityTrigger[TRACK_COUNT],probabiltyGroupModeTrigger[MAX_STEPS];
@@ -59,8 +59,11 @@ struct QARProbabilityExpander : Module {
 	QARProbabilityExpander() {
 		config(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS, NUM_LIGHTS);
 		
-		leftExpander.producerMessage = producerMessage;
-		leftExpander.consumerMessage = consumerMessage;
+		leftExpander.producerMessage = leftMessages[0];
+		leftExpander.consumerMessage = leftMessages[1];
+
+		rightExpander.producerMessage = rightMessages[0];
+		rightExpander.consumerMessage = rightMessages[1];
 
 		
 		for(int i =0;i<TRACK_COUNT;i++) {
@@ -154,57 +157,54 @@ struct QARProbabilityExpander : Module {
 		}
 		
 
-		bool motherPresent = (leftExpander.module && (leftExpander.module->model == modelQuadAlgorithmicRhythm || leftExpander.module->model == modelQARProbabilityExpander || leftExpander.module->model == modelQARGrooveExpander || leftExpander.module->model == modelQARWarpedSpaceExpander));
-		//lights[CONNECTED_LIGHT].value = motherPresent;
+		bool motherPresent = (leftExpander.module && (leftExpander.module->model == modelQuadAlgorithmicRhythm || leftExpander.module->model == modelQARProbabilityExpander || leftExpander.module->model == modelQARGrooveExpander || leftExpander.module->model == modelQARWarpedSpaceExpander || leftExpander.module->model == modelPWAlgorithmicExpander));
 		if (motherPresent) {
 			// To Mother
-			float *producerMessage = (float*) leftExpander.producerMessage;
+			float *messagesFromMother = (float*)leftExpander.consumerMessage;
+			float *messagesToMother = (float*)leftExpander.module->rightExpander.producerMessage;
 
 			//Initalize
-			for (int i = 0; i < PASSTHROUGH_OFFSET + PASSTHROUGH_LEFT_VARIABLE_COUNT; i++) {
-                producerMessage[i] = 0.0;
+			for (int i = 0; i < PASSTHROUGH_OFFSET + PASSTHROUGH_LEFT_VARIABLE_COUNT + PASSTHROUGH_RIGHT_VARIABLE_COUNT; i++) {
+                messagesToMother[i] = 0.0;
 			}
 
 			//If another expander is present, get its values (we can overwrite them)
-			bool anotherExpanderPresent = (rightExpander.module && (rightExpander.module->model == modelQARProbabilityExpander || rightExpander.module->model == modelQARGrooveExpander || rightExpander.module->model == modelQARWarpedSpaceExpander || rightExpander.module->model == modelQuadAlgorithmicRhythm));
+			bool anotherExpanderPresent = (rightExpander.module && (rightExpander.module->model == modelQARProbabilityExpander || rightExpander.module->model == modelQARGrooveExpander || rightExpander.module->model == modelQARWarpedSpaceExpander));
 			if(anotherExpanderPresent)
 			{			
-				float *message = (float*) rightExpander.module->leftExpander.consumerMessage;	
+				float *messagesFromExpander = (float*)rightExpander.consumerMessage;
+				float *messageToExpander = (float*)(rightExpander.module->leftExpander.producerMessage);
 
 				if(rightExpander.module->model == modelQARProbabilityExpander || rightExpander.module->model == modelQARGrooveExpander || rightExpander.module->model == modelQARWarpedSpaceExpander) { // Get QRE values							
 					for(int i = 0; i < PASSTHROUGH_OFFSET; i++) {
-                        producerMessage[i] = message[i];
+                        messagesToMother[i] = messagesFromExpander[i];
 					}
 				}
 
 				//QAR Pass through left
 				for(int i = 0; i < PASSTHROUGH_LEFT_VARIABLE_COUNT; i++) {
-					producerMessage[PASSTHROUGH_OFFSET + i] = message[PASSTHROUGH_OFFSET + i];
+					messagesToMother[PASSTHROUGH_OFFSET + i] = messagesFromExpander[PASSTHROUGH_OFFSET + i];
 				}
 
 				//QAR Pass through right
-				float *messagesFromMother = (float*)leftExpander.consumerMessage;
-				float *messageToSlave = (float*)(rightExpander.module->leftExpander.producerMessage);	
 				for(int i = 0; i < PASSTHROUGH_RIGHT_VARIABLE_COUNT;i++) {
-					messageToSlave[PASSTHROUGH_OFFSET + PASSTHROUGH_LEFT_VARIABLE_COUNT + i] = messagesFromMother[PASSTHROUGH_OFFSET + PASSTHROUGH_LEFT_VARIABLE_COUNT + i];
+					messageToExpander[PASSTHROUGH_OFFSET + PASSTHROUGH_LEFT_VARIABLE_COUNT + i] = messagesFromMother[PASSTHROUGH_OFFSET + PASSTHROUGH_LEFT_VARIABLE_COUNT + i];
 				}	
+
+				rightExpander.module->leftExpander.messageFlipRequested = true;
 			}
 		
 			for (int i = 0; i < TRACK_COUNT; i++) {
                 if(trackProbabilitySelected[i]) {
-                    producerMessage[i] = stepsOrDivs ? 2 : 1;
+                    messagesToMother[i] = stepsOrDivs ? 2 : 1;
     				for (int j = 0; j < MAX_STEPS; j++) {
-						producerMessage[TRACK_LEVEL_PARAM_COUNT + i * MAX_STEPS + j] = clamp(params[PROBABILITY_1_PARAM+j].getValue() + (inputs[PROBABILITY_1_INPUT + j].isConnected() ? inputs[PROBABILITY_1_INPUT + j].getVoltage() / 10 * params[PROBABILITY_ATTEN_1_PARAM + j].getValue() : 0.0f),0.0,1.0f);
-						producerMessage[TRACK_LEVEL_PARAM_COUNT + (MAX_STEPS * TRACK_COUNT) + i * MAX_STEPS + j] = probabilityGroupMode[j];
-						//producerMessage[TRACK_LEVEL_PARAM_COUNT + (MAX_STEPS * TRACK_COUNT * 2) + i * MAX_STEPS + j] = probabilityGroupNumber;
+						messagesToMother[TRACK_LEVEL_PARAM_COUNT + i * MAX_STEPS + j] = clamp(params[PROBABILITY_1_PARAM+j].getValue() + (inputs[PROBABILITY_1_INPUT + j].isConnected() ? inputs[PROBABILITY_1_INPUT + j].getVoltage() / 10 * params[PROBABILITY_ATTEN_1_PARAM + j].getValue() : 0.0f),0.0,1.0f);
+						messagesToMother[TRACK_LEVEL_PARAM_COUNT + (MAX_STEPS * TRACK_COUNT) + i * MAX_STEPS + j] = probabilityGroupMode[j];
 					} 					 
 				} 
 			}			
-						
-			// From Mother	
 			
-			
-			leftExpander.messageFlipRequested = true;
+			leftExpander.module->rightExpander.messageFlipRequested = true;
 		
 		}		
 		
@@ -225,10 +225,10 @@ struct QARProbabilityExpander : Module {
 			trackProbabilitySelected[i] = true;
 		}
 
-		for(int i = 0; i < PASSTHROUGH_LEFT_VARIABLE_COUNT + PASSTHROUGH_RIGHT_VARIABLE_COUNT; i++) {
-			producerMessage[MAX_STEPS * TRACK_COUNT * 2 + 1 + i] = 0;
-			consumerMessage[MAX_STEPS * TRACK_COUNT * 2 + 1 + i] = 0;
-		}
+		// for(int i = 0; i < PASSTHROUGH_LEFT_VARIABLE_COUNT + PASSTHROUGH_RIGHT_VARIABLE_COUNT; i++) {
+		// 	producerMessage[MAX_STEPS * TRACK_COUNT * 2 + 1 + i] = 0;
+		// 	consumerMessage[MAX_STEPS * TRACK_COUNT * 2 + 1 + i] = 0;
+		// }
 	}
 };
 
@@ -245,12 +245,6 @@ struct QARProbabilityExpanderWidget : ModuleWidget {
 
 
 		addParam(createParam<LEDButton>(Vec(12, 324), module, QARProbabilityExpander::STEP_OR_DIV_PARAM));
-
-		// addInput(createInput<PJ301MPort>(Vec(60, 101), module, QuadRhythmExpander::PROBABILITY_2_INPUT));
-		// addInput(createInput<PJ301MPort>(Vec(60, 158), module, QuadRhythmExpander::PROBABILITY_3_INPUT));
-		// addInput(createInput<PJ301MPort>(Vec(60, 215), module, QuadRhythmExpander::PROBABILITY_4_INPUT));
-
-
 
          for(int i=0; i<MAX_STEPS / 3;i++) {
 		    addParam(createParam<RoundSmallFWKnob>(Vec(10, 30 + i*46), module, QARProbabilityExpander::PROBABILITY_1_PARAM + i));
