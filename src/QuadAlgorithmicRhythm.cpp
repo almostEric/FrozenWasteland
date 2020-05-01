@@ -166,6 +166,9 @@ struct QuadAlgorithmicRhythm : Module {
 	float workingBeatWarpMatrix[TRACK_COUNT][MAX_STEPS];
 
 	int beatIndex[TRACK_COUNT];
+	int beatLocation[TRACK_COUNT][MAX_STEPS] = {{0}};
+	int beatCount[TRACK_COUNT] = {0};
+	int beatCountAtIndex[TRACK_COUNT] = {-1};
 	int stepsCount[TRACK_COUNT];
 	int lastStepsCount[TRACK_COUNT];
 	double stepDuration[TRACK_COUNT];
@@ -329,8 +332,6 @@ struct QuadAlgorithmicRhythm : Module {
 
 	void process(const ProcessArgs &args) override  {
 
-		int beatLocation[MAX_STEPS];
-
 		//Initialize
 		for(int i = 0; i < TRACK_COUNT; i++) {
 			expanderOutputValue[i] = 0; 
@@ -453,7 +454,7 @@ struct QuadAlgorithmicRhythm : Module {
 			//clear out the matrix and levels
 			for(int j=0;j<MAX_STEPS;j++)
 			{
-				beatLocation[j] = 0;
+				beatLocation[trackNumber][j] = 0;
 			}
 
 			float stepsCountf = std::floor(params[(trackNumber * 7) + STEPS_1_PARAM].getValue());			
@@ -525,6 +526,7 @@ struct QuadAlgorithmicRhythm : Module {
 			int accentRotation = int(accentRotationf);
 
 
+			beatCount[trackNumber] = 0;
 			if(division > 0) {				
                 int bucket = stepsCount[trackNumber] - pad - 1;                    
                 if(algorithnMatrix[trackNumber] == EUCLIDEAN_ALGO ) { //Euclidean Algorithn
@@ -539,14 +541,14 @@ struct QuadAlgorithmicRhythm : Module {
                         if(bucket >= stepsCount[trackNumber]-pad) {
                             bucket -= (stepsCount[trackNumber] - pad);
                             beatMatrix[trackNumber][((euclideanStepIndex + offset + pad) % (stepsCount[trackNumber]))] = true;	
-                            beatLocation[euclideanBeatIndex] = (euclideanStepIndex + offset + pad) % stepsCount[trackNumber];	
+                            beatLocation[trackNumber][euclideanBeatIndex] = (euclideanStepIndex + offset + pad) % stepsCount[trackNumber];	
                             euclideanBeatIndex++;	
                         } else
                         {
                             beatMatrix[trackNumber][((euclideanStepIndex + offset + pad) % (stepsCount[trackNumber]))] = false;	
-                        }
-                        
+                        }                        
                     }
+					beatCount[trackNumber] = euclideanBeatIndex;
                 } else if(algorithnMatrix[trackNumber] == GOLUMB_RULER_ALGO) { //Golomb Ruler Algorithm
 				
                     int rulerToUse = clamp(division-1,0,NUM_RULERS-1);
@@ -568,8 +570,9 @@ struct QuadAlgorithmicRhythm : Module {
                     {
                         int divisionLocation = (rulers[rulerToUse][rulerIndex] * spaceMultiplier) + pad;
                         beatMatrix[trackNumber][(divisionLocation + offset) % stepsCount[trackNumber]] = true;
-                        beatLocation[rulerIndex] = (divisionLocation + offset) % stepsCount[trackNumber];	            
+                        beatLocation[trackNumber][rulerIndex] = (divisionLocation + offset) % stepsCount[trackNumber];	            
                     }
+					beatCount[trackNumber] = rulerOrders[rulerToUse];
                 } else { //Boolean Logic only for tracs 3 and 4
 					int logicBeatCount = 0;
 					int logicMode = (division-1) % 6; 
@@ -598,10 +601,11 @@ struct QuadAlgorithmicRhythm : Module {
 						}
 						beatMatrix[trackNumber][(logicBeatIndex + offset) % stepsCount[trackNumber]] = isBeat;
 						if(isBeat) {
-                        	beatLocation[(logicBeatIndex + offset) % stepsCount[trackNumber]] = logicBeatIndex;	
+                        	beatLocation[trackNumber][(logicBeatIndex + offset) % stepsCount[trackNumber]] = logicBeatIndex;	
 							logicBeatCount ++;
 						}
 					}
+					beatCount[trackNumber] = logicBeatCount;
 				}
 
 				bucket = division - 1;
@@ -610,10 +614,10 @@ struct QuadAlgorithmicRhythm : Module {
 					bucket += accentDivision;
 					if(bucket >= division) {
 						bucket -= division;
-						accentMatrix[trackNumber][beatLocation[(accentIndex + accentRotation) % division]] = true;				
+						accentMatrix[trackNumber][beatLocation[trackNumber][(accentIndex + accentRotation) % division]] = true;				
 					} else
 					{
-						accentMatrix[trackNumber][beatLocation[(accentIndex + accentRotation) % division]] = false;
+						accentMatrix[trackNumber][beatLocation[trackNumber][(accentIndex + accentRotation) % division]] = false;
 					}
 					
 				}	        	
@@ -669,22 +673,11 @@ struct QuadAlgorithmicRhythm : Module {
 
 				if(messagesFromExpanders[i] > 0) { // 0 is track not selected
 					bool useDivs = messagesFromExpanders[i] == 2; //2 is divs
-					for(int j = 0; j < MAX_STEPS; j++) { // Assign probabilites and swing
+					for(int j = 0; j < stepsCount[i]; j++) { // Assign probabilites and swing
 						int stepIndex = j;
 						bool stepFound = true;
 						if(useDivs) { //Use j as a count to the div # we are looking for
-							int divIndex = -1;
-							stepFound = false;
-							for(int k = 0; k< MAX_STEPS; k++) {
-								if (beatMatrix[i][k]) {
-									divIndex ++;
-									if(divIndex == j) {
-										stepIndex = k;
-										stepFound = true;	
-										break;								
-									}
-								}
-							}
+							stepIndex = beatLocation[i][j];
 						}
 						
 						int messageIndex = j % EXPANDER_MAX_STEPS;
@@ -708,7 +701,7 @@ struct QuadAlgorithmicRhythm : Module {
 
 			//Process Groove Expander Stuff									
 			for(int i = 0; i < TRACK_COUNT; i++) {
-				for(int j = 0; j < MAX_STEPS; j++) { //reset all probabilities
+				for(int j = 0; j < MAX_STEPS; j++) { //reset all swing
 					workingSwingMatrix[i][j] = 0.0;
 				}
 
@@ -738,34 +731,24 @@ struct QuadAlgorithmicRhythm : Module {
 							workingBeatIndex +=grooveLength;
 						}
 					} else {
-						int divCount = -1;
-						for(int k = 0; k<= beatIndex[i]; k++) {
-							if (beatMatrix[i][k]) {
-								divCount++;
-							}
-						}
-
-						workingBeatIndex = (subBeatIndex[i] - divCount) % grooveLength; 
+						workingBeatIndex = (subBeatIndex[i] - beatCountAtIndex[i]) % grooveLength; 
 						if(workingBeatIndex <0) {
 							workingBeatIndex +=grooveLength;
 						}
 					}
 
-					for(int j = 0; j < MAX_STEPS; j++) { // Assign probabilites and swing
+							// if(i==0) {
+							// 	fprintf(stderr, "%i %i %i %i \n", beatCount[i],subBeatIndex[i],beatCountAtIndex[i],beatIndex[i]);
+							// }
+
+					for(int j = 0; j < MAX_STEPS; j++) { // Assign probabilites and swing	
 						int stepIndex = j;
 						bool stepFound = true;
 						if(useDivs) { //Use j as a count to the div # we are looking for
-							int divIndex = -1;
-							stepFound = false;
-							for(int k = 0; k< MAX_STEPS; k++) {
-								if (beatMatrix[i][k]) {
-									divIndex ++;
-									if(divIndex == j) {
-										stepIndex = k;
-										stepFound = true;	
-										break;								
-									}
-								}
+							if(j < beatCount[i]) { //hard coding an 8 for test
+								stepIndex = beatLocation[i][j];
+							} else {
+								stepFound = false;
 							}
 						}
 						
@@ -1033,6 +1016,7 @@ struct QuadAlgorithmicRhythm : Module {
 		//End of Cycle
 		if(beatIndex[trackNumber] >= stepsCount[trackNumber]) {
 			beatIndex[trackNumber] = 0;
+			beatCountAtIndex[trackNumber] = -1;
 			eocPulse[trackNumber].trigger(1e-3);
 			probabilityGroupTriggered[trackNumber] = PENDING_PGTS;
 			if(chainMode != CHAIN_MODE_NONE) {
@@ -1064,7 +1048,8 @@ struct QuadAlgorithmicRhythm : Module {
 
         //Create Beat Trigger    
         if(beatMatrix[trackNumber][beatIndex[trackNumber]] == true && probabilityResult && running[trackNumber] && !muted) {
-            beatPulse[trackNumber].trigger(1e-3);		
+            beatPulse[trackNumber].trigger(1e-3);
+			beatCountAtIndex[trackNumber]++;
         } 
 
         //Create Accent Trigger
@@ -1095,6 +1080,7 @@ struct QuadAlgorithmicRhythm : Module {
             algorithnMatrix[i] = EUCLIDEAN_ALGO;
 			beatIndex[i] = -1;
 			stepsCount[i] = MAX_STEPS;
+			beatCountAtIndex[i] = -1;
 			lastStepTime[i] = 0.0;
 			stepDuration[i] = 0.0;
             lastSwingDuration[i] = 0.0;
@@ -1119,7 +1105,7 @@ struct QuadAlgorithmicRhythm : Module {
 };
 
 
-struct QARBeatDisplay : TransparentWidget {
+struct QARBeatDisplay : FramebufferWidget {
 	QuadAlgorithmicRhythm *module;
 	int frame = 0;
 	std::shared_ptr<Font> font;

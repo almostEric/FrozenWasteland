@@ -77,9 +77,12 @@ struct PWAlgorithmicExpander : Module {
 	float workingBeatWarpMatrix[MAX_STEPS];
     bool probabilityResultMatrix[MAX_STEPS] = {1};
 
+
     float expanderDelayTime[MAX_STEPS] = {0};
 
 	int beatIndex;
+	int beatLocation[MAX_STEPS] = {0};
+	int beatCount = 0;
 	int stepsCount;
 	int lastStepsCount;
 	double stepDuration;
@@ -190,6 +193,7 @@ struct PWAlgorithmicExpander : Module {
 
 	void process(const ProcessArgs &args) override  {
 
+
         expanderOutputValue = 0; 
         lastExpanderEocValue = 0;
 
@@ -237,6 +241,12 @@ struct PWAlgorithmicExpander : Module {
         }		
             
             
+        //clear out the matrix and levels
+        for(int j=0;j<MAX_STEPS;j++)
+        {
+            beatLocation[j] = 0;
+        }
+
         float stepsCountf = std::floor(params[STEPS_1_PARAM].getValue());			
         if(inputs[STEPS_1_INPUT].isConnected()) {
             stepsCountf += inputs[STEPS_1_INPUT].getVoltage() * 1.6;
@@ -275,6 +285,7 @@ struct PWAlgorithmicExpander : Module {
         int offset = int(offsetf);		
         int pad = int(padf);
 
+        beatCount = 0;
         if(division > 0) {					
             int bucket = stepsCount - pad - 1;                    
             if(algorithnMatrix == EUCLIDEAN_ALGO ) { //Euclidean Algorithn
@@ -289,13 +300,14 @@ struct PWAlgorithmicExpander : Module {
                     if(bucket >= stepsCount-pad) {
                         bucket -= (stepsCount - pad);
                         beatMatrix[((euclideanStepIndex + offset + pad) % (stepsCount))] = true;	
+                        beatLocation[euclideanBeatIndex] = (euclideanStepIndex + offset + pad) % stepsCount;	
                         euclideanBeatIndex++;	
                     } else
                     {
                         beatMatrix[((euclideanStepIndex + offset + pad) % (stepsCount))] = false;	
-                    }
-                    
+                    }                    
                 }
+                beatCount = euclideanBeatIndex;
             } else if(algorithnMatrix == GOLUMB_RULER_ALGO) { //Golomb Ruler Algorithm
             
                 int rulerToUse = clamp(division-1,0,NUM_RULERS-1);
@@ -317,7 +329,9 @@ struct PWAlgorithmicExpander : Module {
                 {
                     int divisionLocation = (rulers[rulerToUse][rulerIndex] * spaceMultiplier) + pad;
                     beatMatrix[(divisionLocation + offset) % stepsCount] = true;
+                    beatLocation[rulerIndex] = (divisionLocation + offset) % stepsCount;	            
                 }
+                beatCount = rulerOrders[rulerToUse];
             } 
 
             bucket = division - 1;
@@ -346,18 +360,19 @@ struct PWAlgorithmicExpander : Module {
                     int stepIndex = j;
                     bool stepFound = true;
                     if(useDivs) { //Use j as a count to the div # we are looking for
-                        int divIndex = -1;
-                        stepFound = false;
-                        for(int k = 0; k< MAX_STEPS; k++) {
-                            if (beatMatrix[k]) {
-                                divIndex ++;
-                                if(divIndex == j) {
-                                    stepIndex = k;
-                                    stepFound = true;	
-                                    break;								
-                                }
-                            }
-                        }
+                        stepIndex = beatLocation[j];
+                        // int divIndex = -1;
+                        // stepFound = false;
+                        // for(int k = 0; k< MAX_STEPS; k++) {
+                        //     if (beatMatrix[k]) {
+                        //         divIndex ++;
+                        //         if(divIndex == j) {
+                        //             stepIndex = k;
+                        //             stepFound = true;	
+                        //             break;								
+                        //         }
+                        //     }
+                        // }
                     }
                     
                     if(stepFound) {
@@ -401,41 +416,27 @@ struct PWAlgorithmicExpander : Module {
                 // }
                 
 
-                int workingBeatIndex;
-                if(!useDivs) {
-                    workingBeatIndex = (subBeatIndex - beatIndex) % grooveLength; 
-                    if(workingBeatIndex <0) {
-                        workingBeatIndex +=grooveLength;
-                    }
-                } else {
-                    int divCount = -1;
-                    for(int k = 0; k<= beatIndex; k++) {
-                        if (beatMatrix[k]) {
-                            divCount++;
-                        }
-                    }
-
-                    workingBeatIndex = (subBeatIndex - divCount) % grooveLength; 
-                    if(workingBeatIndex <0) {
-                        workingBeatIndex +=grooveLength;
-                    }
-                }
+                int workingBeatIndex = 0;
+                // if(!useDivs) {
+                //     workingBeatIndex = (subBeatIndex - beatIndex) % grooveLength; 
+                //     if(workingBeatIndex <0) {
+                //         workingBeatIndex +=grooveLength;
+                //     }
+                // } else {
+                //     workingBeatIndex = (subBeatIndex[i] - beatCountAtIndex) % grooveLength; 
+                //     if(workingBeatIndex <0) {
+                //         workingBeatIndex +=grooveLength;
+                //     }
+                // }
 
                 for(int j = 0; j < MAX_STEPS; j++) { // Assign probabilites and swing
                     int stepIndex = j;
                     bool stepFound = true;
                     if(useDivs) { //Use j as a count to the div # we are looking for
-                        int divIndex = -1;
-                        stepFound = false;
-                        for(int k = 0; k< MAX_STEPS; k++) {
-                            if (beatMatrix[k]) {
-                                divIndex ++;
-                                if(divIndex == j) {
-                                    stepIndex = k;
-                                    stepFound = true;	
-                                    break;								
-                                }
-                            }
+                        if(j < beatCount) { //hard coding an 8 for test
+                            stepIndex = beatLocation[j];
+                        } else {
+                            stepFound = false;
                         }
                     }
                     
@@ -649,7 +650,7 @@ struct PWAlgorithmicExpander : Module {
 };
 
 
-struct PWAEBeatDisplay : TransparentWidget {
+struct PWAEBeatDisplay : FramebufferWidget {
 	PWAlgorithmicExpander *module;
 	int frame = 0;
 	std::shared_ptr<Font> font;
