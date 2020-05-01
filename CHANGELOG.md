@@ -1,5 +1,6 @@
 ### 1.13.1 (2019-04-29)
 - Added Portland Weather Tap Breakout Expander back
+- Changed QAR's UI, expanded # of steps to 72
 - Lots of bug fixes with chaining QARs and expanders. Got audio rate chaining working
 
 ### 1.13.0 (2019-04-28)

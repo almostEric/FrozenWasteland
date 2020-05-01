@@ -275,7 +275,7 @@ struct PWAlgorithmicExpander : Module {
         int offset = int(offsetf);		
         int pad = int(padf);
 
-        if(stepsCount > 0 && division > 0) {				
+        if(division > 0) {					
             int bucket = stepsCount - pad - 1;                    
             if(algorithnMatrix == EUCLIDEAN_ALGO ) { //Euclidean Algorithn
                 int euclideanBeatIndex = 0;
@@ -298,31 +298,24 @@ struct PWAlgorithmicExpander : Module {
                 }
             } else if(algorithnMatrix == GOLUMB_RULER_ALGO) { //Golomb Ruler Algorithm
             
-                int rulerToUse = clamp(division - 1,0,MAX_DIVISIONS);
+                int rulerToUse = clamp(division-1,0,NUM_RULERS-1);
                 int actualStepCount = stepsCount - pad;
-                while(rulerLengths[rulerToUse] + 1 > actualStepCount && rulerToUse >= 	0) {
+                while(rulerLengths[rulerToUse] + 1 > actualStepCount && rulerToUse >= 0) {
                     rulerToUse -=1;
                 } 
                 
                 //Multiply beats so that low division beats fill out entire pattern
-                int spaceMultiplier = (actualStepCount / (rulerLengths[rulerToUse] + 1)) + 1;
-                if(actualStepCount % (rulerLengths[rulerToUse] + 1) == 0) {
-                    spaceMultiplier -=1;
-                }	
+                float spaceMultiplier = (actualStepCount / (rulerLengths[rulerToUse] + 1));
 
                 //Set all beats to false
-                for(int j=0;j<actualStepCount;j++)
+                for(int j=0;j<stepsCount;j++)
                 {
                     beatMatrix[j] = false; 			
                 }
 
                 for (int rulerIndex = 0; rulerIndex < rulerOrders[rulerToUse];rulerIndex++)
                 {
-                    int divisionLocation = rulers[rulerToUse][rulerIndex] * spaceMultiplier;
-                    divisionLocation +=pad;
-                    if(rulerIndex > 0) {
-                        divisionLocation -=1;
-                    }
+                    int divisionLocation = (rulers[rulerToUse][rulerIndex] * spaceMultiplier) + pad;
                     beatMatrix[(divisionLocation + offset) % stepsCount] = true;
                 }
             } 
@@ -736,7 +729,7 @@ struct PWAEBeatDisplay : TransparentWidget {
 		
 	}
 
-    void drawArc(const DrawArgs &args, float stepsCount, float stepNumber, float runningTrackWidth, int algorithm, bool isBeat, float beatWarp, float probability, int triggerState, int probabilityGroupMode, float swing, float swingRandomness) 
+    void drawArc(const DrawArgs &args, float stepsCount, float stepNumber, float runningTrackWidth, int algorithm, bool isBeat, float beatWarp, float probability, int triggerState, int probabilityGroupMode, float swing, float nextSwing, float swingRandomness) 
 	{		
         const float rotate90 = (M_PI) / 2.0;
 
@@ -753,11 +746,11 @@ struct PWAEBeatDisplay : TransparentWidget {
         NVGcolor randomFillColor = nvgRGBA(0xff,0x00,0,0x40);			
         nvgFillColor(args.vg, nvgRGBA(0xff, 0xff, 0x20, (int)opacity));
 
-        // double startDegree = (M_PI * 2.0 * (stepNumber- 0.5) / stepsCount) ;
-        // double endDegree = (M_PI * 2.0 * (stepNumber + 0.5) / stepsCount) - rotate90;
-        double baseStartDegree = (M_PI * 2.0 / stepsCount * runningTrackWidth) - rotate90;
-        double baseEndDegree = baseStartDegree + (M_PI * 2.0 / stepsCount * beatWarp);
-     
+        double baseStartDegree = (M_PI * 2.0 / stepsCount * (runningTrackWidth + swing)) - rotate90;
+        double baseEndDegree = baseStartDegree + (M_PI * 2.0 / stepsCount * (beatWarp - swing + nextSwing));
+        if(baseEndDegree < baseStartDegree) {
+            baseEndDegree = baseStartDegree;
+        }
         
 		nvgStrokeColor(args.vg, strokeColor);
 		nvgStrokeWidth(args.vg, 1.0);
@@ -773,13 +766,6 @@ struct PWAEBeatDisplay : TransparentWidget {
         float startDegree = baseStartDegree;
         float endDegree = baseEndDegree;
         if(isBeat) {
-            if(swing > 0) {
-                startDegree += (M_PI * 2.0 / stepsCount * beatWarp * swing);
-            }
-            if(swing < 0) {
-                endDegree = startDegree + (M_PI * 2.0 / stepsCount * beatWarp * (1+swing));
-            }
-
             nvgBeginPath(args.vg);
             nvgStrokeWidth(args.vg, 0.0);
             nvgArc(args.vg,89,80.5,65.0 + (20.0 * probability) ,startDegree,endDegree,NVG_CW);
@@ -794,20 +780,32 @@ struct PWAEBeatDisplay : TransparentWidget {
 
             //Draw swing randomness
             if(swingRandomness > 0.0f) {
-                float centerDegree = (baseStartDegree + baseEndDegree) / 2.0;
-                float width = (baseEndDegree - baseStartDegree) * swingRandomness / 4.0; 
+                float width = (baseEndDegree - baseStartDegree) * swingRandomness / 2.0; 
                 nvgBeginPath(args.vg);
                 nvgStrokeWidth(args.vg, 0.0);
-                nvgArc(args.vg,89,80.5,65.0 + (20.0 * probability),centerDegree-width,centerDegree+width,NVG_CW);
-                double x= cos(centerDegree+width) * 65.0 + 89.0;
-                double y= sin(centerDegree+width) * 65.0 + 80.5;
-                nvgLineTo(args.vg,x,y);
-                nvgArc(args.vg,89,80.5,65.0,centerDegree+width,centerDegree-width,NVG_CCW);
+                nvgArc(args.vg,89,80.5,65.0 + (20.0 * probability),startDegree,startDegree+width,NVG_CW);
+                double srx= cos(startDegree+width) * 65.0 + 89.0;
+                double sry= sin(startDegree+width) * 65.0 + 80.5;
+                nvgLineTo(args.vg,srx,sry);
+                nvgArc(args.vg,89,80.5,65.0,startDegree+width,startDegree,NVG_CCW);
                 nvgFillColor(args.vg, randomFillColor);
                 nvgFill(args.vg);
                 nvgStroke(args.vg);
             }
 
+            if (triggerState == module->NOT_TRIGGERED_PGTS && probabilityGroupMode != module->NONE_PGTM) {
+				nvgBeginPath(args.vg);
+				nvgStrokeColor(args.vg, nvgRGBA(0xff, 0x1f, 0, 0xaf));
+				nvgStrokeWidth(args.vg, 1.0);
+				double sx= cos(startDegree) * 85.0 + 89.0;
+            	double sy= sin(startDegree) * 85.0 + 80.5;
+				nvgMoveTo(args.vg,sx,sy);
+				nvgLineTo(args.vg,x,y);
+				// //nvgStroke(args.vg);
+				// nvgMoveTo(args.vg,boxX+baseWidth-1,boxY+1);
+				// nvgLineTo(args.vg,boxX+1,boxY+20);
+				nvgStroke(args.vg);		
+			}
         }
 	}
 
@@ -819,20 +817,19 @@ struct PWAEBeatDisplay : TransparentWidget {
         int algorithn = module->algorithnMatrix;
         float runningTrackWidth = 0.0;
         int stepsCount = module->stepsCount;
-        for(int stepNumber = 0;stepNumber < stepsCount;stepNumber++) {				
+        for(int stepNumber = 0;stepNumber < stepsCount;stepNumber++) {		
+            int nextStepNumber = (stepNumber + 1) % stepsCount;					
             bool isBeat = module->beatMatrix[stepNumber];
             float probability = module->probabilityMatrix[stepNumber];
             float swing = module->swingMatrix[stepNumber];	
+            float nextSwing = module->swingMatrix[nextStepNumber];	
             float swingRandomness = module->swingRandomness;
             float beatWarp = module->beatWarpMatrix[stepNumber];
             int triggerState = module->probabilityGroupTriggered;
             int probabilityGroupMode = module->probabilityGroupModeMatrix[stepNumber];
-            //drawBox(args, float(stepNumber),runningTrackWidth,algorithn,isBeat,beatWarp,probability,triggerState,probabilityGroupMode,swing,swingRandomness);
-            drawArc(args, float(stepsCount), float(stepNumber),runningTrackWidth,algorithn,isBeat,beatWarp,probability,triggerState,probabilityGroupMode,swing,swingRandomness);
+            drawArc(args, float(stepsCount), float(stepNumber),runningTrackWidth,algorithn,isBeat,beatWarp,probability,triggerState,probabilityGroupMode,swing,nextSwing,swingRandomness);
             runningTrackWidth += beatWarp;
-        }
-
-		//drawMasterTrack(args, Vec(box.size.x - 21, box.size.y - 80), module->beatWarping[2]);
+        }		
 	}
 };
 

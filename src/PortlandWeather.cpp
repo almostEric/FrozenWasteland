@@ -229,7 +229,7 @@ struct PortlandWeather : Module {
 	float tapRSends[NUM_TAPS] = {0};
 
 	float expanderDelayTime[NUM_TAPS] = {0.0f};
-	bool expanderMuteTaps[NUM_TAPS] = {0.0f};
+	bool expanderMuteTaps[NUM_TAPS] = {false};
 	
 
 	float testDelay = 0.0f;
