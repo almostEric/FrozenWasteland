@@ -139,7 +139,7 @@ A collection of unusual plugins that will add a certain coolness to your patches
 - example. If you feed into a RM a 200hz sine wave and a 500hz sine wave, the output is the sum and difference of those two frequencies, so 300hz and 700hz.
 - Where it gets crazy is when harmonics are involved since the output is the sum and difference of "all" the frequencies. example, let's say you had the 200 and 500hz sine waves, but they both each had a 2nd harmonic as well, so a 400hz and 1000hz. The output would be: 500+200=700,1000+200=1200,500+400=900,1000+400=1400,500-200=300,500-400=100,1000-300=700(again),1000-400=600. So a whole slew of new frequencies got created.
 - Most waveforms have *way* more harmonics than this, so the results are really crazy.
-- The Dalek Voices in the original Dr. Who were done using ring modulators. Eliminate!!!
+- The Dalek Voices in the original Dr. Who were done using ring modulators. Exterminate!!!
 
 ## Phased Locked Loop (PLL)
 
@@ -189,11 +189,24 @@ A collection of unusual plugins that will add a certain coolness to your patches
 - Chain the QAR Groove Expander, QAR Warped Space and the QAR Probability Expanders to create dynamic, shifting patterns
 - Can be chained after a Tap Breakout expander (but not before)
 
+## PW Grid Control Expander
+
+![Portland Weather - Grid Control Expander](./doc/pwgc.png)
+
+- Modulate parameters of all 16 taps at once.
+- Right click on grid for built in patterns
+- The grid can be shifted in up/down and left/right using CV
+- The Pin Xs control has five modes that change how X values greater than/less than the blue axis line respond to CV
+- Multiple Grid Controls can be chained
+- Can be chained with Tap Breakout Expander
+- Can be chained before a Algorithmic expander (but not after)
+
 ## PW Tap Breakout Expander
 
 ![Portland Weather - Tap Breakout Expander](./doc/pwtb.png)
 
 - Individual Send/Returns for each Tap of Portland Weather.
+- Can be chained with Grid Control Expander
 - Algorithmic Expander can be chained after (but not before)
 
 

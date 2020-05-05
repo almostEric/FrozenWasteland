@@ -92,8 +92,8 @@ struct QARGrooveExpander : Module {
         configParam(GROOVE_AMOUNT_PARAM, 0.0, 1.0, 1.0,"Groove Amount","%",0,100);
         configParam(GROOVE_AMOUNT_CV_PARAM, -1.0, 1.0, 0.0,"Groove Amount CV Attenuation","%",0,100);		
 
-        configParam(SWING_RANDOMNESS_PARAM, 0.0, 1.0, 0.0,"Swing Randomness","%",0,100);
-        configParam(SWING_RANDOMNESS_CV_PARAM, -1.0, 1.0, 0.0,"Swing Randomness CV Attenuation","%",0,100);		
+        configParam(SWING_RANDOMNESS_PARAM, 0.0, 1.0, 0.0,"Groove Randomness","%",0,100);
+        configParam(SWING_RANDOMNESS_CV_PARAM, -1.0, 1.0, 0.0,"Groove Randomness CV Attenuation","%",0,100);		
 
         configParam(STEP_OR_DIV_PARAM, 0.0, 1.0, 0.0);
 		configParam(GROOVE_LENGTH_SAME_AS_TRACK_PARAM, 0.0, 1.0, 0.0);

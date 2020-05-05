@@ -133,7 +133,7 @@ struct PortlandWeather : Module {
 	};
 
 	// Expander
-	float rightMessages[2][NUM_TAPS * 7 + 4] = {};// this module must read from here
+	float rightMessages[2][NUM_TAPS * 15] = {};// this module must read from here
 
 	bool usingAlgorithm = false;
 	
@@ -231,6 +231,20 @@ struct PortlandWeather : Module {
 	float expanderDelayTime[NUM_TAPS] = {0.0f};
 	bool expanderMuteTaps[NUM_TAPS] = {false};
 	
+	float *expanderLevels;
+	float *expanderPans;
+	float *expanderFcs;
+	float *expanderQs;
+	float *expanderPitches;
+	float *expanderDetunes;
+
+	bool hasExpanderLevels = false;
+	bool hasExpanderPans = false;
+	bool hasExpanderFcs = false;
+	bool hasExpanderQs = false;
+	bool hasExpanderPitches = false;
+	bool hasExpanderDetunes = false;
+
 
 	float testDelay = 0.0f;
 	
@@ -441,19 +455,59 @@ struct PortlandWeather : Module {
 		divisionf = clamp(divisionf,0.0f,35.0f);
 		division = (DIVISIONS-1) - int(divisionf); //TODO: Reverse Division Order
 
-		bool rightExpanderPresent = (rightExpander.module && (rightExpander.module->model == modelPWTapBreakoutExpander || rightExpander.module->model == modelPWAlgorithmicExpander));
+		bool rightExpanderPresent = (rightExpander.module && (rightExpander.module->model == modelPWTapBreakoutExpander || rightExpander.module->model == modelPWAlgorithmicExpander || rightExpander.module->model == modelPWGridControlExpander));
 		bool algorithmExpanderPresent = false;
-		bool tapBreakoutPresent = false;
+		bool tapBreakoutPresent = false;	
+		bool hasExpanderLevels = false;
+		bool hasExpanderPans = false;
+		bool hasExpanderFcs = false;
+		bool hasExpanderQs = false;
+		bool hasExpanderPitches = false;
+		bool hasExpanderDetunes = false;
 		if(rightExpanderPresent) {
 			float *messagesFromExpander = (float*)rightExpander.consumerMessage;// could be invalid pointer when !expanderPresent, so read it only when expanderPresent
-			tapLConnections = &messagesFromExpander[NUM_TAPS * 2]; // contains 8 values of the returns from the aux panel
-			tapLReturns = &messagesFromExpander[NUM_TAPS * 3]; // contains 8 values of the returns from the aux panel
-			tapRConnections = &messagesFromExpander[NUM_TAPS * 4]; // contains 8 values of the returns from the aux panel
-			tapRReturns = &messagesFromExpander[NUM_TAPS * 5]; // contains 8 values of the returns from the aux panel
+			tapLConnections = &messagesFromExpander[NUM_TAPS * 3]; // contains 8 values of the returns from the aux panel
+			tapLReturns = &messagesFromExpander[NUM_TAPS * 4]; // contains 8 values of the returns from the aux panel
+			tapRConnections = &messagesFromExpander[NUM_TAPS * 5]; // contains 8 values of the returns from the aux panel
+			tapRReturns = &messagesFromExpander[NUM_TAPS * 6]; // contains 8 values of the returns from the aux panel
 
-			tapBreakoutPresent = (bool)messagesFromExpander[(NUM_TAPS * 7) + 2];
-			algorithmExpanderPresent = (bool)messagesFromExpander[(NUM_TAPS * 7) + 3];
+			tapBreakoutPresent = (bool)messagesFromExpander[2];
+			algorithmExpanderPresent = (bool)messagesFromExpander[3];
 
+			uint8_t nbrGridControlExpanders = messagesFromExpander[4];
+			//fprintf(stderr, "%hu %i %i \n", nbrGridControlExpanders,tapBreakoutPresent,algorithmExpanderPresent);
+			for(int i=0;i<nbrGridControlExpanders;i++) {
+				uint8_t paramDestination = messagesFromExpander[5+i];
+				switch(paramDestination) {
+					case 0 :
+						//Nothing connected
+						break;
+					case 1 :
+						expanderLevels = &messagesFromExpander[NUM_TAPS * (8+i)];
+						hasExpanderLevels = true;
+						break;
+					case 2 :
+						expanderPans = &messagesFromExpander[NUM_TAPS * (8+i)];
+						hasExpanderPans = true;
+						break;
+					case 3 :
+						expanderFcs = &messagesFromExpander[NUM_TAPS * (8+i)];
+						hasExpanderFcs = true;
+						break;
+					case 4 :
+						expanderQs = &messagesFromExpander[NUM_TAPS * (8+i)];
+						hasExpanderQs = true;
+						break;
+					case 5 :
+						expanderPitches = &messagesFromExpander[NUM_TAPS * (8+i)];
+						hasExpanderPitches = true;
+						break;
+					case 6 :
+						expanderDetunes = &messagesFromExpander[NUM_TAPS * (8+i)];
+						hasExpanderDetunes = true;
+						break;
+				}
+			}
 		}
 		if(algorithmExpanderPresent)
 		{			
@@ -461,12 +515,12 @@ struct PortlandWeather : Module {
 			float *messageToExpander = (float*)(rightExpander.module->leftExpander.producerMessage);
 			usingAlgorithm = true;
 			//Clock for algorithn
-			messageToExpander[NUM_TAPS * 7] = inputs[CLOCK_INPUT].getVoltage();
-			messageToExpander[NUM_TAPS * 7 + 1] = divisions[division];
+			messageToExpander[0] = inputs[CLOCK_INPUT].getVoltage();
+			messageToExpander[1] = divisions[division];
 
 			//Get Delay Times
 			for(int tap=0;tap<NUM_TAPS;tap++) {
-				expanderDelayTime[tap] = messagesFromExpander[NUM_TAPS * 6 + tap];
+				expanderDelayTime[tap] = messagesFromExpander[NUM_TAPS * 7 + tap];
 				expanderMuteTaps[tap] = (expanderDelayTime[tap] < 0);
 			}
 
@@ -616,8 +670,22 @@ struct PortlandWeather : Module {
 			}
 
 			float pitch,detune;
-			pitch = floor(params[TAP_PITCH_SHIFT_PARAM+tap].getValue() + (inputs[TAP_PITCH_SHIFT_CV_INPUT+tap].isConnected() ? (inputs[TAP_PITCH_SHIFT_CV_INPUT+tap].getVoltage()*2.4f) : 0));
-			detune = floor(params[TAP_DETUNE_PARAM+tap].getValue() + (inputs[TAP_DETUNE_CV_INPUT+tap].isConnected() ? (inputs[TAP_DETUNE_CV_INPUT+tap].getVoltage()*10.0f) : 0));
+
+
+			if(!hasExpanderPitches) {
+				pitch = floor(params[TAP_PITCH_SHIFT_PARAM+tap].getValue() + (inputs[TAP_PITCH_SHIFT_CV_INPUT+tap].isConnected() ? (inputs[TAP_PITCH_SHIFT_CV_INPUT+tap].getVoltage()*2.4f) : 0));
+			} else {
+				pitch = expanderPitches[tap] * 24.0f;
+				params[TAP_PITCH_SHIFT_PARAM+tap].setValue(pitch);
+			}
+
+			if(!hasExpanderDetunes) {
+				detune = floor(params[TAP_DETUNE_PARAM+tap].getValue() + (inputs[TAP_DETUNE_CV_INPUT+tap].isConnected() ? (inputs[TAP_DETUNE_CV_INPUT+tap].getVoltage()*10.0f) : 0));
+			} else {
+				detune = expanderDetunes[tap] * 99.0f;
+				params[TAP_DETUNE_PARAM+tap].setValue(detune);
+			}
+
 			tapPitchShift[tap] = pitch;
 			tapDetune[tap] = detune;
 			pitch += detune/100.0f; 
@@ -685,13 +753,28 @@ struct PortlandWeather : Module {
 					}					
 				}
 
-				float cutoffExp = clamp(params[TAP_FC_PARAM+tap].getValue() + inputs[TAP_FC_CV_INPUT+tap].getVoltage() / 10.0f,0.0f,1.0f); 
+				float cutoffExp;
+				if(!hasExpanderFcs) {
+					cutoffExp = clamp(params[TAP_FC_PARAM+tap].getValue() + inputs[TAP_FC_CV_INPUT+tap].getVoltage() / 10.0f,0.0f,1.0f);
+				} else {
+					cutoffExp = clamp(expanderFcs[tap],0.0f,1.0f);
+					params[TAP_FC_PARAM+tap].setValue(cutoffExp);
+				}
+
+				float tapQ;
+				if(!hasExpanderQs) {
+					tapQ = clamp(params[TAP_Q_PARAM+tap].getValue() + (inputs[TAP_Q_CV_INPUT+tap].getVoltage() / 10.0f),0.01f,1.0f) * 50; 
+				} else {
+					tapQ = clamp(expanderQs[tap],0.01f,1.0f);
+					params[TAP_Q_PARAM+tap].setValue(tapQ);
+					tapQ = tapQ * 50;
+				}
+
 				float tapFc = minCutoff * powf(maxCutoff / minCutoff, cutoffExp) / sampleRate;
 				if(lastTapFc[tap] != tapFc) {
 					filterParams[tap].setFreq(T(tapFc));
 					lastTapFc[tap] = tapFc;
 				}
-				float tapQ = clamp(params[TAP_Q_PARAM+tap].getValue() + (inputs[TAP_Q_CV_INPUT+tap].getVoltage() / 10.0f),0.01f,1.0f) * 50; 
 				if(lastTapQ[tap] != tapQ) {
 					filterParams[tap].setQ(tapQ); 
 					lastTapQ[tap] = tapQ;
@@ -722,14 +805,23 @@ struct PortlandWeather : Module {
 			}
 			
 
-			//if(!tapCurrentlyMuted)  {
-			float pan = clamp((params[TAP_PAN_PARAM+tap].getValue() + (inputs[TAP_PAN_CV_INPUT+tap].isConnected() ? (inputs[TAP_PAN_CV_INPUT+tap].getVoltage() / 10.0f) : 0)),0.0f,1.0f);
-			wetTap.l = wetTap.l * muteSmoothing * clamp(params[TAP_MIX_PARAM+tap].getValue() + (inputs[TAP_MIX_CV_INPUT+tap].isConnected() ? (inputs[TAP_MIX_CV_INPUT+tap].getVoltage() / 10.0f) : 0),0.0f,1.0f) * (1.0 - pan);
-			wetTap.r = wetTap.r * muteSmoothing * clamp(params[TAP_MIX_PARAM+tap].getValue() + (inputs[TAP_MIX_CV_INPUT+tap].isConnected() ? (inputs[TAP_MIX_CV_INPUT+tap].getVoltage() / 10.0f) : 0),0.0f,1.0f) * pan;
-			// } else {
-			// 	wetTap.l = 0.0f;
-			// 	wetTap.r = 0.0f;
-			// } 
+			float level;
+			if(!hasExpanderLevels) {
+				level = clamp((params[TAP_MIX_PARAM+tap].getValue() + (inputs[TAP_PAN_CV_INPUT+tap].isConnected() ? (inputs[TAP_PAN_CV_INPUT+tap].getVoltage() / 10.0f) : 0)),0.0f,1.0f);
+			} else {
+				level = clamp(expanderLevels[tap],0.0f,1.0f);
+				params[TAP_MIX_PARAM+tap].setValue(level);
+			}
+
+			float pan;
+			if(!hasExpanderPans) {
+				pan = clamp((params[TAP_PAN_PARAM+tap].getValue() + (inputs[TAP_PAN_CV_INPUT+tap].isConnected() ? (inputs[TAP_PAN_CV_INPUT+tap].getVoltage() / 10.0f) : 0)),0.0f,1.0f);
+			} else {
+				pan = clamp(expanderPans[tap],0.0f,1.0f);
+				params[TAP_PAN_PARAM+tap].setValue(pan);
+			}
+			wetTap.l = wetTap.l * muteSmoothing * level * (1.0 - pan);
+			wetTap.r = wetTap.r * muteSmoothing * level * pan;
 
 
 			if(tapBreakoutPresent)
@@ -882,10 +974,13 @@ struct PortlandWeather : Module {
 		if(tapBreakoutPresent)
 		{	
 			float *messageToExpander = (float*)(rightExpander.module->leftExpander.producerMessage);
-			memcpy(&messageToExpander[0], &tapLSends, sizeof(float) * NUM_TAPS);
-			memcpy(&messageToExpander[NUM_TAPS], &tapRSends, sizeof(float) * NUM_TAPS);
+			memcpy(&messageToExpander[NUM_TAPS], &tapLSends, sizeof(float) * NUM_TAPS);
+			memcpy(&messageToExpander[NUM_TAPS*2], &tapRSends, sizeof(float) * NUM_TAPS);
 		}
-		if(tapBreakoutPresent || algorithmExpanderPresent) {
+
+
+		//if(tapBreakoutPresent || algorithmExpanderPresent) {
+		if(rightExpanderPresent) {
 			rightExpander.module->leftExpander.messageFlipRequested = true;
 		}
 	}
@@ -928,10 +1023,40 @@ struct PortlandWeather : Module {
 					params[TAP_DETUNE_PARAM+tap].setValue(rnd);
 				}
 				break;
-
 		}
-
 	}
+
+
+	void reinitializeParameters(int parameterGroup) {
+		switch(parameterGroup) {
+			case STACKING_AND_MUTING_GROUP :
+				for(int tap = 0; tap < NUM_TAPS;tap++) {
+					tapMuted[tap] = false;
+					tapStacked[tap] = false;
+				}
+				break;
+			case LEVELS_AND_PANNING_GROUP :
+				for(int tap = 0; tap < NUM_TAPS;tap++) {
+					params[TAP_MIX_PARAM+tap].setValue(0.5f);
+					params[TAP_PAN_PARAM+tap].setValue(0.5f);
+				}
+				break;
+			case FILTERING_GROUP :
+				for(int tap = 0; tap < NUM_TAPS;tap++) {
+					params[TAP_FILTER_TYPE_PARAM+tap].setValue(0);
+					params[TAP_FC_PARAM+tap].setValue(0.5f);
+					params[TAP_Q_PARAM+tap].setValue(0.1f);
+				}
+				break;
+			case PITCH_SHIFTING_GROUP :
+				for(int tap = 0; tap < NUM_TAPS;tap++) {
+					params[TAP_PITCH_SHIFT_PARAM+tap].setValue(0);
+					params[TAP_DETUNE_PARAM+tap].setValue(0);
+				}
+				break;
+		}
+	}
+
 
 	void onReset() override {
 		reverse = false;
@@ -1158,7 +1283,7 @@ struct PortlandWeatherWidget : ModuleWidget {
 		addParam(createParam<RoundFWKnob>(Vec(358, 273), module, PortlandWeather::FEEDBACK_R_DETUNE_PARAM));
 
 		
-		addParam( createParam<LEDButton>(Vec(236,116), module, PortlandWeather::REVERSE_PARAM));
+		addParam(createParam<LEDButton>(Vec(236,116), module, PortlandWeather::REVERSE_PARAM));
 		addChild(createLight<LargeLight<BlueLight>>(Vec(237.5, 117.5), module, PortlandWeather::REVERSE_LIGHT));
 		addInput(createInput<PJ301MPort>(Vec(260, 112), module, PortlandWeather::REVERSE_INPUT));
 
@@ -1278,6 +1403,13 @@ struct PortlandWeatherWidget : ModuleWidget {
 		}		
 	};
 
+	struct ReinitializeParamsItem : MenuItem {
+		PortlandWeather *module;
+		int parameterGroup;
+		void onAction(const event::Action &e) override {		
+			module->reinitializeParameters(parameterGroup);
+		}		
+	};
 	
 	
 	void appendContextMenu(Menu *menu) override {
@@ -1345,6 +1477,35 @@ struct PortlandWeatherWidget : ModuleWidget {
 		randomizePitchItem->parameterGroup = module->PITCH_SHIFTING_GROUP;
 		randomizePitchItem->module = module;
 		menu->addChild(randomizePitchItem);	
+
+		MenuLabel *initializeLabel = new MenuLabel();
+		initializeLabel->text = "Initialize";
+		menu->addChild(initializeLabel);
+
+		ReinitializeParamsItem *reinitializeStackMuteItem = new ReinitializeParamsItem();
+		reinitializeStackMuteItem->text = "Stacking & Muting";
+		reinitializeStackMuteItem->parameterGroup = module->STACKING_AND_MUTING_GROUP;
+		reinitializeStackMuteItem->module = module;
+		menu->addChild(reinitializeStackMuteItem);
+
+		ReinitializeParamsItem *reinitializeVolPanItem = new ReinitializeParamsItem();
+		reinitializeVolPanItem->text = "Level & Panning";
+		reinitializeVolPanItem->parameterGroup = module->LEVELS_AND_PANNING_GROUP;
+		reinitializeVolPanItem->module = module;
+		menu->addChild(reinitializeVolPanItem);
+
+		ReinitializeParamsItem *reinitializeFilteringItem = new ReinitializeParamsItem();
+		reinitializeFilteringItem->text = "Filtering";
+		reinitializeFilteringItem->parameterGroup = module->FILTERING_GROUP;
+		reinitializeFilteringItem->module = module;
+		menu->addChild(reinitializeFilteringItem);
+
+		ReinitializeParamsItem *reinitializePitchItem = new ReinitializeParamsItem();
+		reinitializePitchItem->text = "Pitch Shifting"; 
+		reinitializePitchItem->parameterGroup = module->PITCH_SHIFTING_GROUP;
+		reinitializePitchItem->module = module;
+		menu->addChild(reinitializePitchItem);	
+
 	}
 
 };

@@ -1,3 +1,6 @@
+### 1.13.2 (2019-05-06)
+- Added Portland Weather Grid Control Expander
+
 ### 1.13.1 (2019-04-29)
 - Added Portland Weather Tap Breakout Expander back
 - Changed QAR's UI, expanded # of steps to 72

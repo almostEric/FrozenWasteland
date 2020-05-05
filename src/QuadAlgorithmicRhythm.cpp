@@ -251,7 +251,7 @@ struct QuadAlgorithmicRhythm : Module {
 
 	
 		configParam(STEPS_1_PARAM, 1.0, MAX_STEPS, 16.0,"Track 1 Steps");
-		configParam(DIVISIONS_1_PARAM, 0.0, MAX_STEPS, 2.0,"Track 1 Divisions");
+		configParam(DIVISIONS_1_PARAM, 0.0, MAX_STEPS, 2.0,"Track 1 Beats");
 		configParam(OFFSET_1_PARAM, 0.0, MAX_STEPS-1.0, 0.0,"Track 1 Step Offset");
 		configParam(PAD_1_PARAM, 0.0, MAX_STEPS-1.0, 0.0,"Track 1 Step Padding");
 		configParam(ACCENTS_1_PARAM, 0.0, MAX_STEPS, 0.0, "Track 1 Accents");
@@ -259,7 +259,7 @@ struct QuadAlgorithmicRhythm : Module {
         configParam(ALGORITHM_1_PARAM, 0.0, 1.0, 0.0);
 
 		configParam(STEPS_2_PARAM, 1.0, MAX_STEPS, 16.0,"Track 2 Steps");
-		configParam(DIVISIONS_2_PARAM, 0.0, MAX_STEPS, 2.0,"Track 2 Divisions");
+		configParam(DIVISIONS_2_PARAM, 0.0, MAX_STEPS, 2.0,"Track 2 Beats");
 		configParam(OFFSET_2_PARAM, 0.0, MAX_STEPS-1.0, 0.0,"Track 2 Step Offset");
 		configParam(PAD_2_PARAM, 0.0, MAX_STEPS-1.0, 0.0,"Track 2 Step Padding");
 		configParam(ACCENTS_2_PARAM, 0.0, MAX_STEPS, 0.0, "Track 2 Accents");
@@ -267,7 +267,7 @@ struct QuadAlgorithmicRhythm : Module {
         configParam(ALGORITHM_2_PARAM, 0.0, 1.0, 0.0);
 
 		configParam(STEPS_3_PARAM, 1.0, MAX_STEPS, 16.0,"Track 3 Steps");
-		configParam(DIVISIONS_3_PARAM, 0.0, MAX_STEPS, 2.0,"Track 3 Divisions");
+		configParam(DIVISIONS_3_PARAM, 0.0, MAX_STEPS, 2.0,"Track 3 Beats");
 		configParam(OFFSET_3_PARAM, 0.0, MAX_STEPS-1.0, 0.0,"Track 3 Step Offset");
 		configParam(PAD_3_PARAM, 0.0, MAX_STEPS-1.0, 0.0,"Track 3 Step Padding");
 		configParam(ACCENTS_3_PARAM, 0.0, MAX_STEPS, 0.0, "Track 3 Accents");
@@ -275,7 +275,7 @@ struct QuadAlgorithmicRhythm : Module {
         configParam(ALGORITHM_3_PARAM, 0.0, 1.0, 0.0);
 
 		configParam(STEPS_4_PARAM, 1.0, MAX_STEPS, 16.0,"Track 4 Steps");
-		configParam(DIVISIONS_4_PARAM, 0.0, MAX_STEPS, 2.0,"Track 4 Divisions");
+		configParam(DIVISIONS_4_PARAM, 0.0, MAX_STEPS, 2.0,"Track 4 Beats");
 		configParam(OFFSET_4_PARAM, 0.0, MAX_STEPS-1.0, 0.0,"Track 4 Step Offset");
 		configParam(PAD_4_PARAM, 0.0, MAX_STEPS-1.0, 0.0,"Track 4 Step Padding");
 		configParam(ACCENTS_4_PARAM, 0.0, MAX_STEPS, 0.0, "Track 4 Accents");

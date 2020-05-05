@@ -59,7 +59,7 @@ struct PWAlgorithmicExpander : Module {
 	};
 
 	// Expander
-    float leftMessages[2][MAX_STEPS * 7 + 4] = {};
+    float leftMessages[2][MAX_STEPS * 15] = {};
     float rightMessages[2][273] = {};
 	
 		
@@ -145,10 +145,10 @@ struct PWAlgorithmicExpander : Module {
 		config(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS, NUM_LIGHTS);
 
 	
-		configParam(STEPS_1_PARAM, 1.0, 16, 16.0,"Track 1 Steps");
-		configParam(DIVISIONS_1_PARAM, 0.0, 16, 2.0,"Track 1 Divisions");
-		configParam(OFFSET_1_PARAM, 0.0, 15, 0.0,"Track 1 Step Offset");
-		configParam(PAD_1_PARAM, 0.0, 15, 0.0,"Track 1 Step Padding");
+		configParam(STEPS_1_PARAM, 1.0, 16, 16.0,"# Steps");
+		configParam(DIVISIONS_1_PARAM, 0.0, 16, 2.0,"# Beats");
+		configParam(OFFSET_1_PARAM, 0.0, 15, 0.0,"Step Offset");
+		configParam(PAD_1_PARAM, 0.0, 15, 0.0,"Step Padding");
         configParam(ALGORITHM_1_PARAM, 0.0, 1.0, 0.0);
 
 		leftExpander.producerMessage = leftMessages[0];
@@ -201,13 +201,13 @@ struct PWAlgorithmicExpander : Module {
 		expanderClockValue = 0; 
 
 		//See if a master is passing through an expander
-		bool leftExpanderPresent = (leftExpander.module && (leftExpander.module->model == modelPortlandWeather || leftExpander.module->model == modelPWTapBreakoutExpander));
+		bool leftExpanderPresent = (leftExpander.module && (leftExpander.module->model == modelPortlandWeather || leftExpander.module->model == modelPWTapBreakoutExpander || leftExpander.module->model == modelPWGridControlExpander));
 		if(leftExpanderPresent)
 		{
             float *messagesFromMother = (float*)leftExpander.consumerMessage;
 			
-			expanderClockValue = messagesFromMother[MAX_STEPS * 7]; 
-            expanderClockDivision = messagesFromMother[MAX_STEPS * 7 + 1];
+			expanderClockValue = messagesFromMother[0]; 
+            expanderClockDivision = messagesFromMother[1];
 		}
         lights[CLOCK_LIGHT].value = expanderClockValue;
 
@@ -343,9 +343,11 @@ struct PWAlgorithmicExpander : Module {
 
 
 		//Get Expander Info
+        bool rightExpanderPresent = false;
 		if(rightExpander.module && (rightExpander.module->model == modelQARProbabilityExpander || rightExpander.module->model == modelQARGrooveExpander || rightExpander.module->model == modelQARWarpedSpaceExpander))
 		{			
 			QARExpanderDisconnectReset = true;
+            rightExpanderPresent = true;
 			float *messagesFromExpanders = (float*)rightExpander.consumerMessage;
 
 			//Process Probability Expander Stuff						
@@ -360,19 +362,7 @@ struct PWAlgorithmicExpander : Module {
                     int stepIndex = j;
                     bool stepFound = true;
                     if(useDivs) { //Use j as a count to the div # we are looking for
-                        stepIndex = beatLocation[j];
-                        // int divIndex = -1;
-                        // stepFound = false;
-                        // for(int k = 0; k< MAX_STEPS; k++) {
-                        //     if (beatMatrix[k]) {
-                        //         divIndex ++;
-                        //         if(divIndex == j) {
-                        //             stepIndex = k;
-                        //             stepFound = true;	
-                        //             break;								
-                        //         }
-                        //     }
-                        // }
+                        stepIndex = beatLocation[j];                        
                     }
                     
                     if(stepFound) {
@@ -417,17 +407,6 @@ struct PWAlgorithmicExpander : Module {
                 
 
                 int workingBeatIndex = 0;
-                // if(!useDivs) {
-                //     workingBeatIndex = (subBeatIndex - beatIndex) % grooveLength; 
-                //     if(workingBeatIndex <0) {
-                //         workingBeatIndex +=grooveLength;
-                //     }
-                // } else {
-                //     workingBeatIndex = (subBeatIndex[i] - beatCountAtIndex) % grooveLength; 
-                //     if(workingBeatIndex <0) {
-                //         workingBeatIndex +=grooveLength;
-                //     }
-                // }
 
                 for(int j = 0; j < MAX_STEPS; j++) { // Assign probabilites and swing
                     int stepIndex = j;
@@ -543,9 +522,9 @@ struct PWAlgorithmicExpander : Module {
 
 		if(leftExpanderPresent) {
             float *messagesToMother = (float*)leftExpander.module->rightExpander.producerMessage;
-            messagesToMother[MAX_STEPS * 7 + 3] = true; // Algorithm Expander present 
+            messagesToMother[3] = true; // Algorithm Expander present 
             for(int i=0;i<MAX_STEPS;i++) {                    
-                messagesToMother[MAX_STEPS * 6 + i ] = expanderDelayTime[i]; 
+                messagesToMother[MAX_STEPS * 7 + i ] = expanderDelayTime[i]; 
             }
 			leftExpander.module->rightExpander.messageFlipRequested = true;
 		} 			

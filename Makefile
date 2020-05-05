@@ -7,6 +7,9 @@ FLAGS += \
 	-I./src/dsp-delay \
 	-I./src/dsp-filter/utils -I./src/dsp-filter/filters -I./src/dsp-filter/third-party/falco	
 
+CFLAGS += -g #-fno-omit-frame-pointer -fsanitize=address
+CXXFLAGS += -g #-fno-omit-frame-pointer -fsanitize=address
+
 
 # Add .cpp and .c files to the build
 SOURCES += $(wildcard src/*.cpp src/filters/*.cpp src/dsp-noise/*.cpp src/dsp-filter/*.cpp  src/stmlib/*.cc)

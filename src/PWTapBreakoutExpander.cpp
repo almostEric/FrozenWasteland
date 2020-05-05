@@ -28,8 +28,8 @@ struct PWTapBreakoutExpander : Module {
 
 	
 	// Expander
-	float leftMessages[2][NUM_TAPS * 7 + 4] = {};// this module must read from here
-	float rightMessages[2][NUM_TAPS * 7 + 4] = {};// this module must read from here
+	float leftMessages[2][NUM_TAPS * 15] = {};// this module must read from here
+	float rightMessages[2][NUM_TAPS * 15] = {};// this module must read from here
 	
 	float returnLConnected[NUM_TAPS] = {};
 	float returnL[NUM_TAPS] = {};
@@ -50,7 +50,7 @@ struct PWTapBreakoutExpander : Module {
 
 	void process(const ProcessArgs &args) override {
         
-		bool motherPresent = (leftExpander.module && leftExpander.module->model == modelPortlandWeather);
+		bool motherPresent = (leftExpander.module && (leftExpander.module->model == modelPortlandWeather || leftExpander.module->model == modelPWGridControlExpander));
 
 		//lights[CONNECTED_LIGHT].value = motherPresent;
 		if (motherPresent) {
@@ -58,43 +58,50 @@ struct PWTapBreakoutExpander : Module {
 			float *messagesToMother = (float*)leftExpander.module->rightExpander.producerMessage;
 
             // To Master			
-            messagesToMother[NUM_TAPS * 7 + 2] = true; // Tap Breakout Expadner present 
+            messagesToMother[2] = true; // Tap Breakout Expadner present 
             for (int tap = 0; tap < NUM_TAPS; tap++) {
 				returnLConnected[tap] = inputs[TAP_PRE_FB_INPUT_L+tap].isConnected();
 				returnL[tap] = inputs[TAP_PRE_FB_INPUT_L+tap].getVoltage();;
 				returnRConnected[tap] = inputs[TAP_PRE_FB_INPUT_R+tap].isConnected();
 				returnR[tap] = inputs[TAP_PRE_FB_INPUT_R+tap].getVoltage();
 			// From Mother	
-				outputs[TAP_OUTPUT_L+tap].setVoltage(messagesFromMother[tap]);
-				outputs[TAP_OUTPUT_R+tap].setVoltage(messagesFromMother[NUM_TAPS+tap]);
+				outputs[TAP_OUTPUT_L+tap].setVoltage(messagesFromMother[NUM_TAPS + tap]);
+				outputs[TAP_OUTPUT_R+tap].setVoltage(messagesFromMother[NUM_TAPS * 2 +tap]);
 			}
 
-			memcpy(&messagesToMother[NUM_TAPS * 2], &returnLConnected, sizeof(float) * NUM_TAPS);
-			memcpy(&messagesToMother[NUM_TAPS * 3], &returnL, sizeof(float) * NUM_TAPS);
-			memcpy(&messagesToMother[NUM_TAPS * 4], &returnRConnected, sizeof(float) * NUM_TAPS);
-			memcpy(&messagesToMother[NUM_TAPS * 5], &returnR, sizeof(float) * NUM_TAPS);
+			memcpy(&messagesToMother[NUM_TAPS * 3], &returnLConnected, sizeof(float) * NUM_TAPS);
+			memcpy(&messagesToMother[NUM_TAPS * 4], &returnL, sizeof(float) * NUM_TAPS);
+			memcpy(&messagesToMother[NUM_TAPS * 5], &returnRConnected, sizeof(float) * NUM_TAPS);
+			memcpy(&messagesToMother[NUM_TAPS * 6], &returnR, sizeof(float) * NUM_TAPS);
 
 
 
 			//If another expander is present, get its values (we can overwrite them)
-			bool anotherExpanderPresent = (rightExpander.module && (rightExpander.module->model == modelPWAlgorithmicExpander));
+			bool anotherExpanderPresent = (rightExpander.module && (rightExpander.module->model == modelPWAlgorithmicExpander || rightExpander.module->model == modelPWGridControlExpander));
 			if(anotherExpanderPresent)
 			{			
 				float *messagesFromExpander = (float*)rightExpander.consumerMessage;
 				float *messageToExpander = (float*)(rightExpander.module->leftExpander.producerMessage);
 
 				//QAR Pass through left
-				messagesToMother[NUM_TAPS * 7 + 3] = messagesFromExpander[NUM_TAPS * 7 + 3]; // Algorithm presebt
-				for(int i = 0; i < NUM_TAPS; i++) {
-					messagesToMother[NUM_TAPS * 6 + i] = messagesFromExpander[NUM_TAPS * 6 + i]; // Delay Times
-				}
+				//messagesToMother[3] = messagesFromExpander[3]; // Algorithm present
+				memcpy(&messagesToMother[3], &messagesFromExpander[3], sizeof(float) * 8);
 
+				//Switch to memcpy
+				memcpy(&messagesToMother[NUM_TAPS * 7], &messagesFromExpander[NUM_TAPS * 7], sizeof(float) * NUM_TAPS * 8);
+		
 				//QAR Pass through right
-				messageToExpander[NUM_TAPS * 7 + 0] = messagesFromMother[NUM_TAPS * 7 + 0]; //Clock
-				messageToExpander[NUM_TAPS * 7 + 1] = messagesFromMother[NUM_TAPS * 7 + 1]; //Division
+				messageToExpander[0] = messagesFromMother[0]; //Clock
+				messageToExpander[1] = messagesFromMother[1]; //Division
+				memcpy(&messageToExpander[NUM_TAPS], &messagesFromMother[NUM_TAPS], sizeof(float) * NUM_TAPS * 2);
 				
 				rightExpander.module->leftExpander.messageFlipRequested = true;
-			} 
+			} else {
+                //set other stuff to 0
+				messagesToMother[3] = 0; // Algorithm not present
+				messagesToMother[4] = 0; // No Grid Controls present
+                memset(&messagesToMother[NUM_TAPS * 7], 0, sizeof(float) * NUM_TAPS * 8);
+            }
 
 			leftExpander.module->rightExpander.messageFlipRequested = true;
 		}		
