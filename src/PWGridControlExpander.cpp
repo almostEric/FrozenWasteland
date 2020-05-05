@@ -11,7 +11,12 @@ struct PWGridControlExpander : Module {
     enum ParamIds {
         PIN_X_AXIS_MODE_PARAM,
         X_AXIS_PIN_POS_PARAM,
-        DESTINATION_PARAM,
+        DESTINATION_LEVEL_PARAM,
+        DESTINATION_PAN_PARAM,
+        DESTINATION_FC_PARAM,
+        DESTINATION_Q_PARAM,
+        DESTINATION_PITCH_PARAM,
+        DESTINATION_DETUNE_PARAM,
 		NUM_PARAMS
 	};
 
@@ -46,9 +51,9 @@ struct PWGridControlExpander : Module {
 
     OneDimensionalCells *gridCells;
 
-    dsp::SchmittTrigger pinXAxisModeTrigger,destinationTrigger;
+    dsp::SchmittTrigger pinXAxisModeTrigger,destinationTrigger[6];
     uint8_t pinXAxisMode = 0;
-    uint8_t destination = 0;
+    uint8_t destination = 1;
 
 
 	
@@ -104,24 +109,12 @@ struct PWGridControlExpander : Module {
     }
 
     void onReset() override {
+        
+        destination = 1;
+        pinXAxisMode = 0;
 
-        // delayRange = 2;
-
-        // // window function
-        // windowFunctionId = 4;
-
-        // attenuationLinked = false;
-        // delayTimeLinked = false;
-        // feedbackLinked = false;
-
-        // pinAttenuation0s = false;
-        // pinDelayTime0s = false;
-        // pinFeedback0s = false;
-
-        // // reset the cells
-        // attenuationCells->reset();
-        // delayTimeCells->reset();
-        // feedbackCells->reset();
+        // reset the cells
+        gridCells->reset();
     }
 
 
@@ -179,8 +172,10 @@ struct PWGridControlExpander : Module {
         gridCells->shiftX = gridShiftX;
         gridCells->shiftY = gridShiftY;
 
-        if (destinationTrigger.process(params[DESTINATION_PARAM].getValue())) {
-            destination = (destination + 1) % 6;
+        for(int i=0;i<6;i++) {
+            if (destinationTrigger[i].process(params[DESTINATION_LEVEL_PARAM+i].getValue())) {
+                destination = i;
+            }
         }
         for(int i=0;i<6;i++) {
             if(i!=destination) {
@@ -336,13 +331,18 @@ struct PWGridControlExpanderWidget : ModuleWidget {
         }
 
 
-        addParam(createParam<CKD6>(Vec(14,205), module, PWGridControlExpander::DESTINATION_PARAM));
-        addChild(createLight<MediumLight<RedGreenBlueLight>>(Vec(52.5, 209), module, PWGridControlExpander::DESTINATION_LEVEL_LIGHT));
-        addChild(createLight<MediumLight<RedGreenBlueLight>>(Vec(52.5, 229), module, PWGridControlExpander::DESTINATION_PAN_LIGHT));
-        addChild(createLight<MediumLight<RedGreenBlueLight>>(Vec(52.5, 249), module, PWGridControlExpander::DESTINATION_FC_LIGHT));
-        addChild(createLight<MediumLight<RedGreenBlueLight>>(Vec(52.5, 269), module, PWGridControlExpander::DESTINATION_Q_LIGHT));
-        addChild(createLight<MediumLight<RedGreenBlueLight>>(Vec(52.5, 289), module, PWGridControlExpander::DESTINATION_PITCH_LIGHT));
-        addChild(createLight<MediumLight<RedGreenBlueLight>>(Vec(52.5, 309), module, PWGridControlExpander::DESTINATION_DETUNE_LIGHT));
+        addParam(createParam<LEDButton>(Vec(10,208), module, PWGridControlExpander::DESTINATION_LEVEL_PARAM));
+        addChild(createLight<LargeLight<RedGreenBlueLight>>(Vec(11.5, 209.5), module, PWGridControlExpander::DESTINATION_LEVEL_LIGHT));
+        addParam(createParam<LEDButton>(Vec(10,230), module, PWGridControlExpander::DESTINATION_PAN_PARAM));
+        addChild(createLight<LargeLight<RedGreenBlueLight>>(Vec(11.5, 231.5), module, PWGridControlExpander::DESTINATION_PAN_LIGHT));
+        addParam(createParam<LEDButton>(Vec(10,252), module, PWGridControlExpander::DESTINATION_FC_PARAM));
+        addChild(createLight<LargeLight<RedGreenBlueLight>>(Vec(11.5, 253.5), module, PWGridControlExpander::DESTINATION_FC_LIGHT));
+        addParam(createParam<LEDButton>(Vec(10,274), module, PWGridControlExpander::DESTINATION_Q_PARAM));
+        addChild(createLight<LargeLight<RedGreenBlueLight>>(Vec(11.5, 275.5), module, PWGridControlExpander::DESTINATION_Q_LIGHT));
+        addParam(createParam<LEDButton>(Vec(10,296), module, PWGridControlExpander::DESTINATION_PITCH_PARAM));
+        addChild(createLight<LargeLight<RedGreenBlueLight>>(Vec(11.5, 297.5), module, PWGridControlExpander::DESTINATION_PITCH_LIGHT));
+        addParam(createParam<LEDButton>(Vec(10,318), module, PWGridControlExpander::DESTINATION_DETUNE_PARAM));
+        addChild(createLight<LargeLight<RedGreenBlueLight>>(Vec(11.5, 319.5), module, PWGridControlExpander::DESTINATION_DETUNE_LIGHT));
 
     
 		//addChild(createLight<LargeLight<GreenLight>>(Vec(190, 284), module, QuadGrooveExpander::CONNECTED_LIGHT));
