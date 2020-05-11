@@ -54,7 +54,7 @@
      inkscape:pageopacity="0.0"
      inkscape:pageshadow="2"
      inkscape:zoom="3.4201638"
-     inkscape:cx="385.06756"
+     inkscape:cx="239.4605"
      inkscape:cy="135.66659"
      inkscape:document-units="px"
      inkscape:current-layer="layer1"
@@ -78,7 +78,7 @@
         <dc:format>image/svg+xml</dc:format>
         <dc:type
            rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
-        <dc:title></dc:title>
+        <dc:title />
       </cc:Work>
     </rdf:RDF>
   </metadata>
@@ -622,5 +622,17 @@
          x="160.36237"
          y="60.356297"
          style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:3.59068608px;font-family:Homenaje;-inkscape-font-specification:'Homenaje Bold';stroke-width:0.26930147">4</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:3.59068608px;line-height:1.25;font-family:Homenaje;-inkscape-font-specification:'Homenaje Bold';letter-spacing:0px;word-spacing:0px;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.26930147"
+       x="79.270302"
+       y="126.50854"
+       id="text5443-7-5-4-4-6-5"
+       transform="scale(1.0163587,0.9839046)"><tspan
+         sodipodi:role="line"
+         id="tspan5441-1-6-3-8-8-9"
+         x="79.270302"
+         y="126.50854"
+         style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:2.87254906px;font-family:Homenaje;-inkscape-font-specification:'Homenaje Bold';stroke-width:0.26930147">X STEPS</tspan></text>
   </g>
 </svg>

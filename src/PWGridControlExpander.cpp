@@ -11,6 +11,7 @@ struct PWGridControlExpander : Module {
     enum ParamIds {
         PIN_X_AXIS_MODE_PARAM,
         X_AXIS_PIN_POS_PARAM,
+        X_AXIS_ROTATION_PARAM,
         DESTINATION_LEVEL_PARAM,
         DESTINATION_PAN_PARAM,
         DESTINATION_FC_PARAM,
@@ -24,6 +25,7 @@ struct PWGridControlExpander : Module {
         GRID_X_CV_INPUT,
         GRID_Y_CV_INPUT,
         GRID_X_AXIS_PIN_POS_CV_INPUT,
+        GRID_X_AXIS_ROTATION_CV_INPUT,
         NUM_INPUTS
 	};
 
@@ -62,6 +64,7 @@ struct PWGridControlExpander : Module {
 		config(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS, NUM_LIGHTS);
 
         configParam(X_AXIS_PIN_POS_PARAM, 0.0f, 1.0f, 0.0f, "Grid X Axis Pin Position","%",0,100);
+        configParam(X_AXIS_ROTATION_PARAM, -1.0f, 1.0f, 0.0f, "Grid X Axis Rotation","°",0,100);
 
 		leftExpander.producerMessage = leftMessages[0];
 		leftExpander.consumerMessage = leftMessages[1];
@@ -133,12 +136,14 @@ struct PWGridControlExpander : Module {
 
 	void process(const ProcessArgs &args) override {
 
-        float pinXAxisPosAttenuation = paramValue(X_AXIS_PIN_POS_PARAM, GRID_X_AXIS_PIN_POS_CV_INPUT, 0, 1);
+        float pinXAxisPos = paramValue(X_AXIS_PIN_POS_PARAM, GRID_X_AXIS_PIN_POS_CV_INPUT, 0, 1);
+        float xAxisRotation = paramValue(X_AXIS_ROTATION_PARAM, GRID_X_AXIS_ROTATION_CV_INPUT, -1, 1);
         if (pinXAxisModeTrigger.process(params[PIN_X_AXIS_MODE_PARAM].getValue())) {
             pinXAxisMode = (pinXAxisMode + 1) % 5;
         }
         gridCells->pinXAxisValues = pinXAxisMode;
-        gridCells->pinXAxisPosition = pinXAxisPosAttenuation;
+        gridCells->pinXAxisPosition = pinXAxisPos;
+        gridCells->rotateX = xAxisRotation;
         switch (pinXAxisMode) {
             case 0 :
             lights[PIN_X_AXIS_MODE_LIGHT+0].value = 0;
@@ -197,8 +202,8 @@ struct PWGridControlExpander : Module {
             lights[DESTINATION_PAN_LIGHT].value = .25;
             lights[DESTINATION_PAN_LIGHT+1].value = .25;
             lights[DESTINATION_PAN_LIGHT+2].value = 1;
-            gridCells->lowRange = 0.0f; 
-            gridCells->totalRange = 1.0f;
+            gridCells->lowRange = -1.0f; 
+            gridCells->totalRange = 2.0f;
             break;
             case 2 :
             lights[DESTINATION_FC_LIGHT].value = 0;
@@ -315,18 +320,22 @@ struct PWGridControlExpanderWidget : ModuleWidget {
                 gridDisplay->gridName = "Grid";
             }
 
-            gridDisplay->box.pos = Vec(50, 26);
+            gridDisplay->box.pos = Vec(56, 26);
             gridDisplay->box.size = Vec(128, 128);
             addChild(gridDisplay);
 
-            addInput(createInput<FWPortInSmall>(Vec(10, 35), module, PWGridControlExpander::GRID_X_CV_INPUT));
-            addInput(createInput<FWPortInSmall>(Vec(10, 70), module, PWGridControlExpander::GRID_Y_CV_INPUT));
+            addInput(createInput<FWPortInSmall>(Vec(8, 34), module, PWGridControlExpander::GRID_X_CV_INPUT));
+            addInput(createInput<FWPortInSmall>(Vec(33, 34), module, PWGridControlExpander::GRID_Y_CV_INPUT));
 
-            addParam(createParam<LEDButton>(Vec(10,106), module, PWGridControlExpander::PIN_X_AXIS_MODE_PARAM));
-            addChild(createLight<LargeLight<RedGreenBlueLight>>(Vec(11.5, 107.5), module, PWGridControlExpander::PIN_X_AXIS_MODE_LIGHT));
+            addParam(createParam<RoundSmallFWKnob>(Vec(5, 69), module, PWGridControlExpander::X_AXIS_ROTATION_PARAM));
+            addInput(createInput<FWPortInSmall>(Vec(33, 72), module, PWGridControlExpander::GRID_X_AXIS_ROTATION_CV_INPUT));
 
-            addParam(createParam<RoundSmallFWKnob>(Vec(8, 128), module, PWGridControlExpander::X_AXIS_PIN_POS_PARAM));
-            addInput(createInput<FWPortInSmall>(Vec(10, 156), module, PWGridControlExpander::GRID_X_AXIS_PIN_POS_CV_INPUT));
+            addParam(createParam<LEDButton>(Vec(8,110), module, PWGridControlExpander::PIN_X_AXIS_MODE_PARAM));
+            addChild(createLight<LargeLight<RedGreenBlueLight>>(Vec(9.5, 111.5), module, PWGridControlExpander::PIN_X_AXIS_MODE_LIGHT));
+
+            addParam(createParam<RoundSmallFWKnob>(Vec(5, 130), module, PWGridControlExpander::X_AXIS_PIN_POS_PARAM));
+            addInput(createInput<FWPortInSmall>(Vec(33, 133), module, PWGridControlExpander::GRID_X_AXIS_PIN_POS_CV_INPUT));
+
 
         }
 

@@ -6,7 +6,7 @@
 #define MAX_STEPS 18
 #define PASSTHROUGH_LEFT_VARIABLE_COUNT 13
 #define PASSTHROUGH_RIGHT_VARIABLE_COUNT 8
-#define TRACK_LEVEL_PARAM_COUNT TRACK_COUNT * 9
+#define TRACK_LEVEL_PARAM_COUNT TRACK_COUNT * 12
 #define PASSTHROUGH_OFFSET MAX_STEPS * TRACK_COUNT * 3 + TRACK_LEVEL_PARAM_COUNT
 
 struct QARProbabilityExpander : Module {
@@ -157,7 +157,7 @@ struct QARProbabilityExpander : Module {
 		}
 		
 
-		bool motherPresent = (leftExpander.module && (leftExpander.module->model == modelQuadAlgorithmicRhythm || leftExpander.module->model == modelQARProbabilityExpander || leftExpander.module->model == modelQARGrooveExpander || leftExpander.module->model == modelQARWarpedSpaceExpander || leftExpander.module->model == modelPWAlgorithmicExpander));
+		bool motherPresent = (leftExpander.module && (leftExpander.module->model == modelQuadAlgorithmicRhythm || leftExpander.module->model == modelQARAdvancedRhythmsExpander || leftExpander.module->model == modelQARProbabilityExpander || leftExpander.module->model == modelQARGrooveExpander || leftExpander.module->model == modelQARWarpedSpaceExpander || leftExpander.module->model == modelPWAlgorithmicExpander));
 		if (motherPresent) {
 			// To Mother
 			float *messagesFromMother = (float*)leftExpander.consumerMessage;
@@ -169,13 +169,13 @@ struct QARProbabilityExpander : Module {
 			}
 
 			//If another expander is present, get its values (we can overwrite them)
-			bool anotherExpanderPresent = (rightExpander.module && (rightExpander.module->model == modelQARProbabilityExpander || rightExpander.module->model == modelQARGrooveExpander || rightExpander.module->model == modelQARWarpedSpaceExpander));
+			bool anotherExpanderPresent = (rightExpander.module && (rightExpander.module->model == modelQARAdvancedRhythmsExpander || rightExpander.module->model == modelQARGrooveExpander || rightExpander.module->model == modelQARProbabilityExpander || rightExpander.module->model == modelQARWarpedSpaceExpander || rightExpander.module->model == modelQuadAlgorithmicRhythm));
 			if(anotherExpanderPresent)
 			{			
 				float *messagesFromExpander = (float*)rightExpander.consumerMessage;
 				float *messageToExpander = (float*)(rightExpander.module->leftExpander.producerMessage);
 
-				if(rightExpander.module->model == modelQARProbabilityExpander || rightExpander.module->model == modelQARGrooveExpander || rightExpander.module->model == modelQARWarpedSpaceExpander) { // Get QRE values							
+                if(rightExpander.module->model != modelQuadAlgorithmicRhythm) { // Get QRE values							
 					for(int i = 0; i < PASSTHROUGH_OFFSET; i++) {
                         messagesToMother[i] = messagesFromExpander[i];
 					}
@@ -196,7 +196,7 @@ struct QARProbabilityExpander : Module {
 		
 			for (int i = 0; i < TRACK_COUNT; i++) {
                 if(trackProbabilitySelected[i]) {
-                    messagesToMother[i] = stepsOrDivs ? 2 : 1;
+                    messagesToMother[TRACK_COUNT * 3 + i] = stepsOrDivs ? 2 : 1;
     				for (int j = 0; j < MAX_STEPS; j++) {
 						messagesToMother[TRACK_LEVEL_PARAM_COUNT + i * MAX_STEPS + j] = clamp(params[PROBABILITY_1_PARAM+j].getValue() + (inputs[PROBABILITY_1_INPUT + j].isConnected() ? inputs[PROBABILITY_1_INPUT + j].getVoltage() / 10 * params[PROBABILITY_ATTEN_1_PARAM + j].getValue() : 0.0f),0.0,1.0f);
 						messagesToMother[TRACK_LEVEL_PARAM_COUNT + (MAX_STEPS * TRACK_COUNT) + i * MAX_STEPS + j] = probabilityGroupMode[j];

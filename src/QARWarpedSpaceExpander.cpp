@@ -7,7 +7,7 @@
 #define NUM_TAPS 16
 #define PASSTHROUGH_LEFT_VARIABLE_COUNT 13
 #define PASSTHROUGH_RIGHT_VARIABLE_COUNT 8
-#define TRACK_LEVEL_PARAM_COUNT TRACK_COUNT * 9
+#define TRACK_LEVEL_PARAM_COUNT TRACK_COUNT * 12
 #define PASSTHROUGH_OFFSET MAX_STEPS * TRACK_COUNT * 3 + TRACK_LEVEL_PARAM_COUNT
 
 
@@ -115,31 +115,35 @@ struct QARWarpedSpaceExpander : Module {
 			lights[TRACK_1_WARP_ENABELED_LIGHT+i].value = trackWarpSelected[i];
 		}        
 
-		bool motherPresent = (leftExpander.module && (leftExpander.module->model == modelQuadAlgorithmicRhythm || leftExpander.module->model == modelQARProbabilityExpander || leftExpander.module->model == modelQARGrooveExpander || leftExpander.module->model == modelQARWarpedSpaceExpander || leftExpander.module->model == modelPWAlgorithmicExpander));
+		bool motherPresent = (leftExpander.module && (leftExpander.module->model == modelQuadAlgorithmicRhythm || leftExpander.module->model == modelQARAdvancedRhythmsExpander || leftExpander.module->model == modelQARProbabilityExpander || leftExpander.module->model == modelQARGrooveExpander || leftExpander.module->model == modelQARWarpedSpaceExpander || leftExpander.module->model == modelPWAlgorithmicExpander));
 		//lights[CONNECTED_LIGHT].value = motherPresent;
 		if (motherPresent) {
 			// To Mother
 			float *messagesFromMother = (float*)leftExpander.consumerMessage;
 			float *messagesToMother = (float*)leftExpander.module->rightExpander.producerMessage;
 
+
+//USE MEMSSET!
 			//Initalize
 			for (int i = 0; i < PASSTHROUGH_OFFSET + PASSTHROUGH_LEFT_VARIABLE_COUNT + PASSTHROUGH_RIGHT_VARIABLE_COUNT; i++) {
                 messagesToMother[i] = 0.0;
 			}
 
 			//If another expander is present, get its values (we can overwrite them)
-			bool anotherExpanderPresent = (rightExpander.module && (rightExpander.module->model == modelQARWarpedSpaceExpander || rightExpander.module->model == modelQARProbabilityExpander || rightExpander.module->model == modelQARGrooveExpander || rightExpander.module->model == modelQuadAlgorithmicRhythm));
+			bool anotherExpanderPresent = (rightExpander.module && (rightExpander.module->model == modelQARAdvancedRhythmsExpander || rightExpander.module->model == modelQARGrooveExpander || rightExpander.module->model == modelQARProbabilityExpander || rightExpander.module->model == modelQARWarpedSpaceExpander || rightExpander.module->model == modelQuadAlgorithmicRhythm));
 			if(anotherExpanderPresent)
 			{			
 				float *messagesFromExpander = (float*)rightExpander.consumerMessage;
 				float *messageToExpander = (float*)(rightExpander.module->leftExpander.producerMessage);
 
-                if(rightExpander.module->model == modelQARProbabilityExpander || rightExpander.module->model == modelQARGrooveExpander || rightExpander.module->model == modelQARWarpedSpaceExpander ) { // Get QRE values							
+                if(rightExpander.module->model != modelQuadAlgorithmicRhythm) { // Get QRE values							
 					for(int i = 0; i < PASSTHROUGH_OFFSET; i++) {
                         messagesToMother[i] = messagesFromExpander[i];
 					}
 				}
 
+
+//USE MEMCPY!
 				//QAR Pass through left
 				for(int i = 0; i < PASSTHROUGH_LEFT_VARIABLE_COUNT; i++) {
 					messagesToMother[PASSTHROUGH_OFFSET + i] = messagesFromExpander[PASSTHROUGH_OFFSET + i];
@@ -158,9 +162,9 @@ struct QARWarpedSpaceExpander : Module {
             float warpPosition = clamp(params[WARP_POSITION_PARAM].getValue() + (inputs[WARP_POSITION_INPUT].isConnected() ? inputs[WARP_POSITION_INPUT].getVoltage() / 1.8 * params[WARP_POSITION_CV_ATTENUVETER_PARAM].getValue() : 0.0f),0.0f,17.0);
             for (int i = 0; i < TRACK_COUNT; i++) {
                 if(trackWarpSelected[i]) {
-                    messagesToMother[TRACK_COUNT * 6 + i] = 1;
-                    messagesToMother[TRACK_COUNT * 7 + i] = warpAmount;                    
-                    messagesToMother[TRACK_COUNT * 8 + i] = warpPosition;                    
+                    messagesToMother[TRACK_COUNT * 9 + i] = 1;
+                    messagesToMother[TRACK_COUNT * 10 + i] = warpAmount;                    
+                    messagesToMother[TRACK_COUNT * 11 + i] = warpPosition;                    
 				} 
 			}
 					

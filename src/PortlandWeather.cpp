@@ -325,7 +325,7 @@ struct PortlandWeather : Module {
 		for (int i = 0; i < NUM_TAPS; i++) {
 			configParam(TAP_MUTE_PARAM + i, 0.0f, 1.0f, 0.0f);		
 			configParam(TAP_MIX_PARAM + i, 0.0f, 1.0f, 0.5f,"Tap " + std::to_string(i+1) + " mix","%",0,100);
-			configParam(TAP_PAN_PARAM + i, 0.0f, 1.0f, 0.5f,"Tap " + std::to_string(i+1) + " pan","%",0,100);
+			configParam(TAP_PAN_PARAM + i, -1.0f, 1.0f, 0.0f,"Tap " + std::to_string(i+1) + " pan","%",0,100);
 			configParam(TAP_FILTER_TYPE_PARAM + i, 0, 4, 0,"Tap " + std::to_string(i+1) + " filter type");
 			configParam(TAP_FC_PARAM + i, 0.0f, 1.0f, 0.5f,"Tap " + std::to_string(i+1) + " Fc"," Hz",560,15);
 			configParam(TAP_Q_PARAM + i, 0.01f, 1.0f, 0.1f,"Tap " + std::to_string(i+1) + " Q","",0,100);
@@ -815,13 +815,15 @@ struct PortlandWeather : Module {
 
 			float pan;
 			if(!hasExpanderPans) {
-				pan = clamp((params[TAP_PAN_PARAM+tap].getValue() + (inputs[TAP_PAN_CV_INPUT+tap].isConnected() ? (inputs[TAP_PAN_CV_INPUT+tap].getVoltage() / 10.0f) : 0)),0.0f,1.0f);
+				pan = clamp((params[TAP_PAN_PARAM+tap].getValue() + (inputs[TAP_PAN_CV_INPUT+tap].isConnected() ? (inputs[TAP_PAN_CV_INPUT+tap].getVoltage() / 5.0f) : 0)),-1.0f,1.0f);
 			} else {
-				pan = clamp(expanderPans[tap],0.0f,1.0f);
+				pan = clamp(expanderPans[tap],-1.0f,1.0f);
 				params[TAP_PAN_PARAM+tap].setValue(pan);
 			}
-			wetTap.l = wetTap.l * muteSmoothing * level * (1.0 - pan);
-			wetTap.r = wetTap.r * muteSmoothing * level * pan;
+			// wetTap.l = wetTap.l * muteSmoothing * level * (1.0 - pan);  std::max(1.0 - pan,0.0)
+			// wetTap.r = wetTap.r * muteSmoothing * level * pan;   std::max(pan+1.0,1.0);
+			wetTap.l = wetTap.l * muteSmoothing * level * std::max(1.0 - pan,0.0);  
+			wetTap.r = wetTap.r * muteSmoothing * level * std::max(pan+1.0,1.0);   
 
 
 			if(tapBreakoutPresent)
@@ -1001,7 +1003,7 @@ struct PortlandWeather : Module {
 				for(int tap = 0; tap < NUM_TAPS;tap++) {
 					rnd = ((float) rand()/RAND_MAX);
 					params[TAP_MIX_PARAM+tap].setValue(rnd);
-					rnd = ((float) rand()/RAND_MAX);
+					rnd = ((float) rand()/RAND_MAX) * 2 - 1;
 					params[TAP_PAN_PARAM+tap].setValue(rnd);
 				}
 				break;
@@ -1038,7 +1040,7 @@ struct PortlandWeather : Module {
 			case LEVELS_AND_PANNING_GROUP :
 				for(int tap = 0; tap < NUM_TAPS;tap++) {
 					params[TAP_MIX_PARAM+tap].setValue(0.5f);
-					params[TAP_PAN_PARAM+tap].setValue(0.5f);
+					params[TAP_PAN_PARAM+tap].setValue(0.0f);
 				}
 				break;
 			case FILTERING_GROUP :

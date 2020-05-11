@@ -4,6 +4,7 @@ RACK_DIR ?= ../..
 FLAGS += \
 	-Idep/include \
 	-I./src/ui \
+	-I./src/model \
 	-I./src/dsp-delay \
 	-I./src/dsp-filter/utils -I./src/dsp-filter/filters -I./src/dsp-filter/third-party/falco	
 

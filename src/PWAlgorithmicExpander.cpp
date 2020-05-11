@@ -8,13 +8,13 @@
 
 #define TRACK_COUNT 4
 #define MAX_STEPS 16
-#define NUM_ALGORITHMS 2
+#define NUM_ALGORITHMS 4
 #define EXPANDER_MAX_STEPS 18
 #define NUM_RULERS 10
 #define MAX_DIVISIONS 6
 #define PASSTHROUGH_LEFT_VARIABLE_COUNT 13
 #define PASSTHROUGH_RIGHT_VARIABLE_COUNT 8
-#define TRACK_LEVEL_PARAM_COUNT TRACK_COUNT * 9
+#define TRACK_LEVEL_PARAM_COUNT TRACK_COUNT * 12
 #define PASSTHROUGH_OFFSET EXPANDER_MAX_STEPS * TRACK_COUNT * 3 + TRACK_LEVEL_PARAM_COUNT
 
 using namespace frozenwasteland::dsp;
@@ -60,7 +60,7 @@ struct PWAlgorithmicExpander : Module {
 
 	// Expander
     float leftMessages[2][MAX_STEPS * 15] = {};
-    float rightMessages[2][273] = {};
+    float rightMessages[2][285] = {};
 	
 		
     int algorithnMatrix;
@@ -190,6 +190,12 @@ struct PWAlgorithmicExpander : Module {
 
         onReset();	
 	}
+
+    void ChristoffelWordGen(uint8_t length, uint8_t smallSteps) {
+
+
+    }
+
 
 	void process(const ProcessArgs &args) override  {
 
@@ -356,8 +362,8 @@ struct PWAlgorithmicExpander : Module {
                 workingProbabilityMatrix[j] = 1;					
             }
 
-            if(messagesFromExpanders[0] > 0) { // 0 is track not selected
-                bool useDivs = messagesFromExpanders[0] == 2; //2 is divs
+            if(messagesFromExpanders[TRACK_COUNT * 3 + 0] > 0) { // 0 is track not selected
+                bool useDivs = messagesFromExpanders[TRACK_COUNT * 2 + 0] == 2; //2 is divs
                 for(int j = 0; j < MAX_STEPS; j++) { // Assign probabilites and swing
                     int stepIndex = j;
                     bool stepFound = true;
@@ -387,15 +393,15 @@ struct PWAlgorithmicExpander : Module {
                 workingSwingMatrix[j] = 0.0;
             }
 
-            if(messagesFromExpanders[TRACK_COUNT + 0] > 0) { // 0 is track not selected
-                bool useDivs = messagesFromExpanders[TRACK_COUNT + 0] == 2; //2 is divs
+            if(messagesFromExpanders[TRACK_COUNT * 4 + 0] > 0) { // 0 is track not selected
+                bool useDivs = messagesFromExpanders[TRACK_COUNT * 3 + 0] == 2; //2 is divs
                 trackSwingUsingDivs = useDivs;
 
-                int grooveLength = (int)(messagesFromExpanders[TRACK_COUNT * 2 + 0]);
-                bool useTrackLength = messagesFromExpanders[TRACK_COUNT * 3 + 0];
+                int grooveLength = (int)(messagesFromExpanders[TRACK_COUNT * 5 + 0]);
+                bool useTrackLength = messagesFromExpanders[TRACK_COUNT * 6 + 0];
 
-                swingRandomness = messagesFromExpanders[TRACK_COUNT * 4 + 0];
-                useGaussianDistribution = messagesFromExpanders[TRACK_COUNT * 5 + 0];
+                swingRandomness = messagesFromExpanders[TRACK_COUNT * 7 + 0];
+                useGaussianDistribution = messagesFromExpanders[TRACK_COUNT * 8 + 0];
 
                 if(useTrackLength) {
                     grooveLength = stepsCount;
@@ -436,9 +442,9 @@ struct PWAlgorithmicExpander : Module {
                 workingBeatWarpMatrix[j] = 1.0;
             }
 
-            if(messagesFromExpanders[TRACK_COUNT * 6 + 0] > 0) { // 0 is track not selected
-                beatWarping = messagesFromExpanders[TRACK_COUNT * 7 + 0];
-                beatWarpingPosition = (int)messagesFromExpanders[TRACK_COUNT * 8 + 0];
+            if(messagesFromExpanders[TRACK_COUNT * 9 + 0] > 0) { // 0 is track not selected
+                beatWarping = messagesFromExpanders[TRACK_COUNT * 10 + 0];
+                beatWarpingPosition = (int)messagesFromExpanders[TRACK_COUNT * 11 + 0];
                 float trackStepCount = (float)stepsCount;
                 float stepsToSpread = (trackStepCount / 2.0)-1;
                 float fraction = 1.0/beatWarping;

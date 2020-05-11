@@ -54,8 +54,8 @@
      inkscape:pageopacity="0.0"
      inkscape:pageshadow="2"
      inkscape:zoom="5.6568542"
-     inkscape:cx="173.52178"
-     inkscape:cy="172.27705"
+     inkscape:cx="41.469584"
+     inkscape:cy="228.84559"
      inkscape:document-units="px"
      inkscape:current-layer="layer1"
      showgrid="false"
@@ -222,13 +222,13 @@
     <text
        xml:space="preserve"
        style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:3.59068608px;line-height:1.25;font-family:Calibri;-inkscape-font-specification:'Calibri Bold';letter-spacing:0px;word-spacing:0px;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.26930144"
-       x="38.149761"
+       x="38.279922"
        y="59.798027"
        id="text5443-7-5-4"
        transform="scale(1.0163587,0.9839046)"><tspan
          sodipodi:role="line"
          id="tspan5441-1-6-3"
-         x="38.149761"
+         x="38.279922"
          y="59.798027"
          style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:2.51348042px;font-family:Homenaje;-inkscape-font-specification:'Homenaje Bold';stroke-width:0.26930144">X</tspan></text>
     <text
@@ -282,26 +282,26 @@
     <text
        xml:space="preserve"
        style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:3.59068608px;line-height:1.25;font-family:Homenaje;-inkscape-font-specification:'Homenaje Bold';letter-spacing:0px;word-spacing:0px;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.26930144"
-       x="38.242764"
-       y="68.941048"
+       x="44.881039"
+       y="59.798035"
        id="text5443-7-5-4-3"
        transform="scale(1.0163587,0.9839046)"><tspan
          sodipodi:role="line"
          id="tspan5441-1-6-3-0"
-         x="38.242764"
-         y="68.941048"
+         x="44.881039"
+         y="59.798035"
          style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:2.51348042px;font-family:Homenaje;-inkscape-font-specification:'Homenaje Bold';stroke-width:0.26930144">Y</tspan></text>
     <text
        xml:space="preserve"
        style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:3.59068608px;line-height:1.25;font-family:Homenaje;-inkscape-font-specification:'Homenaje Bold';letter-spacing:0px;word-spacing:0px;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.26930144"
-       x="37.000381"
-       y="79.159698"
+       x="39.082981"
+       y="80.255753"
        id="text5443-7-5-4-7"
        transform="scale(1.0163587,0.9839046)"><tspan
          sodipodi:role="line"
          id="tspan5441-1-6-3-7"
-         x="37.000381"
-         y="79.159698"
+         x="39.082981"
+         y="80.255753"
          style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:2.51348042px;font-family:Homenaje;-inkscape-font-specification:'Homenaje Bold';stroke-width:0.26930144">PIN Xs</tspan></text>
     <text
        xml:space="preserve"
@@ -341,7 +341,7 @@
          style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:2.51348042px;font-family:Homenaje;-inkscape-font-specification:'Homenaje Bold';stroke-width:0.26930147">DESTINATION</tspan></text>
     <path
        style="opacity:0.981;fill:#060e08;fill-opacity:1;stroke:#ffffff;stroke-width:0.26458335;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
-       d="M 48.243187,57.135567 H 82.37475 V 91.26713 H 48.243187 Z"
+       d="M 49.830687,57.135567 H 83.96225 V 91.26713 H 49.830687 Z"
        id="rect4936-0-8"
        inkscape:connector-curvature="0" />
     <text
@@ -404,5 +404,17 @@
          x="43.78474"
          y="139.93684"
          style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:2.46944451px;font-family:Homenaje;-inkscape-font-specification:'Homenaje Bold';stroke-width:0.26930147">DETUNE</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:3.59068608px;line-height:1.25;font-family:Homenaje;-inkscape-font-specification:'Homenaje Bold';letter-spacing:0px;word-spacing:0px;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.26930147"
+       x="38.562328"
+       y="68.943871"
+       id="text5443-7-5-4-7-3"
+       transform="scale(1.0163587,0.9839046)"><tspan
+         sodipodi:role="line"
+         id="tspan5441-1-6-3-7-3"
+         x="38.562328"
+         y="68.943871"
+         style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:2.51348042px;font-family:Homenaje;-inkscape-font-specification:'Homenaje Bold';stroke-width:0.26930147">ROTATE</tspan></text>
   </g>
 </svg>

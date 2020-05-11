@@ -38,6 +38,7 @@ void init(rack::Plugin *p) {
 	p->addModel(modelPWGridControlExpander);
 	p->addModel(modelPWTapBreakoutExpander);
 	p->addModel(modelQuadAlgorithmicRhythm);
+	p->addModel(modelQARAdvancedRhythmsExpander);
 	p->addModel(modelQARGrooveExpander);
 	p->addModel(modelQARProbabilityExpander);
 	p->addModel(modelQARWarpedSpaceExpander);
@@ -47,6 +48,7 @@ void init(rack::Plugin *p) {
 	p->addModel(modelSeedsOfChangeGateExpander);
 	p->addModel(modelStringTheory);
 	p->addModel(modelRouletteLFO);
+	p->addModel(modelSeriouslySlowEG);
 	p->addModel(modelSeriouslySlowLFO);
 	//p->addModel(modelTestDelay);
 	p->addModel(modelVoxInhumana);
