@@ -26,11 +26,12 @@ struct SeriouslySlowEG : Module {
 		HOLD_TIME_PARAM = HOLD_TIME_BASE_PARAM + 6,
 		TRIGGER_PARAM,
 		GATE_MODE_PARAM,
+		CYCLE_MODE_PARAM,
+		RETRIGGER_MODE_PARAM,
 		NUM_PARAMS
 	};
 	enum InputIds {
 		TRIGGER_INPUT,
-		RETRIGGER_INPUT,
 		DELAY_TIME_INPUT,
 		ATTACK_TIME_INPUT,
 		DECAY_TIME_INPUT,
@@ -153,6 +154,8 @@ struct SeriouslySlowEG : Module {
 		configParam(HOLD_TIME_PARAM, 0.0, 100.0, 1.0,"Hold Time");
 
 		configParam(GATE_MODE_PARAM, 0.0, 1.0, 0.0, "Gate Mode");
+		configParam(CYCLE_MODE_PARAM, 0.0, 1.0, 0.0, "Cycle Mode");
+		configParam(RETRIGGER_MODE_PARAM, 0.0, 1.0, 0.0, "Retrigger Mode");
 	}
 
 	double timeBase(uint8_t timeBase) {
@@ -241,12 +244,9 @@ struct SeriouslySlowEG : Module {
 
 		sustainLevel = clamp(params[SUSTAIN_LEVEL_PARAM].getValue() + (inputs[SUSTAIN_LEVEL_INPUT].getVoltage() / 10.0),0.0f,1.0f);
 
-			// gateTrigger.process(params[TRIGGER_PARAM].getValue() + inputs[TRIGGER_PARAM].getVoltage()) ||
-			// (firstStep && _triggerOnLoad && _shouldTriggerOnLoad && _loopParam.getValue() < 0.5 && _modeParam.getValue() < 0.5)
 		if (gateTrigger.process(params[TRIGGER_PARAM].getValue() + inputs[TRIGGER_INPUT].getVoltage()))
 		{
-			//if (stage == STOPPED_STAGE || _retriggerParam.getValue() <= 0.5) {
-			if (stage == STOPPED_STAGE) {
+			if (stage == STOPPED_STAGE || params[RETRIGGER_MODE_PARAM].getValue() <= 0.5) {
 				stage = DELAY_STAGE;
 				holdProgress  = 0.0;
 				stageProgress = 0.0;
@@ -412,8 +412,7 @@ struct SeriouslySlowEG : Module {
 				if (envelope <= 0.00001) {
 					complete = true;
 					envelope = 0.0;
-					//if (params[GATE_MODE_PARAM].getValue() < 0.5 && (_loopParam.getValue() <= 0.5 || _trigger.isHigh())) {
-					if (params[GATE_MODE_PARAM].getValue() < 0.5 && (gateTrigger.isHigh())) {
+					if (params[GATE_MODE_PARAM].getValue() < 0.5 && (params[CYCLE_MODE_PARAM].getValue() > 0.5 || gateTrigger.isHigh())) {
 						stage = DELAY_STAGE;
 						holdProgress =  0.0;
 						stageProgress = 0.0;
@@ -521,7 +520,7 @@ struct SSEGProgressDisplay : TransparentWidget {
 		nvgFill(args.vg);
 	}
 
-	void drawEGProgress(const DrawArgs &args, int stage, double progress, float sustainLevel)
+	void drawEGProgress(const DrawArgs &args, int stage, double progress, double holdProgress, float sustainLevel)
 	{
 		nvgFillColor(args.vg, nvgRGBA(0xff, 0xff, 0x20, 0xff));
 		nvgStrokeColor(args.vg, nvgRGBA(0xff, 0xff, 0x20, 0xff));
@@ -559,7 +558,7 @@ struct SSEGProgressDisplay : TransparentWidget {
 			nvgFill(args.vg);
 		}
 
-		double sustainProgress = progress;
+		double sustainProgress = holdProgress;
 		if(stage >= module->SUSTAIN_STAGE) {
 			if(stage > module->SUSTAIN_STAGE)
 				sustainProgress = 1.0;			
@@ -614,7 +613,7 @@ struct SSEGProgressDisplay : TransparentWidget {
 			egActive = true;
 		}
 		drawDelayProgress(args,delayProgress, egActive);  
-		drawEGProgress(args,stage, module->stageProgress, sustainLevel);  
+		drawEGProgress(args,stage, module->stageProgress,module->holdProgress, sustainLevel);  
 
 		drawDuration(args, Vec(44, 140), module->delayValue);
 		drawDuration(args, Vec(138, 140), module->attackValue);
@@ -663,11 +662,11 @@ struct SeriouslySlowEGWidget : ModuleWidget {
 
 		
 		addParam(createParam<CKSS>(Vec(12, 329.5), module, SeriouslySlowEG::GATE_MODE_PARAM));
+		addParam(createParam<CKSS>(Vec(42, 329.5), module, SeriouslySlowEG::CYCLE_MODE_PARAM));
+		addParam(createParam<CKSS>(Vec(72, 329.5), module, SeriouslySlowEG::RETRIGGER_MODE_PARAM));
 		
-		// addInput(createInput<PJ301MPort>(Vec(98, 83), module, SeriouslySlowEG::FM_INPUT));
-		// addInput(createInput<PJ301MPort>(Vec(74, 195), module, SeriouslySlowEG::PHASE_INPUT));
-		// addInput(createInput<PJ301MPort>(Vec(80, 272), module, SeriouslySlowEG::RESET_INPUT));
-		addInput(createInput<FWPortInSmall>(Vec(60, 350), module, SeriouslySlowEG::TRIGGER_INPUT));
+		addParam(createParam<TL1105>(Vec(245, 350), module, SeriouslySlowEG::TRIGGER_PARAM));
+		addInput(createInput<FWPortInSmall>(Vec(265, 350), module, SeriouslySlowEG::TRIGGER_INPUT));
 
 		addOutput(createOutput<FWPortOutSmall>(Vec(300, 350), module, SeriouslySlowEG::ENVELOPE_OUT));
 		addOutput(createOutput<FWPortOutSmall>(Vec(335, 350), module, SeriouslySlowEG::EOC_OUTPUT));

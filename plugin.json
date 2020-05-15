@@ -164,12 +164,6 @@
 			"tags": ["Sequencer"]
 		},
 		{
-			"slug": "QARAdvancedRhythmsExpander",
-			"name": "QAR - Advanced Rhythms",
-			"description": "Extra Parameters for Well Formed and Perfect Balance Algorithms",
-			"tags": ["Expander"]
-		},
-		{
 			"slug": "QARGrooveExpander",
 			"name": "QAR - Groove",
 			"description": "Create Grooves and Microrhythms for QAR",
@@ -185,6 +179,12 @@
 			"slug": "QARWarpedSpaceExpander",
 			"name": "QAR - Warped Space",
 			"description": "Make your QAR Rhythms explore non-linear space",
+			"tags": ["Expander"]
+		},
+		{
+			"slug": "QARWellFormedRhythmExpander",
+			"name": "QAR - Well Formed Rhythms",
+			"description": "Extra Parameters for Well Formed Algorithm",
 			"tags": ["Expander"]
 		},
 		{

@@ -197,18 +197,32 @@ struct OneDimensionalCells : Cells {
     }
   }
 
-  void flip(bool flipHorizontal) {
-    if(flipHorizontal) {
+
+  void changeShape(int flipDirection, int shiftDirection,float reductionAmount) {
+    if(flipDirection==-1) {
       for(uint16_t i=0;i<height;i++) {
           cells[i] = totalRange - cells[i];
       }
-    } else {
+    } else if (flipDirection==1) {
       for(uint16_t i=0;i<height/2;i++) {
           float cellValue = cells[i];
           cells[i] = cells[height-i];
           cells[height-i] = cellValue;
       }
+    } else if (shiftDirection==-1) {
+      for(uint16_t i=0;i<height;i++) {
+          cells[i] = clamp(cells[i] + (totalRange * .25),lowRange,highRange); // shift right by 25%
+      }
+    } else if (shiftDirection==1) {
+      for(uint16_t i=0;i<height;i++) {
+          cells[i] = clamp(cells[i] - (totalRange * .25),lowRange,highRange); // shift left by 25%
+      }
+    } else {
+      for(uint16_t i=0;i<height;i++) {
+          cells[i] = cells[i] * reductionAmount;
+      }
     }
+    
   }
 
   float *cells;
@@ -223,6 +237,8 @@ struct OneDimensionalCells : Cells {
   float shiftX = 0;
   float shiftY = 0;
   float rotateX = 0;
+  float lastRotateX = 0;
+  float phasePosition;
 
   uint8_t pinXAxisValues = 0;
   float pinXAxisPosition = 0;
@@ -284,7 +300,10 @@ struct OneDimensionalCellsWithRollover : OneDimensionalCells {
     
     //Rotation
     if(rotateX !=0) {
-      float phasePosition = cos(M_PI * rotateX);
+      if(rotateX != lastRotateX) {
+        phasePosition = cos(M_PI * rotateX);
+        lastRotateX = rotateX;
+      }
       adjustedValue = adjustedValue * phasePosition + (pinXAxisValues > 0 ? pinXAxisPosition : 0.0);
     }
 

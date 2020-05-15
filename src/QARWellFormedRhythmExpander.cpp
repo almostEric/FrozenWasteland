@@ -11,7 +11,7 @@
 #define PASSTHROUGH_OFFSET MAX_STEPS * TRACK_COUNT * 3 + TRACK_LEVEL_PARAM_COUNT
 
 
-struct QARAdvancedRhythmsExpander : Module {
+struct QARWellFormedRhythmExpander : Module {
 
     enum ParamIds {
 		TRACK_1_EXTRA_VALUE_PARAM,
@@ -47,10 +47,10 @@ struct QARAdvancedRhythmsExpander : Module {
 		TRACK_3_HIERARCHICAL_LIGHT,
 		TRACK_4_HIERARCHICAL_LIGHT,
 		TRACK_1_COMPLEMENT_LIGHT,
-		TRACK_2_COMPLEMENT_LIGHT,
-		TRACK_3_COMPLEMENT_LIGHT,
-		TRACK_4_COMPLEMENT_LIGHT,
-		NUM_LIGHTS 
+		TRACK_2_COMPLEMENT_LIGHT = TRACK_1_COMPLEMENT_LIGHT + 3,
+		TRACK_3_COMPLEMENT_LIGHT = TRACK_2_COMPLEMENT_LIGHT + 3,
+		TRACK_4_COMPLEMENT_LIGHT = TRACK_3_COMPLEMENT_LIGHT + 3,
+		NUM_LIGHTS = TRACK_4_COMPLEMENT_LIGHT + 3 
 	};
 
 	// Expander
@@ -59,7 +59,7 @@ struct QARAdvancedRhythmsExpander : Module {
 
 	dsp::SchmittTrigger trackHierarchicalTrigger[TRACK_COUNT],trackComplementTrigger[TRACK_COUNT];
 	bool trackHierachical[TRACK_COUNT] = {0};
-	bool trackComplement[TRACK_COUNT] = {0};
+	int trackComplement[TRACK_COUNT] = {0};
 	
 
     float lerp(float v0, float v1, float t) {
@@ -69,13 +69,13 @@ struct QARAdvancedRhythmsExpander : Module {
 	
 	float extraParameterValue[TRACK_COUNT] = {0};
 	
-	QARAdvancedRhythmsExpander() {
+	QARWellFormedRhythmExpander() {
 		config(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS, NUM_LIGHTS);
 		        
-        configParam(TRACK_1_EXTRA_VALUE_PARAM, 0.0f, 1.0, 0.5,"Track 1 - Extra Parameter");
-        configParam(TRACK_2_EXTRA_VALUE_PARAM, 0.0f, 1.0, 0.5,"Track 2 - Extra Parameter");
-        configParam(TRACK_3_EXTRA_VALUE_PARAM, 0.0f, 1.0, 0.5,"Track 3 - Extra Parameter");
-        configParam(TRACK_4_EXTRA_VALUE_PARAM, 0.0f, 1.0, 0.5,"Track 4 - Extra Parameter");
+        configParam(TRACK_1_EXTRA_VALUE_PARAM, 0.0f, 1.0, 0.5,"Track 1 - Ratio");
+        configParam(TRACK_2_EXTRA_VALUE_PARAM, 0.0f, 1.0, 0.5,"Track 2 - Ratio");
+        configParam(TRACK_3_EXTRA_VALUE_PARAM, 0.0f, 1.0, 0.5,"Track 3 - Ratio");
+        configParam(TRACK_4_EXTRA_VALUE_PARAM, 0.0f, 1.0, 0.5,"Track 4 - Ratio");
         
 		leftExpander.producerMessage = leftMessages[0];
 		leftExpander.consumerMessage = leftMessages[1];
@@ -144,12 +144,13 @@ struct QARAdvancedRhythmsExpander : Module {
 			lights[TRACK_1_HIERARCHICAL_LIGHT + i].value = trackHierachical[i];
 
 			if (trackComplementTrigger[i].process(params[TRACK_1_COMPLEMENT_PARAM+i].getValue())) {
-				trackComplement[i] = !trackComplement[i];
+				trackComplement[i] = (trackComplement[i] + 1) % 3;
 			}
-			lights[TRACK_1_COMPLEMENT_LIGHT + i].value = trackComplement[i];
+			lights[TRACK_1_COMPLEMENT_LIGHT + (i * 3) + 0].value = trackComplement[i] == 2;
+			lights[TRACK_1_COMPLEMENT_LIGHT + (i * 3) + 1].value = trackComplement[i] > 0;
 		}        
 
-		bool motherPresent = (leftExpander.module && (leftExpander.module->model == modelQARWarpedSpaceExpander || leftExpander.module->model == modelQARProbabilityExpander || leftExpander.module->model == modelQARGrooveExpander || leftExpander.module->model == modelQuadAlgorithmicRhythm || leftExpander.module->model == modelPWAlgorithmicExpander));
+		bool motherPresent = (leftExpander.module && (leftExpander.module->model == modelQARWarpedSpaceExpander || leftExpander.module->model == modelQARProbabilityExpander || leftExpander.module->model == modelQARGrooveExpander || leftExpander.module->model == modelQuadAlgorithmicRhythm));
 		//lights[CONNECTED_LIGHT].value = motherPresent;
 		if (motherPresent) {
 			// To Mother
@@ -215,12 +216,12 @@ struct QARAdvancedRhythmsExpander : Module {
 
 
 
-struct QARAdvancedRhythmsExpanderDisplay : TransparentWidget {
-	QARAdvancedRhythmsExpander *module;
+struct QARWellFormedRhythmExpanderDisplay : TransparentWidget {
+	QARWellFormedRhythmExpander *module;
 	int frame = 0;
 	std::shared_ptr<Font> font;
 
-	QARAdvancedRhythmsExpanderDisplay() {
+	QARWellFormedRhythmExpanderDisplay() {
 		font = APP->window->loadFont(asset::plugin(pluginInstance, "res/fonts/DejaVuSansMono.ttf"));
 	}
 
@@ -235,14 +236,14 @@ struct QARAdvancedRhythmsExpanderDisplay : TransparentWidget {
 	}
 };
 
-struct QARAdvancedRhythmsExpanderWidget : ModuleWidget {
-	QARAdvancedRhythmsExpanderWidget(QARAdvancedRhythmsExpander *module) {
+struct QARWellFormedRhythmExpanderWidget : ModuleWidget {
+	QARWellFormedRhythmExpanderWidget(QARWellFormedRhythmExpander *module) {
 		setModule(module);
 
-		setPanel(APP->window->loadSvg(asset::plugin(pluginInstance, "res/QARAdvancedRhythmsExpander.svg")));
+		setPanel(APP->window->loadSvg(asset::plugin(pluginInstance, "res/QARWellFormedRhythmExpander.svg")));
 
 		{
-			QARAdvancedRhythmsExpanderDisplay *display = new QARAdvancedRhythmsExpanderDisplay();
+			QARWellFormedRhythmExpanderDisplay *display = new QARWellFormedRhythmExpanderDisplay();
 			display->module = module;
 			display->box.pos = Vec(0, 0);
 			display->box.size = Vec(box.size.x, box.size.y);
@@ -260,15 +261,15 @@ struct QARAdvancedRhythmsExpanderWidget : ModuleWidget {
         
 
         for(int i=0;i<TRACK_COUNT; i++) {
-            addParam(createParam<RoundFWKnob>(Vec(12, 59 + i * 72), module, QARAdvancedRhythmsExpander::TRACK_1_EXTRA_VALUE_PARAM+i));
-            addInput(createInput<FWPortInSmall>(Vec(49, 64 + i * 72), module, QARAdvancedRhythmsExpander::TRACK_1_EXTRA_VALUE_INPUT+i));
+            addParam(createParam<RoundFWKnob>(Vec(12, 59 + i * 72), module, QARWellFormedRhythmExpander::TRACK_1_EXTRA_VALUE_PARAM+i));
+            addInput(createInput<FWPortInSmall>(Vec(49, 64 + i * 72), module, QARWellFormedRhythmExpander::TRACK_1_EXTRA_VALUE_INPUT+i));
 
 			if(i > 0) {
-				addParam(createParam<LEDButton>(Vec(10, 103 + i*72), module, QARAdvancedRhythmsExpander::TRACK_1_HIERARCHICAL_PARAM+i));
-				addChild(createLight<LargeLight<BlueLight>>(Vec(11.5, 104.5 + i*72), module, QARAdvancedRhythmsExpander::TRACK_1_HIERARCHICAL_LIGHT+i));
+				addParam(createParam<LEDButton>(Vec(10, 103 + i*72), module, QARWellFormedRhythmExpander::TRACK_1_HIERARCHICAL_PARAM+i));
+				addChild(createLight<LargeLight<BlueLight>>(Vec(11.5, 104.5 + i*72), module, QARWellFormedRhythmExpander::TRACK_1_HIERARCHICAL_LIGHT+i));
 
-				addParam(createParam<LEDButton>(Vec(48, 103 + i*72), module, QARAdvancedRhythmsExpander::TRACK_1_COMPLEMENT_PARAM+i));
-				addChild(createLight<LargeLight<GreenLight>>(Vec(49.5, 104.5 + i*72), module, QARAdvancedRhythmsExpander::TRACK_1_COMPLEMENT_LIGHT+i));
+				addParam(createParam<LEDButton>(Vec(48, 103 + i*72), module, QARWellFormedRhythmExpander::TRACK_1_COMPLEMENT_PARAM+i));
+				addChild(createLight<LargeLight<RedGreenBlueLight>>(Vec(49.5, 104.5 + i*72), module, QARWellFormedRhythmExpander::TRACK_1_COMPLEMENT_LIGHT+i*3));
 			}
 
 		}
@@ -279,5 +280,5 @@ struct QARAdvancedRhythmsExpanderWidget : ModuleWidget {
 	}
 };
 
-Model *modelQARAdvancedRhythmsExpander = createModel<QARAdvancedRhythmsExpander, QARAdvancedRhythmsExpanderWidget>("QARAdvancedRhythmsExpander");
+Model *modelQARWellFormedRhythmExpander = createModel<QARWellFormedRhythmExpander, QARWellFormedRhythmExpanderWidget>("QARWellFormedRhythmExpander");
  

@@ -13,7 +13,7 @@
 
 #define POLYPHONY 16
 #define MAX_NOTES 12
-#define MAX_SCALES 12
+#define MAX_SCALES 42
 #define MAX_TEMPERMENTS 3
 #define NUM_SHIFT_MODES 3
 #define TRIGGER_DELAY_SAMPLES 5
@@ -95,7 +95,11 @@ struct ProbablyNote : Module {
 
 
 	const char* noteNames[MAX_NOTES] = {"C","C#/Db","D","D#/Eb","E","F","F#/Gb","G","G#/Ab","A","A#/Bb","B"};
-	const char* scaleNames[MAX_NOTES] = {"Chromatic","Whole Tone","Ionian M","Dorian","Phrygian","Lydian","Mixolydian","Aeolian m","Locrian","Gypsy","Hungarian","Blues"};
+	const char* scaleNames[MAX_SCALES] = {"Chromatic","Whole Tone","Ionian M","Dorian","Phrygian","Lydian","Mixolydian","Aeolian m","Locrian","Acoustic", "Altered", "Augmented", "Bebop Dominant", "Blues",  
+											"Enigmatic","Flamenco","Gypsy","Half diminished","Harmonic Major","Harmonic Minor","Hirajoshi",
+											"Hungarian","Miyako-bushi", "Insen", "Iwato", "Lydian Augmented",  "Bebob Major", "Locrian Major",
+											"Pentatonic Major","Melodic Minor","Pentatonic Minor - Yo","Neapoliltan Major", "Neapolitan Minor", "Octatonic 1",  "Octatonic 2",
+											"Persian","Phrygian Dominant","Prometheus", "Harmonics", "Tritone", "Tritone 2S", "Ukrainian Dorian"};
 	float defaultScaleNoteWeighting[MAX_SCALES][MAX_NOTES] = {
 		{1,1,1,1,1,1,1,1,1,1,1,1},
 		{1,0,1,0,1,0,1,0,1,0,1,0},
@@ -106,9 +110,39 @@ struct ProbablyNote : Module {
 		{1,0,0.2,0,0.5,0.4,0,0.8,0,0.2,0.3,0},
 		{1,0,0.2,0.5,0,0.4,0,0.8,0.2,0,0.3,0},
 		{1,0.2,0,0.5,0,0.4,0.8,0,0.2,0,0.3,0},
-		{1,0.2,0,0,0.5,0.5,0,0.8,0.2,0,0,0.3},
-		{1,0,0.2,0.5,0,0,0.3,0.8,0.2,0,0,0.3},
-		{1,0,0,0.5,0,0.4,0,0.8,0,0,0.3,0},
+		{1.0,0.0,0.2,0.0,0.3,0.0,0.5,0.8,0.0,0.2,0.3,0.0},
+		{1.0,0.2,0.0,0.3,0.5,0.0,0.8,0.0,0.2,0.0,0.3,0.0},
+		{1.0,0.0,0.0,0.2,0.3,0.0,0.0,0.5,0.8,0.0,0.0,0.2},
+		{1.0,0.0,0.2,0.0,0.3,0.5,0.0,0.8,0.0,0.2,0.3,0.2},
+		{1.0,0.0,0.0,0.2,0.0,0.3,0.5,0.8,0.0,0.0,0.2,0.0},
+		{1.0,0.2,0.0,0.0,0.3,0.0,0.5,0.0,0.8,0.0,0.2,0.3},
+		{1.0,0.2,0.0,0.0,0.3,0.5,0.0,0.8,0.2,0.0,0.0,0.3},
+		{1.0,0.0,0.2,0.3,0.0,0.0,0.5,0.8,0.2,0.0,0.3,0.0},
+		{1.0,0.0,0.2,0.3,0.0,0.5,0.8,0.0,0.2,0.0,0.3,0.0},
+		{1.0,0.0,0.2,0.0,0.3,0.5,0.0,0.8,0.2,0.0,0.0,0.3},
+		{1.0,0.0,0.2,0.3,0.0,0.5,0.0,0.8,0.2,0.0,0.0,0.3},
+		{1.0,0.0,0.0,0.0,0.2,0.0,0.3,0.5,0.0,0.0,0.0,0.8},
+		{1.0,0.0,0.2,0.3,0.0,0.0,0.5,0.8,0.2,0.0,0.0,0.3},
+		{1.0,0.2,0.0,0.0,0.0,0.3,0.0,0.5,0.8,0.0,0.0,0.0},
+		{1.0,0.2,0.0,0.0,0.0,0.3,0.0,0.5,0.0,0.0,0.0,0.8},
+		{1.0,0.2,0.0,0.0,0.0,0.3,0.5,0.0,0.0,0.0,0.8,0.0},
+		{1.0,0.0,0.2,0.0,0.3,0.0,0.5,0.0,0.8,0.2,0.0,0.3},
+		{1.0,0.0,0.2,0.0,0.3,0.5,0.0,0.8,0.2,0.0,0.3,0.2},
+		{1.0,0.0,0.2,0.0,0.3,0.5,0.8,0.0,0.2,0.0,0.3,0.0},
+		{1.0,0.0,0.2,0.0,0.3,0.0,0.0,0.5,0.0,0.8,0.0,0.0},
+		{1.0,0.0,0.2,0.3,0.0,0.5,0.0,0.8,0.0,0.2,0.0,0.3},
+		{1.0,0.0,0.0,0.2,0.0,0.3,0.0,0.5,0.0,0.0,0.8,0.0},
+		{1.0,0.2,0.0,0.3,0.0,0.5,0.0,0.8,0.0,0.2,0.0,0.3},
+		{1.0,0.2,0.0,0.3,0.0,0.5,0.0,0.8,0.2,0.0,0.0,0.3},
+		{1.0,0.0,0.2,0.3,0.0,0.5,0.8,0.0,0.2,0.3,0.0,0.2},
+		{1.0,0.2,0.0,0.3,0.5,0.0,0.8,0.2,0.0,0.3,0.2,0.0},
+		{1.0,0.2,0.0,0.0,0.3,0.5,0.8,0.0,0.2,0.0,0.0,0.3},
+		{1.0,0.2,0.0,0.0,0.3,0.5,0.0,0.8,0.2,0.0,0.3,0.0},
+		{1.0,0.0,0.2,0.0,0.3,0.0,0.5,0.0,0.0,0.8,0.2,0.0},
+		{1.0,0.0,0.0,0.2,0.3,0.5,0.0,0.8,0.0,0.2,0.0,0.0},
+		{1.0,0.2,0.0,0.0,0.3,0.0,0.5,0.8,0.0,0.0,0.2,0.0},
+		{1.0,0.2,0.3,0.0,0.0,0.0,0.5,0.8,0.2,0.0,0.0,0.0},
+		{1.0,0.0,0.2,0.3,0.0,0.0,0.5,0.8,0.0,0.2,0.3,0.0}
 	}; 
 	bool defaultScaleNoteStatus[MAX_SCALES][MAX_NOTES] = {
 		{1,1,1,1,1,1,1,1,1,1,1,1},
@@ -119,10 +153,40 @@ struct ProbablyNote : Module {
 		{1,0,1,0,1,0,1,1,0,1,0,1},
 		{1,0,1,0,1,1,0,1,0,1,1,0},
 		{1,0,1,1,0,1,0,1,1,0,1,0},
-		{1,1,0,1,0,1,1,0,1,0,1,0},
+		{1,1,0,1,0,1,1,0,1,0,1,0},		
+		{1,0,1,0,1,0,1,1,0,1,1,0},//new
+		{1,1,0,1,1,0,1,0,1,0,1,0},
+		{1,0,0,1,1,0,0,1,1,0,0,1},
+		{1,0,1,0,1,1,0,1,0,1,1,1},
+		{1,0,0,1,0,1,1,1,0,0,1,0},
+		{1,1,0,0,1,0,1,0,1,0,1,1},
 		{1,1,0,0,1,1,0,1,1,0,0,1},
+		{1,0,1,1,0,0,1,1,1,0,1,0},
+		{1,0,1,1,0,1,1,0,1,0,1,0},
+		{1,0,1,0,1,1,0,1,1,0,0,1},
+		{1,0,1,1,0,1,0,1,1,0,0,1},
+		{1,0,0,0,1,0,1,1,0,0,0,1},
 		{1,0,1,1,0,0,1,1,1,0,0,1},
+		{1,1,0,0,0,1,0,1,1,0,0,0},
+		{1,1,0,0,0,1,0,1,0,0,0,1},
+		{1,1,0,0,0,1,1,0,0,0,1,0},
+		{1,0,1,0,1,0,1,0,1,1,0,1},
+		{1,0,1,0,1,1,0,1,1,0,1,1},
+		{1,0,1,0,1,1,1,0,1,0,1,0},
+		{1,0,1,0,1,0,0,1,0,1,0,0},
+		{1,0,1,1,0,1,0,1,0,1,0,1},
 		{1,0,0,1,0,1,0,1,0,0,1,0},
+		{1,1,0,1,0,1,0,1,0,1,0,1},
+		{1,1,0,1,0,1,0,1,1,0,0,1},
+		{1,0,1,1,0,1,1,0,1,1,0,1},
+		{1,1,0,1,1,0,1,1,0,1,1,0},
+		{1,1,0,0,1,1,1,0,1,0,0,1},
+		{1,1,0,0,1,1,0,1,1,0,1,0},
+		{1,0,1,0,1,0,1,0,0,1,1,0},
+		{1,0,0,1,1,1,0,1,0,1,0,0},
+		{1,1,0,0,1,0,1,1,0,0,1,0},
+		{1,1,1,0,0,0,1,1,1,0,0,0},
+		{1,0,1,1,0,0,1,1,0,1,1,0}
 	}; 
 
 	float scaleNoteWeighting[MAX_SCALES][MAX_NOTES]; 
@@ -134,7 +198,25 @@ struct ProbablyNote : Module {
         {0,111.73,203.91,315.64,386.61,498.04,582.51,701.955,813.69,884.36,996.09,1088.27},
         {0,90.22,203.91,294.13,407.82,498.04,611.73,701.955,792.18,905.87,996.09,1109.78},
     };
-    
+
+
+    // const char *scaleKeys[SCALE_KEYS]  = { 
+    //     "2221212",      "1212222",      "313131" ,      "22122111",     "321132",       
+    //     "1322211",      "1312131",      "2131122",      "2121222",      "2212131",      "2122131",      "42141",
+    //     "2131131",      "14214",        "14242",        "14142",        "2222121",      "22121211",     "2211222",
+    //     "22323",        "2122221",      "32232",        "1222221",      "1222131",      "21212121",     "12121212",
+    //     "1311231",      "1312122",      "222312",       "311223",       "132132",       "114114",       "2131212",
+         
+    // };
+	// const char *scaleNames[SCALE_KEYS] = {
+    //     "Acoustic",     "Altered",      "Augmented",    "Bebop dom.",   "Blues",        
+    //     "Enigmatic",    "Flamenco",     "Gypsy",        "Half diminished",    "harmonic Major",  "harmonic Minor",  "Hirajoshi",
+    //     "Hungarian",    "Miyako-bushi", "Insen",        "Iwato",        "Lydian augmented",  "Bebob Major",   "Locrian Major",
+    //     "Pentatonic Major",  "melodic Minor",   "Pentatonic Minor -  Yo","Neapoliltan Major", "Neapolitan Minor", "Octatonic 1",  "Octatonic 2",
+    //     "Persian",      "Phrygian dominant",  "Prometheus",   "Harmonics",    "Tritone",      "Tritone 2S",   "Ukrainian Dorian",
+        
+    // };
+
 
 	
 	dsp::SchmittTrigger clockTrigger,resetScaleTrigger,octaveWrapAroundTrigger,tempermentActiveTrigger,tempermentTrigger,shiftScalingTrigger,keyScalingTrigger,pitchRandomnessGaussianTrigger,noteActiveTrigger[MAX_NOTES]; 
@@ -211,7 +293,7 @@ struct ProbablyNote : Module {
 		configParam(ProbablyNote::DISTRIBUTION_CV_ATTENUVERTER_PARAM, -1.0, 1.0, 0.0,"Distribution CV Attenuation");
 		configParam(ProbablyNote::SHIFT_PARAM, -11.0, 11.0, 0.0,"Weight Shift");
         configParam(ProbablyNote::SHIFT_CV_ATTENUVERTER_PARAM, -1.0, 1.0, 0.0,"Weight Shift CV Attenuation" ,"%",0,100);
-		configParam(ProbablyNote::SCALE_PARAM, 0.0, 11.0, 0.0,"Scale");
+		configParam(ProbablyNote::SCALE_PARAM, 0.0, MAX_SCALES-1, 0.0,"Scale");
         configParam(ProbablyNote::SCALE_CV_ATTENUVERTER_PARAM, -1.0, 1.0, 0.0,"Scale CV Attenuation","%",0,100);
 		configParam(ProbablyNote::KEY_PARAM, 0.0, 11.0, 0.0,"Key");
         configParam(ProbablyNote::KEY_CV_ATTENUVERTER_PARAM, -1.0, 1.0, 0.0,"Key CV Attenuation","%",0,100); 
@@ -313,27 +395,27 @@ struct ProbablyNote : Module {
 
 		
 
-		for(int i=0;i<MAX_SCALES;i++) {
-			for(int j=0;j<MAX_NOTES;j++) {
-				char buf[100];
-				char notebuf[100];
-				strcpy(buf, "scaleWeight-");
-				strcat(buf, scaleNames[i]);
-				strcat(buf, ".");
-				sprintf(notebuf, "%i", j);
-				strcat(buf, notebuf);
-				json_object_set_new(rootJ, buf, json_real((float) scaleNoteWeighting[i][j]));
+		// for(int i=0;i<MAX_SCALES;i++) {
+		// 	for(int j=0;j<MAX_NOTES;j++) {
+		// 		char buf[100];
+		// 		char notebuf[100];
+		// 		strcpy(buf, "scaleWeight-");
+		// 		strcat(buf, scaleNames[i]);
+		// 		strcat(buf, ".");
+		// 		sprintf(notebuf, "%i", j);
+		// 		strcat(buf, notebuf);
+		// 		json_object_set_new(rootJ, buf, json_real((float) scaleNoteWeighting[i][j]));
 
-				char buf2[100];
-				char notebuf2[100];
-				strcpy(buf2, "scaleStatus-");
-				strcat(buf2, scaleNames[i]);
-				strcat(buf2, ".");
-				sprintf(notebuf2, "%i", j);
-				strcat(buf2, notebuf2);
-				json_object_set_new(rootJ, buf2, json_integer((int) scaleNoteStatus[i][j]));
-			}
-		}
+		// 		char buf2[100];
+		// 		char notebuf2[100];
+		// 		strcpy(buf2, "scaleStatus-");
+		// 		strcat(buf2, scaleNames[i]);
+		// 		strcat(buf2, ".");
+		// 		sprintf(notebuf2, "%i", j);
+		// 		strcat(buf2, notebuf2);
+		// 		json_object_set_new(rootJ, buf2, json_integer((int) scaleNoteStatus[i][j]));
+		// 	}
+		// }
 		return rootJ;
 	};
 
@@ -382,33 +464,33 @@ struct ProbablyNote : Module {
 
 		
 
-		for(int i=0;i<MAX_SCALES;i++) {
-			for(int j=0;j<MAX_NOTES;j++) {
-				char buf[100];
-				char notebuf[100];
-				strcpy(buf, "scaleWeight-");
-				strcat(buf, scaleNames[i]);
-				strcat(buf, ".");
-				sprintf(notebuf, "%i", j);
-				strcat(buf, notebuf);
-				json_t *sumJ = json_object_get(rootJ, buf);
-				if (sumJ) {
-					scaleNoteWeighting[i][j] = json_real_value(sumJ);
-				}
+		// for(int i=0;i<MAX_SCALES;i++) {
+		// 	for(int j=0;j<MAX_NOTES;j++) {
+		// 		char buf[100];
+		// 		char notebuf[100];
+		// 		strcpy(buf, "scaleWeight-");
+		// 		strcat(buf, scaleNames[i]);
+		// 		strcat(buf, ".");
+		// 		sprintf(notebuf, "%i", j);
+		// 		strcat(buf, notebuf);
+		// 		json_t *sumJ = json_object_get(rootJ, buf);
+		// 		if (sumJ) {
+		// 			scaleNoteWeighting[i][j] = json_real_value(sumJ);
+		// 		}
 
-				char buf2[100];
-				char notebuf2[100];
-				strcpy(buf2, "scaleStatus-");
-				strcat(buf2, scaleNames[i]);
-				strcat(buf2, ".");
-				sprintf(notebuf2, "%i", j);
-				strcat(buf2, notebuf2);
-				json_t *sumJ2 = json_object_get(rootJ, buf2);
-				if (sumJ2) {
-					scaleNoteStatus[i][j] = json_integer_value(sumJ2);
-				}
-			}
-		}		
+		// 		char buf2[100];
+		// 		char notebuf2[100];
+		// 		strcpy(buf2, "scaleStatus-");
+		// 		strcat(buf2, scaleNames[i]);
+		// 		strcat(buf2, ".");
+		// 		sprintf(notebuf2, "%i", j);
+		// 		strcat(buf2, notebuf2);
+		// 		json_t *sumJ2 = json_object_get(rootJ, buf2);
+		// 		if (sumJ2) {
+		// 			scaleNoteStatus[i][j] = json_integer_value(sumJ2);
+		// 		}
+		// 	}
+		// }		
 	}
 	
 
@@ -438,7 +520,6 @@ struct ProbablyNote : Module {
 		} else {
 			generateChords = false;
 		}
-
 	
         if (resetScaleTrigger.process(params[RESET_SCALE_PARAM].getValue())) {
 			resetTriggered = true;
@@ -490,7 +571,6 @@ struct ProbablyNote : Module {
 		lights[PITCH_RANDOMNESS_GAUSSIAN_LIGHT].value = pitchRandomGaussian;
 
 
-
         spread = clamp(params[SPREAD_PARAM].getValue() + (inputs[SPREAD_INPUT].getVoltage() * params[SPREAD_CV_ATTENUVERTER_PARAM].getValue()),0.0f,6.0f);
 
         slant = clamp(params[SLANT_PARAM].getValue() + (inputs[SLANT_INPUT].getVoltage() / 10.0f * params[SLANT_CV_ATTENUVERTER_PARAM].getValue()),-1.0f,1.0f);
@@ -498,7 +578,7 @@ struct ProbablyNote : Module {
         focus = clamp(params[DISTRIBUTION_PARAM].getValue() + (inputs[DISTRIBUTION_INPUT].getVoltage() / 10.0f * params[DISTRIBUTION_CV_ATTENUVERTER_PARAM].getValue()),0.0f,1.0f);
 
         
-        scale = clamp(params[SCALE_PARAM].getValue() + (inputs[SCALE_INPUT].getVoltage() * MAX_SCALES / 10.0 * params[SCALE_CV_ATTENUVERTER_PARAM].getValue()),0.0,11.0f);
+        scale = clamp(params[SCALE_PARAM].getValue() + (inputs[SCALE_INPUT].getVoltage() * MAX_SCALES / 10.0 * params[SCALE_CV_ATTENUVERTER_PARAM].getValue()),0.0,MAX_SCALES-1.0f);
         
         key = params[KEY_PARAM].getValue();
 		if(keyLogarithmic) {
@@ -607,7 +687,6 @@ struct ProbablyNote : Module {
 		}
 		weightShift = clamp(weightShift,-11,11);
 
-	
 		//Process scales, keys and weights
 		if(scale != lastScale || key != lastKey || weightShift != lastWeightShift || resetTriggered) {
 
@@ -662,6 +741,7 @@ struct ProbablyNote : Module {
 			resetTriggered = false;
 		}
 
+
 		for(int i=0;i<MAX_NOTES;i++) {
 			int controlOffset = (i + key) % MAX_NOTES;
 			int actualTarget = useCircleLayout ?  controlOffset : i;
@@ -695,6 +775,7 @@ struct ProbablyNote : Module {
 				scaleNoteStatus[scale][i] = noteActive[controlOffset];
 			}									
         }
+
 
 		if( inputs[TRIGGER_INPUT].active ) {
 			float currentTriggerInput = inputs[TRIGGER_INPUT].getVoltage();
@@ -844,6 +925,7 @@ struct ProbablyNote : Module {
 					}        
 				}
 			}
+
 			for(int channel=0;channel<currentPolyphony;channel++) {
 				outputs[NOTE_CHANGE_OUTPUT].setVoltage(noteChangePulse[channel].process(1.0 / args.sampleRate) ? 10.0 : 0, channel);
 			}
@@ -866,6 +948,9 @@ void ProbablyNote::onReset() {
 	for(int i=0;i<TRIGGER_DELAY_SAMPLES;i++) {
 		triggerDelay[i] = 0.0f;
 	}
+
+			fprintf(stderr, "Resetting \n");
+
 
 	for(int i = 0;i<MAX_SCALES;i++) {
 		for(int j=0;j<MAX_NOTES;j++) {
@@ -926,7 +1011,7 @@ struct ProbablyNoteWidget : ModuleWidget {
     void drawScale(const DrawArgs &args, Vec pos, int scale, bool shifted) {
 		nvgFontSize(args.vg, 9);
 		nvgFontFaceId(args.vg, font->handle);
-		nvgTextLetterSpacing(args.vg, -1);
+		nvgTextLetterSpacing(args.vg, -1.5);
 
 		if(shifted) 
 			nvgFillColor(args.vg, nvgRGBA(0xff, 0xff, 0x00, 0xff));

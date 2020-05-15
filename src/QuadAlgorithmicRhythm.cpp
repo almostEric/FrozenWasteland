@@ -11,8 +11,13 @@
 #define MAX_STEPS 73
 #define NUM_ALGORITHMS 5
 #define EXPANDER_MAX_STEPS 18
-#define NUM_RULERS 20
+//GOLOMB RULER
+#define NUM_RULERS 20 
 #define MAX_DIVISIONS 11
+//PERFECT BALANCE
+#define NUM_PB_PATTERNS 115
+#define MAX_PB_SIZE 73
+
 #define PASSTHROUGH_LEFT_VARIABLE_COUNT 13
 #define PASSTHROUGH_RIGHT_VARIABLE_COUNT 8
 #define TRACK_LEVEL_PARAM_COUNT TRACK_COUNT * 12
@@ -29,6 +34,7 @@ struct QuadAlgorithmicRhythm : Module {
 		ACCENTS_1_PARAM,
 		ACCENT_ROTATE_1_PARAM,
 		ALGORITHM_1_PARAM,
+		TRACK_1_INDEPENDENT_PARAM,
 		STEPS_2_PARAM,
 		DIVISIONS_2_PARAM,
 		OFFSET_2_PARAM,
@@ -36,6 +42,7 @@ struct QuadAlgorithmicRhythm : Module {
 		ACCENTS_2_PARAM,
 		ACCENT_ROTATE_2_PARAM,
 		ALGORITHM_2_PARAM,
+		TRACK_2_INDEPENDENT_PARAM,
 		STEPS_3_PARAM,
 		DIVISIONS_3_PARAM,
 		OFFSET_3_PARAM,
@@ -43,6 +50,7 @@ struct QuadAlgorithmicRhythm : Module {
 		ACCENTS_3_PARAM,
 		ACCENT_ROTATE_3_PARAM,
 		ALGORITHM_3_PARAM,
+		TRACK_3_INDEPENDENT_PARAM,
 		STEPS_4_PARAM,
 		DIVISIONS_4_PARAM,
 		OFFSET_4_PARAM,
@@ -50,6 +58,7 @@ struct QuadAlgorithmicRhythm : Module {
 		ACCENTS_4_PARAM,
 		ACCENT_ROTATE_4_PARAM,
 		ALGORITHM_4_PARAM,
+		TRACK_4_INDEPENDENT_PARAM,
 		META_STEP_PARAM,
 		CHAIN_MODE_PARAM,	
 		CONSTANT_TIME_MODE_PARAM,	
@@ -117,7 +126,11 @@ struct QuadAlgorithmicRhythm : Module {
         ALGORITHM_2_LIGHT = ALGORITHM_1_LIGHT+3,
         ALGORITHM_3_LIGHT = ALGORITHM_2_LIGHT+3,
         ALGORITHM_4_LIGHT = ALGORITHM_3_LIGHT+3,
-		CHAIN_MODE_NONE_LIGHT = ALGORITHM_4_LIGHT+3,
+        TRACK_INDEPENDENT_1_LIGHT = ALGORITHM_4_LIGHT+3,
+        TRACK_INDEPENDENT_2_LIGHT = TRACK_INDEPENDENT_1_LIGHT+3,
+        TRACK_INDEPENDENT_3_LIGHT = TRACK_INDEPENDENT_2_LIGHT+3,
+        TRACK_INDEPENDENT_4_LIGHT = TRACK_INDEPENDENT_3_LIGHT+3,
+		CHAIN_MODE_NONE_LIGHT = TRACK_INDEPENDENT_4_LIGHT+3,
 		CHAIN_MODE_BOSS_LIGHT,
 		CHAIN_MODE_EMPLOYEE_LIGHT,
 		MUTED_LIGHT,
@@ -156,9 +169,12 @@ struct QuadAlgorithmicRhythm : Module {
 	float leftMessages[2][PASSTHROUGH_OFFSET + PASSTHROUGH_LEFT_VARIABLE_COUNT + PASSTHROUGH_RIGHT_VARIABLE_COUNT] = {};
 	float rightMessages[2][PASSTHROUGH_OFFSET + PASSTHROUGH_LEFT_VARIABLE_COUNT + PASSTHROUGH_RIGHT_VARIABLE_COUNT] = {};
 	
-    int algorithnMatrix[TRACK_COUNT];
+    int algorithmMatrix[TRACK_COUNT];
+	bool trackIndependent[TRACK_COUNT] = {false};
 	bool beatMatrix[TRACK_COUNT][MAX_STEPS];
 	bool accentMatrix[TRACK_COUNT][MAX_STEPS];
+
+	std::string trackPatternName[TRACK_COUNT] = {""};
 
 	float probabilityMatrix[TRACK_COUNT][MAX_STEPS];
 	float swingMatrix[TRACK_COUNT][MAX_STEPS];
@@ -182,17 +198,26 @@ struct QuadAlgorithmicRhythm : Module {
 
 
 //Stuff for Advanced Rhythms
+	int lastAlgorithmSetting[TRACK_COUNT] = {0};
 	int lastStepsSetting[TRACK_COUNT] = {0};
 	int lastDivisionsSetting[TRACK_COUNT] = {0};
+	int lastOffsetSetting[TRACK_COUNT] = {0};
+	int lastPadSetting[TRACK_COUNT] = {0};
+	int lastAccentSetting[TRACK_COUNT] = {0};
+	int lastAccentRotationSetting[TRACK_COUNT] = {0};
+	float lastExtraParameterValue[TRACK_COUNT] = {0};
+	bool lastwfHierarchicalValue[TRACK_COUNT] = {0};
+	int lastwfComplementValue[TRACK_COUNT] = {0};
+
 	int currentDivisionsSetting[TRACK_COUNT] = {0};
-	int lastAlgorithmSetting[TRACK_COUNT] = {0};
 	float extraParameterValue[TRACK_COUNT] = {0}; //r for Well Formed, evenness for Perfect Balanced
 	int wellFormedParentTrack[TRACK_COUNT] = {0};
 	double wellFormedStepDurations[TRACK_COUNT][MAX_STEPS] = {{0}};
 	double wellFormedTrackDuration[TRACK_COUNT] = {0};
-	double lastWellFormedTrackDuration[TRACK_COUNT] = {0};
 	bool wellFormedHierchical[TRACK_COUNT] = {0};
-	bool wellFormedComplement[TRACK_COUNT] = {0};
+	int wellFormedComplement[TRACK_COUNT] = {0};
+
+	bool dirty[TRACK_COUNT] = {true};
 
 	
 	ChristoffelWords christoffelWords;
@@ -228,10 +253,10 @@ struct QuadAlgorithmicRhythm : Module {
 	bool slaveQARsPresent;
 	bool masterQARPresent;
 
-	const char* trackNames[TRACK_COUNT] {"1","2","3","4"};
-
+	//GOLOMB RULER PATTERNS
     const int rulerOrders[NUM_RULERS] = {1,2,3,4,5,5,6,6,6,6,7,7,7,7,7,8,9,10,11,11};
 	const int rulerLengths[NUM_RULERS] = {0,1,3,6,11,11,17,17,17,17,25,25,25,25,25,34,44,55,72,72};
+	const std::string rulerNames[NUM_RULERS] = {"1","2","3","4","5a","5b","6a","6b","6c","6d","7a","7b","7c","7d","7e","8","9","10","11a","11b"};
 	const int rulers[NUM_RULERS][MAX_DIVISIONS] = {{0},
 												   {0,1},
 												   {0,1,3},
@@ -253,6 +278,136 @@ struct QuadAlgorithmicRhythm : Module {
 												   {0,1,4,13,28,33,47,54,64,70,72},
 												   {0,1,9,19,24,31,52,56,58,69,72}};
 
+
+
+ 
+	//PERFECT BALANCE PATTERNS
+    const int pbPatternOrders[NUM_PB_PATTERNS] = {2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,27,29,6,7,7,8,8,9,31,37,41,8,9,9,9,10,10,10,10,10,11,11,11,11,11,12,12,12,13,43,47,53,59,61,67,13,13,13,15,15,16,16,16,16,16,16,16,16,16,16,16,10,17,17,17,17,17,17,17,17,17,17,18,18,18,18,18,18,18,18,18,18,19,19,19,19,19,19,19,19,19,19,19,20,20,22,22,22,25,71,73};
+	const int pbPatternLengths[NUM_PB_PATTERNS] = {2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,27,29,30,30,30,30,30,30,31,37,41,42,42,42,42,42,42,42,42,42,42,42,42,42,42,42,42,42,42,43,47,53,59,61,67,70,70,70,70,70,70,70,70,70,70,70,70,70,70,70,70,70,70,70,70,70,70,70,70,70,70,70,70,70,70,70,70,70,70,70,70,70,70,70,70,70,70,70,70,70,70,70,70,70,70,70,70,70,70,71,73};
+	const std::string pbPatternNames[NUM_PB_PATTERNS] = {"2","3","4","5","6","7","8","9","10","11","12","13","14","15","16","17","18","19","20","21","22","23","24","25","27","29","6-in-30","7a-in-30","7b-in-30","8b-in-30","8a-in-30","9-in-30","31","37","41",
+	"8-in-42","9a-in-42","9b-in-42","9c-in-42","10a-in-42","10b-in-42","10c-in-42","10d-in-42","10e-in-42","11a-in-42","11b-in-42","11c-in-42","11d-in-42","11e-in-42","12a-in-42","12b-in-42","12c-in-42","13-in-42","43","47","53","59","61","67",
+	"13a-in-70","13b-in-70","13c-in-70","15a-in-70","15b-in-70","16a-in-70","16b-in-70","16c-in-70","16d-in-70","16e-in-70","16f-in-70","16g-in-70","16h-in-70","16i-in-70","16j-in-70","16k-in-70","10-in-70","17a-in-70","17b-in-70","17c-in-70","17d-in-70","17e-in-70","17f-in-70","17g-in-70","17h-in-70","17i-in-70","17j-in-70","18a-in-70","18b-in-70","18c-in-70","18d-in-70","18e-in-70","18f-in-70","18g-in-70","18h-in-70","18i-in-70","18j-in-70","19a-in-70","19b-in-70","19c-in-70","19d-in-70","19e-in-70","19f-in-70","19g-in-70","19h-in-70","19i-in-70","19j-in-70","19k-in-70","20a-in-70","20b-in-70","22a-in-70","22b-in-70","22c-in-70","25-in-70","71","73"};
+	const int pbPatterns[NUM_PB_PATTERNS][MAX_PB_SIZE] = {
+															{0,1},
+															{0,1,2},
+															{0,1,2,3},
+															{0,1,2,3,4},
+															{0,1,2,3,4,5},
+															{0,1,2,3,4,5,6},
+															{0,1,2,3,4,5,6,7},
+															{0,1,2,3,4,5,6,7,8},
+															{0,1,2,3,4,5,6,7,8,9},
+															{0,1,2,3,4,5,6,7,8,9,10},
+															{0,1,2,3,4,5,6,7,8,9,10,11},
+															{0,1,2,3,4,5,6,7,8,9,10,11,12},
+															{0,1,2,3,4,5,6,7,8,9,10,11,12,13},
+															{0,1,2,3,4,5,6,7,8,9,10,11,12,13,14},
+															{0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15},
+															{0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16},
+															{0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17},
+															{0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18},
+															{0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19},
+															{0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20},
+															{0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21},
+															{0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22},
+															{0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23},
+															{0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24},
+															{0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26},
+															{0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28},
+															{0,10,11,17,23,29},
+															{0,10,11,17,18,28,29},
+															{0,6,12,13,19,23,29},
+															{0,6,10,12,16,22,23,29},
+															{0,10,11,12,18,22,28,29},
+															{0,6,10,12,16,18,22,28,29},
+															{0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30},
+															{0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36},
+															{0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40},
+															{0,12,13,18,24,30,36,41},
+															{0,12,13,18,23,24,36,37,41},
+															{0,11,12,17,23,28,29,40,41},
+															{0,8,13,14,19,25,31,36,37},
+															{0,12,13,17,18,23,31,36,37,41},
+															{0,11,12,17,22,23,28,36,40,41},
+															{0,11,12,16,17,28,29,30,40,41},
+															{0,11,12,13,17,25,30,31,36,41},
+															{0,6,11,12,17,23,28,29,34,40},
+															{0,11,12,16,17,22,28,30,36,40,41},
+															{0,11,12,13,17,23,25,31,36,37,41},
+															{0,10,11,12,22,23,24,28,36,40,41},
+															{0,8,13,14,18,19,24,32,36,37,38},
+															{0,6,11,12,17,22,23,28,34,36,40},
+															{0,10,11,12,16,22,24,28,30,36,40,41},
+															{0,8,12,13,14,18,24,26,32,36,37,38},
+															{0,6,11,12,16,17,22,28,30,34,36,40},
+															{0,6,10,11,12,16,22,24,28,30,34,36,40},
+															{0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42}, 
+															{0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46},
+															{0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50,51,52},
+															{0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50,51,52,53,54,55,56,57,58},
+															{0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50,51,52,53,54,55,56,57,58,59,60},
+															{0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50,51,52,53,54,55,56,57,58,59,60,61,62,63,64,65,66},
+															{0,14,17,26,27,28,37,40,54,56,57,67,68},
+															{0,10,14,24,27,28,37,38,47,56,57,66,67},
+															{0,10,13,19,27,30,33,41,47,50,60,61,69},
+															{0,10,13,16,26,27,30,36,40,46,50,56,60,66,69},
+															{0,9,17,19,27,28,29,37,39,47,56,57,59,67,69},
+															{0,16,17,19,27,28,29,30,39,47,56,57,58,59,67,69},
+															{0,14,16,17,26,27,28,30,40,44,54,56,57,58,67,68},
+															{0,10,14,16,24,27,28,30,38,44,47,56,57,58,66,67},
+															{0,10,13,16,26,27,30,36,39,40,50,53,56,66,67,69},
+															{0,10,13,16,19,27,30,33,36,46,47,50,56,60,66,69},
+															{0,10,13,14,23,24,27,33,37,43,47,53,56,57,66,67},
+															{0,10,13,14,22,23,24,33,36,42,50,52,53,56,64,66},
+															{0,10,11,13,19,27,30,33,39,41,47,50,53,61,67,69},
+															{0,9,17,18,19,27,28,29,37,46,47,56,57,59,60,69},
+															{0,9,10,18,19,28,29,32,38,42,46,52,56,60,66,69},
+															{0,8,11,17,20,28,30,31,39,40,48,50,58,59,67,68},
+															{0,14,17,27,28,37,47,56,57,67},
+															{0,16,17,26,27,28,29,30,39,40,56,57,58,59,67,68,69},
+															{0,10,16,19,27,28,29,30,38,39,47,56,57,58,66,67,69},
+															{0,10,13,16,26,27,29,30,39,40,43,53,56,57,66,67,69},
+															{0,10,13,16,19,27,30,33,36,39,47,50,53,56,66,67,69},
+															{0,10,13,16,19,27,29,30,33,43,46,47,56,57,60,66,69},
+															{0,10,13,14,16,24,27,30,33,43,44,47,53,56,57,66,67},
+															{0,10,11,13,14,22,23,24,33,41,42,50,51,52,53,61,64},
+															{0,9,10,18,19,27,28,29,37,38,46,47,56,57,60,66,69},
+															{0,9,10,13,19,23,29,32,33,42,43,46,52,56,60,66,69},
+															{0,8,16,17,19,27,28,30,36,39,47,50,56,58,59,67,69},
+															{0,16,17,18,26,27,28,29,30,40,46,56,57,58,59,60,68,69},
+															{0,10,16,18,19,27,28,29,30,38,46,47,56,57,58,60,66,69},
+															{0,10,13,16,19,27,29,30,33,39,43,47,53,56,57,66,67,69},
+															{0,10,13,14,23,24,26,27,36,37,40,50,53,54,56,64,66,67},
+															{0,10,13,14,16,24,27,30,33,36,44,47,50,53,56,64,66,67},
+															{0,10,11,14,20,22,23,24,33,34,42,50,51,52,53,61,62,64},
+															{0,10,11,13,14,23,24,27,33,37,41,47,50,51,53,61,64,67},
+															{0,9,10,13,19,23,27,29,33,37,43,46,47,56,57,60,66,69},
+															{0,8,11,17,19,27,28,30,31,39,41,47,50,58,59,61,67,69},
+															{0,8,9,17,18,26,27,28,36,37,40,46,50,56,59,60,68,69},
+															{0,10,16,18,26,27,28,29,30,38,40,46,56,57,58,60,66,68,69},
+															{0,10,14,16,24,26,27,28,30,38,40,44,54,56,57,58,66,67,68},
+															{0,10,13,14,16,24,26,27,30,36,40,44,50,53,54,56,64,66,67},
+															{0,9,10,13,19,23,27,29,33,37,39,43,47,53,56,57,66,67,69},
+															{0,9,10,12,18,26,28,29,32,38,40,42,46,52,56,60,66,68,69},
+															{0,9,10,11,13,19,23,27,33,37,39,41,47,50,51,53,61,67,69},
+															{0,8,16,17,18,26,27,28,30,36,40,46,50,56,58,59,60,68,69},
+															{0,8,11,14,17,20,28,30,31,34,40,44,48,50,54,58,64,67,68},
+															{0,8,11,12,14,20,22,28,31,34,40,42,48,50,51,54,62,64,68},
+															{0,8,10,16,18,19,27,28,30,36,38,46,47,50,56,58,60,66,69},
+															{0,8,9,12,18,22,26,28,32,36,40,42,46,50,56,59,60,68,69},
+															{0,8,10,16,18,26,27,28,30,36,38,40,46,50,56,58,60,66,68,69},
+															{0,8,10,11,14,20,24,28,30,34,38,40,44,48,50,54,58,64,67,68},
+															{0,8,10,14,16,24,26,27,28,30,36,38,40,44,50,54,56,58,64,66,67,68},
+															{0,8,9,10,12,18,22,26,28,32,36,38,40,42,46,50,52,56,60,66,68,69},
+															{0,6,9,10,12,18,20,26,28,29,32,38,40,42,46,48,52,56,60,62,66,68},
+															{0,6,8,10,14,16,20,24,26,28,30,34,36,38,40,44,48,50,54,56,58,64,66,67,68},
+															{0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50,51,52,53,54,55,56,57,58,59,60,61,62,63,64,65,66,67,68,69,70},
+															{0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50,51,52,53,54,55,56,57,58,59,60,61,62,63,64,65,66,67,68,69,70,71,72}};
+
+
+	const std::string booleanOperationNames[6] = {"AND","OR","XOR","NAND","NOR","IMP"};
+
+
 	bool running[TRACK_COUNT];
 	int chainMode = 0;
 	bool initialized = false;
@@ -266,7 +421,7 @@ struct QuadAlgorithmicRhythm : Module {
 	bool firstClockReceived = false;
 	bool secondClockReceived = false;
 
-	dsp::SchmittTrigger clockTrigger,resetTrigger,chainModeTrigger,constantTimeTrigger,muteTrigger,algorithmButtonTrigger[TRACK_COUNT],algorithmInputTrigger[TRACK_COUNT],startTrigger[TRACK_COUNT];
+	dsp::SchmittTrigger clockTrigger,resetTrigger,chainModeTrigger,constantTimeTrigger,muteTrigger,algorithmTrigger[TRACK_COUNT],trackIndependentTrigger[TRACK_COUNT],startTrigger[TRACK_COUNT];
 	dsp::PulseGenerator beatPulse[TRACK_COUNT],accentPulse[TRACK_COUNT],eocPulse[TRACK_COUNT];
 
 	GaussianNoiseGenerator _gauss;
@@ -328,11 +483,10 @@ struct QuadAlgorithmicRhythm : Module {
 		
 
 		for(int i = 0; i < TRACK_COUNT; i++) {
-            algorithnMatrix[i] = 0;
+            algorithmMatrix[i] = 0;
 			beatIndex[i] = -1;
 			stepsCount[i] = MAX_STEPS;
 			lastStepsCount[i] = -1;
-			lastWellFormedTrackDuration[i] = -1;
 			lastStepTime[i] = 0.0;
 			stepDuration[i] = 0.0;
             lastSwingDuration[i] = 0.0;
@@ -375,7 +529,7 @@ struct QuadAlgorithmicRhythm : Module {
 		//See if a slave is passing through an expander
 		bool slavedQARPresent = false;
 		bool rightExpanderPresent = (rightExpander.module 
-		&& (rightExpander.module->model == modelQuadAlgorithmicRhythm || rightExpander.module->model == modelQARAdvancedRhythmsExpander || rightExpander.module->model == modelQARProbabilityExpander || rightExpander.module->model == modelQARGrooveExpander || rightExpander.module->model == modelQARWarpedSpaceExpander));
+		&& (rightExpander.module->model == modelQuadAlgorithmicRhythm || rightExpander.module->model == modelQARWellFormedRhythmExpander || rightExpander.module->model == modelQARProbabilityExpander || rightExpander.module->model == modelQARGrooveExpander || rightExpander.module->model == modelQARWarpedSpaceExpander));
 		if(rightExpanderPresent)
 		{			
 			float *messagesFromExpander = (float*)rightExpander.consumerMessage;
@@ -386,6 +540,15 @@ struct QuadAlgorithmicRhythm : Module {
 					expanderOutputValue[i] = messagesFromExpander[PASSTHROUGH_OFFSET + 1 + i * 3] ; 
 					expanderAccentValue[i] = messagesFromExpander[PASSTHROUGH_OFFSET + 1 + i * 3 + 1] ; 
 					lastExpanderEocValue[i] = messagesFromExpander[PASSTHROUGH_OFFSET + 1 + i * 3 + 2] ; 					
+				}
+			}
+
+			//Process Advanced Rhythms Stuff
+			for(int i = 0; i < TRACK_COUNT; i++) {
+				wellFormedHierchical[i] = messagesFromExpander[TRACK_COUNT + i];
+				wellFormedComplement[i] = messagesFromExpander[TRACK_COUNT * 2 + i];
+				if(!wellFormedHierchical[i]) {
+					extraParameterValue[i] = messagesFromExpander[i];
 				}
 			}
 		}
@@ -489,15 +652,12 @@ struct QuadAlgorithmicRhythm : Module {
 		metaStepCount = clamp(metaStepCount,1.0f,360.0f);
 
 
-		for(int trackNumber=0;trackNumber<4;trackNumber++) {
-            if(algorithmButtonTrigger[trackNumber].process(params[(ALGORITHM_1_PARAM + trackNumber * 7)].getValue())) {
-                algorithnMatrix[trackNumber] = (algorithnMatrix[trackNumber] + 1) % (trackNumber < 2 ? NUM_ALGORITHMS -1 : NUM_ALGORITHMS); //Only tracks 3 and 4 get logic
-            }
-            if(algorithmInputTrigger[trackNumber].process(inputs[(ALGORITHM_1_INPUT + trackNumber * 8)].getVoltage())) {
-                algorithnMatrix[trackNumber] = (algorithnMatrix[trackNumber] + 1) % (trackNumber < 2 ? NUM_ALGORITHMS -1 : NUM_ALGORITHMS); //Only tracks 3 and 4 get logic
-            }
 
-			switch (algorithnMatrix[trackNumber]) {
+		for(int trackNumber=0;trackNumber<4;trackNumber++) {
+            if(algorithmTrigger[trackNumber].process(params[(ALGORITHM_1_PARAM + trackNumber * 8)].getValue()+inputs[(ALGORITHM_1_INPUT + trackNumber * 8)].getVoltage())) {
+                algorithmMatrix[trackNumber] = (algorithmMatrix[trackNumber] + 1) % (trackNumber < 2 ? NUM_ALGORITHMS -1 : NUM_ALGORITHMS); //Only tracks 3 and 4 get logic
+            } 
+			switch (algorithmMatrix[trackNumber]) {
 				case EUCLIDEAN_ALGO :
 					lights[ALGORITHM_1_LIGHT + trackNumber*3].value = 1;
 					lights[ALGORITHM_1_LIGHT + trackNumber*3 + 1].value = 1;
@@ -523,38 +683,36 @@ struct QuadAlgorithmicRhythm : Module {
 					lights[ALGORITHM_1_LIGHT + trackNumber*3 + 1].value = 0;
 					lights[ALGORITHM_1_LIGHT + trackNumber*3 + 2].value = .9;
 					break;
-
-			}		
-            
-            
-			//clear out the matrix and levels
-			for(int j=0;j<MAX_STEPS;j++)
-			{
-				beatLocation[trackNumber][j] = 0;
 			}
+			if(trackIndependentTrigger[trackNumber].process(params[(TRACK_1_INDEPENDENT_PARAM + trackNumber * 8)].getValue())) {
+                trackIndependent[trackNumber] = !trackIndependent[trackNumber]; 
+            }
+			lights[TRACK_INDEPENDENT_1_LIGHT + trackNumber*3 + 1].value = trackIndependent[trackNumber] ? 0.875 : 0.0;
 
-			float stepsCountf = std::floor(params[(trackNumber * 7) + STEPS_1_PARAM].getValue());			
+            
+        
+			float stepsCountf = std::floor(params[(trackNumber * 8) + STEPS_1_PARAM].getValue());			
 			if(inputs[trackNumber * 8].isConnected()) {
 				stepsCountf += inputs[trackNumber * 8 + STEPS_1_INPUT].getVoltage() * 1.8;
 			}
 			stepsCountf = clamp(stepsCountf,1.0f,float(MAX_STEPS));
-			if(algorithnMatrix[trackNumber] == BOOLEAN_LOGIC_ALGO) { // Boolean Tracks can't exceed length of the tracks they are based (-1 and -2)
+			if(algorithmMatrix[trackNumber] == BOOLEAN_LOGIC_ALGO) { // Boolean Tracks can't exceed length of the tracks they are based (-1 and -2)
 				stepsCountf = std::min(stepsCountf,(float)std::min(stepsCount[trackNumber-1],stepsCount[trackNumber-2]));
 			}
 
-			float divisionf = std::floor(params[(trackNumber * 7) + DIVISIONS_1_PARAM].getValue());
+			float divisionf = std::floor(params[(trackNumber * 8) + DIVISIONS_1_PARAM].getValue());
 			if(inputs[(trackNumber * 8) + DIVISIONS_1_INPUT].isConnected()) {
 				divisionf += inputs[(trackNumber * 8) + DIVISIONS_1_INPUT].getVoltage() * 1.7;
 			}		
 			divisionf = clamp(divisionf,0.0f,stepsCountf);
 
-			float offsetf = std::floor(params[(trackNumber * 7) + OFFSET_1_PARAM].getValue());
+			float offsetf = std::floor(params[(trackNumber * 8) + OFFSET_1_PARAM].getValue());
 			if(inputs[(trackNumber * 8) + OFFSET_1_INPUT].isConnected()) {
 				offsetf += inputs[(trackNumber * 8) + OFFSET_1_INPUT].getVoltage() * 1.7;
 			}	
 			offsetf = clamp(offsetf,0.0f,MAX_STEPS-1.0f);
 
-			float padf = std::floor(params[trackNumber * 7 + PAD_1_PARAM].getValue());
+			float padf = std::floor(params[trackNumber * 8 + PAD_1_PARAM].getValue());
 			if(inputs[(trackNumber * 8) + PAD_1_INPUT].isConnected()) {
 				padf += inputs[trackNumber * 8 + PAD_1_INPUT].getVoltage() * 1.7;
 			}
@@ -570,13 +728,13 @@ struct QuadAlgorithmicRhythm : Module {
 				divisionScale = divisionf / stepsCountf;
 			}		
 
-			float accentDivisionf = std::floor(params[(trackNumber * 7) + ACCENTS_1_PARAM].getValue() * divisionScale);
+			float accentDivisionf = std::floor(params[(trackNumber * 8) + ACCENTS_1_PARAM].getValue() * divisionScale);
 			if(inputs[(trackNumber * 8) + ACCENTS_1_INPUT].isConnected()) {
 				accentDivisionf += inputs[(trackNumber * 8) + ACCENTS_1_INPUT].getVoltage() * divisionScale;
 			}
 			accentDivisionf = clamp(accentDivisionf,0.0f,divisionf);
 
-			float accentRotationf = std::floor(params[(trackNumber * 7) + ACCENT_ROTATE_1_PARAM].getValue() * divisionScale);
+			float accentRotationf = std::floor(params[(trackNumber * 8) + ACCENT_ROTATE_1_PARAM].getValue() * divisionScale);
 			if(inputs[(trackNumber * 8) + ACCENT_ROTATE_1_INPUT].isConnected()) {
 				accentRotationf += inputs[(trackNumber * 8) + ACCENT_ROTATE_1_INPUT].getVoltage() * divisionScale;
 			}
@@ -603,9 +761,9 @@ struct QuadAlgorithmicRhythm : Module {
 			int accentRotation = int(accentRotationf);
 
 
-			if(trackNumber > 0 && algorithnMatrix[trackNumber] == WELL_FORMED_ALGO && wellFormedHierchical[trackNumber]) {				
+			if(trackNumber > 0 && algorithmMatrix[trackNumber] == WELL_FORMED_ALGO && wellFormedHierchical[trackNumber]) {				
 				int parentTrackNumber = trackNumber-1;
-				while (parentTrackNumber >=0 && algorithnMatrix[trackNumber] != WELL_FORMED_ALGO) {
+				while (parentTrackNumber >=0 && algorithmMatrix[parentTrackNumber] != WELL_FORMED_ALGO) {
 					parentTrackNumber -=1;
 				}
 				if(parentTrackNumber >=0) {
@@ -623,189 +781,271 @@ struct QuadAlgorithmicRhythm : Module {
 					}
 					//fprintf(stderr, "%f %f\n", extraParameterValue[parentTrackNumber], extraParameterValue[trackNumber]);
 					stepsCount[trackNumber] = newLargeValue;
-					params[STEPS_1_PARAM + (trackNumber * 7)].setValue(newLargeValue);
-					params[DIVISIONS_1_PARAM + (trackNumber * 7)].setValue(currentDivisionsSetting[trackNumber]);
+					params[STEPS_1_PARAM + (trackNumber * 8)].setValue(newLargeValue);
+					params[DIVISIONS_1_PARAM + (trackNumber * 8)].setValue(currentDivisionsSetting[trackNumber]);
 				}				
 			}
 
-			if(stepsCount[trackNumber] != lastStepsSetting[trackNumber] || currentDivisionsSetting[trackNumber] != lastDivisionsSetting[trackNumber] || algorithnMatrix[trackNumber] != lastAlgorithmSetting[trackNumber]) {
+
+			//Parameters that cause a word to be created
+			if(stepsCount[trackNumber] != lastStepsSetting[trackNumber] || currentDivisionsSetting[trackNumber] != lastDivisionsSetting[trackNumber] 
+				|| algorithmMatrix[trackNumber] != lastAlgorithmSetting[trackNumber] || pad != lastPadSetting[trackNumber]) {
+					
+				lastAlgorithmSetting[trackNumber] = algorithmMatrix[trackNumber];
 				lastStepsSetting[trackNumber] = stepsCount[trackNumber];
 				lastDivisionsSetting[trackNumber] = currentDivisionsSetting[trackNumber];
-				lastAlgorithmSetting[trackNumber] = algorithnMatrix[trackNumber];
+				lastPadSetting[trackNumber] = pad;
 
-				if(algorithnMatrix[trackNumber] == WELL_FORMED_ALGO) {
-					std::string word = christoffelWords.Generate(stepsCount[trackNumber],division);
+				dirty[trackNumber] = true;
+				if(algorithmMatrix[trackNumber] == WELL_FORMED_ALGO) {
+					std::string word = christoffelWords.Generate(stepsCount[trackNumber]-pad,division);
 					if(word != "unknown") {
 						currentChristoffelword[trackNumber] = word;
 					}
+					for(int i=trackNumber+1;i<TRACK_COUNT;i++) {
+						dirty[i] = true;
+					}
 					//fprintf(stderr, "%s \n", word.c_str());
 				}
+			}
 
+			//These force other tracks to recalc as well 
+			if(offset != lastOffsetSetting[trackNumber] || extraParameterValue[trackNumber] != lastExtraParameterValue[trackNumber] 
+				|| lastwfHierarchicalValue[trackNumber] != wellFormedHierchical[trackNumber] || lastwfComplementValue[trackNumber] != wellFormedComplement[trackNumber]) {
+
+				lastOffsetSetting[trackNumber] = offset;
+				lastExtraParameterValue[trackNumber] = extraParameterValue[trackNumber]; 
+				lastwfHierarchicalValue[trackNumber] = wellFormedHierchical[trackNumber];
+				lastwfComplementValue[trackNumber] = wellFormedComplement[trackNumber];
+				for(int i=trackNumber;i<TRACK_COUNT;i++) {
+					dirty[i] = true;
+				}
 			}
 
 
-			beatCount[trackNumber] = 0;
-			if(division > 0) {				
-                int bucket = stepsCount[trackNumber] - pad - 1;                    
-                if(algorithnMatrix[trackNumber] == EUCLIDEAN_ALGO ) { //Euclidean Algorithn
-                    int euclideanBeatIndex = 0;
-					//Set padded steps to false
-					for(int euclideanStepIndex = 0; euclideanStepIndex < pad; euclideanStepIndex++) {
-						beatMatrix[trackNumber][((euclideanStepIndex + offset) % (stepsCount[trackNumber]))] = false;	
-					}
-                    for(int euclideanStepIndex = 0; euclideanStepIndex < stepsCount[trackNumber]-pad; euclideanStepIndex++)
-                    {
-                        bucket += division;
-                        if(bucket >= stepsCount[trackNumber]-pad) {
-                            bucket -= (stepsCount[trackNumber] - pad);
-                            beatMatrix[trackNumber][((euclideanStepIndex + offset + pad) % (stepsCount[trackNumber]))] = true;	
-                            beatLocation[trackNumber][euclideanBeatIndex] = (euclideanStepIndex + offset + pad) % stepsCount[trackNumber];	
-                            euclideanBeatIndex++;	
-                        } else
-                        {
-                            beatMatrix[trackNumber][((euclideanStepIndex + offset + pad) % (stepsCount[trackNumber]))] = false;	
-                        }                        
-                    }
-					beatCount[trackNumber] = euclideanBeatIndex;
-                } else if(algorithnMatrix[trackNumber] == GOLUMB_RULER_ALGO) { //Golomb Ruler Algorithm
-				
-                    int rulerToUse = clamp(division-1,0,NUM_RULERS-1);
-                    int actualStepCount = stepsCount[trackNumber] - pad;
-                    while(rulerLengths[rulerToUse] + 1 > actualStepCount && rulerToUse >= 0) {
-                        rulerToUse -=1;
-                    } 
-                    
-                    //Multiply beats so that low division beats fill out entire pattern
-                    float spaceMultiplier = (actualStepCount / (rulerLengths[rulerToUse] + 1));
-
-                    //Set all beats to false
-                    for(int j=0;j<stepsCount[trackNumber];j++)
-                    {
-                        beatMatrix[trackNumber][j] = false; 			
-                    }
-
-                    for (int rulerIndex = 0; rulerIndex < rulerOrders[rulerToUse];rulerIndex++)
-                    {
-                        int divisionLocation = (rulers[rulerToUse][rulerIndex] * spaceMultiplier) + pad;
-                        beatMatrix[trackNumber][(divisionLocation + offset) % stepsCount[trackNumber]] = true;
-                        beatLocation[trackNumber][rulerIndex] = (divisionLocation + offset) % stepsCount[trackNumber];	            
-                    }
-					beatCount[trackNumber] = rulerOrders[rulerToUse];
-                } else if(algorithnMatrix[trackNumber] == WELL_FORMED_ALGO) { 
-					int wfBeatCount = 0;
-					int wfParentBeatIndex = 0;
-					double parentTrackPosition = 0.0;
-					double trackPosition = 0.0;
-					double stepScaling = (masterTrack <= TRACK_COUNT ? wellFormedTrackDuration[masterTrack-1] : metaStepCount) / wellFormedTrackDuration[trackNumber];
-					double parentStepScaling = (masterTrack <= TRACK_COUNT ? 1.0 : metaStepCount / wellFormedTrackDuration[wellFormedParentTrack[trackNumber]]);
-					wellFormedTrackDuration[trackNumber] = currentDivisionsSetting[trackNumber] + (stepsCount[trackNumber] - currentDivisionsSetting[trackNumber]) * extraParameterValue[trackNumber]; 
-					if(lastWellFormedTrackDuration[trackNumber] == -1) //first time
-						lastWellFormedTrackDuration[trackNumber] = wellFormedTrackDuration[trackNumber];
-
+			//Everything else that forces beat recalc
+			if(accentDivision != lastAccentSetting[trackNumber] || accentRotation != lastAccentRotationSetting[trackNumber]) {
 					
-					for(int wfBeatIndex=0;wfBeatIndex<stepsCount[trackNumber];wfBeatIndex++) { //NEED TO HANDLE UNKNOWNS
-						char beatType = currentChristoffelword[trackNumber][wfBeatIndex];
-						if(beatType == 's') {
-							wellFormedStepDurations[trackNumber][wfBeatIndex] = 1.0;
-	                        beatLocation[trackNumber][wfBeatCount] = (wfBeatIndex + offset) % stepsCount[trackNumber];	     
-							wfBeatCount++;       						
-						} else {
-							wellFormedStepDurations[trackNumber][wfBeatIndex] = extraParameterValue[trackNumber];
-						}
-						if(wellFormedHierchical[trackNumber] && wellFormedComplement[trackNumber]) {		
-					
-	                        beatMatrix[trackNumber][(wfBeatIndex + offset) % stepsCount[trackNumber]] = abs(trackPosition * stepScaling - parentTrackPosition) > .001; 
-							// if(trackNumber==2) {
-							// 	fprintf(stderr, "%i %i %i %f %f %i\n", wfBeatIndex, wellFormedParentTrack[trackNumber], wfParentBeatIndex, trackPosition * stepScaling,parentTrackPosition,beatMatrix[trackNumber][wfBeatIndex]);
-							// }
-							trackPosition += wellFormedStepDurations[trackNumber][wfBeatIndex];
-							if(trackPosition * stepScaling > parentTrackPosition + .01) { //ADd is a test hack
-								parentTrackPosition += wellFormedStepDurations[wellFormedParentTrack[trackNumber]][wfParentBeatIndex] * parentStepScaling;
-								wfParentBeatIndex++;
-							}
-						} else {
-	                        beatMatrix[trackNumber][(wfBeatIndex + offset) % stepsCount[trackNumber]] = true; //every step is a beat if not complementiing
-						}
-					}
-					beatCount[trackNumber] = currentDivisionsSetting[trackNumber];
-				} else if(algorithnMatrix[trackNumber] == PERFECT_BALANCE_ALGO) { 
-				}else if(algorithnMatrix[trackNumber] == BOOLEAN_LOGIC_ALGO) { //Boolean Logic only for tracs 3 and 4
-					int logicBeatCount = 0;
-					int logicMode = (division-1) % 6; 
+				lastAccentSetting[trackNumber] = accentDivision;
+				lastAccentRotationSetting[trackNumber] = accentRotation;
 
-					for (int logicBeatIndex = 0; logicBeatIndex < stepsCount[trackNumber];logicBeatIndex++) {
-						bool isBeat = false;
-						switch (logicMode) {
-							case 0 :
-								isBeat = beatMatrix[trackNumber-1][logicBeatIndex] && beatMatrix[trackNumber-2][logicBeatIndex];  //AND
-								break;
-							case 1 :
-								isBeat = beatMatrix[trackNumber-1][logicBeatIndex] || beatMatrix[trackNumber-2][logicBeatIndex];  //OR
-								break;
-							case 2 :
-								isBeat = beatMatrix[trackNumber-1][logicBeatIndex] != beatMatrix[trackNumber-2][logicBeatIndex]; //XOR
-								break;
-							case 3 :
-								isBeat = !(beatMatrix[trackNumber-1][logicBeatIndex] && beatMatrix[trackNumber-2][logicBeatIndex]);  //NAND
-								break;
-							case 4 :
-								isBeat = !(beatMatrix[trackNumber-1][logicBeatIndex] || beatMatrix[trackNumber-2][logicBeatIndex]); //NOR
-								break;
-							case 5 :
-								isBeat = beatMatrix[trackNumber-1][logicBeatIndex] == beatMatrix[trackNumber-2][logicBeatIndex]; //IMP
-								break;
-						}
-						beatMatrix[trackNumber][(logicBeatIndex + offset) % stepsCount[trackNumber]] = isBeat;
-						if(isBeat) {
-                        	beatLocation[trackNumber][(logicBeatIndex + offset) % stepsCount[trackNumber]] = logicBeatIndex;	
-							logicBeatCount ++;
-						}
-					}
-					beatCount[trackNumber] = logicBeatCount;
-				}
+				dirty[trackNumber] = true;
+			}
 
-				bucket = division - 1;
-				for(int accentIndex = 0; accentIndex < division; accentIndex++)
-				{
-					bucket += accentDivision;
-					if(bucket >= division) {
-						bucket -= division;
-						accentMatrix[trackNumber][beatLocation[trackNumber][(accentIndex + accentRotation) % division]] = true;				
-					} else
-					{
-						accentMatrix[trackNumber][beatLocation[trackNumber][(accentIndex + accentRotation) % division]] = false;
-					}
-					
-				}	        	
-			} else {
-				//Set all beats to false
+
+
+
+			if(dirty[trackNumber]) {
+				beatCount[trackNumber] = 0;
+
+				//clear out the matrix and levels
 				for(int j=0;j<MAX_STEPS;j++)
 				{
-					beatMatrix[trackNumber][j] = false; 			
+					beatLocation[trackNumber][j] = 0;
 				}
-			}	
+
+
+				if(division > 0) {				
+					int bucket = stepsCount[trackNumber] - pad - 1;                    
+					if(algorithmMatrix[trackNumber] == EUCLIDEAN_ALGO ) { //Euclidean Algorithn
+						int euclideanBeatIndex = 0;
+						//Set padded steps to false
+						for(int euclideanStepIndex = 0; euclideanStepIndex < pad; euclideanStepIndex++) {
+							beatMatrix[trackNumber][((euclideanStepIndex + offset) % (stepsCount[trackNumber]))] = false;	
+						}
+						for(int euclideanStepIndex = 0; euclideanStepIndex < stepsCount[trackNumber]-pad; euclideanStepIndex++)
+						{
+							bucket += division;
+							if(bucket >= stepsCount[trackNumber]-pad) {
+								bucket -= (stepsCount[trackNumber] - pad);
+								beatMatrix[trackNumber][((euclideanStepIndex + offset + pad) % (stepsCount[trackNumber]))] = true;	
+								beatLocation[trackNumber][euclideanBeatIndex] = (euclideanStepIndex + offset + pad) % stepsCount[trackNumber];	
+								euclideanBeatIndex++;	
+							} else
+							{
+								beatMatrix[trackNumber][((euclideanStepIndex + offset + pad) % (stepsCount[trackNumber]))] = false;	
+							}                        
+						}
+						trackPatternName[trackNumber] = std::to_string(stepsCount[trackNumber])+"-"+std::to_string(euclideanBeatIndex);
+						beatCount[trackNumber] = euclideanBeatIndex;
+					} else if(algorithmMatrix[trackNumber] == GOLUMB_RULER_ALGO) { //Golomb Ruler Algorithm
+					
+						int rulerToUse = clamp(division-1,0,NUM_RULERS-1);
+						int actualStepCount = stepsCount[trackNumber] - pad;
+						while(rulerLengths[rulerToUse] + 1 > actualStepCount && rulerToUse >= 0) {
+							rulerToUse -=1;
+						}
+
+						trackPatternName[trackNumber] =std::to_string(stepsCount[trackNumber])+"-"+rulerNames[rulerToUse]; 
+						
+						//Multiply beats so that low division beats fill out entire pattern
+						float spaceMultiplier = (actualStepCount / (rulerLengths[rulerToUse] + 1));
+
+						//Set all beats to false
+						for(int j=0;j<stepsCount[trackNumber];j++)
+						{
+							beatMatrix[trackNumber][j] = false; 			
+						}
+
+						for (int rulerIndex = 0; rulerIndex < rulerOrders[rulerToUse];rulerIndex++)
+						{
+							int divisionLocation = (rulers[rulerToUse][rulerIndex] * spaceMultiplier) + pad;
+							beatMatrix[trackNumber][(divisionLocation + offset) % stepsCount[trackNumber]] = true;
+							beatLocation[trackNumber][rulerIndex] = (divisionLocation + offset) % stepsCount[trackNumber];	            
+						}
+						beatCount[trackNumber] = rulerOrders[rulerToUse];
+					} else if(algorithmMatrix[trackNumber] == WELL_FORMED_ALGO) { 
+						int wfBeatCount = 0;
+						int wfParentBeatIndex = 0;
+						double parentTrackPosition = 0.0;
+						double trackPosition = 0.0;
+						wellFormedTrackDuration[trackNumber] = currentDivisionsSetting[trackNumber] + (stepsCount[trackNumber] - currentDivisionsSetting[trackNumber]) * extraParameterValue[trackNumber]; 
+						double stepScaling = (masterTrack <= TRACK_COUNT ? wellFormedTrackDuration[masterTrack-1] : metaStepCount) / wellFormedTrackDuration[trackNumber];
+						double parentStepScaling = (masterTrack <= TRACK_COUNT ? 1.0 : metaStepCount / wellFormedTrackDuration[wellFormedParentTrack[trackNumber]]);
+
+						//Set all beats to false
+						for(int j=0;j<stepsCount[trackNumber];j++)
+						{
+							beatMatrix[trackNumber][j] = false; 			
+						}
+
+						for(int wfBeatIndex=0;wfBeatIndex<stepsCount[trackNumber]-pad;wfBeatIndex++) { //NEED TO HANDLE UNKNOWNS
+							char beatType = currentChristoffelword[trackNumber][wfBeatIndex];
+							int adjustedWfBeatIndex = (wfBeatIndex + offset + pad) % stepsCount[trackNumber];
+							if(beatType == 's') {
+								wellFormedStepDurations[trackNumber][adjustedWfBeatIndex] = 1.0;
+								beatLocation[trackNumber][wfBeatCount] = adjustedWfBeatIndex;	     
+								wfBeatCount++;       						
+							} else {
+								wellFormedStepDurations[trackNumber][(wfBeatIndex + offset + pad) % stepsCount[trackNumber]] = extraParameterValue[trackNumber];
+							}
+							if(wellFormedHierchical[trackNumber] && wellFormedComplement[trackNumber]) {		
+								beatMatrix[trackNumber][adjustedWfBeatIndex] = abs(trackPosition * stepScaling - parentTrackPosition) >= .01 || (wellFormedComplement[trackNumber] == 1 && !beatMatrix[wellFormedParentTrack[trackNumber]][wfParentBeatIndex]); 
+								trackPosition += wellFormedStepDurations[trackNumber][adjustedWfBeatIndex];
+								if(trackPosition * stepScaling > parentTrackPosition + .01) { 
+									parentTrackPosition += wellFormedStepDurations[wellFormedParentTrack[trackNumber]][wfParentBeatIndex] * parentStepScaling;
+									wfParentBeatIndex++;
+								}
+							} else {
+								beatMatrix[trackNumber][adjustedWfBeatIndex] = true; //every step is a beat if not complementiing
+							}
+						}
+
+
+						trackPatternName[trackNumber] = std::to_string(stepsCount[trackNumber]-pad-wfBeatCount)+"l "+std::to_string(wfBeatCount)+"s"; 
+						beatCount[trackNumber] = currentDivisionsSetting[trackNumber];
+					} else if(algorithmMatrix[trackNumber] == PERFECT_BALANCE_ALGO) { 
+						int pbPatternToUse = -1;
+						int pbMatchPatternCount = 0;
+						int pbLastMatchedPattern = 0;
+						int actualStepCount = stepsCount[trackNumber] - pad;
+						bool patternFound = false;
+						while(!patternFound) {
+							pbPatternToUse +=1;
+							if(pbPatternToUse >= NUM_PB_PATTERNS)
+								break;
+							if(pbPatternLengths[pbPatternToUse] <= actualStepCount && actualStepCount % pbPatternLengths[pbPatternToUse] == 0) {
+								pbLastMatchedPattern = pbPatternToUse;
+								if(pbMatchPatternCount >= division-1) {
+									patternFound = true;
+								} else {
+									pbMatchPatternCount +=1;							
+								}
+							}
+						}
+						if(!patternFound)
+							pbPatternToUse = pbLastMatchedPattern;
+						
+						//Set all beats to false
+						for(int j=0;j<stepsCount[trackNumber];j++)
+						{
+							beatMatrix[trackNumber][j] = false; 			
+						}
+
+						//Multiply beats so that low division beats fill out entire pattern
+						float spaceMultiplier = (actualStepCount / (pbPatternLengths[pbPatternToUse]));
+						trackPatternName[trackNumber] =std::to_string(stepsCount[trackNumber])+"-"+pbPatternNames[pbPatternToUse]; 
+
+						for (int pbIndex = 0; pbIndex < pbPatternOrders[pbPatternToUse];pbIndex++)
+						{
+							int divisionLocation = (pbPatterns[pbPatternToUse][pbIndex] * spaceMultiplier) + pad;
+							beatMatrix[trackNumber][(divisionLocation + offset) % stepsCount[trackNumber]] = true;
+							beatLocation[trackNumber][pbIndex] = (divisionLocation + offset) % stepsCount[trackNumber];	            
+						}
+						beatCount[trackNumber] = pbPatternOrders[pbPatternToUse];
+					}else if(algorithmMatrix[trackNumber] == BOOLEAN_LOGIC_ALGO) { //Boolean Logic only for tracs 3 and 4
+						int logicBeatCount = 0;
+						int logicMode = (division-1) % 6; 
+
+						trackPatternName[trackNumber] = booleanOperationNames[logicMode];
+
+						for (int logicBeatIndex = 0; logicBeatIndex < stepsCount[trackNumber];logicBeatIndex++) {
+							bool isBeat = false;
+							switch (logicMode) {
+								case 0 :
+									isBeat = beatMatrix[trackNumber-1][logicBeatIndex] && beatMatrix[trackNumber-2][logicBeatIndex];  //AND
+									break;
+								case 1 :
+									isBeat = beatMatrix[trackNumber-1][logicBeatIndex] || beatMatrix[trackNumber-2][logicBeatIndex];  //OR
+									break;
+								case 2 :
+									isBeat = beatMatrix[trackNumber-1][logicBeatIndex] != beatMatrix[trackNumber-2][logicBeatIndex]; //XOR
+									break;
+								case 3 :
+									isBeat = !(beatMatrix[trackNumber-1][logicBeatIndex] && beatMatrix[trackNumber-2][logicBeatIndex]);  //NAND
+									break;
+								case 4 :
+									isBeat = !(beatMatrix[trackNumber-1][logicBeatIndex] || beatMatrix[trackNumber-2][logicBeatIndex]); //NOR
+									break;
+								case 5 :
+									isBeat = beatMatrix[trackNumber-1][logicBeatIndex] == beatMatrix[trackNumber-2][logicBeatIndex]; //IMP
+									break;
+							}
+							beatMatrix[trackNumber][(logicBeatIndex + offset) % stepsCount[trackNumber]] = isBeat;
+							if(isBeat) {
+								beatLocation[trackNumber][(logicBeatIndex + offset) % stepsCount[trackNumber]] = logicBeatIndex;	
+								logicBeatCount ++;
+							}
+						}
+						beatCount[trackNumber] = logicBeatCount;
+					}
+
+					bucket = division - 1;
+					for(int accentIndex = 0; accentIndex < division; accentIndex++)
+					{
+						bucket += accentDivision;
+						if(bucket >= division) {
+							bucket -= division;
+							accentMatrix[trackNumber][beatLocation[trackNumber][(accentIndex + accentRotation) % division]] = true;				
+						} else
+						{
+							accentMatrix[trackNumber][beatLocation[trackNumber][(accentIndex + accentRotation) % division]] = false;
+						}
+						
+					}	        	
+				} else {
+					trackPatternName[trackNumber] = "";
+					//Set all beats to false
+					for(int j=0;j<stepsCount[trackNumber];j++)
+					{
+						beatMatrix[trackNumber][j] = false; 			
+					}
+				}	
+			}
+			dirty[trackNumber] = false;
 		}
 		
 
 		//Get Expander Info
-		if(rightExpander.module && (rightExpander.module->model == modelQARAdvancedRhythmsExpander || rightExpander.module->model == modelQARProbabilityExpander || rightExpander.module->model == modelQARGrooveExpander || rightExpander.module->model == modelQARWarpedSpaceExpander))
+		if(rightExpander.module && (rightExpander.module->model == modelQARWellFormedRhythmExpander || rightExpander.module->model == modelQARProbabilityExpander || rightExpander.module->model == modelQARGrooveExpander || rightExpander.module->model == modelQARWarpedSpaceExpander))
 		{			
 			QARExpanderDisconnectReset = true;
 			float *messagesFromExpanders = (float*)rightExpander.consumerMessage;
 
-			//Process Advanced Rhythms Stuff
-			for(int i = 0; i < TRACK_COUNT; i++) {
-				wellFormedHierchical[i] = messagesFromExpanders[TRACK_COUNT + i];
-				wellFormedComplement[i] = messagesFromExpanders[TRACK_COUNT * 2 + i];
-				if(!wellFormedHierchical[i]) {
-					extraParameterValue[i] = messagesFromExpanders[i];
-				}
-			}
-
 			//Process Probability Expander Stuff						
 			for(int i = 0; i < TRACK_COUNT; i++) {
 				probabilityGroupFirstStep[i] = -1;
-				for(int j = 0; j < MAX_STEPS; j++) { //reset all probabilities, find first group step
+				for(int j = 0; j < stepsCount[i]; j++) { //reset all probabilities, find first group step
 					workingProbabilityMatrix[i][j] = 1;					
 				}
 
@@ -826,11 +1066,8 @@ struct QuadAlgorithmicRhythm : Module {
 							
 							workingProbabilityMatrix[i][stepIndex] = probability;
 							probabilityGroupModeMatrix[i][stepIndex] = probabilityMode;
-							for(int j = 0; j < MAX_STEPS; j++) { //reset all probabilities, find first group step
-								if(probabilityGroupFirstStep[i] < 0 && probabilityGroupModeMatrix[i][j] != NONE_PGTM ) {
-									probabilityGroupFirstStep[i] = j;
-									break;
-								}
+							if(probabilityGroupFirstStep[i] < 0 && probabilityGroupModeMatrix[i][stepIndex] != NONE_PGTM ) {
+								probabilityGroupFirstStep[i] = stepIndex;
 							}
 						} 
 					}
@@ -839,7 +1076,7 @@ struct QuadAlgorithmicRhythm : Module {
 
 			//Process Groove Expander Stuff									
 			for(int i = 0; i < TRACK_COUNT; i++) {
-				for(int j = 0; j < MAX_STEPS; j++) { //reset all swing
+				for(int j = 0; j < stepsCount[i]; j++) { //reset all swing
 					workingSwingMatrix[i][j] = 0.0;
 				}
 
@@ -879,7 +1116,7 @@ struct QuadAlgorithmicRhythm : Module {
 							// 	fprintf(stderr, "%i %i %i %i \n", beatCount[i],subBeatIndex[i],beatCountAtIndex[i],beatIndex[i]);
 							// }
 
-					for(int j = 0; j < MAX_STEPS; j++) { // Assign probabilites and swing	
+					for(int j = 0; j < stepsCount[i]; j++) { 
 						int stepIndex = j;
 						bool stepFound = true;
 						if(useDivs) { //Use j as a count to the div # we are looking for
@@ -911,7 +1148,7 @@ struct QuadAlgorithmicRhythm : Module {
 
 			//Process Warped Space Stuff									
 			for(int i = 0; i < TRACK_COUNT; i++) {
-				for(int j = 0; j < MAX_STEPS; j++) { //reset all warping
+				for(int j = 0; j < stepsCount[i]; j++) { //reset all warping
 					workingBeatWarpMatrix[i][j] = 1.0;
 				}
 
@@ -930,17 +1167,27 @@ struct QuadAlgorithmicRhythm : Module {
 							workingBeatWarpMatrix[i][actualBeat] = (2-fraction)*(fj-stepsToSpread-1.0)/stepsToSpread + (fraction*(trackStepCount-fj-1.0)/stepsToSpread); 						
 					}
 				}
-			}											
+			}
+
+			//set calculated probability and swing
+			for(int i = 0; i < TRACK_COUNT; i++) {
+				for(int j = 0; j < stepsCount[i]; j++) { 
+					probabilityMatrix[i][j] = workingProbabilityMatrix[i][j];
+					swingMatrix[i][j] = workingSwingMatrix[i][j];
+					beatWarpMatrix[i][j] = workingBeatWarpMatrix[i][j];
+				}
+			}
+											
 		} else {
 			if(QARExpanderDisconnectReset) { //If QRE gets disconnected, reset warping, probability and swing
 				for(int i = 0; i < TRACK_COUNT; i++) {
 					subBeatIndex[i] = 0;
 					beatWarping[i] = 1.0;
 					extraParameterValue[i] = 1.0;
-					for(int j = 0; j < MAX_STEPS; j++) { //reset all probabilities
-						workingProbabilityMatrix[i][j] = 1;
-						workingSwingMatrix[i][j] = 0;
-						workingBeatWarpMatrix[i][j] = 1.0;
+					for(int j = 0; j < stepsCount[i]; j++) { //reset all probabilities
+						probabilityMatrix[i][j] = 1;
+						swingMatrix[i][j] = 0;
+						beatWarpMatrix[i][j] = 1.0;
 						swingRandomness[i] = 0.0f;
 					}
 				}
@@ -949,14 +1196,6 @@ struct QuadAlgorithmicRhythm : Module {
 		}
 
 
-		//set calculated probability and swing
-		for(int i = 0; i < TRACK_COUNT; i++) {
-			for(int j = 0; j < MAX_STEPS; j++) { 
-				probabilityMatrix[i][j] = workingProbabilityMatrix[i][j];
-				swingMatrix[i][j] = workingSwingMatrix[i][j];
-				beatWarpMatrix[i][j] = workingBeatWarpMatrix[i][j];
-			}
-		}
 
 
 		
@@ -991,18 +1230,17 @@ struct QuadAlgorithmicRhythm : Module {
 			}
 		}
 
-		//Calculate clock duration
-		double timeAdvance =1.0 / args.sampleRate;
-		timeElapsed += timeAdvance;
 
 		float clockInput = inputs[CLOCK_INPUT].getVoltage();
 		if(!inputs[CLOCK_INPUT].isConnected() && masterQARPresent) {
 			clockInput = expanderClockValue;
 		}
 
-	
-
 		if((inputs[CLOCK_INPUT].isConnected() || masterQARPresent)) {
+			//Calculate clock duration
+			double timeAdvance =1.0 / args.sampleRate;
+			timeElapsed += timeAdvance;
+
 			if(clockTrigger.process(clockInput)) {
 				if(firstClockReceived) {
 					duration = timeElapsed;
@@ -1017,20 +1255,18 @@ struct QuadAlgorithmicRhythm : Module {
 			for(int trackNumber=0;trackNumber < TRACK_COUNT;trackNumber++) {
 
 
-				double beatSizeAdjustment = beatIndex[trackNumber] >= 0 ? (algorithnMatrix[trackNumber] == WELL_FORMED_ALGO ? wellFormedStepDurations[trackNumber][beatIndex[trackNumber]] : 1.0) * beatWarpMatrix[trackNumber][beatIndex[trackNumber]] : 1.0;
+				double beatSizeAdjustment = beatIndex[trackNumber] >= 0 ? (algorithmMatrix[trackNumber] == WELL_FORMED_ALGO ? wellFormedStepDurations[trackNumber][beatIndex[trackNumber]] : 1.0) * beatWarpMatrix[trackNumber][beatIndex[trackNumber]] : 1.0;
 
-				if(stepsCount[trackNumber] > 0 && constantTime && beatIndex[trackNumber] >= 0 ) {
-					double constantNumerator = masterTrack <= TRACK_COUNT ? (algorithnMatrix[masterTrack-1] != WELL_FORMED_ALGO ? masterStepCount : wellFormedTrackDuration[masterTrack-1]) : metaStepCount;
+				if(stepsCount[trackNumber] > 0 && constantTime && !trackIndependent[trackNumber] && beatIndex[trackNumber] >= 0 ) {
+					double constantNumerator = masterTrack <= TRACK_COUNT ? (algorithmMatrix[masterTrack-1] != WELL_FORMED_ALGO ? masterStepCount : wellFormedTrackDuration[masterTrack-1]) : metaStepCount;
 					double constantDenominator;
-					if(algorithnMatrix[trackNumber] != WELL_FORMED_ALGO) {
+					if(algorithmMatrix[trackNumber] != WELL_FORMED_ALGO) {
 						double stepsChangeAdjustemnt = (double)(lastStepsCount[trackNumber] / (double)stepsCount[trackNumber]); 
 						constantDenominator = (double)stepsCount[trackNumber] * stepsChangeAdjustemnt;
 					} else {
-						//double stepsChangeAdjustemnt = lastWellFormedTrackDuration[trackNumber] / wellFormedTrackDuration[trackNumber]; 
 						constantDenominator = wellFormedTrackDuration[trackNumber];
 					}
 					double constantTimeAdjustment = constantNumerator / constantDenominator;
-					//double desiredStep = beatIndex[masterTrack-1] * constantTimeAdjustment;
 
 					stepDuration[trackNumber] = duration * beatSizeAdjustment * constantTimeAdjustment; //Constant Time scales duration based on a master track
 					// if(trackNumber == 1) {
@@ -1052,7 +1288,6 @@ struct QuadAlgorithmicRhythm : Module {
 					if(stepDuration[trackNumber] > 0.0 && lastStepTime[trackNumber] >= stepDuration[trackNumber] + swingDuration - lastSwingDuration[trackNumber]) {
 						lastSwingDuration[trackNumber] = swingDuration;
 						lastStepsCount[trackNumber] = stepsCount[trackNumber];
-						//lastWellFormedTrackDuration[trackNumber] = wellFormedTrackDuration[trackNumber];
 						advanceBeat(trackNumber);					
 					}					
 				}	
@@ -1118,10 +1353,11 @@ struct QuadAlgorithmicRhythm : Module {
 		json_t *rootJ = json_object();
 		
         for(int i=0;i<TRACK_COUNT;i++) {
-			char buf[100];
-			strcpy(buf, "algorithm");
-			strcat(buf, trackNames[i]);
-            json_object_set_new(rootJ, buf, json_integer((int) algorithnMatrix[i]));
+			std::string buf = "algorithm-" + std::to_string(i) ;
+            json_object_set_new(rootJ, buf.c_str(), json_integer((int) algorithmMatrix[i]));
+
+			buf = "independent-" + std::to_string(i) ;
+            json_object_set_new(rootJ, buf.c_str(), json_integer((int) trackIndependent[i]));			
         }
         
         json_object_set_new(rootJ, "constantTime", json_integer((bool) constantTime));
@@ -1135,12 +1371,15 @@ struct QuadAlgorithmicRhythm : Module {
 	void dataFromJson(json_t *rootJ) override {
 
         for(int i=0;i<TRACK_COUNT;i++) {
-			char buf[100];
-			strcpy(buf, "algorithm");
-			strcat(buf, trackNames[i]);
-            json_t *ctAl = json_object_get(rootJ, buf);
+			std::string buf = "algorithm-" + std::to_string(i) ;
+            json_t *ctAl = json_object_get(rootJ, buf.c_str());
             if (ctAl)
-                algorithnMatrix[i] = json_integer_value(ctAl);
+                algorithmMatrix[i] = json_integer_value(ctAl);
+
+			buf = "independent-" + std::to_string(i) ;
+            json_t *ctTi = json_object_get(rootJ, buf.c_str());
+            if (ctTi)
+                trackIndependent[i] = json_integer_value(ctTi);
         }
 
 		json_t *ctJ = json_object_get(rootJ, "constantTime");
@@ -1241,7 +1480,7 @@ struct QuadAlgorithmicRhythm : Module {
 
     void onReset() override {
 		for(int i = 0; i < TRACK_COUNT; i++) {
-            algorithnMatrix[i] = EUCLIDEAN_ALGO;
+            algorithmMatrix[i] = EUCLIDEAN_ALGO;
 			beatIndex[i] = -1;
 			stepsCount[i] = MAX_STEPS;
 			beatCountAtIndex[i] = -1;
@@ -1273,10 +1512,12 @@ struct QuadAlgorithmicRhythm : Module {
 struct QARBeatDisplay : FramebufferWidget {
 	QuadAlgorithmicRhythm *module;
 	int frame = 0;
-	std::shared_ptr<Font> font;
+	std::shared_ptr<Font> digitalFont;
+	std::shared_ptr<Font> textFont;
 
 	QARBeatDisplay() {
-		font = APP->window->loadFont(asset::plugin(pluginInstance, "res/fonts/01 Digit.ttf"));
+		digitalFont = APP->window->loadFont(asset::plugin(pluginInstance, "res/fonts/01 Digit.ttf"));
+		textFont = APP->window->loadFont(asset::plugin(pluginInstance, "res/fonts/DejaVuSansMono.ttf"));
 	}
 
 	
@@ -1386,10 +1627,10 @@ struct QARBeatDisplay : FramebufferWidget {
 
 	void drawMasterTrack(const DrawArgs &args, Vec pos, int track) {
 		nvgFontSize(args.vg, 20);
-		nvgFontFaceId(args.vg, font->handle);
+		nvgFontFaceId(args.vg, digitalFont->handle);
 		nvgTextAlign(args.vg,NVG_ALIGN_RIGHT);
 
-		nvgFillColor(args.vg, nvgRGBA(0x00, 0xff, 0x00, 0xff));
+		nvgFillColor(args.vg, nvgRGBA(0x4a, 0xc3, 0x27, 0xff));
 		char text[8];
 		if(track <= TRACK_COUNT) {
 			snprintf(text, sizeof(text), " %i", track);
@@ -1399,15 +1640,33 @@ struct QARBeatDisplay : FramebufferWidget {
 		nvgText(args.vg, pos.x, pos.y, text, NULL);
 	}
 
+
+	void drawPatternNameTrack(const DrawArgs &args, Vec pos, std::string trackPatternName) {
+		nvgFontSize(args.vg, 10);
+		nvgFontFaceId(args.vg, textFont->handle);
+		nvgTextAlign(args.vg,NVG_ALIGN_CENTER);
+		nvgTextLetterSpacing(args.vg, -1);
+
+		nvgFillColor(args.vg, nvgRGBA(0x4a, 0xc3, 0x27, 0xff));
+		char text[32];
+		snprintf(text, sizeof(text), "%s", trackPatternName.c_str() );
+		nvgText(args.vg, pos.x, pos.y, text, NULL);
+	}
+
+
 	void draw(const DrawArgs &args) override {
 		if (!module)
 			return;
 		
 		for(int trackNumber = 0;trackNumber < TRACK_COUNT;trackNumber++) {
-            int algorithn = module->algorithnMatrix[trackNumber];
+            int algorithn = module->algorithmMatrix[trackNumber];
 			float runningTrackWidth = 0.0;
 			int stepsCount = module->stepsCount[trackNumber];
 			float wfTrackDurationAdjustment = stepsCount / (module->wellFormedTrackDuration[trackNumber]);
+
+
+			
+			drawPatternNameTrack(args, Vec(294 + trackNumber*62, 25), module->trackPatternName[trackNumber]);
 			// if(trackNumber == 0) {
 			// 	fprintf(stderr, "%f %f \n", wfTrackDurationAdjustment, module->wellFormedTrackDuration[trackNumber]);
 			// }
@@ -1457,16 +1716,18 @@ struct QuadAlgorithmicRhythmWidget : ModuleWidget {
 		}
 
 		for(int track=0;track<TRACK_COUNT;track++) {
-			addParam(createParam<LEDButton>(Vec(290+(track*62), 42), module, QuadAlgorithmicRhythm::ALGORITHM_1_PARAM+(track*7)));
-			addChild(createLight<LargeLight<RedGreenBlueLight>>(Vec(291.5+(track*62), 43.5), module, QuadAlgorithmicRhythm::ALGORITHM_1_LIGHT+(track*3)));
-			addParam(createParam<RoundSmallFWSnapKnob>(Vec(286+(track*62), 68), module, QuadAlgorithmicRhythm::STEPS_1_PARAM+(track*7)));
-			addParam(createParam<RoundSmallFWSnapKnob>(Vec(286+(track*62), 98), module, QuadAlgorithmicRhythm::DIVISIONS_1_PARAM+(track*7)));
-			addParam(createParam<RoundSmallFWSnapKnob>(Vec(286+(track*62), 128), module, QuadAlgorithmicRhythm::OFFSET_1_PARAM+(track*7)));
-			addParam(createParam<RoundSmallFWSnapKnob>(Vec(286+(track*62), 158), module, QuadAlgorithmicRhythm::PAD_1_PARAM+(track*7)));
-			addParam(createParam<RoundSmallFWSnapKnob>(Vec(286+(track*62), 188), module, QuadAlgorithmicRhythm::ACCENTS_1_PARAM+(track*7)));
-			addParam(createParam<RoundSmallFWSnapKnob>(Vec(286+(track*62), 218), module, QuadAlgorithmicRhythm::ACCENT_ROTATE_1_PARAM+(track*7)));
+			addParam(createParam<LEDButton>(Vec(290+(track*62), 27), module, QuadAlgorithmicRhythm::ALGORITHM_1_PARAM+(track*8)));
+			addChild(createLight<LargeLight<RedGreenBlueLight>>(Vec(291.5+(track*62), 28.5), module, QuadAlgorithmicRhythm::ALGORITHM_1_LIGHT+(track*3)));
+			addParam(createParam<RoundSmallFWSnapKnob>(Vec(286+(track*62), 68), module, QuadAlgorithmicRhythm::STEPS_1_PARAM+(track*8)));
+			addParam(createParam<RoundSmallFWSnapKnob>(Vec(286+(track*62), 98), module, QuadAlgorithmicRhythm::DIVISIONS_1_PARAM+(track*8)));
+			addParam(createParam<RoundSmallFWSnapKnob>(Vec(286+(track*62), 128), module, QuadAlgorithmicRhythm::OFFSET_1_PARAM+(track*8)));
+			addParam(createParam<RoundSmallFWSnapKnob>(Vec(286+(track*62), 158), module, QuadAlgorithmicRhythm::PAD_1_PARAM+(track*8)));
+			addParam(createParam<RoundSmallFWSnapKnob>(Vec(286+(track*62), 188), module, QuadAlgorithmicRhythm::ACCENTS_1_PARAM+(track*8)));
+			addParam(createParam<RoundSmallFWSnapKnob>(Vec(286+(track*62), 218), module, QuadAlgorithmicRhythm::ACCENT_ROTATE_1_PARAM+(track*8)));
+			addParam(createParam<LEDButton>(Vec(290+(track*62), 248), module, QuadAlgorithmicRhythm::TRACK_1_INDEPENDENT_PARAM+(track*8)));
+			addChild(createLight<LargeLight<RedGreenBlueLight>>(Vec(291.5+(track*62), 249.5), module, QuadAlgorithmicRhythm::TRACK_INDEPENDENT_1_LIGHT+(track*3)));
 
-			addInput(createInput<FWPortInSmall>(Vec(316+(track*62), 43), module, QuadAlgorithmicRhythm::ALGORITHM_1_INPUT+(track*8)));
+			addInput(createInput<FWPortInSmall>(Vec(316+(track*62), 27), module, QuadAlgorithmicRhythm::ALGORITHM_1_INPUT+(track*8)));
 			addInput(createInput<FWPortInSmall>(Vec(316+(track*62), 72), module, QuadAlgorithmicRhythm::STEPS_1_INPUT+(track*8)));
 			addInput(createInput<FWPortInSmall>(Vec(316+(track*62), 102), module, QuadAlgorithmicRhythm::DIVISIONS_1_INPUT+(track*8)));
 			addInput(createInput<FWPortInSmall>(Vec(316+(track*62), 132), module, QuadAlgorithmicRhythm::OFFSET_1_INPUT+(track*8)));
@@ -1474,12 +1735,12 @@ struct QuadAlgorithmicRhythmWidget : ModuleWidget {
 			addInput(createInput<FWPortInSmall>(Vec(316+(track*62), 192), module, QuadAlgorithmicRhythm::ACCENTS_1_INPUT+(track*8)));
 			addInput(createInput<FWPortInSmall>(Vec(316+(track*62), 222), module, QuadAlgorithmicRhythm::ACCENT_ROTATE_1_INPUT+(track*8)));
 
-			addInput(createInput<FWPortInSmall>(Vec(290+(track*62), 256), module, QuadAlgorithmicRhythm::START_1_INPUT+(track*8)));
-			addOutput(createOutput<FWPortOutSmall>(Vec(290+(track*62), 282), module, QuadAlgorithmicRhythm::EOC_OUTPUT_1+(track*3)));
-			addOutput(createOutput<FWPortOutSmall>(Vec(290+(track*62), 308), module, QuadAlgorithmicRhythm::ACCENT_OUTPUT_1+(track*3)));
-			addOutput(createOutput<FWPortOutSmall>(Vec(290+(track*62), 334), module, QuadAlgorithmicRhythm::OUTPUT_1+(track*3)));
+			addInput(createInput<FWPortInSmall>(Vec(290+(track*62), 282), module, QuadAlgorithmicRhythm::START_1_INPUT+(track*8)));
+			addOutput(createOutput<FWPortOutSmall>(Vec(290+(track*62), 304), module, QuadAlgorithmicRhythm::EOC_OUTPUT_1+(track*3)));
+			addOutput(createOutput<FWPortOutSmall>(Vec(290+(track*62), 326), module, QuadAlgorithmicRhythm::ACCENT_OUTPUT_1+(track*3)));
+			addOutput(createOutput<FWPortOutSmall>(Vec(290+(track*62), 348), module, QuadAlgorithmicRhythm::OUTPUT_1+(track*3)));
 
-			addChild(createLight<SmallLight<RedLight>>(Vec(312+(track*62), 344), module, QuadAlgorithmicRhythm::WAITING_1_LIGHT+track));
+			addChild(createLight<SmallLight<RedLight>>(Vec(312+(track*62), 358), module, QuadAlgorithmicRhythm::WAITING_1_LIGHT+track));
 
 		}
 

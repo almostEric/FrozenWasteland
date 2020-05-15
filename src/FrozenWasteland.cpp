@@ -38,10 +38,10 @@ void init(rack::Plugin *p) {
 	p->addModel(modelPWGridControlExpander);
 	p->addModel(modelPWTapBreakoutExpander);
 	p->addModel(modelQuadAlgorithmicRhythm);
-	p->addModel(modelQARAdvancedRhythmsExpander);
 	p->addModel(modelQARGrooveExpander);
 	p->addModel(modelQARProbabilityExpander);
 	p->addModel(modelQARWarpedSpaceExpander);
+	p->addModel(modelQARWellFormedRhythmExpander);
 	p->addModel(modelQuantussyCell);
 	p->addModel(modelSeedsOfChange);
 	p->addModel(modelSeedsOfChangeCVExpander);

@@ -2,13 +2,14 @@
 #include <stdlib.h>
 #include <time.h>
 #include "FrozenWasteland.hpp"
+#include "model/ChristoffelWords.hpp"
 #include "ui/knobs.hpp"
 #include "ui/ports.hpp"
 #include "dsp-noise/noise.hpp"
 
 #define TRACK_COUNT 4
 #define MAX_STEPS 16
-#define NUM_ALGORITHMS 4
+#define NUM_ALGORITHMS 3
 #define EXPANDER_MAX_STEPS 18
 #define NUM_RULERS 10
 #define MAX_DIVISIONS 6
@@ -26,6 +27,7 @@ struct PWAlgorithmicExpander : Module {
 		OFFSET_1_PARAM,
 		PAD_1_PARAM,
 		ALGORITHM_1_PARAM,
+        RATIO_1_PARAM,
 		NUM_PARAMS
 	};
 	enum InputIds {
@@ -34,6 +36,7 @@ struct PWAlgorithmicExpander : Module {
 		OFFSET_1_INPUT,
 		PAD_1_INPUT,
         ALGORITHM_1_INPUT,
+        RATIO_1_INPUT,
 		NUM_INPUTS
 	};
 	enum OutputIds {
@@ -47,6 +50,7 @@ struct PWAlgorithmicExpander : Module {
 	enum Algorithms {
 		EUCLIDEAN_ALGO,
 		GOLUMB_RULER_ALGO,
+        WELL_FORMED_ALGO
 	};
 	enum ProbabilityGroupTriggerModes {
 		NONE_PGTM,
@@ -63,7 +67,7 @@ struct PWAlgorithmicExpander : Module {
     float rightMessages[2][285] = {};
 	
 		
-    int algorithnMatrix;
+    int algorithmMatrix;
 	bool beatMatrix[MAX_STEPS];
 
 	float probabilityMatrix[MAX_STEPS];
@@ -76,6 +80,24 @@ struct PWAlgorithmicExpander : Module {
 	float workingSwingMatrix[MAX_STEPS];
 	float workingBeatWarpMatrix[MAX_STEPS];
     bool probabilityResultMatrix[MAX_STEPS] = {1};
+
+    std::string trackPatternName = "";
+
+    //Stuff for Advanced Rhythms
+    int lastAlgorithmSetting = 0;
+    int lastStepsSetting = 0;
+    int lastDivisionsSetting = 0;
+    int lastOffsetSetting = 0;
+    int lastPadSetting = 0;
+    float lastExtraParameterValue = 0.0;
+
+    float extraParameterValue= 0; //r for Well Formed, evenness for Perfect Balanced
+    double wellFormedStepDurations[MAX_STEPS] = {0};
+    double wellFormedTrackDuration= 0;
+    double lastWellFormedTrackDuration= 0;
+
+    bool dirty = true;
+
 
 
     float expanderDelayTime[MAX_STEPS] = {0};
@@ -117,6 +139,7 @@ struct PWAlgorithmicExpander : Module {
 
     const int rulerOrders[NUM_RULERS] = {1,2,3,4,5,5,6,6,6,6};
 	const int rulerLengths[NUM_RULERS] = {0,1,3,6,11,11,17,17,17,17};
+	const std::string rulerNames[NUM_RULERS] = {"1","2","3","4","5a","5b","6a","6b","6c","6d"};
 	const int rulers[NUM_RULERS][MAX_DIVISIONS] = {{0},
 												   {0,1},
 												   {0,1,3},
@@ -141,6 +164,11 @@ struct PWAlgorithmicExpander : Module {
 
 	GaussianNoiseGenerator _gauss;
 
+    ChristoffelWords christoffelWords;
+    std::string currentChristoffelword = {"unknown"};
+
+
+
 	PWAlgorithmicExpander() {
 		config(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS, NUM_LIGHTS);
 
@@ -150,6 +178,7 @@ struct PWAlgorithmicExpander : Module {
 		configParam(OFFSET_1_PARAM, 0.0, 15, 0.0,"Step Offset");
 		configParam(PAD_1_PARAM, 0.0, 15, 0.0,"Step Padding");
         configParam(ALGORITHM_1_PARAM, 0.0, 1.0, 0.0);
+        configParam(RATIO_1_PARAM, 0.0, 1.0, 0.5,"Well Formed Ratio");
 
 		leftExpander.producerMessage = leftMessages[0];
 		leftExpander.consumerMessage = leftMessages[1];
@@ -160,7 +189,6 @@ struct PWAlgorithmicExpander : Module {
 		srand(time(NULL));
 		
 
-        algorithnMatrix = 0;
         beatIndex = -1;
         stepsCount = MAX_STEPS;
         lastStepsCount = -1;
@@ -173,8 +201,7 @@ struct PWAlgorithmicExpander : Module {
         probabilityGroupTriggered = PENDING_PGTS;
         beatWarping = 1.0;
         beatWarpingPosition = 8;
-
-
+    
         expanderOutputValue = 0.0;
         expanderAccentValue = 0.0;
         expanderEocValue = 0.0;
@@ -190,11 +217,6 @@ struct PWAlgorithmicExpander : Module {
 
         onReset();	
 	}
-
-    void ChristoffelWordGen(uint8_t length, uint8_t smallSteps) {
-
-
-    }
 
 
 	void process(const ProcessArgs &args) override  {
@@ -227,13 +249,13 @@ struct PWAlgorithmicExpander : Module {
 		maxStepCount = 0;
 
         if(algorithmButtonTrigger.process(params[(ALGORITHM_1_PARAM)].getValue())) {
-            algorithnMatrix = (algorithnMatrix + 1) % NUM_ALGORITHMS; //Only tracks 3 and 4 get logic
+            algorithmMatrix = (algorithmMatrix + 1) % NUM_ALGORITHMS; 
         }
         if(algorithmInputTrigger.process(inputs[(ALGORITHM_1_INPUT)].getVoltage())) {
-            algorithnMatrix = (algorithnMatrix + 1) % NUM_ALGORITHMS; //Only tracks 3 and 4 get logic
+            algorithmMatrix = (algorithmMatrix + 1) % NUM_ALGORITHMS; 
         }
 
-        switch (algorithnMatrix) {
+        switch (algorithmMatrix) {
             case EUCLIDEAN_ALGO :
                 lights[ALGORITHM_1_LIGHT].value = 1;
                 lights[ALGORITHM_1_LIGHT+ 1].value = 1;
@@ -243,6 +265,11 @@ struct PWAlgorithmicExpander : Module {
                 lights[ALGORITHM_1_LIGHT].value = 0;
                 lights[ALGORITHM_1_LIGHT + 1].value = 0;
                 lights[ALGORITHM_1_LIGHT + 2].value = 1;
+                break;
+            case WELL_FORMED_ALGO :
+                lights[ALGORITHM_1_LIGHT].value = 0;
+                lights[ALGORITHM_1_LIGHT + 1].value = .75;
+                lights[ALGORITHM_1_LIGHT + 2].value = 0;
                 break;
         }		
             
@@ -279,6 +306,13 @@ struct PWAlgorithmicExpander : Module {
         // Reclamp
         divisionf = clamp(divisionf,0.0f,stepsCountf-padf);
 
+        float t = params[RATIO_1_PARAM].getValue();
+        if(inputs[RATIO_1_INPUT].isConnected()) {
+            t += inputs[RATIO_1_INPUT].getVoltage() / 10.0;
+        }	
+        t = clamp(t,0.0f,1.0f);
+        extraParameterValue = 1/(1-t);
+
 
         if(stepsCountf > maxStepCount)
             maxStepCount = std::floor(stepsCountf);
@@ -291,80 +325,133 @@ struct PWAlgorithmicExpander : Module {
         int offset = int(offsetf);		
         int pad = int(padf);
 
-        beatCount = 0;
-        if(division > 0) {					
-            int bucket = stepsCount - pad - 1;                    
-            if(algorithnMatrix == EUCLIDEAN_ALGO ) { //Euclidean Algorithn
-                int euclideanBeatIndex = 0;
-                //Set padded steps to false
-                for(int euclideanStepIndex = 0; euclideanStepIndex < pad; euclideanStepIndex++) {
-                    beatMatrix[((euclideanStepIndex + offset) % (stepsCount))] = false;	
-                }
-                for(int euclideanStepIndex = 0; euclideanStepIndex < stepsCount-pad; euclideanStepIndex++)
-                {
-                    bucket += division;
-                    if(bucket >= stepsCount-pad) {
-                        bucket -= (stepsCount - pad);
-                        beatMatrix[((euclideanStepIndex + offset + pad) % (stepsCount))] = true;	
-                        beatLocation[euclideanBeatIndex] = (euclideanStepIndex + offset + pad) % stepsCount;	
-                        euclideanBeatIndex++;	
-                    } else
-                    {
-                        beatMatrix[((euclideanStepIndex + offset + pad) % (stepsCount))] = false;	
-                    }                    
-                }
-                beatCount = euclideanBeatIndex;
-            } else if(algorithnMatrix == GOLUMB_RULER_ALGO) { //Golomb Ruler Algorithm
-            
-                int rulerToUse = clamp(division-1,0,NUM_RULERS-1);
-                int actualStepCount = stepsCount - pad;
-                while(rulerLengths[rulerToUse] + 1 > actualStepCount && rulerToUse >= 0) {
-                    rulerToUse -=1;
-                } 
+        
+        //Parameters that cause a word to be created
+        if(stepsCount != lastStepsSetting || division != lastDivisionsSetting 
+            || algorithmMatrix != lastAlgorithmSetting || pad != lastPadSetting) {
                 
-                //Multiply beats so that low division beats fill out entire pattern
-                float spaceMultiplier = (actualStepCount / (rulerLengths[rulerToUse] + 1));
+            lastAlgorithmSetting = algorithmMatrix;
+            lastStepsSetting = stepsCount;
+            lastDivisionsSetting = division;
+            lastPadSetting = pad;
 
-                //Set all beats to false
-                for(int j=0;j<stepsCount;j++)
-                {
-                    beatMatrix[j] = false; 			
+            dirty = true;
+            if(algorithmMatrix == WELL_FORMED_ALGO) {
+                std::string word = christoffelWords.Generate(stepsCount,division);
+                if(word != "unknown") {
+                    currentChristoffelword = word;
                 }
-
-                for (int rulerIndex = 0; rulerIndex < rulerOrders[rulerToUse];rulerIndex++)
-                {
-                    int divisionLocation = (rulers[rulerToUse][rulerIndex] * spaceMultiplier) + pad;
-                    beatMatrix[(divisionLocation + offset) % stepsCount] = true;
-                    beatLocation[rulerIndex] = (divisionLocation + offset) % stepsCount;	            
-                }
-                beatCount = rulerOrders[rulerToUse];
-            } 
-
-            bucket = division - 1;
-        } else { // No Divisions
-            for(int j=0;j<stepsCount;j++) {
-                beatMatrix[j] = false; 	
+                //fprintf(stderr, "%s \n", word.c_str());
             }
-        }	
+        }
 
+        //Everything else that forces beat recalc
+        if(offset != lastOffsetSetting || extraParameterValue != lastExtraParameterValue) {
+                
+            lastOffsetSetting = offset;
+            lastExtraParameterValue = extraParameterValue; 
+
+            dirty = true;
+        }
+
+        if(dirty) {
+            beatCount = 0;
+            if(division > 0) {					
+                int bucket = stepsCount - pad - 1;                    
+                if(algorithmMatrix == EUCLIDEAN_ALGO ) { //Euclidean Algorithn
+                    int euclideanBeatIndex = 0;
+                    //Set padded steps to false
+                    for(int euclideanStepIndex = 0; euclideanStepIndex < pad; euclideanStepIndex++) {
+                        beatMatrix[((euclideanStepIndex + offset) % (stepsCount))] = false;	
+                    }
+                    for(int euclideanStepIndex = 0; euclideanStepIndex < stepsCount-pad; euclideanStepIndex++)
+                    {
+                        bucket += division;
+                        if(bucket >= stepsCount-pad) {
+                            bucket -= (stepsCount - pad);
+                            beatMatrix[((euclideanStepIndex + offset + pad) % (stepsCount))] = true;	
+                            beatLocation[euclideanBeatIndex] = (euclideanStepIndex + offset + pad) % stepsCount;	
+                            euclideanBeatIndex++;	
+                        } else
+                        {
+                            beatMatrix[((euclideanStepIndex + offset + pad) % (stepsCount))] = false;	
+                        }                    
+                    }
+                    trackPatternName = std::to_string(stepsCount)+"-"+std::to_string(euclideanBeatIndex);
+                    beatCount = euclideanBeatIndex;
+                } else if(algorithmMatrix == GOLUMB_RULER_ALGO) { //Golomb Ruler Algorithm
+                
+                    int rulerToUse = clamp(division-1,0,NUM_RULERS-1);
+                    int actualStepCount = stepsCount - pad;
+                    while(rulerLengths[rulerToUse] + 1 > actualStepCount && rulerToUse >= 0) {
+                        rulerToUse -=1;
+                    } 
+                    trackPatternName =std::to_string(stepsCount)+"-"+rulerNames[rulerToUse]; 
+                    //Multiply beats so that low division beats fill out entire pattern
+                    float spaceMultiplier = (actualStepCount / (rulerLengths[rulerToUse] + 1));
+
+                    //Set all beats to false
+                    for(int j=0;j<stepsCount;j++)
+                    {
+                        beatMatrix[j] = false; 			
+                    }
+
+                    for (int rulerIndex = 0; rulerIndex < rulerOrders[rulerToUse];rulerIndex++)
+                    {
+                        int divisionLocation = (rulers[rulerToUse][rulerIndex] * spaceMultiplier) + pad;
+                        beatMatrix[(divisionLocation + offset) % stepsCount] = true;
+                        beatLocation[rulerIndex] = (divisionLocation + offset) % stepsCount;	            
+                    }
+                    beatCount = rulerOrders[rulerToUse];
+                } else if(algorithmMatrix == WELL_FORMED_ALGO) { 
+                    int wfBeatCount = 0;
+                    wellFormedTrackDuration = division + (stepsCount - division) * extraParameterValue; 
+                    if(lastWellFormedTrackDuration == -1) //first time
+                        lastWellFormedTrackDuration = wellFormedTrackDuration; 
+
+                    for(int wfBeatIndex=0;wfBeatIndex<stepsCount;wfBeatIndex++) { //NEED TO HANDLE UNKNOWNS
+                        int adjustedWfBeatIndex = (wfBeatIndex + offset + pad) % stepsCount;
+                        char beatType = currentChristoffelword[wfBeatIndex];
+                        if(beatType == 's') {
+                            wellFormedStepDurations[adjustedWfBeatIndex] = 1.0;
+                            beatLocation[wfBeatCount] = adjustedWfBeatIndex;	     
+                            wfBeatCount++;       						
+                        } else {
+                            wellFormedStepDurations[adjustedWfBeatIndex] = extraParameterValue;
+                        }
+                        beatMatrix[adjustedWfBeatIndex] = true; 
+                    }
+                    trackPatternName = std::to_string(stepsCount-wfBeatCount)+"l "+std::to_string(wfBeatCount)+"s"; 
+                    beatCount = division;
+                }
+
+                bucket = division - 1;
+            } else { // No Divisions
+                trackPatternName = "";
+                for(int j=0;j<stepsCount;j++) {
+                    beatMatrix[j] = false; 	
+                }
+            }	
+        }
+        dirty = false;
 
 		//Get Expander Info
-        bool rightExpanderPresent = false;
+        //bool rightExpanderPresent = false;
 		if(rightExpander.module && (rightExpander.module->model == modelQARProbabilityExpander || rightExpander.module->model == modelQARGrooveExpander || rightExpander.module->model == modelQARWarpedSpaceExpander))
 		{			
 			QARExpanderDisconnectReset = true;
-            rightExpanderPresent = true;
+            //rightExpanderPresent = true;
 			float *messagesFromExpanders = (float*)rightExpander.consumerMessage;
 
 			//Process Probability Expander Stuff						
             probabilityGroupFirstStep = -1;
-            for(int j = 0; j < MAX_STEPS; j++) { //reset all probabilities, find first group step
+            for(int j = 0; j < stepsCount; j++) { //reset all probabilities, find first group step
                 workingProbabilityMatrix[j] = 1;					
             }
 
             if(messagesFromExpanders[TRACK_COUNT * 3 + 0] > 0) { // 0 is track not selected
                 bool useDivs = messagesFromExpanders[TRACK_COUNT * 2 + 0] == 2; //2 is divs
-                for(int j = 0; j < MAX_STEPS; j++) { // Assign probabilites and swing
+                for(int j = 0; j < stepsCount; j++) { // Assign probabilites and swing
                     int stepIndex = j;
                     bool stepFound = true;
                     if(useDivs) { //Use j as a count to the div # we are looking for
@@ -377,11 +464,8 @@ struct PWAlgorithmicExpander : Module {
                         
                         workingProbabilityMatrix[stepIndex] = probability;
                         probabilityGroupModeMatrix[stepIndex] = probabilityMode;
-                        for(int j = 0; j < MAX_STEPS; j++) { //reset all probabilities, find first group step
-                            if(probabilityGroupFirstStep < 0 && probabilityGroupModeMatrix[j] != NONE_PGTM ) {
-                                probabilityGroupFirstStep = j;
-                                break;
-                            }
+                        if(probabilityGroupFirstStep < 0 && probabilityGroupModeMatrix[stepIndex] != NONE_PGTM ) {
+                            probabilityGroupFirstStep = stepIndex;
                         }
                     } 
                 }
@@ -389,7 +473,7 @@ struct PWAlgorithmicExpander : Module {
 			
 
 			//Process Groove Expander Stuff									
-            for(int j = 0; j < MAX_STEPS; j++) { //reset all probabilities
+            for(int j = 0; j < stepsCount; j++) { //reset all probabilities
                 workingSwingMatrix[j] = 0.0;
             }
 
@@ -414,7 +498,7 @@ struct PWAlgorithmicExpander : Module {
 
                 int workingBeatIndex = 0;
 
-                for(int j = 0; j < MAX_STEPS; j++) { // Assign probabilites and swing
+                for(int j = 0; j < stepsCount; j++) { // Assign probabilites and swing
                     int stepIndex = j;
                     bool stepFound = true;
                     if(useDivs) { //Use j as a count to the div # we are looking for
@@ -438,7 +522,7 @@ struct PWAlgorithmicExpander : Module {
         
 
             //Process Warped Space Stuff									
-            for(int j = 0; j < MAX_STEPS; j++) { //reset all warping
+            for(int j = 0; j < stepsCount; j++) { //reset all warping
                 workingBeatWarpMatrix[j] = 1.0;
             }
 
@@ -506,7 +590,8 @@ struct PWAlgorithmicExpander : Module {
             probabilityGroupTriggered = PENDING_PGTS;
         }
         for(int step=0;step<stepsCount;step++) {   
-            stepDuration = duration / (expanderClockDivision * MAX_STEPS) * (beatIndex >= 0 ? beatWarpMatrix[beatIndex] : 1.0); 
+            double beatSizeAdjustment = beatIndex >= 0 ? (algorithmMatrix == WELL_FORMED_ALGO ? wellFormedStepDurations[step] : 1.0) * beatWarpMatrix[step] : 1.0;
+            stepDuration = duration / (expanderClockDivision * MAX_STEPS) * beatSizeAdjustment; 
             //swing is affected by next beat
             int nextBeat = beatIndex + 1;
             if(nextBeat >= stepsCount)
@@ -540,7 +625,7 @@ struct PWAlgorithmicExpander : Module {
 	json_t *dataToJson() override {
 		json_t *rootJ = json_object();
 		
-        json_object_set_new(rootJ, "algorithm", json_integer((int) algorithnMatrix));
+        json_object_set_new(rootJ, "algorithm", json_integer((int) algorithmMatrix));
 		return rootJ;
 	}
 
@@ -548,7 +633,7 @@ struct PWAlgorithmicExpander : Module {
 
 		json_t *aJ = json_object_get(rootJ, "algorithm");
 		if (aJ)
-			algorithnMatrix = json_integer_value(aJ);
+			algorithmMatrix = json_integer_value(aJ);
 	}
 
 	void setRunningState() {
@@ -610,7 +695,7 @@ struct PWAlgorithmicExpander : Module {
 	// - onReset, onRandomize, onCreate, onDelete: implements special behavior when user clicks these from the context menu
 
     void onReset() override {
-        algorithnMatrix = EUCLIDEAN_ALGO;
+        algorithmMatrix = EUCLIDEAN_ALGO;
         beatIndex = -1;
         stepsCount = MAX_STEPS;
         lastStepTime = 0.0;
@@ -638,105 +723,43 @@ struct PWAlgorithmicExpander : Module {
 struct PWAEBeatDisplay : FramebufferWidget {
 	PWAlgorithmicExpander *module;
 	int frame = 0;
-	std::shared_ptr<Font> font;
+	std::shared_ptr<Font> digitalFont;
+	std::shared_ptr<Font> textFont;
 
 	PWAEBeatDisplay() {
-		font = APP->window->loadFont(asset::plugin(pluginInstance, "res/fonts/01 Digit.ttf"));
+		digitalFont = APP->window->loadFont(asset::plugin(pluginInstance, "res/fonts/01 Digit.ttf"));
+		textFont = APP->window->loadFont(asset::plugin(pluginInstance, "res/fonts/DejaVuSansMono.ttf"));
 	}
 
-	void drawBox(const DrawArgs &args, float stepNumber, float runningTrackWidth, int algorithm, bool isBeat, float beatWarp, float probability, int triggerState, int probabilityGroupMode, float swing, float swingRandomness) {
-		
-		//nvgSave(args.vg);
-		//Rect b = Rect(Vec(0, 0), box.size);
-		//nvgScissor(args.vg, b.pos.x, b.pos.y, b.size.x, b.size.y);
-		nvgBeginPath(args.vg);
-		
-		//float boxX = stepNumber * 22.5;
-		float boxX = runningTrackWidth * 22.5;
-		float boxY = 0;
 
-		float baseWidth = 21.0 * beatWarp;
-
-		float opacity = 0x80; // Testing using opacity for accents
-
-		//TODO: Replace with switch statement
-		//Default Euclidean Colors
-		NVGcolor strokeColor = nvgRGBA(0xef, 0xe0, 0, 0xff);
-		NVGcolor fillColor = nvgRGBA(0xef,0xe0,0,opacity);
-        if(algorithm == 1) { //Golumb Ruler
-            strokeColor = nvgRGBA(0, 0xe0, 0xef, 0xff);
-			fillColor = nvgRGBA(0,0xe0,0xef,opacity);
-        } 
-		
-		NVGcolor randomFillColor = nvgRGBA(0xff,0x00,0,0x40);			
-
-
-		nvgStrokeColor(args.vg, strokeColor);
-		nvgStrokeWidth(args.vg, 1.0);
-		nvgRect(args.vg,boxX,boxY,baseWidth,21.0);		
-		nvgStroke(args.vg);
-		if(isBeat) {
-			nvgBeginPath(args.vg);
-			nvgStrokeWidth(args.vg, 0.0);
-            nvgRect(args.vg,boxX + (baseWidth/2),boxY+(21*(1-probability)),(baseWidth/2)+(baseWidth*std::min(swing,0.0f)),21*probability);
-            nvgRect(args.vg,boxX + (baseWidth*std::max(swing,0.0f)),boxY+(21*(1-probability)),(baseWidth/2)-(baseWidth*std::max(swing,0.0f)),21*probability);
-            nvgFillColor(args.vg, fillColor);
-			nvgFill(args.vg);
-			nvgStroke(args.vg);
-
-			//Draw swing randomness
-			if(swingRandomness > 0.0f) {
-				nvgBeginPath(args.vg);
-				nvgStrokeWidth(args.vg, 0.0);
-				nvgRect(args.vg,boxX + (baseWidth/2),boxY+(21*(1-probability)),((baseWidth/4)*swingRandomness),21*probability);
-				nvgRect(args.vg,boxX + (baseWidth/2)-((baseWidth/4)*swingRandomness),boxY+(21*(1-probability)),((baseWidth/4)*swingRandomness),21*probability);
-				nvgFillColor(args.vg, randomFillColor);
-				nvgFill(args.vg);
-				nvgStroke(args.vg);
-			}
-
-		}
-
-		if (triggerState == module->NOT_TRIGGERED_PGTS && probabilityGroupMode != module->NONE_PGTM) {
-			nvgBeginPath(args.vg);
-			nvgStrokeColor(args.vg, nvgRGBA(0xff, 0x1f, 0, 0xaf));
-			nvgStrokeWidth(args.vg, 1.0);
-			nvgMoveTo(args.vg,boxX+1,boxY+1);
-			nvgLineTo(args.vg,boxX+baseWidth-1,boxY+20);
-			//nvgStroke(args.vg);
-			nvgMoveTo(args.vg,boxX+baseWidth-1,boxY+1);
-			nvgLineTo(args.vg,boxX+1,boxY+20);
-			nvgStroke(args.vg);
-			
-		}
-
-
-		//nvgStroke(args.vg);
-		
-	}
-
-    void drawArc(const DrawArgs &args, float stepsCount, float stepNumber, float runningTrackWidth, int algorithm, bool isBeat, float beatWarp, float probability, int triggerState, int probabilityGroupMode, float swing, float nextSwing, float swingRandomness) 
+    void drawArc(const DrawArgs &args, float stepsCount, float stepNumber, float runningTrackWidth, int algorithm, bool isBeat, float beatWarp, float probability, int triggerState, int probabilityGroupMode, float swing, float nextSwing, float swingRandomness, float wfTrackDurationAdjustment, float wfStepDuration) 
 	{		
         const float rotate90 = (M_PI) / 2.0;
 
         float opacity = 0x80; // Testing using opacity for accents
 
-        //Default Euclidean Colors
-        NVGcolor strokeColor = nvgRGBA(0xef, 0xe0, 0, 0xff);
-        NVGcolor fillColor = nvgRGBA(0xef,0xe0,0,opacity);
-        if(algorithm == 1) { //Golumb Ruler
+		//Default Euclidean Colors
+		NVGcolor strokeColor = nvgRGBA(0xef, 0xe0, 0, 0xff);
+		NVGcolor fillColor = nvgRGBA(0xef,0xe0,0,opacity);
+        if(algorithm == module->GOLUMB_RULER_ALGO) { 
             strokeColor = nvgRGBA(0, 0xe0, 0xef, 0xff);
-            fillColor = nvgRGBA(0,0xe0,0xef,opacity);
-        } 
+			fillColor = nvgRGBA(0,0xe0,0xef,opacity);
+        } else if(algorithm == module->WELL_FORMED_ALGO ) { 
+            strokeColor = nvgRGBA(0x10, 0xcf, 0x20, 0xff);
+			fillColor = nvgRGBA(0x10,0x7f,0x20,opacity);        
+		}		
         
         NVGcolor randomFillColor = nvgRGBA(0xff,0x00,0,0x40);			
         nvgFillColor(args.vg, nvgRGBA(0xff, 0xff, 0x20, (int)opacity));
 
+    
         double baseStartDegree = (M_PI * 2.0 / stepsCount * (runningTrackWidth + swing)) - rotate90;
-        double baseEndDegree = baseStartDegree + (M_PI * 2.0 / stepsCount * (beatWarp - swing + nextSwing));
-        if(baseEndDegree < baseStartDegree) {
-            baseEndDegree = baseStartDegree;
+		double wfModifier = algorithm == module->WELL_FORMED_ALGO ? (wfStepDuration*wfTrackDurationAdjustment) : 1.0;
+        double baseEndDegree = baseStartDegree + (M_PI * 2.0 / stepsCount * (wfModifier * beatWarp - swing + nextSwing));
+		if(baseEndDegree < baseStartDegree) {
+			baseEndDegree = baseStartDegree;
         }
+
         
 		nvgStrokeColor(args.vg, strokeColor);
 		nvgStrokeWidth(args.vg, 1.0);
@@ -795,14 +818,27 @@ struct PWAEBeatDisplay : FramebufferWidget {
         }
 	}
 
+    void drawPatternNameTrack(const DrawArgs &args, Vec pos, std::string trackPatternName) {
+		nvgFontSize(args.vg, 10);
+		nvgFontFaceId(args.vg, textFont->handle);
+		nvgTextAlign(args.vg,NVG_ALIGN_CENTER);
+		nvgTextLetterSpacing(args.vg, -1);
+
+		nvgFillColor(args.vg, nvgRGBA(0x4a, 0xc3, 0x27, 0xff));
+		char text[32];
+		snprintf(text, sizeof(text), "%s", trackPatternName.c_str() );
+		nvgText(args.vg, pos.x, pos.y, text, NULL);
+	}
+
 
 	void draw(const DrawArgs &args) override {
 		if (!module)
 			return;
 		
-        int algorithn = module->algorithnMatrix;
+        int algorithn = module->algorithmMatrix;
         float runningTrackWidth = 0.0;
         int stepsCount = module->stepsCount;
+        float wfTrackDurationAdjustment = stepsCount / (module->wellFormedTrackDuration);
         for(int stepNumber = 0;stepNumber < stepsCount;stepNumber++) {		
             int nextStepNumber = (stepNumber + 1) % stepsCount;					
             bool isBeat = module->beatMatrix[stepNumber];
@@ -811,11 +847,14 @@ struct PWAEBeatDisplay : FramebufferWidget {
             float nextSwing = module->swingMatrix[nextStepNumber];	
             float swingRandomness = module->swingRandomness;
             float beatWarp = module->beatWarpMatrix[stepNumber];
+            float wfStepDuration = module->wellFormedStepDurations[stepNumber];
             int triggerState = module->probabilityGroupTriggered;
             int probabilityGroupMode = module->probabilityGroupModeMatrix[stepNumber];
-            drawArc(args, float(stepsCount), float(stepNumber),runningTrackWidth,algorithn,isBeat,beatWarp,probability,triggerState,probabilityGroupMode,swing,nextSwing,swingRandomness);
-            runningTrackWidth += beatWarp;
+            drawArc(args, float(stepsCount), float(stepNumber),runningTrackWidth,algorithn,isBeat,beatWarp,probability,triggerState,probabilityGroupMode,swing,nextSwing,swingRandomness,wfTrackDurationAdjustment,wfStepDuration);
+            runningTrackWidth += beatWarp * (algorithn == module->WELL_FORMED_ALGO ? wfStepDuration * wfTrackDurationAdjustment : 1);
         }		
+
+        drawPatternNameTrack(args, Vec(90 , 184), module->trackPatternName);
 	}
 };
 
@@ -841,20 +880,22 @@ struct PWAlgorithmicExpanderWidget : ModuleWidget {
 		}
 
 
-		addParam(createParam<LEDButton>(Vec(20, 240), module, PWAlgorithmicExpander::ALGORITHM_1_PARAM));
-		addParam(createParam<RoundSmallFWSnapKnob>(Vec(55, 238), module, PWAlgorithmicExpander::STEPS_1_PARAM));
-		addParam(createParam<RoundSmallFWSnapKnob>(Vec(94, 238), module, PWAlgorithmicExpander::DIVISIONS_1_PARAM));
-		addParam(createParam<RoundSmallFWSnapKnob>(Vec(133, 238), module, PWAlgorithmicExpander::OFFSET_1_PARAM));
-		addParam(createParam<RoundSmallFWSnapKnob>(Vec(172, 238), module, PWAlgorithmicExpander::PAD_1_PARAM));
+		addParam(createParam<LEDButton>(Vec(10, 250), module, PWAlgorithmicExpander::ALGORITHM_1_PARAM));
+		addParam(createParam<RoundSmallFWSnapKnob>(Vec(40, 248), module, PWAlgorithmicExpander::STEPS_1_PARAM));
+		addParam(createParam<RoundSmallFWSnapKnob>(Vec(74, 248), module, PWAlgorithmicExpander::DIVISIONS_1_PARAM));
+		addParam(createParam<RoundSmallFWSnapKnob>(Vec(108, 248), module, PWAlgorithmicExpander::OFFSET_1_PARAM));
+		addParam(createParam<RoundSmallFWSnapKnob>(Vec(142, 248), module, PWAlgorithmicExpander::PAD_1_PARAM));
+		addParam(createParam<RoundSmallFWKnob>(Vec(176, 248), module, PWAlgorithmicExpander::RATIO_1_PARAM));
 
-        addInput(createInput<FWPortInSmall>(Vec(21, 265), module, PWAlgorithmicExpander::ALGORITHM_1_INPUT));
-		addInput(createInput<FWPortInSmall>(Vec(57, 265), module, PWAlgorithmicExpander::STEPS_1_INPUT));
-		addInput(createInput<FWPortInSmall>(Vec(96, 265), module, PWAlgorithmicExpander::DIVISIONS_1_INPUT));
-		addInput(createInput<FWPortInSmall>(Vec(135, 265), module, PWAlgorithmicExpander::OFFSET_1_INPUT));
-		addInput(createInput<FWPortInSmall>(Vec(174, 265), module, PWAlgorithmicExpander::PAD_1_INPUT));
+        addInput(createInput<FWPortInSmall>(Vec(11, 276), module, PWAlgorithmicExpander::ALGORITHM_1_INPUT));
+		addInput(createInput<FWPortInSmall>(Vec(42, 276), module, PWAlgorithmicExpander::STEPS_1_INPUT));
+		addInput(createInput<FWPortInSmall>(Vec(76, 276), module, PWAlgorithmicExpander::DIVISIONS_1_INPUT));
+		addInput(createInput<FWPortInSmall>(Vec(110, 276), module, PWAlgorithmicExpander::OFFSET_1_INPUT));
+		addInput(createInput<FWPortInSmall>(Vec(144, 276), module, PWAlgorithmicExpander::PAD_1_INPUT));
+		addInput(createInput<FWPortInSmall>(Vec(178, 276), module, PWAlgorithmicExpander::RATIO_1_INPUT));
 
 
-        addChild(createLight<LargeLight<RedGreenBlueLight>>(Vec(21.5, 241.5), module, PWAlgorithmicExpander::ALGORITHM_1_LIGHT));
+        addChild(createLight<LargeLight<RedGreenBlueLight>>(Vec(11.5, 251.5), module, PWAlgorithmicExpander::ALGORITHM_1_LIGHT));
 
 
         //addChild(createLight<LargeLight<BlueLight>>(Vec(27.5, 341.5), module, PWAlgorithmicExpander::CLOCK_LIGHT));

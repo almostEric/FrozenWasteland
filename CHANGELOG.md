@@ -1,3 +1,10 @@
+### 1.14 (2019-05-15)
+- Added Seriously Slow Envelope Generator
+- Added Axis Rotation to Grid Control Expander
+- Added Well Formed and Perfect Balance Rhythms to QAR
+- Added new scales to Probably Not(e)
+- Reduced CPU usaage of QAR
+ 
 ### 1.13.2 (2019-05-06)
 - Added Portland Weather Grid Control Expander
 

@@ -197,6 +197,7 @@ A collection of unusual plugins that will add a certain coolness to your patches
 - Right click on grid for built in patterns
 - The grid can be shifted in up/down and left/right using CV
 - The Pin Xs control has five modes that change how X values greater than/less than the blue axis line respond to CV
+- The X values can be rotated around the axis
 - Multiple Grid Controls can be chained
 - Can be chained with Tap Breakout Expander
 - Can be chained before a Algorithmic expander (but not after)
@@ -279,10 +280,11 @@ When they are connected this way, the Clock, Mute and Reset signals, and Eoc out
 - Patch EoC (End of Cycle) outputs to next QAR's Start Inputs
 - Last QAR's EoC should be patched back to first QAR's Start Input to create a complete loop.
 - May want to consider using an OR module (Qwelk has a nice one) so that mutiple QAR's outs and accent outs can gate a single unit
-- Each QAR has its own clock input, so tempo changes can easily be created
 - Mute Input keeps rhythm running just no output
 - https://www.youtube.com/watch?v=ARMxz11z9FU is an example of how to patch a couple QARs together and drive some drum synths
 - Normally each track advances one step every clock beat and are independent. If Time Sync is enabled, the selected track becomes the master and the other tracks will fit their patterns to the timing of the master. This allows for complex polyrhythms (ie. 15 on 13 on 11 on 4, etc.)
+- If X sync is selected, all tracks sync to the number of steps set by the X Sync control
+- If a track's Run Free is enabled, it will not sync to master track - this allows combinations of polyrhythms and polymeters
 - https://www.youtube.com/watch?v=eCErJMKAlVY is an example of the QAR with Time Sync enabled
 ### Euclidean Rhythms
 - Euclidean are based upon attempting to equally distribute the divisions among the steps available
@@ -292,6 +294,14 @@ When they are connected this way, the Clock, Mute and Reset signals, and Eoc out
 ### Golomb Ruler Rhythms
 - Unlike Euclidean Rhythms which seek to evenly distribute the divisions, Golomb Rulers try to ensure unequal distribution
 - Basic example, with a step count of 16, and 4 divisions, the divisions will be on the 1,4,9 and 13.
+### Well Formed Rulers
+- Based on the work of A. J. Milne
+- https://www.researchgate.net/publication/302345911_XronoMorph_Algorithmic_generation_of_perfectly_balanced_and_well-formed_rhythms
+- Needs Well Formed Expander to take full advantage, as there are some additional parameters
+- Works best with multiple WF rhythms in a hierarchy
+### Perfect Balanced Rhythms
+- Based on the work of A. J. Milne
+- https://www.researchgate.net/publication/302345911_XronoMorph_Algorithmic_generation_of_perfectly_balanced_and_well-formed_rhythms
 ### Boolean Logic
 - Uses a boolean operator to combine the previous two tracks (so 3 = 1 & 2, 4 = 2 & 3)
 - Length can't be longer than shortest of the 2 tracks combined
@@ -341,6 +351,15 @@ When they are connected this way, the Clock, Mute and Reset signals, and Eoc out
 - Allows warping the duration of beats
 - The time of the track will stay constant, but some beats will be faster and others slower.
 - The position control allows moving where the warped beats around
+
+## QAR Well Formed Rhythm Expander
+![QAR Warped Space Expander](./doc/qarwf.png)
+
+- Expander Module for Quad Algorithmic Rhythm
+- Provides extra parameters for Well Formed Rhythms
+- Ratio controls the length of long vs. short steps.
+- Left Button is hierarchy - if enabled, the steps and ratio of the track are based on the well formed track above it
+- Right Button is Complmeent - if green, only plays beats where there is not also a beat at same time in the parent track above it. Yellow uses all tracks above.
 
 ## Quantussy Cell
 
@@ -398,6 +417,12 @@ When they are connected this way, the Clock, Mute and Reset signals, and Eoc out
 - Generate oscillating CVs with range from 1 minute to 100 months
 - Phase Control allows LFOs to be offset (cv controllable). 90° button limits offset to 0, 90, 180, 270 degrees.
 - NOTE: Pretty sure my math is correct, but 100 month LFOs have not been unit tested
+
+## Seriously Envelope Generator
+
+![Seriously Slow LFO](./doc/sseg.png)
+- The Seriously Slow LFO's new buddy
+- Basic Envelope Generator but on looooonnnnnnggggg time scales.
 
 ## String Theory VCO
 

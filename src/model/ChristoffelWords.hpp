@@ -1,11 +1,11 @@
 #pragma once
 
-#define MAX_STEPS 73
+#define MAX_WORD_LENGTH 73
 
 
 struct ChristoffelWords {
 
-    uint8_t maxStringLength = 73;;
+    uint8_t maxStringLength = MAX_WORD_LENGTH;
 
     std::string Generate(uint8_t length, uint8_t smallSteps) {
 
@@ -23,7 +23,7 @@ struct ChristoffelWords {
 
         lastList[0] = initial;
         lastListCount = 1;
-        for(int i=0;i<MAX_STEPS;i++) {
+        for(int i=0;i<MAX_WORD_LENGTH;i++) {
             newListCount = 0;
             for(int j=0;j<lastListCount;j++) {
                 std::string s1 = Morph1(lastList[j]); 
