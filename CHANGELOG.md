@@ -1,3 +1,6 @@
+### 1.14.1 (2019-05-16)
+- Fixed Probably Not(e) bug
+
 ### 1.14 (2019-05-15)
 - Added Seriously Slow Envelope Generator
 - Added Axis Rotation to Grid Control Expander

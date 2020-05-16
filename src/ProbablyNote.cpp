@@ -395,27 +395,27 @@ struct ProbablyNote : Module {
 
 		
 
-		// for(int i=0;i<MAX_SCALES;i++) {
-		// 	for(int j=0;j<MAX_NOTES;j++) {
-		// 		char buf[100];
-		// 		char notebuf[100];
-		// 		strcpy(buf, "scaleWeight-");
-		// 		strcat(buf, scaleNames[i]);
-		// 		strcat(buf, ".");
-		// 		sprintf(notebuf, "%i", j);
-		// 		strcat(buf, notebuf);
-		// 		json_object_set_new(rootJ, buf, json_real((float) scaleNoteWeighting[i][j]));
+		for(int i=0;i<MAX_SCALES;i++) {
+			for(int j=0;j<MAX_NOTES;j++) {
+				char buf[140];
+				char notebuf[100];
+				strcpy(buf, "scaleWeight-");
+				strcat(buf, scaleNames[i]);
+				strcat(buf, ".");
+				sprintf(notebuf, "%i", j);
+				strcat(buf, notebuf);
+				json_object_set_new(rootJ, buf, json_real((float) scaleNoteWeighting[i][j]));
 
-		// 		char buf2[100];
-		// 		char notebuf2[100];
-		// 		strcpy(buf2, "scaleStatus-");
-		// 		strcat(buf2, scaleNames[i]);
-		// 		strcat(buf2, ".");
-		// 		sprintf(notebuf2, "%i", j);
-		// 		strcat(buf2, notebuf2);
-		// 		json_object_set_new(rootJ, buf2, json_integer((int) scaleNoteStatus[i][j]));
-		// 	}
-		// }
+				char buf2[140];
+				char notebuf2[100];
+				strcpy(buf2, "scaleStatus-");
+				strcat(buf2, scaleNames[i]);
+				strcat(buf2, ".");
+				sprintf(notebuf2, "%i", j);
+				strcat(buf2, notebuf2);
+				json_object_set_new(rootJ, buf2, json_integer((int) scaleNoteStatus[i][j]));
+			}
+		}
 		return rootJ;
 	};
 
@@ -464,33 +464,33 @@ struct ProbablyNote : Module {
 
 		
 
-		// for(int i=0;i<MAX_SCALES;i++) {
-		// 	for(int j=0;j<MAX_NOTES;j++) {
-		// 		char buf[100];
-		// 		char notebuf[100];
-		// 		strcpy(buf, "scaleWeight-");
-		// 		strcat(buf, scaleNames[i]);
-		// 		strcat(buf, ".");
-		// 		sprintf(notebuf, "%i", j);
-		// 		strcat(buf, notebuf);
-		// 		json_t *sumJ = json_object_get(rootJ, buf);
-		// 		if (sumJ) {
-		// 			scaleNoteWeighting[i][j] = json_real_value(sumJ);
-		// 		}
+		for(int i=0;i<MAX_SCALES;i++) {
+			for(int j=0;j<MAX_NOTES;j++) {
+				char buf[140];
+				char notebuf[100];
+				strcpy(buf, "scaleWeight-");
+				strcat(buf, scaleNames[i]);
+				strcat(buf, ".");
+				sprintf(notebuf, "%i", j);
+				strcat(buf, notebuf);
+				json_t *sumJ = json_object_get(rootJ, buf);
+				if (sumJ) {
+					scaleNoteWeighting[i][j] = json_real_value(sumJ);
+				}
 
-		// 		char buf2[100];
-		// 		char notebuf2[100];
-		// 		strcpy(buf2, "scaleStatus-");
-		// 		strcat(buf2, scaleNames[i]);
-		// 		strcat(buf2, ".");
-		// 		sprintf(notebuf2, "%i", j);
-		// 		strcat(buf2, notebuf2);
-		// 		json_t *sumJ2 = json_object_get(rootJ, buf2);
-		// 		if (sumJ2) {
-		// 			scaleNoteStatus[i][j] = json_integer_value(sumJ2);
-		// 		}
-		// 	}
-		// }		
+				char buf2[140];
+				char notebuf2[100];
+				strcpy(buf2, "scaleStatus-");
+				strcat(buf2, scaleNames[i]);
+				strcat(buf2, ".");
+				sprintf(notebuf2, "%i", j);
+				strcat(buf2, notebuf2);
+				json_t *sumJ2 = json_object_get(rootJ, buf2);
+				if (sumJ2) {
+					scaleNoteStatus[i][j] = json_integer_value(sumJ2);
+				}
+			}
+		}		
 	}
 	
 
