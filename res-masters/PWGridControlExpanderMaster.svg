@@ -54,7 +54,7 @@
      inkscape:pageopacity="0.0"
      inkscape:pageshadow="2"
      inkscape:zoom="5.6568542"
-     inkscape:cx="41.469584"
+     inkscape:cx="-2.5478135"
      inkscape:cy="228.84559"
      inkscape:document-units="px"
      inkscape:current-layer="layer1"
@@ -404,17 +404,10 @@
          x="43.78474"
          y="139.93684"
          style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:2.46944451px;font-family:Homenaje;-inkscape-font-specification:'Homenaje Bold';stroke-width:0.26930147">DETUNE</tspan></text>
-    <text
-       xml:space="preserve"
-       style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:3.59068608px;line-height:1.25;font-family:Homenaje;-inkscape-font-specification:'Homenaje Bold';letter-spacing:0px;word-spacing:0px;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.26930147"
-       x="38.562328"
-       y="68.943871"
-       id="text5443-7-5-4-7-3"
-       transform="scale(1.0163587,0.9839046)"><tspan
-         sodipodi:role="line"
-         id="tspan5441-1-6-3-7-3"
-         x="38.562328"
-         y="68.943871"
-         style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:2.51348042px;font-family:Homenaje;-inkscape-font-specification:'Homenaje Bold';stroke-width:0.26930147">ROTATE</tspan></text>
+    <path
+       inkscape:connector-curvature="0"
+       d="m 42.649419,66.194873 c -0.682855,0 -1.41769,0.203322 -1.41769,0.649775 0,0.39512 0.575641,0.599683 1.181407,0.641506 v 0.36535 l 0.686932,-0.534295 -0.686932,-0.534289 v 0.348102 c -0.543505,-0.04176 -0.826984,-0.219564 -0.826984,-0.286374 0,-0.0759 0.365588,-0.295352 1.063267,-0.295352 0.69768,0 1.063268,0.219448 1.063268,0.295352 0,0.03267 -0.09327,0.130606 -0.370488,0.208991 l -0.04301,0.01209 v 0.364701 l 0.07325,-0.01812 c 0.447932,-0.110816 0.694669,-0.312423 0.694669,-0.567667 0,-0.446452 -0.734835,-0.649774 -1.417691,-0.649774 z"
+       id="path24013"
+       style="fill:#ffffff;fill-opacity:1;stroke-width:0.05907042" />
   </g>
 </svg>

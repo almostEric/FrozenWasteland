@@ -1,3 +1,6 @@
+### 1.14.2 (2019-05-26)
+- Fixed Probably Not(e)-Arabic Bug
+
 ### 1.14.1 (2019-05-16)
 - Fixed Probably Not(e) bug
 

@@ -744,7 +744,7 @@ struct ProbablyNoteArabic : Module {
 
         focus = clamp(params[FOCUS_PARAM].getValue() + (inputs[FOCUS_INPUT].getVoltage() / 10.0f * params[FOCUS_CV_ATTENUVERTER_PARAM].getValue()),0.0f,1.0f);
 
-		family = clamp(params[FAMILY_PARAM].getValue() + (inputs[FAMILY_PARAM].getVoltage() * MAX_FAMILIES / 10.0),0.0,MAX_FAMILIES);
+		family = clamp(params[FAMILY_PARAM].getValue() + (inputs[FAMILY_INPUT].getVoltage() * (MAX_FAMILIES-1) / 10.0),0.0,MAX_FAMILIES-1);
 		if(family != lastFamily) {
 
 			rootJins = jins[family]; 
@@ -771,7 +771,7 @@ struct ProbablyNoteArabic : Module {
 			lastFamily = family;
 		}
 
-		maqamIndex = clamp(params[MAQAM_PARAM].getValue() + (inputs[MAQAM_INPUT].getVoltage() * MAX_MAQAM / 10.0),0.0,11.0f);
+		maqamIndex = clamp(params[MAQAM_PARAM].getValue() + (inputs[MAQAM_INPUT].getVoltage() * (MAX_MAQAM-1.0f) / 10.0),0.0f,numberMaqams-1.0f);
 		if(maqamIndex != lastMaqamIndex || maqamScaleModeChanged || resetMaqamTriggered) {
 			currentMaqam = maqams[family][maqamIndex];
 
@@ -830,7 +830,8 @@ struct ProbablyNoteArabic : Module {
 				
 
 		if(inputs[JINS_SELECT_INPUT].isConnected()) {
-			jinsIndex = clamp((int)inputs[JINS_SELECT_INPUT].getVoltage(0),0,numberActiveAjnas+1); 
+			//jinsIndex = clamp((int)inputs[JINS_SELECT_INPUT].getVoltage(0),0,numberActiveAjnas+1); 
+			jinsIndex = clamp((int)inputs[JINS_SELECT_INPUT].getVoltage(0),0,numberActiveAjnas); 
 			params[CURRENT_JINS_PARAM].setValue(jinsIndex);							
 		}
 
@@ -912,7 +913,7 @@ struct ProbablyNoteArabic : Module {
 			}			
 		}
 
-        int tonicIndex = clamp(params[TONIC_PARAM].getValue() + (inputs[TONIC_INPUT].getVoltage() * (float)numberTonics / 10.0),0.0f,(float)numberTonics);
+        int tonicIndex = clamp(params[TONIC_PARAM].getValue() + (inputs[TONIC_INPUT].getVoltage() * ((float)numberTonics-1) / 10.0),0.0f,(float)numberTonics-1.0);
 		tonic = availableTonics[tonicIndex];
 		
         octave = clamp(params[OCTAVE_PARAM].getValue() + (inputs[OCTAVE_INPUT].getVoltage() * 0.4 * params[OCTAVE_CV_ATTENUVERTER_PARAM].getValue()),-4.0f,4.0f);

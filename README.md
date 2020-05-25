@@ -270,7 +270,7 @@ A collection of unusual plugins that will add a certain coolness to your patches
 ![Quad Algorithmic Rhythm](./doc/qar.png)
 
 - 4 Algorithmic rhythm based triggers
-- 3 Algorithms, Euclidean, Golumb Ruler and Boolean. Each track can use its own Algorithm (Boolean only available on tracks 3 & 4).
+- 5 Algorithms: Euclidean (yellow), Golumb Ruler (blue), Well Formed (green), Perfect Balance (orange) and Boolean (purple). Each track can use its own Algorithm (Boolean only available on tracks 3 & 4).
 - CV Control of Alogorithm. Try hooking EOC output to Algorithm trigger to get alternating rhythms
 - CV control of Steps, Divisions and Offset, Padding, Accents and Accent Rotation
 - QARs can be chained together to create arbitrarily long sequences. This can either be done manually by patching the appropriate outputs and input triggers together, or just by having multiple QARs be adjacent.
