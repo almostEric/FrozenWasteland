@@ -24,6 +24,7 @@ extern Model *modelPortlandWeather;
 extern Model *modelProbablyNote;
 extern Model *modelProbablyNoteArabic;
 extern Model *modelProbablyNoteBP;
+extern Model *modelProbablyNoteEF;
 //extern Model *modelProbablyNoteIndian;
 extern Model *modelPNChordExpander;
 extern Model *modelPWAlgorithmicExpander;
