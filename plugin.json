@@ -134,9 +134,9 @@
 			"tags": ["Quantizer","Random","Polyphonic"]
 		},
 		{
-			"slug": "ProbablyNoteEF",
-			"name": "Probably Note - Euler-Fokker Genera",
-			"description": "Probabilistic Quantizer using Euler-Fokker Genera",
+			"slug": "ProbablyNoteMN",
+			"name": "Probably Note - Math Nerd",
+			"description": "Probabilistic Quantizer using prime number based generative scales",
 			"tags": ["Quantizer","Random","Polyphonic"]
 		},
 		{

@@ -341,7 +341,7 @@ void BPMLFO2::process(const ProcessArgs &args) {
 	} 
 
     if(!holding || (holding && params[HOLD_CLOCK_BEHAVIOR_PARAM].getValue() == 0.0)) {
-    	oscillator.step(1.0 / args.sampleRate);
+    	oscillator.step(args.sampleTime);
     }
 
 	if(!holding) {

@@ -32,7 +32,7 @@ void init(rack::Plugin *p) {
 	p->addModel(modelProbablyNote);
 	p->addModel(modelProbablyNoteArabic);
 	p->addModel(modelProbablyNoteBP);
-	p->addModel(modelProbablyNoteEF);
+	p->addModel(modelProbablyNoteMN);
 	//p->addModel(modelProbablyNoteIndian);
 	p->addModel(modelPNChordExpander);
 	p->addModel(modelPWAlgorithmicExpander);

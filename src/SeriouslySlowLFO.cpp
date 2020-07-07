@@ -2,15 +2,11 @@
 #include "ui/knobs.hpp"
 
 
-//Not sure why this is necessary, but SSLFO is running twice as fast as sample rate says it should
-#define SampleRateCompensation 2
-
-
 
 struct SeriouslySlowLFO : Module {
 	enum ParamIds {
 		TIME_BASE_PARAM,
-		DURATION_PARAM,
+		DURATION_PARAM = TIME_BASE_PARAM + 5,
 		FM_CV_ATTENUVERTER_PARAM,
 		PHASE_PARAM,
 		PHASE_CV_ATTENUVERTER_PARAM,
@@ -63,7 +59,7 @@ struct LowFrequencyOscillator {
 		pw = clamp(pw_, pwMin, 1.0f - pwMin);
 	}
 
-	void setBasePhase(float initialPhase) {
+	void setBasePhase(double initialPhase) {
 		//Apply change, then remember
 		phase += initialPhase - basePhase;
 		if (phase >= 1.0)
@@ -79,7 +75,7 @@ struct LowFrequencyOscillator {
 		phase = basePhase;
 	}
 
-	void step(float dt) {
+	void step(double dt) {
 		//float deltaPhase = fminf(freq * dt, 0.5);
 		double deltaPhase = freq * dt;
 		phase += deltaPhase;
@@ -92,7 +88,7 @@ struct LowFrequencyOscillator {
 		else
 			return sinf(2*M_PI * phase) * (invert ? -1.0 : 1.0);
 	}
-	float tri(float x) {
+	float tri(double x) {
 		return 4.0 * fabsf(x - roundf(x));
 	}
 	float tri() {
@@ -101,7 +97,7 @@ struct LowFrequencyOscillator {
 		else
 			return -1.0 + tri(invert ? phase - 0.25 : phase - 0.75);
 	}
-	float saw(float x) {
+	float saw(double x) {
 		return 2.0 * (x - roundf(x));
 	}
 	float saw() {
@@ -123,7 +119,7 @@ struct LowFrequencyOscillator {
 
 
 	LowFrequencyOscillator oscillator;
-	dsp::SchmittTrigger sumTrigger, quantizePhaseTrigger, resetTrigger;
+	dsp::SchmittTrigger timeBaseTrigger[5], quantizePhaseTrigger, resetTrigger;
 	
 	double duration = 0.0;
 	double initialPhase = 0.0;
@@ -146,9 +142,17 @@ struct LowFrequencyOscillator {
 
 	void process(const ProcessArgs &args) override {
 
-		if (sumTrigger.process(params[TIME_BASE_PARAM].getValue())) {
-			timeBase = (timeBase + 1) % 5;
-			oscillator.hardReset();
+		// if (sumTrigger.process(params[TIME_BASE_PARAM].getValue())) {
+		// 	timeBase = (timeBase + 1) % 5;
+		// 	oscillator.hardReset();
+		// }
+
+		for(int timeIndex = 0;timeIndex<5;timeIndex++)
+		{	
+			if (timeBaseTrigger[timeIndex].process(params[TIME_BASE_PARAM+timeIndex].getValue())) {
+				timeBase = timeIndex;
+				oscillator.hardReset();
+			}
 		}
 
 		if(resetTrigger.process(params[RESET_PARAM].getValue() + inputs[RESET_INPUT].getVoltage())) {
@@ -170,7 +174,7 @@ struct LowFrequencyOscillator {
 				numberOfSeconds = 604800; // Weeks
 				break;
 			case 4 :
-				numberOfSeconds = 259200; // Months
+				numberOfSeconds = 2592000; // Months
 				break;
 		}
 
@@ -180,7 +184,7 @@ struct LowFrequencyOscillator {
 		}
 		duration = clamp(duration,1.0f,100.0f);
 
-		oscillator.setFrequency(1.0 / (duration * SampleRateCompensation * numberOfSeconds));
+		oscillator.setFrequency(1.0 / (duration * numberOfSeconds));
 
 		if (quantizePhaseTrigger.process(params[QUANTIZE_PHASE_PARAM].getValue())) {
 			phase_quantized = !phase_quantized;
@@ -199,10 +203,12 @@ struct LowFrequencyOscillator {
 			initialPhase = std::round(initialPhase * 4.0f) / 4.0f;
 		
 		oscillator.offset = (params[OFFSET_PARAM].getValue() > 0.0);
-		oscillator.setBasePhase(initialPhase);
+		//oscillator.setBasePhase(initialPhase);
 
 		//sr= args.sampleRate / 1000; // Test Code
-		oscillator.step(1.0 / args.sampleRate);
+		oscillator.step(args.sampleTime);
+
+		        //fprintf(stderr, "sample time %f \n",args.sampleTime);
 
 
 		outputs[SIN_OUTPUT].setVoltage(5.0 * oscillator.sin());
@@ -311,7 +317,7 @@ struct SeriouslySlowLFOWidget : ModuleWidget {
 			addChild(display);
 		}
 
-		addParam(createParam<CKD6>(Vec(8, 240), module, SeriouslySlowLFO::TIME_BASE_PARAM));
+		//addParam(createParam<CKD6>(Vec(8, 240), module, SeriouslySlowLFO::TIME_BASE_PARAM));
 		addParam(createParam<RoundLargeFWKnob>(Vec(56, 80), module, SeriouslySlowLFO::DURATION_PARAM));
 		addParam(createParam<RoundSmallFWKnob>(Vec(99, 111), module, SeriouslySlowLFO::FM_CV_ATTENUVERTER_PARAM));
 
@@ -331,12 +337,18 @@ struct SeriouslySlowLFOWidget : ModuleWidget {
 		addOutput(createOutput<PJ301MPort>(Vec(98, 320), module, SeriouslySlowLFO::SAW_OUTPUT));
 		addOutput(createOutput<PJ301MPort>(Vec(132, 320), module, SeriouslySlowLFO::SQR_OUTPUT));
 
-		addChild(createLight<MediumLight<BlueLight>>(Vec(5, 168), module, SeriouslySlowLFO::MINUTES_LIGHT));
-		addChild(createLight<MediumLight<BlueLight>>(Vec(5, 183), module, SeriouslySlowLFO::HOURS_LIGHT));
-		addChild(createLight<MediumLight<BlueLight>>(Vec(5, 198), module, SeriouslySlowLFO::DAYS_LIGHT));
-		addChild(createLight<MediumLight<BlueLight>>(Vec(5, 213), module, SeriouslySlowLFO::WEEKS_LIGHT));
-		addChild(createLight<MediumLight<BlueLight>>(Vec(5, 228), module, SeriouslySlowLFO::MONTHS_LIGHT));
-		addChild(createLight<MediumLight<BlueLight>>(Vec(62, 188), module, SeriouslySlowLFO::QUANTIZE_PHASE_LIGHT));
+
+		for(int i = 0;i<5;i++) {
+			addParam(createParam<LEDButton>(Vec(3.5, 166 + i*20.0), module, SeriouslySlowLFO::TIME_BASE_PARAM+i));
+			addChild(createLight<LargeLight<BlueLight>>(Vec(5, 167.5 + i*20.0), module, SeriouslySlowLFO::MINUTES_LIGHT + i));
+		}
+
+		// addChild(createLight<MediumLight<BlueLight>>(Vec(5, 183), module, SeriouslySlowLFO::HOURS_LIGHT));
+		// addChild(createLight<MediumLight<BlueLight>>(Vec(5, 198), module, SeriouslySlowLFO::DAYS_LIGHT));
+		// addChild(createLight<MediumLight<BlueLight>>(Vec(5, 213), module, SeriouslySlowLFO::WEEKS_LIGHT));
+		// addChild(createLight<MediumLight<BlueLight>>(Vec(5, 228), module, SeriouslySlowLFO::MONTHS_LIGHT));
+
+		addChild(createLight<LargeLight<BlueLight>>(Vec(59.5, 185.5), module, SeriouslySlowLFO::QUANTIZE_PHASE_LIGHT));
 	}
 };
 

@@ -1,42 +1,46 @@
-### 1.14.2 (2019-05-26)
+### 1.15.0 (2020-07-07)
+- Added Probably Note - Math Nerd module
+- Fixed Seriously Slow LFO bug
+
+### 1.14.2 (2020-05-26)
 - Fixed Probably Not(e)-Arabic Bug
 
-### 1.14.1 (2019-05-16)
+### 1.14.1 (2020-05-16)
 - Fixed Probably Not(e) bug
 
-### 1.14 (2019-05-15)
+### 1.14 (2020-05-15)
 - Added Seriously Slow Envelope Generator
 - Added Axis Rotation to Grid Control Expander
 - Added Well Formed and Perfect Balance Rhythms to QAR
 - Added new scales to Probably Not(e)
 - Reduced CPU usaage of QAR
  
-### 1.13.2 (2019-05-06)
+### 1.13.2 (2020-05-06)
 - Added Portland Weather Grid Control Expander
 
-### 1.13.1 (2019-04-29)
+### 1.13.1 (2020-04-29)
 - Added Portland Weather Tap Breakout Expander back
 - Changed QAR's UI, expanded # of steps to 72
 - Lots of bug fixes with chaining QARs and expanders. Got audio rate chaining working
 
-### 1.13.0 (2019-04-28)
+### 1.13.0 (2020-04-28)
 - Added Portland Weather Algorithm Expander
 - Added Midichlorian
 - Minor bug fixes to PW and QAR
 - Removed PW Tap Breakout expander due to expander bus audio rate limitations
 
-### 1.12.1 (2019-03-25)
+### 1.12.1 (2020-03-25)
 - Added new module - Portland Weather Tab Breakout Expander
 - Added Gate/Trigger Modes to Seeds of Change and SoC Gate Expander
 - Added Div Reset Mode to The Gardner
 - Fixed bug in Mr. Blue Sky, added invert mode
 
-### 1.12.0 (2019-02-11)
+### 1.12.0 (2020-02-11)
 - Massive performance improvements on Portland Weather and Hair Pick
 - Probably Not(e) and Probably Not(e) Bohlen-Pierce are now polyphonic
 - Removed dependencies on a bunch of 3rd party libraries
 
-### 1.11.0 (2019-01-11)
+### 1.11.0 (2020-01-11)
 - New Module: The Gardener
 - Bug fixes to Seeds of Change
 - Damian Lillard works a little better, more work to be done

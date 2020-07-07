@@ -177,7 +177,7 @@ struct SeriouslySlowEG : Module {
 				numberOfSeconds = 604800; // Weeks
 				break;
 			case 5 :
-				numberOfSeconds = 259200; // Months
+				numberOfSeconds = 2592000; // Months
 				break;
 		}
 		return numberOfSeconds;
@@ -371,11 +371,11 @@ struct SeriouslySlowEG : Module {
 						break;
 					}
 					case LOGARITHMIC_SHAPE: {
-						envelope = stageProgress >= 1.0 ? 0.0 : pow(1.0 - stageProgress, shapeInverseExponent);
+						envelope = stageProgress >= 1.0 ? 0.0 : pow(1.0 - stageProgress, shapeExponent);
 						break;
 					}
 					default: {
-						envelope = stageProgress >= 1.0 ? 0.0 : pow(1.0 - stageProgress, shapeExponent);
+						envelope = stageProgress >= 1.0 ? 0.0 : pow(1.0 - stageProgress, shapeInverseExponent);
 						break;
 					}
 				}
@@ -400,11 +400,11 @@ struct SeriouslySlowEG : Module {
 						break;
 					}
 					case LOGARITHMIC_SHAPE: {
-						envelope = stageProgress >= 1.0 ? 0.0 : pow(1.0 - stageProgress, shapeInverseExponent);
+						envelope = stageProgress >= 1.0 ? 0.0 : pow(1.0 - stageProgress, shapeExponent);
 						break;
 					}
 					default: {
-						envelope = stageProgress >= 1.0 ? 0.0 : pow(1.0 - stageProgress, shapeExponent);
+						envelope = stageProgress >= 1.0 ? 0.0 : pow(1.0 - stageProgress, shapeInverseExponent);
 						break;
 					}
 				}
