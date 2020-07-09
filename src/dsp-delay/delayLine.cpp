@@ -1,6 +1,6 @@
 #include "frame.h"
 
-#define DELAY_LINE_SIZE 1<<22
+#define DELAY_LINE_SIZE 1<<24
 
 #define MAKE_INTEGRAL_FRACTIONAL(x) \
   int x ## _integral = static_cast<int32_t>(x); \

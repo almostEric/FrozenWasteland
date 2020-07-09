@@ -8,7 +8,7 @@
 #include <iostream>
 #include <time.h>
 
-#define HISTORY_SIZE (1<<22)
+#define HISTORY_SIZE (1<<24)
 #define NUM_TAPS 16
 #define MAX_GRAINS 4
 #define CHANNELS 2
@@ -53,6 +53,7 @@ struct PortlandWeather : Module {
 		STACK_TRIGGER_MODE_PARAM,
 		MUTE_TRIGGER_MODE_PARAM,
 		COMPRESSION_MODE_PARAM,
+		CLOCK_MULT_PARAM,
 		NUM_PARAMS
 	};
 	enum InputIds {
@@ -88,6 +89,7 @@ struct PortlandWeather : Module {
 		TAP_DETUNE_CV_INPUT = TAP_PITCH_SHIFT_CV_INPUT + NUM_TAPS,
 		IN_L_INPUT = TAP_DETUNE_CV_INPUT+NUM_TAPS,
 		IN_R_INPUT,
+		CLOCK_MULT_CV_INPUT,
 		NUM_INPUTS
 	};
 	enum OutputIds {
@@ -262,9 +264,10 @@ struct PortlandWeather : Module {
 
 	
 	dsp::SchmittTrigger clockTrigger,pingPongTrigger,reverseTrigger,clearBufferTrigger,compressionModeTrigger,mutingTrigger[NUM_TAPS],stackingTrigger[NUM_TAPS];
-	double divisions[DIVISIONS] = {1/256.0,1/192.0,1/128.0,1/96.0,1/64.0,1/48.0,1/32.0,1/24.0,1/16.0,1/13.0,1/12.0,1/11.0,1/8.0,1/7.0,1/6.0,1/5.0,1/4.0,1/3.0,1/2.0,1/1.5,1,1/1.5,2.0,3.0,4.0,5.0,6.0,7.0,8.0,9.0,10.0,11.0,12.0,13.0,16.0,24.0};
-	const char* divisionNames[DIVISIONS] = {"/256","/192","/128","/96","/64","/48","/32","/24","/16","/13","/12","/11","/8","/7","/6","/5","/4","/3","/2","/1.5","x 1","x 1.5","x 2","x 3","x 4","x 5","x 6","x 7","x 8","x 9","x 10","x 11","x 12","x 13","x 16","x 24"};
-	int division = 0;
+	//double divisions[DIVISIONS] = {1/256.0,1/192.0,1/128.0,1/96.0,1/64.0,1/48.0,1/32.0,1/24.0,1/16.0,1/13.0,1/12.0,1/11.0,1/8.0,1/7.0,1/6.0,1/5.0,1/4.0,1/3.0,1/2.0,1/1.5,1,1/1.5,2.0,3.0,4.0,5.0,6.0,7.0,8.0,9.0,10.0,11.0,12.0,13.0,16.0,24.0};
+	//const char* divisionNames[DIVISIONS] = {"/256","/192","/128","/96","/64","/48","/32","/24","/16","/13","/12","/11","/8","/7","/6","/5","/4","/3","/2","/1.5","x 1","x 1.5","x 2","x 3","x 4","x 5","x 6","x 7","x 8","x 9","x 10","x 11","x 12","x 13","x 16","x 24"};
+	double division = 1;
+	double multiplier = 1;
 	double timeElapsed = 0.0;
 	double duration = 0;
 	double baseDelay = 0.0;
@@ -290,7 +293,8 @@ struct PortlandWeather : Module {
 	PortlandWeather() {
 		config(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS, NUM_LIGHTS);
 
-		configParam(CLOCK_DIV_PARAM, 0, DIVISIONS-1, 0,"Divisions");
+		configParam(CLOCK_DIV_PARAM, 1, 256, 1,"Clock Division");
+		configParam(CLOCK_MULT_PARAM, 1, 256, 1,"Clock Multiply");
 		configParam(TIME_PARAM, 0.0f, 10.0f, 0.350f,"Time"," ms",0,16000);
 		
 
@@ -448,12 +452,17 @@ struct PortlandWeather : Module {
 		tapGroovePattern = (int)clamp(params[GROOVE_TYPE_PARAM].getValue() + (inputs[GROOVE_TYPE_CV_INPUT].isConnected() ?  inputs[GROOVE_TYPE_CV_INPUT].getVoltage() / 10.0f : 0.0f),0.0f,15.0);
 		grooveAmount = clamp(params[GROOVE_AMOUNT_PARAM].getValue() + (inputs[GROOVE_AMOUNT_CV_INPUT].isConnected() ? inputs[GROOVE_AMOUNT_CV_INPUT].getVoltage() / 10.0f : 0.0f),0.0f,1.0f);
 
-		float divisionf = params[CLOCK_DIV_PARAM].getValue();
+		division = params[CLOCK_DIV_PARAM].getValue();
 		if(inputs[CLOCK_DIVISION_CV_INPUT].isConnected()) {
-			divisionf +=(inputs[CLOCK_DIVISION_CV_INPUT].getVoltage() * (DIVISIONS / 10.0));
+			division +=(inputs[CLOCK_DIVISION_CV_INPUT].getVoltage() * 25.6);
 		}
-		divisionf = clamp(divisionf,0.0f,35.0f);
-		division = (DIVISIONS-1) - int(divisionf); //TODO: Reverse Division Order
+		division = clamp(std::floor(division),1.0f,256.0f);
+
+		multiplier = params[CLOCK_MULT_PARAM].getValue();
+		if(inputs[CLOCK_MULT_CV_INPUT].isConnected()) {
+			multiplier +=(inputs[CLOCK_MULT_CV_INPUT].getVoltage() * 25.6);
+		}
+		multiplier = clamp(std::floor(multiplier),1.0f,256.0f);
 
 		bool rightExpanderPresent = (rightExpander.module && (rightExpander.module->model == modelPWTapBreakoutExpander || rightExpander.module->model == modelPWAlgorithmicExpander || rightExpander.module->model == modelPWGridControlExpander));
 		bool algorithmExpanderPresent = false;
@@ -516,7 +525,7 @@ struct PortlandWeather : Module {
 			usingAlgorithm = true;
 			//Clock for algorithn
 			messageToExpander[0] = inputs[CLOCK_INPUT].getVoltage();
-			messageToExpander[1] = divisions[division];
+			messageToExpander[1] = division;
 
 			//Get Delay Times
 			for(int tap=0;tap<NUM_TAPS;tap++) {
@@ -546,13 +555,14 @@ struct PortlandWeather : Module {
 				//duration = timeElapsed;
 				//duration = 1;
 			}	
-			baseDelay = duration / divisions[division];
-			if(baseDelay > 30000.0f) {
-				baseDelay = 30000.0f;
-			}
+			//baseDelay = duration / division;
+			baseDelay = clamp(duration / multiplier * division,0.001f,99.0f);
+			// if(baseDelay > HISTORY_SIZE / sampleRate) {
+			// 	baseDelay = HISTORY_SIZE / sampleRate - 1.0;
+			// }
 				
 		} else {
-			baseDelay = clamp(params[TIME_PARAM].getValue() + inputs[TIME_CV_INPUT].getVoltage(), 0.001f, HISTORY_SIZE / sampleRate);	
+			baseDelay = clamp(params[TIME_PARAM].getValue() + inputs[TIME_CV_INPUT].getVoltage(), 0.001f, 99.0f);	
 			duration = 0.0f;
 			firstClockReceived = false;
 			secondClockReceived = false;			
@@ -820,8 +830,6 @@ struct PortlandWeather : Module {
 				pan = clamp(expanderPans[tap],-1.0f,1.0f);
 				params[TAP_PAN_PARAM+tap].setValue(pan);
 			}
-			// wetTap.l = wetTap.l * muteSmoothing * level * (1.0 - pan);  std::max(1.0 - pan,0.0)
-			// wetTap.r = wetTap.r * muteSmoothing * level * pan;   std::max(pan+1.0,1.0);
 			wetTap.l = wetTap.l * muteSmoothing * level * std::max(1.0 - pan,0.0);  
 			wetTap.r = wetTap.r * muteSmoothing * level * std::max(pan+1.0,1.0);   
 
@@ -1105,23 +1113,25 @@ struct PWStatusDisplay : TransparentWidget {
 		nvgFill(args.vg);
 	}
 
-	void drawDivision(const DrawArgs &args, Vec pos, int division) {
-		nvgFontSize(args.vg, 28);
+	void drawDivisionMultiplier(const DrawArgs &args, Vec pos, double dm) {
+		nvgFontSize(args.vg, 20);
 		nvgFontFaceId(args.vg, fontNumbers->handle);
 		nvgTextLetterSpacing(args.vg, -2);
-
+		nvgTextAlign(args.vg,NVG_ALIGN_RIGHT);
+		
 		//nvgFillColor(args.vg, nvgRGBA(0x00, 0xff, 0x00, 0xff));
 		nvgFillColor(args.vg, nvgRGBA(0x4a, 0xc3, 0x27, 0xff));
 		char text[128];
-		snprintf(text, sizeof(text), "%s", module->divisionNames[division]);
+		snprintf(text, sizeof(text), "%3.0f", dm);
 		nvgText(args.vg, pos.x, pos.y, text, NULL);
 	}
 
 	void drawDelayTime(const DrawArgs &args, Vec pos, float delayTime) {
-		nvgFontSize(args.vg, 28);
+		nvgFontSize(args.vg, 26);
 		nvgFontFaceId(args.vg, fontNumbers->handle);
 		nvgTextLetterSpacing(args.vg, -2);
-
+		nvgTextAlign(args.vg,NVG_ALIGN_RIGHT);
+		
 		//nvgFillColor(args.vg, nvgRGBA(0x00, 0xff, 0x00, 0xff));
 		nvgFillColor(args.vg, nvgRGBA(0x4a, 0xc3, 0x27, 0xff));
 		char text[128];
@@ -1133,6 +1143,8 @@ struct PWStatusDisplay : TransparentWidget {
 		nvgFontSize(args.vg, 14);
 		nvgFontFaceId(args.vg, fontText->handle);
 		nvgTextLetterSpacing(args.vg, -2);
+		nvgTextAlign(args.vg,NVG_ALIGN_LEFT);
+		
 
 		nvgFillColor(args.vg, nvgRGBA(0x00, 0xff, 0x00, 0xff));
 		char text[128];
@@ -1144,6 +1156,8 @@ struct PWStatusDisplay : TransparentWidget {
 		nvgFontSize(args.vg, 12);
 		nvgFontFaceId(args.vg, fontText->handle);
 		nvgTextLetterSpacing(args.vg, -2);
+		nvgTextAlign(args.vg,NVG_ALIGN_RIGHT);
+		
 
 		nvgFillColor(args.vg, nvgRGBA(0x00, 0xff, 0x00, 0xff));
 		for(int i=0;i<CHANNELS;i++) {
@@ -1226,13 +1240,14 @@ struct PWStatusDisplay : TransparentWidget {
 		if (!module)
 			return;
 		
-		drawDivision(args, Vec(100,65), module->division);
+		drawDivisionMultiplier(args, Vec(105,56), module->multiplier);
+		drawDivisionMultiplier(args, Vec(156,56), module->division);
 		//drawDelayTime(args, Vec(82,65), module->testDelay);
-		drawDelayTime(args, Vec(82,127), module->baseDelay);
-		drawGrooveType(args, Vec(95,203), module->tapGroovePattern, module->usingAlgorithm);
-		drawFeedbackTaps(args, Vec(292,174), module->feedbackTap);
-		drawFeedbackPitch(args, Vec(292,254), module->feedbackPitch);
-		drawFeedbackDetune(args, Vec(292,295), module->feedbackDetune);
+		drawDelayTime(args, Vec(178,130), module->baseDelay);
+		drawGrooveType(args, Vec(88,203), module->tapGroovePattern, module->usingAlgorithm);
+		drawFeedbackTaps(args, Vec(310,174), module->feedbackTap);
+		drawFeedbackPitch(args, Vec(310,254), module->feedbackPitch);
+		drawFeedbackDetune(args, Vec(310,295), module->feedbackDetune);
 		
 		drawFilterTypes(args, Vec(490,210), module->lastFilterType);
 		//drawTapPitchShift(args, Vec(513,320), module->tapPitchShift);
@@ -1266,8 +1281,10 @@ struct PortlandWeatherWidget : ModuleWidget {
 			addChild(display);
 		}
 
-		addParam(createParam<RoundLargeFWSnapKnob>(Vec(12, 40), module, PortlandWeather::CLOCK_DIV_PARAM));
-		addParam(createParam<RoundLargeFWKnob>(Vec(12, 100), module, PortlandWeather::TIME_PARAM));
+		addParam(createParam<RoundLargeFWSnapKnob>(Vec(12, 40), module, PortlandWeather::CLOCK_MULT_PARAM));
+		addParam(createParam<RoundLargeFWSnapKnob>(Vec(170, 40), module, PortlandWeather::CLOCK_DIV_PARAM));
+		addParam(createParam<RoundLargeFWKnob>(Vec(12, 105), module, PortlandWeather::TIME_PARAM));
+
 
 		addParam(createParam<RoundLargeFWSnapKnob>(Vec(12, 175), module, PortlandWeather::GROOVE_TYPE_PARAM));
 		addParam(createParam<RoundLargeFWKnob>(Vec(12, 230), module, PortlandWeather::GROOVE_AMOUNT_PARAM));
@@ -1332,8 +1349,9 @@ struct PortlandWeatherWidget : ModuleWidget {
 		
 
 
-		addInput(createInput<PJ301MPort>(Vec(55, 45), module, PortlandWeather::CLOCK_DIVISION_CV_INPUT));
-		addInput(createInput<PJ301MPort>(Vec(55, 105), module, PortlandWeather::TIME_CV_INPUT));
+		addInput(createInput<PJ301MPort>(Vec(55, 66), module, PortlandWeather::CLOCK_MULT_CV_INPUT));
+		addInput(createInput<PJ301MPort>(Vec(146, 66), module, PortlandWeather::CLOCK_DIVISION_CV_INPUT));
+		addInput(createInput<PJ301MPort>(Vec(55, 110), module, PortlandWeather::TIME_CV_INPUT));
 		
 		addInput(createInput<PJ301MPort>(Vec(55, 180), module, PortlandWeather::GROOVE_TYPE_CV_INPUT));
 		addInput(createInput<PJ301MPort>(Vec(55, 235), module, PortlandWeather::GROOVE_AMOUNT_CV_INPUT));

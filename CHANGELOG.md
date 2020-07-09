@@ -1,3 +1,7 @@
+### 1.15.1 (2020-07-07)
+- Refactored Clock Division in Portland Weather
+- Fixed Seriously Slow EG Bug
+
 ### 1.15.0 (2020-07-07)
 - Added Probably Note - Math Nerd module
 - Fixed Seriously Slow LFO bug
