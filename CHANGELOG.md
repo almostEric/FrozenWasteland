@@ -1,3 +1,6 @@
+### 1.15.2 (2020-07-18)
+- Fixed Randomization bug in Probably Note - Math Nerd
+
 ### 1.15.1 (2020-07-07)
 - Refactored Clock Division in Portland Weather
 - Fixed Seriously Slow EG Bug

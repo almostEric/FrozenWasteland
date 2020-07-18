@@ -13,8 +13,9 @@
 #include <vector>
 
 #define POLYPHONY 16
-#define MAX_PRIME_NUMBERS 46 //Up to 200
+#define MAX_PRIME_NUMBERS 49 //Up to 200 and some transcenttals
 #define MAX_FACTORS 10
+#define MAX_GENERATED_PITCHES 100000 //hard limit but to prevent getting silly
 #define MAX_PITCHES 128 //Not really a hard limit but to prevent getting silly
 #define MAX_SCALES 42
 #define MAX_NOTES 12
@@ -36,8 +37,8 @@
 using namespace frozenwasteland::dsp;
 
 struct EFPitch {
-  uint64_t numerator;
-  uint64_t denominator;
+  float numerator;
+  float denominator;
   float ratio;
   float pitch;
   float dissonance;
@@ -151,13 +152,14 @@ struct ProbablyNoteMN : Module {
 
 	const char* algorithms[NBR_ALGORITHMS] = {"Euclidean","Golumb Ruler","Perfect Balance"};
 
-
+// “”
 	const char* noteNames[MAX_NOTES] = {"C","C#/Db","D","D#/Eb","E","F","F#/Gb","G","G#/Ab","A","A#/Bb","B"};
-    const int primeNumbers[MAX_PRIME_NUMBERS] = {2,3,5,7,11,13,17,19,23,29,31,37,41,43,47,53,59,61,67,71,73,79,83,89,97,101,103,107,109,113,127,131,137,139,149,151,157,163,167,173,179,181,191,193,197,199};
+    const float primeNumbers[MAX_PRIME_NUMBERS] = {(1 + std::sqrt(5))/2.0,M_E,M_PI,2,3,5,7,11,13,17,19,23,29,31,37,41,43,47,53,59,61,67,71,73,79,83,89,97,101,103,107,109,113,127,131,137,139,149,151,157,163,167,173,179,181,191,193,197,199};
+    const std::string primeNumberNames[MAX_PRIME_NUMBERS] = {"ɸ","e","π","2","3","5","7","11","13","17","19","23","29","31","37","41","43","47","53","59","61","67","71","73","79","83","89","97","101","103","107","109","113","127","131","137","139","149","151","157","163","167","173","179","181","191","193","197","199"};
 
 	//GOLOMB RULER PATTERNS
     const int rulerOrders[NUM_RULERS] = {1,2,3,4,5,5,6,6,6,6,7,7,7,7,7,8,9,10,11,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27};
-	const int rulerLengths[NUM_RULERS] = {0,1,3,6,11,11,17,17,17,17,25,25,25,25,25,34,44,55,72,72,85,106,127,151,177,199,216,246,283,333,356,372,425,480,492,553};
+	const uint64_t rulerLengths[NUM_RULERS] = {0,1,3,6,11,11,17,17,17,17,25,25,25,25,25,34,44,55,72,72,85,106,127,151,177,199,216,246,283,333,356,372,425,480,492,553};
 	const std::string rulerNames[NUM_RULERS] = {"1","2","3","4","5a","5b","6a","6b","6c","6d","7a","7b","7c","7d","7e","8","9","10","11a","11b","12","13","14","15","16","17","18","19","20","21","22","23","24","25","26","27"};
 	const int rulers[NUM_RULERS][MAX_DIVISIONS] = {{0},
 												   {0,1},
@@ -200,7 +202,7 @@ struct ProbablyNoteMN : Module {
 		
 	//PERFECT BALANCE PATTERNS
     const int pbPatternOrders[NUM_PB_PATTERNS] = {2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,27,29,6,7,7,8,8,9,31,37,41,8,9,9,9,10,10,10,10,10,11,11,11,11,11,12,12,12,13,43,47,53,59,61,67,13,13,13,15,15,16,16,16,16,16,16,16,16,16,16,16,10,17,17,17,17,17,17,17,17,17,17,18,18,18,18,18,18,18,18,18,18,19,19,19,19,19,19,19,19,19,19,19,20,20,22,22,22,25,71,73};
-	const int pbPatternLengths[NUM_PB_PATTERNS] = {2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,27,29,30,30,30,30,30,30,31,37,41,42,42,42,42,42,42,42,42,42,42,42,42,42,42,42,42,42,42,43,47,53,59,61,67,70,70,70,70,70,70,70,70,70,70,70,70,70,70,70,70,70,70,70,70,70,70,70,70,70,70,70,70,70,70,70,70,70,70,70,70,70,70,70,70,70,70,70,70,70,70,70,70,70,70,70,70,70,70,71,73};
+	const uint64_t pbPatternLengths[NUM_PB_PATTERNS] = {2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,27,29,30,30,30,30,30,30,31,37,41,42,42,42,42,42,42,42,42,42,42,42,42,42,42,42,42,42,42,43,47,53,59,61,67,70,70,70,70,70,70,70,70,70,70,70,70,70,70,70,70,70,70,70,70,70,70,70,70,70,70,70,70,70,70,70,70,70,70,70,70,70,70,70,70,70,70,70,70,70,70,70,70,70,70,70,70,70,70,71,73};
 	const std::string pbPatternNames[NUM_PB_PATTERNS] = {"2","3","4","5","6","7","8","9","10","11","12","13","14","15","16","17","18","19","20","21","22","23","24","25","27","29","6-in-30","7a-in-30","7b-in-30","8b-in-30","8a-in-30","9-in-30","31","37","41",
 	"8-in-42","9a-in-42","9b-in-42","9c-in-42","10a-in-42","10b-in-42","10c-in-42","10d-in-42","10e-in-42","11a-in-42","11b-in-42","11c-in-42","11d-in-42","11e-in-42","12a-in-42","12b-in-42","12c-in-42","13-in-42","43","47","53","59","61","67",
 	"13a-in-70","13b-in-70","13c-in-70","15a-in-70","15b-in-70","16a-in-70","16b-in-70","16c-in-70","16d-in-70","16e-in-70","16f-in-70","16g-in-70","16h-in-70","16i-in-70","16j-in-70","16k-in-70","10-in-70","17a-in-70","17b-in-70","17c-in-70","17d-in-70","17e-in-70","17f-in-70","17g-in-70","17h-in-70","17i-in-70","17j-in-70","18a-in-70","18b-in-70","18c-in-70","18d-in-70","18e-in-70","18f-in-70","18g-in-70","18h-in-70","18i-in-70","18j-in-70","19a-in-70","19b-in-70","19c-in-70","19d-in-70","19e-in-70","19f-in-70","19g-in-70","19h-in-70","19i-in-70","19j-in-70","19k-in-70","20a-in-70","20b-in-70","22a-in-70","22b-in-70","22c-in-70","25-in-70","71","73"};
@@ -430,8 +432,9 @@ struct ProbablyNoteMN : Module {
 	float actualProbability[POLYPHONY][MAX_NOTES] = {{0.0f}};
 	int controlIndex[MAX_NOTES] = {0};
 
-	uint8_t factors[MAX_FACTORS] = {0};
-    uint8_t lastFactors[MAX_FACTORS] = {0};
+	float factors[MAX_FACTORS] = {0};
+    float lastFactors[MAX_FACTORS] = {0};
+	std::string factorNames[MAX_FACTORS] = {""};
     uint8_t stepsN[MAX_FACTORS] = {0};
     uint8_t lastNSteps[MAX_FACTORS] = {0};
     uint8_t actualNSteps[MAX_FACTORS] = {0};
@@ -483,7 +486,7 @@ struct ProbablyNoteMN : Module {
 	float focus = 0; 
 	float dissonanceProbability = 0; 
 	int currentNote[POLYPHONY] = {0};
-	int probabilityNote[POLYPHONY] = {0};
+	uint64_t probabilityNote[POLYPHONY] = {0};
 	double lastQuantizedCV[POLYPHONY] = {0.0};
 	bool noteChange = false;
 	bool resetTriggered = false;
@@ -513,7 +516,7 @@ struct ProbablyNoteMN : Module {
         configParam(ProbablyNoteMN::SHIFT_CV_ATTENUVERTER_PARAM, -1.0, 1.0, 0.0,"Weight Shift CV Attenuation" ,"%",0,100);
 		configParam(ProbablyNoteMN::KEY_PARAM, 0.0, 10.0, 0.0,"Key");
         configParam(ProbablyNoteMN::KEY_CV_ATTENUVERTER_PARAM, -1.0, 1.0, 0.0,"Key CV Attenuation","%",0,100); 
-		configParam(ProbablyNoteMN::NUMBER_OF_NOTES_PARAM, 1.0, 115.0, 1.0,"Max # of Notes in Scale");
+		configParam(ProbablyNoteMN::NUMBER_OF_NOTES_PARAM, 1.0, 115.0, 12.0,"Max # of Notes in Scale");
         configParam(ProbablyNoteMN::NUMBER_OF_NOTES_CV_ATTENUVERTER_PARAM, -1.0, 1.0, 0.0,"# of Notes CV Attenuation","%",0,100);
 		configParam(ProbablyNoteMN::SCALE_PARAM, 0.0, MAX_SCALES-1.0, 0.0,"Mapped Scale");
         configParam(ProbablyNoteMN::SCALE_CV_ATTENUVERTER_PARAM, -1.0, 1.0, 0.0,"Mapped Scale CV Attenuation","%",0,100);
@@ -530,7 +533,7 @@ struct ProbablyNoteMN : Module {
         srand(time(NULL));
 
         for(int i=0;i<MAX_FACTORS;i++) {
-            configParam(ProbablyNoteMN::FACTOR_1_PARAM + i, i, MAX_PRIME_NUMBERS-MAX_FACTORS+i, i,"Factor");		
+            configParam(ProbablyNoteMN::FACTOR_1_PARAM + i, i, MAX_PRIME_NUMBERS-MAX_FACTORS+i, i+3,"Factor");		
             configParam(ProbablyNoteMN::FACTOR_1_CV_ATTENUVERTER_PARAM + i, -1.0, 1.0, 0.0,"Factor CV Attenuverter","%",0,100);		
             configParam(ProbablyNoteMN::FACTOR_NUMERATOR_1_STEP_PARAM + i, 0.0, 10.0, 0.0,"Numerator Step Count");		
             configParam(ProbablyNoteMN::FACTOR_NUMERATOR_1_STEP_CV_ATTENUVERTER_PARAM + i, -1.0, 1.0, 0.0,"Numerator Step Count CV Attenuverter","%",0,100);		
@@ -556,7 +559,7 @@ struct ProbablyNoteMN : Module {
         double weightTotal = 0.0f;
 		double linearWeight, logWeight, weight;
             
-        for(int i = 0;i <actualScaleSize; i++) {
+        for(uint64_t i = 0;i <actualScaleSize; i++) {
 			linearWeight = weights[i];
 			logWeight = (std::pow(10,weights[i]) - 1) / 10.0;
 			weight = lerp(linearWeight,logWeight,scaling);
@@ -565,7 +568,7 @@ struct ProbablyNoteMN : Module {
 
         int chosenWeight = -1;        
         double rnd = randomIn * weightTotal;
-        for(int i = 0;i <actualScaleSize;i++ ) {
+        for(uint64_t i = 0;i <actualScaleSize;i++ ) {
 			linearWeight = weights[i];
 			logWeight = (std::pow(10,weights[i]) - 1) / 10.0;
 			weight = lerp(linearWeight,logWeight,scaling);
@@ -602,9 +605,20 @@ struct ProbablyNoteMN : Module {
 		denominatorList.push_back(1);
 
         //Check that we aren't getting too crazy - Simplifying out for now 
+		uint64_t numeratorCount = 1;
+		uint64_t denominatorCount = 1;
+
         for(uint8_t f = 0; f< MAX_FACTORS;f++) {
-            actualDSteps[f] = stepsD[f]; 
-            actualNSteps[f] = stepsN[f];
+			numeratorCount *= (stepsN[f]+1);
+			denominatorCount *= (stepsD[f]+1);
+
+			if(numeratorCount * denominatorCount < MAX_GENERATED_PITCHES) {
+				actualNSteps[f] = stepsN[f];
+				actualDSteps[f] = stepsD[f]; 
+			} else {
+				actualNSteps[f] = 0;
+				actualDSteps[f] = 0; 
+			}
         }
  
         //Calculate Numerators (basically all factors multiplied by each other)
@@ -641,21 +655,24 @@ struct ProbablyNoteMN : Module {
 				float numerator = numeratorList[n];
 				float denominator = ScaleDenominator(numerator,denominatorList[d]);        
 				numerator = ScaleNumerator(numerator,denominator);
-				efPitch.numerator = (uint64_t) numerator;
-				efPitch.denominator = (uint64_t) denominator;        
-				float ratio = numerator / denominator;
-				efPitch.ratio = ratio;
-				if(numerator > 0 && IsUniqueRatio(ratio)) {
-					uint64_t gcd = GCD(efPitch.numerator,efPitch.denominator);
-					efPitch.numerator = efPitch.numerator / gcd;
-					efPitch.denominator = efPitch.denominator / gcd;
-					float pitchInCents = 1200 * std::log2f(ratio);
-					efPitch.pitch = pitchInCents;
-					float dissonance = CalculateDissonance(efPitch.numerator,efPitch.denominator);
-					efPitch.dissonance = dissonance;
-					//fprintf(stderr, "n: %llu d: %llu  p: %f \n", efPitch.numerator, efPitch.denominator, pitchInCents);
-	
-					efPitches.push_back(efPitch);
+				if(numerator <= float(ULLONG_MAX) && denominator <= float(ULLONG_MAX)) {		
+					efPitch.numerator = numerator;
+					efPitch.denominator = denominator;        
+					float ratio = numerator / denominator;
+					efPitch.ratio = ratio;
+					if(numerator > 0 && IsUniqueRatio(ratio)) {
+						//uint64_t gcd = GCD(efPitch.numerator,efPitch.denominator);
+						float gcd = GCD(efPitch.numerator,efPitch.denominator);
+						efPitch.numerator = efPitch.numerator / gcd;
+						efPitch.denominator = efPitch.denominator / gcd;
+						float pitchInCents = 1200 * std::log2f(ratio);
+						efPitch.pitch = pitchInCents;
+						float dissonance = CalculateDissonance(efPitch.numerator,efPitch.denominator);
+						efPitch.dissonance = dissonance;
+						//fprintf(stderr, "n: %llu d: %llu  p: %f \n", efPitch.numerator, efPitch.denominator, pitchInCents);
+		
+						efPitches.push_back(efPitch);
+					}
 				}
 			}
 		}
@@ -667,7 +684,7 @@ struct ProbablyNoteMN : Module {
 
 	bool IsUniqueRatio(float ratio) {
 		bool isUnique = true;
-		for(int i = 0;i<efPitches.size();i++) {
+		for(uint64_t i = 0;i<efPitches.size();i++) {
 			if(efPitches[i].ratio == ratio) {
 				isUnique = false;
 				break;
@@ -679,6 +696,9 @@ struct ProbablyNoteMN : Module {
 
     float ScaleDenominator(float numerator,float denominator)
     {
+		if(denominator <1) {
+			fprintf(stderr, "denominator issue \n");
+		}
 		float newDenominator = denominator;
         while (numerator/newDenominator > 2.0)
         {
@@ -690,6 +710,9 @@ struct ProbablyNoteMN : Module {
 
 	float ScaleNumerator(float numerator,float denominator)
     {
+		if(numerator <=0) {
+			fprintf(stderr, "numerator issue \n");
+		}
 		float newNumerator = numerator;
         while (newNumerator/denominator < 1.0)
         {
@@ -700,24 +723,24 @@ struct ProbablyNoteMN : Module {
         return newNumerator;
     }
 
-    float CalculateDissonance(uint64_t numerator, uint64_t denominator)
+    float CalculateDissonance(float numerator, float denominator)
     {
         float lcm = LCM(numerator, denominator);
         return std::log2f(lcm);
     }
 
     //least common multiple
-    uint64_t LCM(uint64_t a, uint64_t b)
+    float LCM(float a, float b)
     {
         return (a * b) / GCD(a, b);
     }
 
     //Greatest common divisor
-    uint64_t GCD(uint64_t a, uint64_t b)
+    float GCD(float a, float b)
     {
         if (b == 0)
             return a;
-        return GCD(b, a % b);
+        return GCD(b, std::fmod(a,b));
     }
 
 	void ChooseNotes(uint64_t totalSize, uint64_t scaleSize) {
@@ -725,7 +748,7 @@ struct ProbablyNoteMN : Module {
 		pitchIncluded.resize(totalSize);
 		if(totalSize == 0 || scaleSize == 0) 
 			return;
-		for(int i=0;i<totalSize;i++) {
+		for(uint64_t i=0;i<totalSize;i++) {
 			pitchIncluded[i] = 0;
 		}
 		
@@ -775,7 +798,7 @@ struct ProbablyNoteMN : Module {
 
 	void PerfectBalanceAlgo(uint64_t totalSize, uint64_t scaleSize) {
 		int pbPatternToUse = -1;
-		int pbMatchPatternCount = 0;
+		uint64_t pbMatchPatternCount = 0;
 		int pbLastMatchedPattern = 0;
 		bool patternFound = false;
 		while(!patternFound) {
@@ -957,7 +980,9 @@ struct ProbablyNoteMN : Module {
 
         bool scaleChange = false;
         for(int i=0;i<MAX_FACTORS;i++) {
-            factors[i] = primeNumbers[clamp((int) (params[FACTOR_1_PARAM+ i].getValue() + (inputs[FACTOR_1_INPUT + i].getVoltage() * MAX_PRIME_NUMBERS / 10.0 * params[FACTOR_1_CV_ATTENUVERTER_PARAM+i].getValue())),0,MAX_PRIME_NUMBERS-1)];
+			int factorIndex = clamp((int) (params[FACTOR_1_PARAM+ i].getValue() + (inputs[FACTOR_1_INPUT + i].getVoltage() * MAX_PRIME_NUMBERS / 10.0 * params[FACTOR_1_CV_ATTENUVERTER_PARAM+i].getValue())),0,MAX_PRIME_NUMBERS-1);
+            factors[i] = primeNumbers[factorIndex];
+			factorNames[i] = primeNumberNames[factorIndex];
             stepsN[i] = clamp(params[FACTOR_NUMERATOR_1_STEP_PARAM+ i].getValue() + (inputs[FACTOR_NUMERATOR_STEP_1_INPUT + i].getVoltage() * 1.0f * params[FACTOR_NUMERATOR_1_STEP_CV_ATTENUVERTER_PARAM+i].getValue()),0.0f,10.0f);
             stepsD[i] = clamp(params[FACTOR_DENOMINATOR_1_STEP_PARAM+ i].getValue() + (inputs[FACTOR_DENOMINATOR_STEP_1_INPUT + i].getVoltage() * 0.5f * params[FACTOR_DENOMINATOR_1_STEP_CV_ATTENUVERTER_PARAM+i].getValue()),0.0f,5.0f);
             scaleChange = scaleChange || (factors[i] != lastFactors[i]) || (stepsN[i] != lastNSteps[i]) || (stepsD[i] != lastDSteps[i]);
@@ -984,7 +1009,7 @@ struct ProbablyNoteMN : Module {
 
 		if(reloadPitches) {
 			reducedEfPitches.clear();
-			for(int i=0;i<nbrPitches;i++) {
+			for(uint64_t i=0;i<nbrPitches;i++) {
 				if(pitchIncluded[i] > 0) {
 					efPitches[i].inUse = false;
 					reducedEfPitches.push_back(efPitches[i]);
@@ -1003,19 +1028,19 @@ struct ProbablyNoteMN : Module {
 			float scaleSpreadFactor = actualScaleSize / float(MAX_NOTES);
 			switch(scaleMappingMode) {
 				case NO_SCALE_MAPPING :
-					for(int i=0;i<actualScaleSize;i++) {
+					for(uint64_t i=0;i<actualScaleSize;i++) {
 						reducedEfPitches[i].inUse = true;
 						reducedEfPitches[i].weighting = 0.8;
 					}
 					break;
 				case SPREAD_SCALE_MAPPING :
-					for(int i=0;i<reducedEfPitches.size();i++) {
+					for(uint64_t i=0;i<reducedEfPitches.size();i++) {
 						reducedEfPitches[i].inUse = false;
                         reducedEfPitches[i].weighting = 0.8;
 					}
-					for(int i=0;i<MAX_NOTES;i++) {
+					for(uint64_t i=0;i<MAX_NOTES;i++) {
 						if(defaultScaleNoteStatus[scale][i]) {
-							int noteIndex = i * scaleSpreadFactor;
+							uint64_t noteIndex = i * scaleSpreadFactor;
 							//fprintf(stderr, "note index set %i %i \n", noteIndex,reducedEfPitches[noteIndex].inUse);
 							reducedEfPitches[noteIndex].inUse = true;
 							reducedEfPitches[noteIndex].weighting = useScaleWeighting ? defaultScaleNoteWeighting[scale][i] : 1.0;
@@ -1023,8 +1048,8 @@ struct ProbablyNoteMN : Module {
 					}
 					break;
 				case REPEAT_SCALE_MAPPING:
-					int scaleIndex = 0;
-					for(int i=0;i<actualScaleSize;i++) {
+					uint64_t scaleIndex = 0;
+					for(uint64_t i=0;i<actualScaleSize;i++) {
 						if(defaultScaleNoteStatus[scale][scaleIndex]) {
 							reducedEfPitches[i].inUse = true;
 							reducedEfPitches[i].weighting = useScaleWeighting ? defaultScaleNoteWeighting[scale][scaleIndex] : 1.0;
@@ -1072,7 +1097,7 @@ struct ProbablyNoteMN : Module {
 
 											              //fprintf(stderr, "%i %f \n", key, fractionalValue);
 			double lastDif = 1.0f;    
-			for(int i = 0;i<actualScaleSize;i++) {            
+			for(uint64_t i = 0;i<actualScaleSize;i++) {            
 				if(reducedEfPitches[i].inUse) {
 					double currentDif = std::abs((reducedEfPitches[i].pitch / 1200.0) - fractionalValue);
 					if(currentDif < lastDif) {
@@ -1104,8 +1129,8 @@ struct ProbablyNoteMN : Module {
 
 			
 				for(int i=1;i<=actualSpread;i++) {
-					int noteAbove = (currentNote[channel] + i) % actualScaleSize;
-					int noteBelow = (currentNote[channel] - i);
+					int64_t noteAbove = (currentNote[channel] + i) % actualScaleSize;
+					int64_t noteBelow = (currentNote[channel] - i);
 					if(noteBelow < 0)
 						noteBelow +=actualScaleSize;
 
@@ -1181,7 +1206,7 @@ struct ProbablyNoteMN : Module {
 					int randomNote = weightedProbability(noteProbability[channel],params[WEIGHT_SCALING_PARAM].getValue(), rnd);
 					if(randomNote == -1) { //Couldn't find a note, so find first active
 						bool noteOk = false;
-						int notesSearched = 0;
+						uint64_t notesSearched = 0;
 						randomNote = currentNote[channel]; 
 						do {
 							randomNote = (randomNote + 1) % actualScaleSize;
@@ -1297,7 +1322,7 @@ struct ProbablyNoteMNDisplay : TransparentWidget {
 		char text[128];
         for(int i=0;i<MAX_FACTORS;i++) {
     		nvgFontSize(args.vg, 11);
-	        snprintf(text, sizeof(text), "%i", module->factors[i]);
+	        snprintf(text, sizeof(text), "%s", module->factorNames[i].c_str());
             nvgText(args.vg, pos.x, pos.y+i*34.5, text, NULL);
 			nvgFontSize(args.vg, 9);
             snprintf(text, sizeof(text), "%i", module->actualNSteps[i]);
