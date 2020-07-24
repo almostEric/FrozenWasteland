@@ -2,15 +2,17 @@
 #include "ui/knobs.hpp"
 #include "ui/ports.hpp"
 #include "dsp-noise/noise.hpp"
-#include "osdialog.h"
+
 #include <sstream>
 #include <iomanip>
 #include <time.h>
-
 #include <iostream>
 #include <fstream>
 #include <string>
 #include <vector>
+
+#include "osdialog.h"
+
 
 #define POLYPHONY 16
 #define MAX_PRIME_NUMBERS 49 //Up to 200 and some transcenttals
@@ -83,7 +85,10 @@ struct ProbablyNoteMN : Module {
 		FACTOR_NUMERATOR_1_STEP_CV_ATTENUVERTER_PARAM = FACTOR_NUMERATOR_1_STEP_PARAM + MAX_FACTORS,
 		FACTOR_DENOMINATOR_1_STEP_PARAM = FACTOR_NUMERATOR_1_STEP_CV_ATTENUVERTER_PARAM + MAX_FACTORS,
 		FACTOR_DENOMINATOR_1_STEP_CV_ATTENUVERTER_PARAM = FACTOR_DENOMINATOR_1_STEP_PARAM + MAX_FACTORS,
-		WEIGHT_SCALING_PARAM = FACTOR_DENOMINATOR_1_STEP_CV_ATTENUVERTER_PARAM + MAX_FACTORS,	
+		OCTAVE_SIZE_PARAM = FACTOR_DENOMINATOR_1_STEP_CV_ATTENUVERTER_PARAM + MAX_FACTORS,
+		OCTAVE_SIZE_CV_ATTENUVERTER_PARAM,
+		OCTAVE_SCALE_SIZE_MAPPING_PARAM,
+		WEIGHT_SCALING_PARAM ,
 		PITCH_RANDOMNESS_PARAM,
 		PITCH_RANDOMNESS_CV_ATTENUVERTER_PARAM,
 		PITCH_RANDOMNESS_GAUSSIAN_PARAM,
@@ -108,7 +113,8 @@ struct ProbablyNoteMN : Module {
 		FACTOR_1_INPUT,
         FACTOR_NUMERATOR_STEP_1_INPUT = FACTOR_1_INPUT + MAX_FACTORS,
         FACTOR_DENOMINATOR_STEP_1_INPUT = FACTOR_NUMERATOR_STEP_1_INPUT + MAX_FACTORS,
-		TRIGGER_INPUT = FACTOR_DENOMINATOR_STEP_1_INPUT + MAX_FACTORS,
+		OCTAVE_SIZE_INPUT = FACTOR_DENOMINATOR_STEP_1_INPUT + MAX_FACTORS,
+		TRIGGER_INPUT,
         EXTERNAL_RANDOM_INPUT,
 		OCTAVE_WRAP_INPUT,
 		PITCH_RANDOMNESS_INPUT,
@@ -127,6 +133,7 @@ struct ProbablyNoteMN : Module {
 		SCALE_WEIGHTING_LIGHT = SCALE_MAPPING_LIGHT + 3,
 		DISTRIBUTION_GAUSSIAN_LIGHT = SCALE_WEIGHTING_LIGHT + 3,
         OCTAVE_WRAPAROUND_LIGHT,
+		OCTAVE_SCALE_SIZE_MAPPING_LIGHT,
 		SHIFT_MODE_LIGHT,
         KEY_LOGARITHMIC_SCALE_LIGHT = SHIFT_MODE_LIGHT + 3,
 		PITCH_RANDOMNESS_GAUSSIAN_LIGHT,
@@ -419,7 +426,7 @@ struct ProbablyNoteMN : Module {
 		{1,0,1,1,0,0,1,1,0,1,1,0}
 	}; 
 	
-	dsp::SchmittTrigger clockTrigger,resetScaleTrigger,algorithmTrigger,scaleMappingTrigger,useScaleWeightingTrigger,octaveWrapAroundTrigger,shiftScalingTrigger,keyScalingTrigger,pitchRandomnessGaussianTrigger; 
+	dsp::SchmittTrigger clockTrigger,resetScaleTrigger,algorithmTrigger,scaleMappingTrigger,useScaleWeightingTrigger,octaveScaleMappingTrigger,octaveWrapAroundTrigger,shiftScalingTrigger,keyScalingTrigger,pitchRandomnessGaussianTrigger; 
 	dsp::PulseGenerator noteChangePulse[POLYPHONY];
     GaussianNoiseGenerator _gauss;
  
@@ -470,6 +477,10 @@ struct ProbablyNoteMN : Module {
 	bool lastUseScaleWeighting;
 
 	bool mapPitches = false;
+
+	float octaveSize = 2;;
+	float lastOctaveSize = -1;
+	bool octaveScaleMapping;
 
     int scale = 0;
     int lastScale = -1;
@@ -525,6 +536,8 @@ struct ProbablyNoteMN : Module {
         configParam(ProbablyNoteMN::DISSONANCE_CV_ATTENUVERTER_PARAM, -1.0, 1.0, 0.0,"Dissonance CV Attenuation","%",0,100); 
         configParam(ProbablyNoteMN::OCTAVE_CV_ATTENUVERTER_PARAM, -1.0, 1.0, 0.0,"Octave CV Attenuation","%",0,100);
 		configParam(ProbablyNoteMN::OCTAVE_WRAPAROUND_PARAM, 0.0, 1.0, 0.0,"Octave Wraparound");
+        configParam(ProbablyNoteMN::OCTAVE_SIZE_PARAM, 2.0, 4.0, 2.0,"Octave Size");
+		configParam(ProbablyNoteMN::OCTAVE_SIZE_CV_ATTENUVERTER_PARAM, -1.0, 1.0, 0.0,"Octave Size CV Attenuation");
 		configParam(ProbablyNoteMN::WEIGHT_SCALING_PARAM, 0.0, 1.0, 0.0,"Weight Scaling","%",0,100);
 		configParam(ProbablyNoteMN::PITCH_RANDOMNESS_PARAM, 0.0, 10.0, 0.0,"Randomize Pitch Amount"," Cents");
         configParam(ProbablyNoteMN::PITCH_RANDOMNESS_CV_ATTENUVERTER_PARAM, -1.0, 1.0, 0.0,"Randomize Pitch Amount CV Attenuation","%",0,100);
@@ -837,6 +850,7 @@ struct ProbablyNoteMN : Module {
 		json_object_set_new(rootJ, "scaleMappingMode", json_integer((int) scaleMappingMode));
 		json_object_set_new(rootJ, "useScaleWeighting", json_integer((bool) useScaleWeighting));
 		json_object_set_new(rootJ, "octaveWrapAround", json_integer((int) octaveWrapAround));
+		json_object_set_new(rootJ, "octaveScaleMapping", json_integer((bool) octaveScaleMapping));
 		json_object_set_new(rootJ, "shiftMode", json_integer((int) shiftMode));
 		json_object_set_new(rootJ, "keyLogarithmic", json_integer((int) keyLogarithmic));
 		json_object_set_new(rootJ, "pitchRandomGaussian", json_integer((int) pitchRandomGaussian));
@@ -863,6 +877,11 @@ struct ProbablyNoteMN : Module {
 		if (ctUsw)
 			useScaleWeighting = json_integer_value(ctUsw);
 
+		json_t *sumOS = json_object_get(rootJ, "octaveScaleMapping");
+		if (sumOS) {
+			octaveScaleMapping = json_integer_value(sumOS);			
+		}
+
 		json_t *sumO = json_object_get(rootJ, "octaveWrapAround");
 		if (sumO) {
 			octaveWrapAround = json_integer_value(sumO);			
@@ -885,6 +904,80 @@ struct ProbablyNoteMN : Module {
 	
 	}
 	
+	void CreateScalaFile(std::string fileName) {
+		
+		int noteCount = 1;
+		for(uint64_t i=1;i<actualScaleSize;i++) {
+			if(reducedEfPitches[i].inUse) {
+				noteCount++;
+			}
+		}
+
+		std::ofstream scalefile;
+		scalefile.open (fileName);
+		scalefile << "Math Nerd Generated Scale File.\n";
+		scalefile << "! Numerator Factors:";
+		for(int i=0;i<MAX_FACTORS;i++) {
+			for(int j=0;j<actualNSteps[i];j++) {
+				scalefile << " ";
+				scalefile << factorNames[i];
+			}
+		}
+		scalefile << "\n";
+
+		scalefile << "! Denominator Factors:";
+		for(int i=0;i<MAX_FACTORS;i++) {
+			for(int j=0;j<actualDSteps[i];j++) {
+				scalefile << " ";
+				scalefile << factorNames[i];
+			}
+		}
+		scalefile << "\n";
+
+		if(actualScaleSize < nbrPitches) {
+			scalefile << "! Pitches Reduced to " + noteReductionPatternName + " by ";
+
+			switch (noteReductionAlgorithm) {
+				case EUCLIDEAN_ALGO :
+					scalefile << "Euclidean Algorithm .\n";
+					break;
+				case GOLUMB_RULER_ALGO :
+					scalefile << "Golumb Ruler Algorithm .\n";
+					break;
+				case PERFECT_BALANCE_ALGO :
+					scalefile << "Perfect Balance Algorithm .\n";
+					break;
+			}
+		}
+
+		switch (scaleMappingMode) {
+			case NO_SCALE_MAPPING :
+				break;
+			case SPREAD_SCALE_MAPPING :
+				scalefile << "! Spread Mapped to ";
+				scalefile << scaleNames[scale];
+				scalefile << " scale.\n";
+				break;
+			case REPEAT_SCALE_MAPPING :
+				scalefile << "! Repeat Mapped to ";
+				scalefile << scaleNames[scale];
+				scalefile << " scale.\n";
+				break;
+		}
+
+		scalefile << noteCount;
+		scalefile << "\n";
+		for(uint64_t i=1;i<actualScaleSize;i++) {
+			//scalefile << ((reducedEfPitches[i].ratio - 1.0 ) * (octaveSize - 1.0)) + 1.0;
+			if(reducedEfPitches[i].inUse) {
+				scalefile << (reducedEfPitches[i].pitch * (octaveSize - 1.0));
+				scalefile << "\n";
+			}
+		}
+		scalefile << (octaveSize-1)*1200.0;
+		scalefile << "\n";
+		scalefile.close();
+	}
 
 	void process(const ProcessArgs &args) override {
 	
@@ -940,7 +1033,13 @@ struct ProbablyNoteMN : Module {
 		}		
 		lights[SCALE_WEIGHTING_LIGHT+2].value = useScaleWeighting;
 		
-		
+
+        if (octaveScaleMappingTrigger.process(params[OCTAVE_SCALE_SIZE_MAPPING_PARAM].getValue())) {
+			octaveScaleMapping = !octaveScaleMapping;
+		}		
+		lights[OCTAVE_SCALE_SIZE_MAPPING_LIGHT].value = octaveScaleMapping;
+
+
         if (octaveWrapAroundTrigger.process(params[OCTAVE_WRAPAROUND_PARAM].getValue() + inputs[OCTAVE_WRAP_INPUT].getVoltage())) {
 			octaveWrapAround = !octaveWrapAround;
 		}		
@@ -978,6 +1077,9 @@ struct ProbablyNoteMN : Module {
 
         scale = clamp(params[SCALE_PARAM].getValue() + (inputs[SCALE_INPUT].getVoltage() * MAX_SCALES / 10.0 * params[SCALE_CV_ATTENUVERTER_PARAM].getValue()),0.0,MAX_SCALES-1.0f);
 
+        octaveSize = clamp(params[OCTAVE_SIZE_PARAM].getValue() + (inputs[OCTAVE_SIZE_INPUT].getVoltage() * 2.0 / 10.0 * params[OCTAVE_SIZE_CV_ATTENUVERTER_PARAM].getValue()),2.0f,4.0f);
+
+
         bool scaleChange = false;
         for(int i=0;i<MAX_FACTORS;i++) {
 			int factorIndex = clamp((int) (params[FACTOR_1_PARAM+ i].getValue() + (inputs[FACTOR_1_INPUT + i].getVoltage() * MAX_PRIME_NUMBERS / 10.0 * params[FACTOR_1_CV_ATTENUVERTER_PARAM+i].getValue())),0,MAX_PRIME_NUMBERS-1);
@@ -990,6 +1092,9 @@ struct ProbablyNoteMN : Module {
             lastNSteps[i] = stepsN[i];
             lastDSteps[i] = stepsD[i];
         }
+		// if(octaveSize != lastOctaveSize) {
+		// 	scaleChange = true;
+		// }
 		//fprintf(stderr,"denom value: %f",(inputs[FACTOR_DENOMINATOR_STEP_1_INPUT + 1].getVoltage() * 1.0f * params[FACTOR_DENOMINATOR_1_STEP_CV_ATTENUVERTER_PARAM+1].getValue()))
         if(scaleChange) {
 			reloadPitches = true;
@@ -1090,16 +1195,23 @@ struct ProbablyNoteMN : Module {
 		double octaveIn[POLYPHONY];
 		for(int channel = 0;channel<currentPolyphony;channel++) {
 			double noteIn = inputs[NOTE_INPUT].getVoltage(channel) - (float(key)/12.0);
+
+			if(!octaveScaleMapping) {
+				noteIn /= (octaveSize - 1.0);
+			}
 			octaveIn[channel] = std::floor(noteIn);
 			double fractionalValue = noteIn - octaveIn[channel];
 			if(fractionalValue < 0.0)
 				fractionalValue += 1.0;
 
+			if(!octaveScaleMapping) {
+				fractionalValue *= (octaveSize - 1.0);
+			}
 											              //fprintf(stderr, "%i %f \n", key, fractionalValue);
 			double lastDif = 1.0f;    
 			for(uint64_t i = 0;i<actualScaleSize;i++) {            
 				if(reducedEfPitches[i].inUse) {
-					double currentDif = std::abs((reducedEfPitches[i].pitch / 1200.0) - fractionalValue);
+					double currentDif = std::abs((reducedEfPitches[i].pitch / 1200.0) * (octaveScaleMapping ? 1.0 : octaveSize - 1.0) - fractionalValue); // BOTEL Add octave size adjustment here
 					if(currentDif < lastDif) {
 						lastDif = currentDif;
 						currentNote[channel] = i;
@@ -1228,7 +1340,7 @@ struct ProbablyNoteMN : Module {
 
 					int notePosition = randomNote;				
 
-					double quantitizedNoteCV = (reducedEfPitches[notePosition].pitch / 1200.0) + (key / 12.0); 
+					double quantitizedNoteCV = (reducedEfPitches[notePosition].pitch / 1200.0) * (octaveSize - 1.0) + (key / 12.0); 
               //fprintf(stderr, "%i \n", notePosition);
 
 					float pitchRandomness = 0;
@@ -1245,7 +1357,7 @@ struct ProbablyNoteMN : Module {
 						pitchRandomness = (1.0 - ((double) rand()/RAND_MAX)) * randomRange / 600.0;
 					}
 
-					quantitizedNoteCV += (octaveIn[channel] + octave + octaveAdjust); 
+					quantitizedNoteCV += (octaveIn[channel] + octave + octaveAdjust) * (octaveSize - 1.0); 
 					//quantitizedNoteCV += (octaveIn[channel] + octave + octaveAdjust) * octaveFrequency; 
 					outputs[QUANT_OUTPUT].setVoltage(quantitizedNoteCV + pitchRandomness, channel);
 					outputs[WEIGHT_OUTPUT].setVoltage(clamp((params[NOTE_WEIGHT_PARAM+randomNote].getValue() + (inputs[NOTE_WEIGHT_INPUT+randomNote].getVoltage() / 10.0f) * 10.0f),0.0f,10.0f),channel);
@@ -1278,8 +1390,6 @@ void ProbablyNoteMN::onReset() {
 	triggerDelayEnabled = false;
 	
 }
-
-
 
 
 struct ProbablyNoteMNDisplay : TransparentWidget {
@@ -1368,8 +1478,12 @@ struct ProbablyNoteMNDisplay : TransparentWidget {
 		nvgFontSize(args.vg, 9);
 		nvgFontFaceId(args.vg, font->handle);
 		nvgTextLetterSpacing(args.vg, -1);
+			//fprintf(stderr, "a: %llu s: %llu  \n", module->actualScaleSize, module->nbrPitches);
 		char text[128];
-		nvgFillColor(args.vg, nvgRGBA(0x4a, 0xc3, 0x27, 0xff));
+		if(module->actualScaleSize < module->nbrPitches) 
+			nvgFillColor(args.vg, nvgRGBA(0x4a, 0xc3, 0x27, 0xff));
+		else
+			nvgFillColor(args.vg, nvgRGB(0xff, 0xff, 0x00));
 		snprintf(text, sizeof(text), "%s", module->noteReductionPatternName.c_str());
 		nvgText(args.vg, pos.x, pos.y, text, NULL);
 	}
@@ -1386,6 +1500,17 @@ struct ProbablyNoteMNDisplay : TransparentWidget {
 		}
 	}
 
+	void drawOctaveSize(const DrawArgs &args, Vec pos) {
+		nvgFillColor(args.vg, nvgRGB(0x40, 0x40, 0x40));
+
+		float nbrCentLines = (module->octaveSize / 2.0f) * 12;
+		float spacing = 150.0f / nbrCentLines;
+		for(uint16_t i = 0; i < nbrCentLines;i++) {
+			nvgBeginPath(args.vg);
+			nvgRect(args.vg,pos.x + i * spacing,pos.y,1,74.0);
+			nvgFill(args.vg);
+		}
+	}
 	
 
 	void draw(const DrawArgs &args) override {
@@ -1394,9 +1519,10 @@ struct ProbablyNoteMNDisplay : TransparentWidget {
 
 		drawFactors(args, Vec(35,30), module->weightShift != 0);
         drawPitchInfo(args,Vec(270,156));
-		drawKey(args, Vec(264,82), module->lastKey);
+		drawKey(args, Vec(324,82), module->lastKey);
 		drawAlgorithm(args, Vec(274,240), module->noteReductionAlgorithm);
 		drawNoteReduction(args, Vec(274,284));
+		drawOctaveSize(args, Vec(269,141.5));
 		drawScale(args, Vec(359,240));
 	}
 };
@@ -1438,16 +1564,23 @@ struct ProbablyNoteMNWidget : ModuleWidget {
         addParam(createParam<RoundReallySmallFWKnob>(Vec(449,51), module, ProbablyNoteMN::DISTRIBUTION_CV_ATTENUVERTER_PARAM));			
 		addInput(createInput<FWPortInSmall>(Vec(451, 29), module, ProbablyNoteMN::DISTRIBUTION_INPUT));
 
-        addParam(createParam<RoundSmallFWSnapKnob>(Vec(263,86), module, ProbablyNoteMN::KEY_PARAM));			
-        addParam(createParam<RoundReallySmallFWKnob>(Vec(289,112), module, ProbablyNoteMN::KEY_CV_ATTENUVERTER_PARAM));			
-		addInput(createInput<FWPortInSmall>(Vec(291, 90), module, ProbablyNoteMN::KEY_INPUT));
+        addParam(createParam<RoundSmallFWKnob>(Vec(263,86), module, ProbablyNoteMN::OCTAVE_SIZE_PARAM));			
+        addParam(createParam<RoundReallySmallFWKnob>(Vec(289,112), module, ProbablyNoteMN::OCTAVE_SIZE_CV_ATTENUVERTER_PARAM));			
+		addInput(createInput<FWPortInSmall>(Vec(291, 90), module, ProbablyNoteMN::OCTAVE_SIZE_INPUT));
 
-		addParam(createParam<LEDButton>(Vec(270, 113), module, ProbablyNoteMN::KEY_SCALING_PARAM));
-		addChild(createLight<LargeLight<BlueLight>>(Vec(271.5, 114.5), module, ProbablyNoteMN::KEY_LOGARITHMIC_SCALE_LIGHT));
+		addParam(createParam<LEDButton>(Vec(268, 113), module, ProbablyNoteMN::OCTAVE_SCALE_SIZE_MAPPING_PARAM));
+		addChild(createLight<LargeLight<BlueLight>>(Vec(269.5, 114.5), module, ProbablyNoteMN::OCTAVE_SCALE_SIZE_MAPPING_LIGHT));
 
-        addParam(createParam<RoundSmallFWKnob>(Vec(323,86), module, ProbablyNoteMN::DISSONANCE_PARAM));			
-        addParam(createParam<RoundReallySmallFWKnob>(Vec(349,112), module, ProbablyNoteMN::DISSONANCE_CV_ATTENUVERTER_PARAM));			
-		addInput(createInput<FWPortInSmall>(Vec(351, 90), module, ProbablyNoteMN::DISSONANCE_INPUT));
+        addParam(createParam<RoundSmallFWSnapKnob>(Vec(323,86), module, ProbablyNoteMN::KEY_PARAM));			
+        addParam(createParam<RoundReallySmallFWKnob>(Vec(349,112), module, ProbablyNoteMN::KEY_CV_ATTENUVERTER_PARAM));			
+		addInput(createInput<FWPortInSmall>(Vec(351, 90), module, ProbablyNoteMN::KEY_INPUT));
+
+		addParam(createParam<LEDButton>(Vec(328, 113), module, ProbablyNoteMN::KEY_SCALING_PARAM));
+		addChild(createLight<LargeLight<BlueLight>>(Vec(329.5, 114.5), module, ProbablyNoteMN::KEY_LOGARITHMIC_SCALE_LIGHT));
+
+        addParam(createParam<RoundSmallFWKnob>(Vec(383,86), module, ProbablyNoteMN::DISSONANCE_PARAM));			
+        addParam(createParam<RoundReallySmallFWKnob>(Vec(409,112), module, ProbablyNoteMN::DISSONANCE_CV_ATTENUVERTER_PARAM));			
+		addInput(createInput<FWPortInSmall>(Vec(411, 90), module, ProbablyNoteMN::DISSONANCE_INPUT));
 
 
 		addParam(createParam<LEDButton>(Vec(272, 245), module, ProbablyNoteMN::NOTE_REDUCTION_ALGORITHM_PARAM));
@@ -1525,6 +1658,20 @@ struct ProbablyNoteMNWidget : ModuleWidget {
 		}
 	};
 
+	struct PNMNSaveScaletem : MenuItem {
+		ProbablyNoteMN *module ;
+		void onAction(const event::Action &e) override {
+			
+			osdialog_filters* filters = osdialog_filters_parse("Scale:scl");
+			char *filename  = osdialog_file(OSDIALOG_SAVE, NULL, NULL, filters);        //////////dir.c_str(),
+			if (filename) {
+				module->CreateScalaFile(filename);
+				free(filename);
+			}
+			osdialog_filters_free(filters);
+		}
+	};
+
 	
 	
 	void appendContextMenu(Menu *menu) override {
@@ -1537,6 +1684,11 @@ struct ProbablyNoteMNWidget : ModuleWidget {
 		TriggerDelayItem *triggerDelayItem = new TriggerDelayItem();
 		triggerDelayItem->module = module;
 		menu->addChild(triggerDelayItem);
+
+		PNMNSaveScaletem *saveScaleItem = new PNMNSaveScaletem();
+		saveScaleItem->module = module;
+		saveScaleItem->text = "Save as Scale File";
+		menu->addChild(saveScaleItem);
 
 	}
 	

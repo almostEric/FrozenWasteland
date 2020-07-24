@@ -1,3 +1,6 @@
+### 1.15.3 (2020-07-24)
+- Added Octave Size and Scala Export to Probably Note - Math Nerd
+
 ### 1.15.2 (2020-07-18)
 - Fixed Randomization bug in Probably Note - Math Nerd
 

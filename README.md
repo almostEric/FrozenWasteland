@@ -269,7 +269,7 @@ A collection of unusual plugins that will add a certain coolness to your patches
 
 - Familiarity with original Probably Not(e) will help :)
 - Probablistic Quantizer that uses generated scales based on prime factors
-- Up to 10 Prime numbers can be used as either numerators or denominators to create pitch ratios
+- Up to 10 Prime numbers (and the transcendtal/irrational numbers, pi, e and phi) can be used as either numerators or denominators to create pitch ratios
 - If the value in numerator or denominator is > 0, that factor is used (0s are ignored). 
 - If a value > 1, then powers of the factor up to that value are used (ie if factor is 5 and numerator/denominator value is 3, then combinations 5, 25 and 125 are used)
 - Example: If 2 and 3 are used for numerators and 5 and 7 are used for denominators, pitch ratios generated are 2/5,2/7,2/35,3/5,3/7,3/35,6/5,6/7 and 6/35.
@@ -279,12 +279,14 @@ A collection of unusual plugins that will add a certain coolness to your patches
 - Eucldean tries to find the most balanced distribution of pitches, Golumb Ruler te most unbalanced. Perfect Balance is just strange :)
 - Finally the number of pitches can be further reduced by mapping the pattern of a "standard" scale on to the selected pitches.
 - Scale Mapping can either be off, Spread (green) which tries to match the pattern of the source "standard scale" across the number of pitches in the generated scale. Repeat (blue) repeats the standard scale pattern for as many notes are in the generated scale.
+- The size of the Octave can be adjusted from (2x - standard to 4x)
+- The v/O button controls how input cv is mapped to the generated octave. If octave mapping is off, then it will take 2v to cover all the notes in an octave that is twice the normal size. If octave mapping is enabled, the 1V/Octave input standard will hold true no matter what size the octave of generated scale is (so conceivably 1v in could generate 3v out at highest setting)
 - Since it would be difficult to individually control the weighting of so many pitches, a "dissonance" control chooses the overall weighting within the spread. To the left more consonant notes have a higher weighting, to the right more dissonant pitches do. 
 - The scale display shows dissonance by height - more dissonant notes are shorter. 
 - The weighting of a pitch is shown by its brightness
 - If scale mapping is enabled, unused notes become red
 - If Scale Weighting is enabled, the individual note weighting of the standard scale also be applied. (ie the 5th has a greater weighting than the 7th in the minor scale)
-
+- From the context menu, the current scale can be exported to a scala file.
 
 
 ## Quad Algorithmic Rhythm
