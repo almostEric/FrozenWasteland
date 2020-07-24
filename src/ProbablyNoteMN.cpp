@@ -25,7 +25,7 @@
 #define TRIGGER_DELAY_SAMPLES 5
 
 #define NBR_ALGORITHMS 3
-#define NBR_SCALE_MAPPING 3
+#define NBR_SCALE_MAPPING 4
 
 //GOLOMB RULER
 #define NUM_RULERS 36
@@ -148,6 +148,7 @@ struct ProbablyNoteMN : Module {
 		NO_SCALE_MAPPING,
 		SPREAD_SCALE_MAPPING,
 		REPEAT_SCALE_MAPPING,
+		NEAREST_NEIGHBOR_SCALE_MAPPING
 	};
 
 	enum ShiftModes {
@@ -963,6 +964,11 @@ struct ProbablyNoteMN : Module {
 				scalefile << scaleNames[scale];
 				scalefile << " scale.\n";
 				break;
+			case NEAREST_NEIGHBOR_SCALE_MAPPING :
+				scalefile << "! Nearest Neighbor Mapped to ";
+				scalefile << scaleNames[scale];
+				scalefile << " scale.\n";
+				break;
 		}
 
 		scalefile << noteCount;
@@ -1023,6 +1029,11 @@ struct ProbablyNoteMN : Module {
 				break;
 			case REPEAT_SCALE_MAPPING :
 				lights[SCALE_MAPPING_LIGHT].value = 0;
+				lights[SCALE_MAPPING_LIGHT + 1].value = 0;
+				lights[SCALE_MAPPING_LIGHT + 2].value = 1.0;
+				break;
+			case NEAREST_NEIGHBOR_SCALE_MAPPING:
+				lights[SCALE_MAPPING_LIGHT].value = 1.0;
 				lights[SCALE_MAPPING_LIGHT + 1].value = 0;
 				lights[SCALE_MAPPING_LIGHT + 2].value = 1.0;
 				break;
@@ -1131,6 +1142,7 @@ struct ProbablyNoteMN : Module {
 		if(mapPitches) {
 			actualScaleSize = reducedEfPitches.size();
 			float scaleSpreadFactor = actualScaleSize / float(MAX_NOTES);
+			uint64_t scaleIndex;
 			switch(scaleMappingMode) {
 				case NO_SCALE_MAPPING :
 					for(uint64_t i=0;i<actualScaleSize;i++) {
@@ -1153,7 +1165,7 @@ struct ProbablyNoteMN : Module {
 					}
 					break;
 				case REPEAT_SCALE_MAPPING:
-					uint64_t scaleIndex = 0;
+					scaleIndex = 0;
 					for(uint64_t i=0;i<actualScaleSize;i++) {
 						if(defaultScaleNoteStatus[scale][scaleIndex]) {
 							reducedEfPitches[i].inUse = true;
@@ -1163,6 +1175,30 @@ struct ProbablyNoteMN : Module {
                             reducedEfPitches[i].weighting = 0.8;
 						}
 						scaleIndex = (scaleIndex+1) % MAX_NOTES;
+					}
+					break;
+				case NEAREST_NEIGHBOR_SCALE_MAPPING:
+					for(uint64_t i=0;i<reducedEfPitches.size();i++) {
+						reducedEfPitches[i].inUse = false;
+                        reducedEfPitches[i].weighting = 0.8;
+					}
+					for(uint64_t mapScaleIndex=0;mapScaleIndex<MAX_NOTES;mapScaleIndex++) {
+						if(defaultScaleNoteStatus[scale][mapScaleIndex]) {
+							float targetPitch = mapScaleIndex * (octaveSize-1) * 100.0;
+							int64_t selectedPitchIndex = -1;
+							float lastDifference = 10000.0;
+							for(uint64_t i=0;i<actualScaleSize;i++) {
+								float difference = std::abs(reducedEfPitches[i].pitch - targetPitch);
+								if(difference < lastDifference) {
+									lastDifference = difference;
+									selectedPitchIndex = i;
+								} 
+							}
+							if(selectedPitchIndex >= 0) {
+								reducedEfPitches[selectedPitchIndex].inUse = true;
+								reducedEfPitches[selectedPitchIndex].weighting = useScaleWeighting ? defaultScaleNoteWeighting[scale][mapScaleIndex] : 1.0;
+							}
+						}
 					}
 					break;
 			}
