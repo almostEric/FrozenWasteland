@@ -278,7 +278,11 @@ A collection of unusual plugins that will add a certain coolness to your patches
 - Next, the number of pitches is reduced by using an alogorithm is to select from available pitch ratios.
 - Eucldean tries to find the most balanced distribution of pitches, Golumb Ruler te most unbalanced. Perfect Balance is just strange :)
 - Finally the number of pitches can be further reduced by mapping the pattern of a "standard" scale on to the selected pitches.
-- Scale Mapping can either be off, Spread (green) which tries to match the pattern of the source "standard scale" across the number of pitches in the generated scale. Repeat (blue) repeats the standard scale pattern for as many notes are in the generated scale.
+- Scale Mapping can either be: 
+-- Off - the pitches are not mapped to any standard scale,
+-- Spread (green) which tries to match the pattern of the source "standard scale" across the number of pitches in the generated scale. 
+-- Repeat (blue) repeats the standard scale pattern for as many notes are in the generated scale.
+-- Nearest Neighbor (purple) tries to find pitch closest to the mapped scale (using equal temperment).
 - The size of the Octave can be adjusted from (2x - standard to 4x)
 - The v/O button controls how input cv is mapped to the generated octave. If octave mapping is off, then it will take 2v to cover all the notes in an octave that is twice the normal size. If octave mapping is enabled, the 1V/Octave input standard will hold true no matter what size the octave of generated scale is (so conceivably 1v in could generate 3v out at highest setting)
 - Since it would be difficult to individually control the weighting of so many pitches, a "dissonance" control chooses the overall weighting within the spread. To the left more consonant notes have a higher weighting, to the right more dissonant pitches do. 
