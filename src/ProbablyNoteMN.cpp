@@ -970,11 +970,11 @@ struct ProbablyNoteMN : Module {
 		for(uint64_t i=1;i<actualScaleSize;i++) {
 			//scalefile << ((reducedEfPitches[i].ratio - 1.0 ) * (octaveSize - 1.0)) + 1.0;
 			if(reducedEfPitches[i].inUse) {
-				scalefile << (reducedEfPitches[i].pitch * (octaveSize - 1.0));
+				scalefile <<  std::to_string((reducedEfPitches[i].pitch * (octaveSize - 1.0)));
 				scalefile << "\n";
 			}
 		}
-		scalefile << (octaveSize-1)*1200.0;
+		scalefile << std::to_string((octaveSize-1)*1200.0);
 		scalefile << "\n";
 		scalefile.close();
 	}
@@ -1665,6 +1665,11 @@ struct ProbablyNoteMNWidget : ModuleWidget {
 			osdialog_filters* filters = osdialog_filters_parse("Scale:scl");
 			char *filename  = osdialog_file(OSDIALOG_SAVE, NULL, NULL, filters);        //////////dir.c_str(),
 			if (filename) {
+
+				char *dot = strrchr(filename,'.');
+				if(dot == 0 || strcmp(dot,".scl") != 0)
+				strcat(filename,".scl");
+
 				module->CreateScalaFile(filename);
 				free(filename);
 			}
