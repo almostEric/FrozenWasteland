@@ -1,3 +1,6 @@
+### 1.15.4 (2020-07-27)
+- Fixed Phase Bug in Seriously Slow LFO
+
 ### 1.15.3 (2020-07-24)
 - Added Octave Size and Scala Export to Probably Note - Math Nerd
 

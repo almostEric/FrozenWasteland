@@ -978,6 +978,15 @@ struct ProbablyNoteMN : Module {
 			if(reducedEfPitches[i].inUse) {
 				scalefile <<  std::to_string((reducedEfPitches[i].pitch * (octaveSize - 1.0)));
 				scalefile << "\n";
+				scalefile << "! Based on ratio of ";
+				scalefile << std::to_string(reducedEfPitches[i].numerator);
+				if(octaveSize > 2.0) {
+					scalefile << " x ";
+					scalefile << std::to_string(octaveSize - 1.0);
+				}
+				scalefile << " / ";
+				scalefile << std::to_string(reducedEfPitches[i].denominator);
+				scalefile << "\n";
 			}
 		}
 		scalefile << std::to_string((octaveSize-1)*1200.0);

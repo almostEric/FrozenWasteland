@@ -202,8 +202,8 @@ struct LowFrequencyOscillator {
 		if(phase_quantized) // Limit to 90 degree increments
 			initialPhase = std::round(initialPhase * 4.0f) / 4.0f;
 		
-		oscillator.offset = (params[OFFSET_PARAM].getValue() > 0.0);
-		//oscillator.setBasePhase(initialPhase);
+		//oscillator.offset = (params[OFFSET_PARAM].getValue() > 0.0);
+		oscillator.setBasePhase(initialPhase);
 
 		//sr= args.sampleRate / 1000; // Test Code
 		oscillator.step(args.sampleTime);
