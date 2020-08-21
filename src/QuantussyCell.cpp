@@ -1,5 +1,6 @@
 #include "FrozenWasteland.hpp"
 #include "ui/knobs.hpp"
+#include "ui/ports.hpp"
 
 struct LowFrequencyOscillator {
 	float phase = 0.0;
@@ -67,12 +68,16 @@ struct QuantussyCell : Module {
 	enum ParamIds {
 		FREQ_PARAM,
 		CV_ATTENUVERTER_PARAM,
+		LOW_LIMIT_PARAM,
+		HI_LIMIT_PARAM,
 		NUM_PARAMS
 	};
 	enum InputIds {
 		CASTLE_INPUT,
 		CV_INPUT,
 		CV_AMOUNT_INPUT,
+		LOW_LIMIT_CV_INPUT,
+		HI_LIMIT_CV_INPUT,
 		NUM_INPUTS
 	};
 	enum OutputIds {
@@ -102,6 +107,11 @@ struct QuantussyCell : Module {
 
 		configParam(FREQ_PARAM, -3.0, 3.0, 0.0,"Frequency", " Hz", 2, 1);
 		configParam(CV_ATTENUVERTER_PARAM, -1.0, 1.0, 1.0,"CV Attenuator","%",0,100);	
+
+
+		configParam(LOW_LIMIT_PARAM, -3.0, 3.0, -3.0,"Low Lmit", " Hz", 2, 1);
+		configParam(HI_LIMIT_PARAM, -3.0, 3.0, 3.0,"High Limit", " Hz", 2, 1);
+
 	}
 	void process(const ProcessArgs &args) override;
 
@@ -114,7 +124,12 @@ struct QuantussyCell : Module {
 
 void QuantussyCell::process(const ProcessArgs &args) {
 	float deltaTime = args.sampleTime;
-	oscillator.setPitch(params[FREQ_PARAM].getValue()  + _value2);
+
+	float lowLimit = params[LOW_LIMIT_PARAM].getValue() + (inputs[LOW_LIMIT_CV_INPUT].getVoltage() * 0.6f);
+	float hiLimit = params[HI_LIMIT_PARAM].getValue() + (inputs[HI_LIMIT_CV_INPUT].getVoltage() * 0.6f);
+	float pitch = clamp(params[FREQ_PARAM].getValue()  + _value2,lowLimit,hiLimit);
+
+	oscillator.setPitch(pitch);
 	oscillator.step(1.0 / args.sampleRate);
 
 	outputs[SIN_OUTPUT].setVoltage(5.0 * oscillator.sin());
@@ -123,6 +138,7 @@ void QuantussyCell::process(const ProcessArgs &args) {
 
 	float squareOutput = 5.0 * oscillator.sqr(); //Used a lot :)
 	outputs[SQR_OUTPUT].setVoltage(squareOutput);
+
 
 
 	//Process Castle
@@ -139,7 +155,7 @@ void QuantussyCell::process(const ProcessArgs &args) {
 	//Process CV
 	if (_cvTrigger.process(squareOutput)) {
 		if (inputs[CV_INPUT].isConnected()) {
-			float attenuverting = params[CV_ATTENUVERTER_PARAM].getValue() + (inputs[CV_AMOUNT_INPUT].getVoltage() / 10.0f);
+			float attenuverting = params[CV_ATTENUVERTER_PARAM].getValue() + (inputs[CV_AMOUNT_INPUT].getVoltage() * 10.0f);
 			_value2 = inputs[CV_INPUT].getVoltage() * attenuverting;
 		}
 		else {
@@ -158,19 +174,25 @@ struct QuantussyCellWidget : ModuleWidget {
 
 		setPanel(APP->window->loadSvg(asset::plugin(pluginInstance, "res/QuantussyCell.svg")));
 		
-		addChild(createWidget<ScrewSilver>(Vec(RACK_GRID_WIDTH - 12, 0)));	
-		addChild(createWidget<ScrewSilver>(Vec(box.size.x - 2 * RACK_GRID_WIDTH + 12, 0)));
-		addChild(createWidget<ScrewSilver>(Vec(RACK_GRID_WIDTH - 12, RACK_GRID_HEIGHT - RACK_GRID_WIDTH)));
-		addChild(createWidget<ScrewSilver>(Vec(box.size.x - 2 * RACK_GRID_WIDTH + 12, RACK_GRID_HEIGHT - RACK_GRID_WIDTH)));
+		addChild(createWidget<ScrewSilver>(Vec(RACK_GRID_WIDTH - 14, 0)));	
+		addChild(createWidget<ScrewSilver>(Vec(box.size.x - 2 * RACK_GRID_WIDTH + 14, 0)));
+		addChild(createWidget<ScrewSilver>(Vec(RACK_GRID_WIDTH - 14, RACK_GRID_HEIGHT - RACK_GRID_WIDTH)));
+		addChild(createWidget<ScrewSilver>(Vec(box.size.x - 2 * RACK_GRID_WIDTH + 14, RACK_GRID_HEIGHT - RACK_GRID_WIDTH)));
 
 		addParam(createParam<RoundLargeFWKnob>(Vec(28, 54), module, QuantussyCell::FREQ_PARAM));
 		addParam(createParam<RoundFWKnob>(Vec(13, 180), module, QuantussyCell::CV_ATTENUVERTER_PARAM));
 
-		addInput(createInput<PJ301MPort>(Vec(35, 109), module, QuantussyCell::CASTLE_INPUT));
+		addParam(createParam<RoundSmallFWKnob>(Vec(5, 90), module, QuantussyCell::LOW_LIMIT_PARAM));
+		addInput(createInput<FWPortInSmall>(Vec(8, 116), module, QuantussyCell::LOW_LIMIT_CV_INPUT));
+		addParam(createParam<RoundSmallFWKnob>(Vec(60, 90), module, QuantussyCell::HI_LIMIT_PARAM));
+		addInput(createInput<FWPortInSmall>(Vec(63, 116), module, QuantussyCell::HI_LIMIT_CV_INPUT));
+
+
+		addInput(createInput<PJ301MPort>(Vec(5, 154), module, QuantussyCell::CASTLE_INPUT));
 		addInput(createInput<PJ301MPort>(Vec(50, 203), module, QuantussyCell::CV_INPUT));
 		addInput(createInput<PJ301MPort>(Vec(15, 212), module, QuantussyCell::CV_AMOUNT_INPUT));
 
-		addOutput(createOutput<PJ301MPort>(Vec(35, 155), module, QuantussyCell::CASTLE_OUTPUT));
+		addOutput(createOutput<PJ301MPort>(Vec(60, 154), module, QuantussyCell::CASTLE_OUTPUT));
 
 		addOutput(createOutput<PJ301MPort>(Vec(15, 255), module, QuantussyCell::SIN_OUTPUT));
 		addOutput(createOutput<PJ301MPort>(Vec(50, 255), module, QuantussyCell::TRI_OUTPUT));
@@ -178,7 +200,7 @@ struct QuantussyCellWidget : ModuleWidget {
 		addOutput(createOutput<PJ301MPort>(Vec(50, 301), module, QuantussyCell::SAW_OUTPUT));
 
 
-		addChild(createLight<LargeLight<BlueLight>>(Vec(67,67), module, QuantussyCell::BLINK_LIGHT));
+		addChild(createLight<LargeLight<BlueLight>>(Vec(69,58), module, QuantussyCell::BLINK_LIGHT));
 	}
 };
 
