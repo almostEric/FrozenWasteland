@@ -1,3 +1,7 @@
+### 1.15.5 (2020-08-21)
+- Fixed Offset Bug in Seriously Slow LFO
+- Added Lo/Hi Range to Quantussy Cell
+
 ### 1.15.4 (2020-07-27)
 - Fixed Phase Bug in Seriously Slow LFO
 
