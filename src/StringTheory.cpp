@@ -3,6 +3,7 @@
 #include "ui/ports.hpp"
 #include "dsp-delay/delayLine.cpp"
 #include "dsp-noise/noise.hpp"
+#include "filters/Compressor.hpp"
 
 using namespace frozenwasteland::dsp;
 
@@ -26,6 +27,7 @@ struct StringTheory : Module {
 		RING_MOD_GRAIN_PARAM,
 		RING_MOD_MIX_PARAM,
 		WINDOW_FUNCTION_PARAM,
+		COMPRESSION_MODE_PARAM,
 		NUM_PARAMS
 	};
 	enum InputIds {
@@ -53,7 +55,8 @@ struct StringTheory : Module {
 	};
 	enum LightIds {
         NOISE_TYPE_LIGHT,
-		WINDOW_FUNCTION_LIGHT = NOISE_TYPE_LIGHT + 3,
+		COMPRESSION_MODE_LIGHT = NOISE_TYPE_LIGHT + 3,
+		WINDOW_FUNCTION_LIGHT = COMPRESSION_MODE_LIGHT + 3,
 		NUM_LIGHTS = WINDOW_FUNCTION_LIGHT + 3
 	};
 
@@ -71,6 +74,16 @@ struct StringTheory : Module {
 		NUM_WINDOW_FUNCTIONS
 	};
 
+	enum CompressionModes {
+		COMPRESSION_NONE,
+		COMPRESSION_CLAMP,
+		COMPRESSION_HARD,
+		COMPRESSION_ADAPTIVE,
+		NUM_COMPRESSION_MODES
+	};
+
+
+
 	// dsp::DoubleRingBuffer<float, HISTORY_SIZE> historyBuffer[MAX_GRAINS];
 	// dsp::DoubleRingBuffer<float, 16> outBuffer[MAX_GRAINS];
 	// SRC_STATE *src[MAX_GRAINS];
@@ -85,7 +98,9 @@ struct StringTheory : Module {
 	PinkNoiseGenerator _pinkNoise;
 	GaussianNoiseGenerator _gaussianNoise;
 
-	dsp::SchmittTrigger pluckTrigger, noiseTypeTrigger,windowFunctionTrigger;
+	Compressor compressor[MAX_GRAINS];
+
+	dsp::SchmittTrigger pluckTrigger, noiseTypeTrigger,windowFunctionTrigger,compressionModeTrigger;
 
 	float lastDelayTime = -1;
 	float lastWet[MAX_GRAINS] = {0.f};
@@ -96,6 +111,36 @@ struct StringTheory : Module {
 	int noiseType = WHITE_NOISE;
 	int windowFunction = NO_WINDOW_FUNCTION;
 	int grainCount = MAX_GRAINS;
+	uint8_t compressionMode = COMPRESSION_NONE;
+
+	float sampleRate;
+
+	void changeCompressionMode (uint8_t newMode) {
+		if (newMode == COMPRESSION_HARD) {
+			// reset to hard compression
+			for(int i=0;i<MAX_GRAINS;i++) {
+				compressor[i].setCoefficients(1.0f, 30.0f, 5.0f, 20.0f, sampleRate);
+			}
+		}
+
+		// compressionMode = newMode;
+	}
+
+	inline float limit (float in, int which) {
+		if (compressionMode == COMPRESSION_NONE) {
+			return in;
+		} else if (compressionMode == COMPRESSION_CLAMP) {
+			return clamp(in, -6.0f, 6.0f);
+		} else if (compressionMode == COMPRESSION_HARD) {
+			return compressor[which].process(in);
+		} else {
+			// adaptive compression	
+			float ratio = fabs(in) / 4.0f;
+			compressor[which].setCoefficients(1.0f, 30.0f, 5.0f, ratio, sampleRate);
+			return compressor[which].process(in);
+		}
+	}
+
 
 	float HanningWindow(float phase) {
 		return 0.5f * (1 - cosf(2 * M_PI * phase));
@@ -129,7 +174,7 @@ struct StringTheory : Module {
 		configParam(RING_MOD_MIX_PARAM, 0.f, 1.f, 0.0f, "Ring Mod Mix", "%", 0, 100);
 		configParam(NOISE_TYPE_PARAM, 0.f, 1.f, 0.0f);
 		configParam(WINDOW_FUNCTION_PARAM, 0.f, 1.f, 0.0f);
-
+		configParam(COMPRESSION_MODE_PARAM, 0.0f, 1.0f, 0.0f);
 
 		// for(int i=0;i<MAX_GRAINS;i++) {
 		// 	src[i] = src_new(SRC_SINC_FASTEST, 1, NULL);
@@ -149,6 +194,7 @@ struct StringTheory : Module {
 		
         json_object_set_new(rootJ, "noiseType", json_integer((int) noiseType));
         json_object_set_new(rootJ, "windowFunction", json_integer((int) windowFunction));
+        json_object_set_new(rootJ, "compressionMode", json_integer((int) compressionMode));
 
 		
 		
@@ -164,10 +210,20 @@ struct StringTheory : Module {
         json_t *sdwf = json_object_get(rootJ, "windowFunction");
 		if (sdwf)
 			windowFunction = json_integer_value(sdwf);		
+
+        json_t *sdcm = json_object_get(rootJ, "compressionMode");
+		if (sdcm) {
+			compressionMode = json_integer_value(sdcm);	
+			changeCompressionMode(compressionMode);
+		}
+
 	}
 
 	void process(const ProcessArgs &args) override {
 		
+
+		sampleRate = args.sampleRate;
+
 		grainCount = params[GRAIN_COUNT_PARAM].getValue();
 
 		// Compute delay time in seconds - eventually milliseconds
@@ -184,7 +240,7 @@ struct StringTheory : Module {
 		float pitch = inputs[V_OCT_INPUT].getVoltage();
 		delay = delay / std::pow(2.0f, pitch);
 
-		float index = (delay * args.sampleRate) + params[SAMPLE_TIME_PARAM].getValue() ; // Maybe get rid of rounding
+		float index = (delay * sampleRate) + params[SAMPLE_TIME_PARAM].getValue() ; // Maybe get rid of rounding
 
 		float pluckInput = params[PLUCK_PARAM].getValue();
 		if(inputs[PLUCK_INPUT].isConnected()) {
@@ -222,6 +278,34 @@ struct StringTheory : Module {
 				lights[WINDOW_FUNCTION_LIGHT+2].value = 1.0f;
 				break;
 		}
+
+		if(compressionModeTrigger.process(params[COMPRESSION_MODE_PARAM].getValue())) {
+			compressionMode = (compressionMode + 1) % NUM_COMPRESSION_MODES;
+			changeCompressionMode(compressionMode);
+		}
+		switch(compressionMode) {
+			case COMPRESSION_NONE :
+				lights[COMPRESSION_MODE_LIGHT].value = 0;
+				lights[COMPRESSION_MODE_LIGHT+1].value = 0;
+				lights[COMPRESSION_MODE_LIGHT+2].value = 0;
+				break;
+			case COMPRESSION_CLAMP :
+				lights[COMPRESSION_MODE_LIGHT].value = 1;
+				lights[COMPRESSION_MODE_LIGHT+1].value = 0;
+				lights[COMPRESSION_MODE_LIGHT+2].value = 0;
+				break;
+			case COMPRESSION_HARD :
+				lights[COMPRESSION_MODE_LIGHT].value = 1;
+				lights[COMPRESSION_MODE_LIGHT+1].value = 1;
+				lights[COMPRESSION_MODE_LIGHT+2].value = 0;
+				break;
+			case COMPRESSION_ADAPTIVE :
+				lights[COMPRESSION_MODE_LIGHT].value = 0;
+				lights[COMPRESSION_MODE_LIGHT+1].value = 1;
+				lights[COMPRESSION_MODE_LIGHT+2].value = 0;
+				break;
+		}
+
 
 		int feedBackShift = clamp(params[FEEDBACK_SHIFT_PARAM].getValue() + inputs[FEEDBACK_SHIFT_INPUT].getVoltage() / 10.0f,0.0,(float)grainCount);
 		int ringModGrain = clamp(params[RING_MOD_GRAIN_PARAM].getValue() + inputs[RING_MOD_GRAIN_INPUT].getVoltage() / 10.0f,0.0,(float)grainCount);
@@ -266,9 +350,9 @@ struct StringTheory : Module {
 				acceptingInput[i] = false;
 			}
 
-			if(lastDelayTime != index) {
-				delayLine[i].setDelayTime(index);
-			}
+			// if(lastDelayTime != index) {
+			// 	delayLine[i].setDelayTime(index);
+			// }
 
 
 			float in = 0.0;
@@ -302,12 +386,13 @@ struct StringTheory : Module {
 				}
 			}
 
-			float dry = in + lastWet[i] * feedback;
+			float dry = clamp(in + lastWet[i] * feedback,-10.0,10.0);
 
 			// Push dry sample into history buffer
 			delayLine[i].write(dry);
 		
-			individualWet[i] = delayLine[i].getDelay();
+			//individualWet[i] = delayLine[i].getDelay();
+			individualWet[i] = delayLine[i].getLangrangeInterpolatedDelay(index);
 		
 			if(i < ringModGrain) {
 				float ringModdedValue = ringModIn * individualWet[i] / 5.0f;
@@ -317,8 +402,11 @@ struct StringTheory : Module {
 			outputs[FB_SEND_OUTPUT].setVoltage(individualWet[i],i);
 
 			if(inputs[FB_RETURN_INPUT].isConnected()) {
-				individualWet[i] = inputs[FB_RETURN_INPUT].getPolyVoltage(i);			
+				individualWet[i] = clamp(inputs[FB_RETURN_INPUT].getPolyVoltage(i),-10.0,10.0);	
 			}
+
+			//Apply compression
+			individualWet[i] = limit(individualWet[i],i);
 
 			// Apply color to delay wet output
 			float color = params[COLOR_PARAM].getValue() + inputs[COLOR_INPUT].getVoltage() / 10.f;
@@ -326,12 +414,12 @@ struct StringTheory : Module {
 			float colorFreq = std::pow(100.f, 2.f * color - 1.f);
 
 			float lowpassFreq = clamp(20000.f * colorFreq, 20.f, 20000.f);
-			lowpassFilter.setCutoffFreq(lowpassFreq / args.sampleRate);
+			lowpassFilter.setCutoffFreq(lowpassFreq / sampleRate);
 			lowpassFilter.process(individualWet[i]);
 			individualWet[i] = lowpassFilter.lowpass();
 
 			float highpassFreq = clamp(20.f * colorFreq, 20.f, 20000.f);
-			highpassFilter.setCutoff(highpassFreq / args.sampleRate);
+			highpassFilter.setCutoff(highpassFreq / sampleRate);
 			highpassFilter.process(individualWet[i]);
 			individualWet[i] = highpassFilter.highpass();
 			
@@ -380,6 +468,7 @@ struct StringTheoryWidget : ModuleWidget {
 		addParam(createParam<RoundSmallFWKnob>(Vec(75, 222), module, StringTheory::RING_MOD_MIX_PARAM));
 
 		addParam(createParam<TL1105>(Vec(30, 307), module, StringTheory::PLUCK_PARAM));
+		addParam(createParam<TL1105>(Vec(10, 278), module, StringTheory::COMPRESSION_MODE_PARAM));
 		addParam(createParam<TL1105>(Vec(60, 280), module, StringTheory::NOISE_TYPE_PARAM));
 		addParam(createParam<TL1105>(Vec(60, 307), module, StringTheory::WINDOW_FUNCTION_PARAM));
 
@@ -409,6 +498,7 @@ struct StringTheoryWidget : ModuleWidget {
 		addOutput(createOutput<FWPortOutSmall>(Vec(80, 105), module, StringTheory::FB_SEND_OUTPUT));
 		addOutput(createOutput<FWPortOutSmall>(Vec(82, 340), module, StringTheory::OUT_OUTPUT));
 
+		addChild(createLight<LargeLight<RedGreenBlueLight>>(Vec(31, 278), module, StringTheory::COMPRESSION_MODE_LIGHT));
 		addChild(createLight<LargeLight<RedGreenBlueLight>>(Vec(81, 280), module, StringTheory::NOISE_TYPE_LIGHT));
 		addChild(createLight<LargeLight<RedGreenBlueLight>>(Vec(81, 307), module, StringTheory::WINDOW_FUNCTION_LIGHT));
 

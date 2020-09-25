@@ -1,3 +1,9 @@
+### 1.15.7 (2020-08-31)
+- Added Optional compression to String Theory's Feedback
+
+### 1.15.6 (2020-08-31)
+- Fixed Lo/Hi Range Bug in Quantussy Cell
+
 ### 1.15.5 (2020-08-21)
 - Fixed Offset Bug in Seriously Slow LFO
 - Added Lo/Hi Range to Quantussy Cell

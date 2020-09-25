@@ -109,8 +109,8 @@ struct QuantussyCell : Module {
 		configParam(CV_ATTENUVERTER_PARAM, -1.0, 1.0, 1.0,"CV Attenuator","%",0,100);	
 
 
-		configParam(LOW_LIMIT_PARAM, -3.0, 3.0, -3.0,"Low Lmit", " Hz", 2, 1);
-		configParam(HI_LIMIT_PARAM, -3.0, 3.0, 3.0,"High Limit", " Hz", 2, 1);
+		configParam(LOW_LIMIT_PARAM, -10.0, 10.0, -10.0,"Low Lmit", " Hz", 2, 1);
+		configParam(HI_LIMIT_PARAM, -10.0, 10.0, 10.0,"High Limit", " Hz", 2, 1);
 
 	}
 	void process(const ProcessArgs &args) override;
@@ -125,8 +125,8 @@ struct QuantussyCell : Module {
 void QuantussyCell::process(const ProcessArgs &args) {
 	float deltaTime = args.sampleTime;
 
-	float lowLimit = params[LOW_LIMIT_PARAM].getValue() + (inputs[LOW_LIMIT_CV_INPUT].getVoltage() * 0.6f);
-	float hiLimit = params[HI_LIMIT_PARAM].getValue() + (inputs[HI_LIMIT_CV_INPUT].getVoltage() * 0.6f);
+	float lowLimit = params[LOW_LIMIT_PARAM].getValue() + (inputs[LOW_LIMIT_CV_INPUT].getVoltage());
+	float hiLimit = params[HI_LIMIT_PARAM].getValue() + (inputs[HI_LIMIT_CV_INPUT].getVoltage());
 	float pitch = clamp(params[FREQ_PARAM].getValue()  + _value2,lowLimit,hiLimit);
 
 	oscillator.setPitch(pitch);

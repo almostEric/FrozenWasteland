@@ -178,6 +178,7 @@ A collection of unusual plugins that will add a certain coolness to your patches
 - Reverse mode reverses direction of input buffer - time is based on feedback time
 - Ping Pong feeds the L feedback into the right channel and vise versa
 - FB Send and Returns allow you to insert FX into the feedback loop
+- If engaged, the compressor can limit the feedback.  Red = hard clip, Yellow = -6db compression, Green = adaptive compression
 - In Context Menu, the Grain Number and Grain Size control how the all the pitch shifters work. "RAW" is uses one grain sample but without the a triangle window
 
 ## PW Algorithm Expander
@@ -466,6 +467,8 @@ When they are connected this way, the Clock, Mute and Reset signals, and Eoc out
 - Feedback Shift allows the feedback of one grain to be fed into another grain
 - The initial burst of noise or external input can go through a Windowing function. Green = Hanning, Blue = Blackman
 - Grains can be ring modulated either against the internal noise source or an external input. RM Grains controls # of grains that are ring modulated (starting with first)
+- If engaged, the compressor can limit the Feedback.  Red = hard clip, Yellow = -6db compression, Green = adaptive compression
+
 
 ## Vox Inhumana
 

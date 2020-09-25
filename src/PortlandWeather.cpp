@@ -155,7 +155,7 @@ struct PortlandWeather : Module {
 			}
 		}
 
-		//compressionMode = newMode;
+		// compressionMode = newMode;
 	}
 
 	
@@ -174,7 +174,7 @@ struct PortlandWeather : Module {
 		}
 	}
 
-	float sampleRate = 44100;
+	float sampleRate;
 
 	const char* grooveNames[NUM_GROOVES+1] = {"Straight","Swing","Hard Swing","Reverse Swing","Alternate Swing","Accelerando","Ritardando","Waltz Time","Half Swing","Roller Coaster","Quintuple","Random 1","Random 2","Random 3","Early Reflection","Late Reflection"};
 	const float tapGroovePatterns[NUM_GROOVES][NUM_TAPS] = {
@@ -349,7 +349,7 @@ struct PortlandWeather : Module {
 		rightExpander.producerMessage = rightMessages[0];
 		rightExpander.consumerMessage = rightMessages[1];
 
-		float sampleRate = APP->engine->getSampleRate();
+		sampleRate = APP->engine->getSampleRate();
 		
 
 		for (int i = 0; i < NUM_TAPS; ++i) {
@@ -411,7 +411,8 @@ struct PortlandWeather : Module {
 
 		json_t *sumCM = json_object_get(rootJ, "compressionMode");
 		if (sumCM) {
-			compressionMode = json_integer_value(sumCM);			
+			compressionMode = json_integer_value(sumCM);
+			changeCompressionMode(compressionMode);
 		}
 
 		json_t *sumGs = json_object_get(rootJ, "grainSize");

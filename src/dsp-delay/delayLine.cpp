@@ -21,15 +21,6 @@ struct DelayLine {
 		return (1 - t) * v0 + t * v1;
 	}
 
-
-	void setDelayTime(int delaySize) {
-		desiredReadPtr = writePtr - delaySize;
-		balance = 0;
-		if (desiredReadPtr < 0) { 
-			desiredReadPtr += DELAY_LINE_SIZE;
-		}
-	}
-
     void write(T in) {
         DelayBuffer[writePtr++] = in; 
 
@@ -38,33 +29,31 @@ struct DelayLine {
 		}
     }
 
-	T getDelay() {
+	T getLangrangeInterpolatedDelay(float delay) {
 		T out;
 
-		out = DelayBuffer[readPtr++];
+		float readPtrf = writePtr - delay;
+		readPtrf = std::fmin(readPtrf, writePtr-3.0f);
+		int read0 = floor(readPtrf)-1;
+		int read1 = read0 + 1;
+		int read2 = read0 + 2;
+		int read3 = read0 + 3;
+		float fDelay = readPtrf - floor(readPtrf) + 1.0f;
 
-		int distance = desiredReadPtr - readPtr;
-		if(distance !=0) {
-			T desiredOut = DelayBuffer[desiredReadPtr]; 
-			out = lerp(out,desiredOut,balance);
-			balance +=.001;
-		}
-		desiredReadPtr++;
+		if (read0<0) read0 += DELAY_LINE_SIZE;
+		if (read1<0) read1 += DELAY_LINE_SIZE;
+		if (read2<0) read2 += DELAY_LINE_SIZE;
+		if (read3<0) read3 += DELAY_LINE_SIZE;
+	    	
+		out =   DelayBuffer[read3] *  fDelay       * (fDelay-1.0f) * (fDelay-2.0f) / 6.0f 
+	          - DelayBuffer[read2] *  fDelay       * (fDelay-1.0f) * (fDelay-3.0f) / 2.0f 
+        	  + DelayBuffer[read1] *  fDelay       * (fDelay-2.0f) * (fDelay-3.0f) / 2.0f 
+        	  - DelayBuffer[read0] * (fDelay-1.0f) * (fDelay-2.0f) * (fDelay-3.0f) / 6.0f;
 
-		if(balance >= 1) {
-			readPtr = desiredReadPtr;
-			//balance = 0.0;
-		}
-
-		if (desiredReadPtr >= DELAY_LINE_SIZE) {
-			desiredReadPtr -= DELAY_LINE_SIZE;
-		}
-		if (readPtr >= DELAY_LINE_SIZE) {
-			readPtr -= DELAY_LINE_SIZE;
-		}
 
 		return out;
 	}
+
 };
 
 
