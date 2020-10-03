@@ -1,4 +1,7 @@
-### 1.15.7 (2020-08-31)
+### 1.15.8 (2020-10-03)
+- Fixed Random Number Bug
+
+### 1.15.7 (2020-09-15)
 - Added Optional compression to String Theory's Feedback
 
 ### 1.15.6 (2020-08-31)

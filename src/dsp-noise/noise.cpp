@@ -5,8 +5,8 @@ using namespace frozenwasteland::dsp;
 
 
 Seeds::Seeds() {
-  std::random_device rd;
-  _generator.seed(rd());
+  //std::random_device rd;
+  _generator.seed(time(0));
 }
 
 unsigned int Seeds::_next() {

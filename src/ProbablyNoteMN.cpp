@@ -1281,7 +1281,7 @@ struct ProbablyNoteMN : Module {
 					noteProbability[channel][i] = 0.0;
 				}
 
-				EFPitch currentPitch = reducedEfPitches[currentNote[channel]];
+				//EFPitch currentPitch = reducedEfPitches[currentNote[channel]];
 				noteProbability[channel][currentNote[channel]] = 1.0;
 
 			

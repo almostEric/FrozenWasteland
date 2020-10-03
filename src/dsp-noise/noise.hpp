@@ -1,6 +1,7 @@
 #pragma once
 
 #include <random>
+#include <time.h>
 
 #include "base.hpp"
 
