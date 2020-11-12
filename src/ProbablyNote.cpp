@@ -45,6 +45,7 @@ struct ProbablyNote : Module {
 		PITCH_RANDOMNESS_PARAM,
 		PITCH_RANDOMNESS_CV_ATTENUVERTER_PARAM,
 		PITCH_RANDOMNESS_GAUSSIAN_PARAM,
+		TRIGGER_MODE_PARAM,
         NOTE_ACTIVE_PARAM,
         NOTE_WEIGHT_PARAM = NOTE_ACTIVE_PARAM + MAX_NOTES,
 		NUM_PARAMS = NOTE_WEIGHT_PARAM + MAX_NOTES
@@ -79,6 +80,7 @@ struct ProbablyNote : Module {
 		SHIFT_MODE_LIGHT = INTONATION_LIGHT+3,
         KEY_LOGARITHMIC_SCALE_LIGHT = SHIFT_MODE_LIGHT + 3,
 		PITCH_RANDOMNESS_GAUSSIAN_LIGHT,
+		TRIGGER_POLYPHONIC_LIGHT,
         NOTE_ACTIVE_LIGHT,
 		NUM_LIGHTS = NOTE_ACTIVE_LIGHT + MAX_NOTES*2
 	};
@@ -219,11 +221,14 @@ struct ProbablyNote : Module {
 
 
 	
-	dsp::SchmittTrigger clockTrigger,resetScaleTrigger,octaveWrapAroundTrigger,tempermentActiveTrigger,tempermentTrigger,shiftScalingTrigger,keyScalingTrigger,pitchRandomnessGaussianTrigger,noteActiveTrigger[MAX_NOTES]; 
+	dsp::SchmittTrigger clockTrigger[POLYPHONY],clockModeTrigger,resetScaleTrigger,octaveWrapAroundTrigger,
+						tempermentActiveTrigger,tempermentTrigger,shiftScalingTrigger,keyScalingTrigger,
+						pitchRandomnessGaussianTrigger,noteActiveTrigger[MAX_NOTES]; 
 	dsp::PulseGenerator noteChangePulse[POLYPHONY];
     GaussianNoiseGenerator _gauss;
  
     bool octaveWrapAround = false;
+	bool triggerPolyphonic = false;
     bool noteActive[MAX_NOTES] = {false};
     float noteScaleProbability[MAX_NOTES] = {0.0f};
     float noteInitialProbability[POLYPHONY][MAX_NOTES] = {{0.0f}};
@@ -234,8 +239,8 @@ struct ProbablyNote : Module {
 
 
 	bool triggerDelayEnabled = false;
-	float triggerDelay[TRIGGER_DELAY_SAMPLES] = {0};
-	int triggerDelayIndex = 0;
+	float triggerDelay[POLYPHONY][TRIGGER_DELAY_SAMPLES] = {{0}};
+	int triggerDelayIndex[POLYPHONY] = {0};
 
 
 
@@ -392,6 +397,7 @@ struct ProbablyNote : Module {
 		json_object_set_new(rootJ, "keyLogarithmic", json_integer((int) keyLogarithmic));
 		json_object_set_new(rootJ, "useCircleLayout", json_integer((int) useCircleLayout));
 		json_object_set_new(rootJ, "pitchRandomGaussian", json_integer((int) pitchRandomGaussian)); 
+		json_object_set_new(rootJ, "triggerPolyphonic", json_integer((int) triggerPolyphonic)); 
 
 		
 
@@ -462,6 +468,10 @@ struct ProbablyNote : Module {
 			useCircleLayout = json_integer_value(sumCl);			
 		}
 
+		json_t *sumTp = json_object_get(rootJ, "triggerPolyphonic");
+		if (sumTp) {
+			triggerPolyphonic = json_integer_value(sumTp);			
+		}
 		
 
 		for(int i=0;i<MAX_SCALES;i++) {
@@ -513,14 +523,18 @@ struct ProbablyNote : Module {
 			messageToExpander[0] = thirdOffset; 
 			messageToExpander[1] = fifthOffset; 
 			messageToExpander[2] = seventhOffset; 
-			rightExpander.module->leftExpander.messageFlipRequested = true;
-
-							
-
+			rightExpander.module->leftExpander.messageFlipRequested = true;					
 		} else {
 			generateChords = false;
 		}
 	
+
+		if (clockModeTrigger.process(params[TRIGGER_MODE_PARAM].getValue())) {
+			triggerPolyphonic = !triggerPolyphonic;
+		}		
+		lights[TRIGGER_POLYPHONIC_LIGHT].value = triggerPolyphonic;
+
+
         if (resetScaleTrigger.process(params[RESET_SCALE_PARAM].getValue())) {
 			resetTriggered = true;
 			lastWeightShift = 0;			
@@ -778,14 +792,18 @@ struct ProbablyNote : Module {
 
 
 		if( inputs[TRIGGER_INPUT].active ) {
-			float currentTriggerInput = inputs[TRIGGER_INPUT].getVoltage();
-			triggerDelay[triggerDelayIndex] = currentTriggerInput;
-			int delayedIndex = (triggerDelayIndex + 1) % TRIGGER_DELAY_SAMPLES;
-			float triggerInputValue = triggerDelayEnabled ? triggerDelay[delayedIndex] : currentTriggerInput;
-			triggerDelayIndex = delayedIndex;
+			bool triggerFired = false;
+			for(int channel=0;channel<currentPolyphony;channel++) {
+				float currentTriggerInput = inputs[TRIGGER_INPUT].getVoltage(channel);
+				triggerDelay[channel][triggerDelayIndex[channel]] = currentTriggerInput;
+				int delayedIndex = (triggerDelayIndex[channel] + 1) % TRIGGER_DELAY_SAMPLES;
+				float triggerInputValue = triggerDelayEnabled ? triggerDelay[channel][delayedIndex] : currentTriggerInput;
+				triggerDelayIndex[channel] = delayedIndex;
 
-			if (clockTrigger.process(triggerInputValue) ) {
-				for(int channel=0;channel<currentPolyphony;channel++) {
+				triggerFired = triggerPolyphonic ? clockTrigger[channel].process(triggerInputValue) : 
+									channel == 0 ? clockTrigger[0].process(triggerInputValue) : triggerFired;
+
+				if (triggerFired) {
 					float rnd = ((float) rand()/RAND_MAX);
 					if(inputs[EXTERNAL_RANDOM_INPUT].isConnected()) {
 						int randomPolyphony = inputs[EXTERNAL_RANDOM_INPUT].getChannels(); //Use as many random channels as possible
@@ -942,15 +960,16 @@ struct ProbablyNote : Module {
 };
 
 void ProbablyNote::onReset() {
-	clockTrigger.reset();
+	for(int i=0;i<POLYPHONY;i++) {
+		clockTrigger[i].reset();
+		for(int j=0;j<TRIGGER_DELAY_SAMPLES;j++) {
+			triggerDelay[i][j] = 0.0f;
+		}
+	}
 	resetTriggered = true;
 	triggerDelayEnabled = false;
-	for(int i=0;i<TRIGGER_DELAY_SAMPLES;i++) {
-		triggerDelay[i] = 0.0f;
-	}
 
-			fprintf(stderr, "Resetting \n");
-
+			// fprintf(stderr, "Resetting \n");
 
 	for(int i = 0;i<MAX_SCALES;i++) {
 		for(int j=0;j<MAX_NOTES;j++) {
@@ -1311,7 +1330,7 @@ struct ProbablyNoteWidget : ModuleWidget {
 
 		addInput(createInput<FWPortInSmall>(Vec(8, 345), module, ProbablyNote::NOTE_INPUT));
 		addInput(createInput<FWPortInSmall>(Vec(43, 345), module, ProbablyNote::TRIGGER_INPUT));
-		addInput(createInput<FWPortInSmall>(Vec(80, 345), module, ProbablyNote::EXTERNAL_RANDOM_INPUT));
+		addInput(createInput<FWPortInSmall>(Vec(90, 345), module, ProbablyNote::EXTERNAL_RANDOM_INPUT));
 
         addParam(createParam<RoundSmallFWSnapKnob>(Vec(23,25), module, ProbablyNote::SPREAD_PARAM));			
         addParam(createParam<RoundReallySmallFWKnob>(Vec(49,51), module, ProbablyNote::SPREAD_CV_ATTENUVERTER_PARAM));			
@@ -1362,11 +1381,15 @@ struct ProbablyNoteWidget : ModuleWidget {
 		addParam(createParam<RoundSmallFWKnob>(Vec(188,216), module, ProbablyNote::PITCH_RANDOMNESS_PARAM));			
         addParam(createParam<RoundReallySmallFWKnob>(Vec(214,242), module, ProbablyNote::PITCH_RANDOMNESS_CV_ATTENUVERTER_PARAM));			
 		addInput(createInput<FWPortInSmall>(Vec(216, 220), module, ProbablyNote::PITCH_RANDOMNESS_INPUT));
+
 		addParam(createParam<LEDButton>(Vec(190, 250), module, ProbablyNote::PITCH_RANDOMNESS_GAUSSIAN_PARAM));
 		addChild(createLight<LargeLight<GreenLight>>(Vec(191.5, 251.5), module, ProbablyNote::PITCH_RANDOMNESS_GAUSSIAN_LIGHT));
 
 		addParam(createParam<RoundReallySmallFWKnob>(Vec(202,292), module, ProbablyNote::WEIGHT_SCALING_PARAM));		
 
+
+		addParam(createParam<LEDButton>(Vec(62, 345), module, ProbablyNote::TRIGGER_MODE_PARAM));
+		addChild(createLight<LargeLight<BlueLight>>(Vec(63.5, 346.5), module, ProbablyNote::TRIGGER_POLYPHONIC_LIGHT));
 
 
 		PortWidget* weightInput;

@@ -46,6 +46,7 @@ struct ProbablyNoteBP : Module {
 		PITCH_RANDOMNESS_PARAM,
 		PITCH_RANDOMNESS_CV_ATTENUVERTER_PARAM,
 		PITCH_RANDOMNESS_GAUSSIAN_PARAM,
+		TRIGGER_MODE_PARAM,
         NOTE_ACTIVE_PARAM,
         NOTE_WEIGHT_PARAM = NOTE_ACTIVE_PARAM + MAX_NOTES,
 		NUM_PARAMS = NOTE_WEIGHT_PARAM + MAX_NOTES
@@ -81,6 +82,7 @@ struct ProbablyNoteBP : Module {
         KEY_LOGARITHMIC_SCALE_LIGHT = SHIFT_MODE_LIGHT + 3,
 		TRITAVE_MAPPING_LIGHT,
 		PITCH_RANDOMNESS_GAUSSIAN_LIGHT,
+		TRIGGER_POLYPHONIC_LIGHT,
         NOTE_ACTIVE_LIGHT,
 		NUM_LIGHTS = NOTE_ACTIVE_LIGHT + MAX_NOTES*2
 	};
@@ -131,11 +133,15 @@ struct ProbablyNoteBP : Module {
     
 	const double tritaveFrequency = 1.5849625;
 	
-	dsp::SchmittTrigger clockTrigger,resetScaleTrigger,tritaveWrapAroundTrigger,tempermentTrigger,tritaveMappingTrigger,shiftScalingTrigger,keyScalingTrigger,pitchRandomnessGaussianTrigger,noteActiveTrigger[MAX_NOTES]; 
+	dsp::SchmittTrigger clockTrigger[POLYPHONY],clockModeTrigger,resetScaleTrigger,tritaveWrapAroundTrigger,
+						tempermentTrigger,tritaveMappingTrigger,shiftScalingTrigger,keyScalingTrigger,
+						pitchRandomnessGaussianTrigger,noteActiveTrigger[MAX_NOTES]; 
+
 	dsp::PulseGenerator noteChangePulse[POLYPHONY];
     GaussianNoiseGenerator _gauss;
  
     bool tritaveWrapAround = false;
+	bool triggerPolyphonic = false;
     bool noteActive[MAX_NOTES] = {false};
     float noteScaleProbability[MAX_NOTES] = {0.0f};
     float noteInitialProbability[POLYPHONY][MAX_NOTES] = {{0.0f}};
@@ -145,8 +151,8 @@ struct ProbablyNoteBP : Module {
 	int controlIndex[MAX_NOTES] = {0};
 
 	bool triggerDelayEnabled = false;
-	float triggerDelay[TRIGGER_DELAY_SAMPLES] = {0};
-	int triggerDelayIndex = 0;
+	float triggerDelay[POLYPHONY][TRIGGER_DELAY_SAMPLES] = {{0}};
+	int triggerDelayIndex[POLYPHONY] = {0};
 
 
 
@@ -289,6 +295,7 @@ struct ProbablyNoteBP : Module {
 		json_object_set_new(rootJ, "keyLogarithmic", json_integer((int) keyLogarithmic));
 		json_object_set_new(rootJ, "tritaveMapping", json_integer((int) tritaveMapping));
 		json_object_set_new(rootJ, "pitchRandomGaussian", json_integer((int) pitchRandomGaussian));
+		json_object_set_new(rootJ, "triggerPolyphonic", json_integer((int) triggerPolyphonic)); 
 
 		for(int i=0;i<MAX_SCALES;i++) {
 			for(int j=0;j<MAX_NOTES;j++) {
@@ -351,6 +358,11 @@ struct ProbablyNoteBP : Module {
 			pitchRandomGaussian = json_integer_value(sumPg);			
 		}
 
+		json_t *sumTp = json_object_get(rootJ, "triggerPolyphonic");
+		if (sumTp) {
+			triggerPolyphonic = json_integer_value(sumTp);			
+		}
+
 
 		for(int i=0;i<MAX_SCALES;i++) {
 			for(int j=0;j<MAX_NOTES;j++) {
@@ -383,6 +395,12 @@ struct ProbablyNoteBP : Module {
 	
 
 	void process(const ProcessArgs &args) override {
+
+		if (clockModeTrigger.process(params[TRIGGER_MODE_PARAM].getValue())) {
+			triggerPolyphonic = !triggerPolyphonic;
+		}		
+		lights[TRIGGER_POLYPHONIC_LIGHT].value = triggerPolyphonic;
+
 	
         if (resetScaleTrigger.process(params[RESET_SCALE_PARAM].getValue())) {
 			resetTriggered = true;
@@ -641,14 +659,19 @@ struct ProbablyNoteBP : Module {
         
 
 		if( inputs[TRIGGER_INPUT].active ) {
-			float currentTriggerInput = inputs[TRIGGER_INPUT].getVoltage();
-			triggerDelay[triggerDelayIndex] = currentTriggerInput;
-			int delayedIndex = (triggerDelayIndex + 1) % TRIGGER_DELAY_SAMPLES;
-			float triggerInputValue = triggerDelayEnabled ? triggerDelay[delayedIndex] : currentTriggerInput;
-			triggerDelayIndex = delayedIndex;
+			bool triggerFired = false;
 
-			if (clockTrigger.process(triggerInputValue) ) {		
-				for(int channel=0;channel<currentPolyphony;channel++) {
+			for(int channel=0;channel<currentPolyphony;channel++) {
+				float currentTriggerInput = inputs[TRIGGER_INPUT].getVoltage(channel);
+				triggerDelay[channel][triggerDelayIndex[channel]] = currentTriggerInput;
+				int delayedIndex = (triggerDelayIndex[channel] + 1) % TRIGGER_DELAY_SAMPLES;
+				float triggerInputValue = triggerDelayEnabled ? triggerDelay[channel][delayedIndex] : currentTriggerInput;
+				triggerDelayIndex[channel] = delayedIndex;
+
+				triggerFired = triggerPolyphonic ? clockTrigger[channel].process(triggerInputValue) : 
+									channel == 0 ? clockTrigger[0].process(triggerInputValue) : triggerFired;
+
+				if (triggerFired) {
 					float rnd = ((float) rand()/RAND_MAX);
 					if(inputs[EXTERNAL_RANDOM_INPUT].isConnected()) {
 						int randomPolyphony = inputs[EXTERNAL_RANDOM_INPUT].getChannels(); //Use as many random channels as possible
@@ -728,10 +751,11 @@ struct ProbablyNoteBP : Module {
 };
 
 void ProbablyNoteBP::onReset() {
-	clockTrigger.reset();
-
-	for(int i=0;i<TRIGGER_DELAY_SAMPLES;i++) {
-		triggerDelay[i] = 0.0f;
+	for(int i=0;i<POLYPHONY;i++) {
+		clockTrigger[i].reset();
+		for(int j=0;j<TRIGGER_DELAY_SAMPLES;j++) {
+			triggerDelay[i][j] = 0.0f;
+		}
 	}
 	triggerDelayEnabled = false;
 
@@ -905,7 +929,7 @@ struct ProbablyNoteBPWidget : ModuleWidget {
 
 		addInput(createInput<FWPortInSmall>(Vec(8, 345), module, ProbablyNoteBP::NOTE_INPUT));
 		addInput(createInput<FWPortInSmall>(Vec(43, 345), module, ProbablyNoteBP::TRIGGER_INPUT));
-		addInput(createInput<FWPortInSmall>(Vec(80, 345), module, ProbablyNoteBP::EXTERNAL_RANDOM_INPUT));
+		addInput(createInput<FWPortInSmall>(Vec(90, 345), module, ProbablyNoteBP::EXTERNAL_RANDOM_INPUT));
 
         addParam(createParam<RoundSmallFWSnapKnob>(Vec(23,25), module, ProbablyNoteBP::SPREAD_PARAM));			
         addParam(createParam<RoundReallySmallFWKnob>(Vec(49,51), module, ProbablyNoteBP::SPREAD_CV_ATTENUVERTER_PARAM));			
@@ -969,6 +993,8 @@ struct ProbablyNoteBPWidget : ModuleWidget {
 
 		addParam(createParam<RoundReallySmallFWKnob>(Vec(202,292), module, ProbablyNoteBP::WEIGHT_SCALING_PARAM));	
 
+		addParam(createParam<LEDButton>(Vec(62, 345), module, ProbablyNoteBP::TRIGGER_MODE_PARAM));
+		addChild(createLight<LargeLight<BlueLight>>(Vec(63.5, 346.5), module, ProbablyNoteBP::TRIGGER_POLYPHONIC_LIGHT));
 
 
 
