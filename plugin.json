@@ -16,36 +16,42 @@
 			"slug": "BPMLFO",
 			"name": "BPM LFO",
 			"description": "Beat Synchronized LFO",
+			"manualUrl": "https://github.com/almostEric/FrozenWasteland#bpm-lfo",
 			"tags": ["LFO"]
 		},
 		{
 			"slug": "BPMLFO2",
 			"name": "BPM LFO 2",
 			"description": "Beat Synchronized LFO with CV Waveshape",
+			"manualUrl": "https://github.com/almostEric/FrozenWasteland#bpm-lfo-2",
 			"tags": ["LFO"]
 		},
 		{
 			"slug": "BPMLFOPhaseExpander",
 			"name": "BPM LFO Phase Expander",
 			"description": "Add multiple phased outputs to BMPLFO and BPMLFO 2",
+			"manualUrl": "https://github.com/almostEric/FrozenWasteland#bpm-lfo-phasex",
 			"tags": ["Expander"]
 		},
 		{
 			"slug": "CDCSeriouslySlowLFO",
 			"name": "CDC Seriously Slow LFO",
 			"description": "Slow LFO taken to absurdity",
+			"manualUrl": "https://github.com/almostEric/FrozenWasteland#seriously-slow-lfo",
 			"tags": ["LFO"]
 		},
 		{
 			"slug": "DamianLillard",
 			"name": "Damian Lillard",
 			"description": "4-channel CV crossover/mixer",
+			"manualUrl": "https://github.com/almostEric/FrozenWasteland#damian-lillard",
 			"tags": ["VCA"]
 		},
 		{
 		  "slug": "DrunkenRampage",
 		  "name": "Drunken Rampage",
 		  "description": "Probalistic Dual ramp generator. Inspired by Befaco Rampage.",
+		  "manualUrl": "https://github.com/almostEric/FrozenWasteland#drunken-rampage",
 		  "tags": [
 			"Function Generator",
 			"Logic",
@@ -59,198 +65,231 @@
 			"slug": "EverlastingGlottalStopper",
 			"name": "Everlasting Glottal Stopper",
 			"description": "Vocal Tract simulating VCO",
+			"manualUrl": "https://github.com/almostEric/FrozenWasteland#everlasting-glottal-stopper",
 			"tags": ["VCO"]
 		},
 		{
 			"slug": "TheGardener",
 			"name": "The Gardener",
 			"description": "Sequencer Controller",
+			"manualUrl": "https://github.com/almostEric/FrozenWasteland#the-gardener",
 			"tags": ["Clock Modulator"]
 		},
 		{
 			"slug": "HairPick",
 			"name": "Hair Pick",
 			"description": "64 Tap Rhythmic Comb Filter",
+			"manualUrl": "https://github.com/almostEric/FrozenWasteland#hair-pick",
 			"tags": ["VCF"]
 		},
 		{
 			"slug": "JustAPhaser",
 			"name": "Just A Phaser",
 			"description": "Advanced Phaser",
+			"manualUrl": "https://github.com/almostEric/FrozenWasteland#just-a-phaser",
 			"tags": ["Phaser"]
 		},
 		{
 			"slug": "LissajousLFO",
 			"name":  "Lissajous LFO",
 			"description": "LFO based on interactions of 4 sine waves",
+			"manualUrl": "https://github.com/almostEric/FrozenWasteland#lissajou-lfo",
 			"tags": ["LFO"]
 		},
 		{
 			"slug": "Midichlorian",
 			"name": "Midichlorian",
 			"description": "Microtonal CV-MIDI",
+			"manualUrl": "https://github.com/almostEric/FrozenWasteland#midichlorian",
 			"tags": ["MIDI","Polyphonic"]
 		},
 		{
 			"slug": "MrBlueSky",
 			"name": "Mr. Blue Sky",
 			"description": "16 band vocoder",
+			"manualUrl": "https://github.com/almostEric/FrozenWasteland#mr-blue-sky",
 			"tags": ["Vocoder"]
 		},
 		{
 			"slug": "TheOneRingModulator",
 			"name": "The One Ring Modulator",
 			"description": "Ring Modulator with CV controlable response",
+			"manualUrl": "https://github.com/almostEric/FrozenWasteland#the-one-ring-modulator",
 			"tags": ["Ring Modulator"]
 		},
 		{
 			"slug": "PhasedLockedLoop",
 			"name": "Phased Locked Loop",
 			"description": "PLL attempts to follow input signals freqency",
+			"manualUrl": "https://github.com/almostEric/FrozenWasteland#phased-locked-loop-pll",
 			"tags": ["VCO"]
 		},
 		{
 			"slug": "PortlandWeather",
 			"name": "Portland Weather",
 			"description": "16 tap rhytmic delay with per tap pitch shifting and filtering",
+			"manualUrl": "https://github.com/almostEric/FrozenWasteland#portland-weather",
 			"tags": ["Delay", "Granular", "VCF"]
 		},
 		{
 			"slug": "ProbablyNote",
 			"name": "Probably Note",
 			"description": "Probabilistic Quantizer",
+			"manualUrl": "https://github.com/almostEric/FrozenWasteland#probably-note",
 			"tags": ["Quantizer","Random","Polyphonic"]
 		},
 		{
 			"slug": "ProbablyNoteArabic",
 			"name": "Probably Note - Arabic",
 			"description": "Probabilistic Quantizer using Arabic maqams, ajnas and sayrs",
+			"manualUrl": "https://github.com/almostEric/FrozenWasteland#probably-note---arabic",
 			"tags": ["Quantizer","Random"]
 		},
 		{
 			"slug": "ProbablyNoteBP",
 			"name": "Probably Note - Bohlen Pierce",
 			"description": "Probabilistic Quantizer using Bohlen Pierce scales and tuning",
+			"manualUrl": "https://github.com/almostEric/FrozenWasteland#probably-note---bohlen-pierce",
 			"tags": ["Quantizer","Random","Polyphonic"]
 		},
 		{
 			"slug": "ProbablyNoteMN",
 			"name": "Probably Note - Math Nerd",
 			"description": "Probabilistic Quantizer using prime number based generative scales",
+			"manualUrl": "https://github.com/almostEric/FrozenWasteland#probably-note---math-nerd",
 			"tags": ["Quantizer","Random","Polyphonic"]
 		},
 		{
 			"slug": "PNChordExpander",
 			"name": "Probably Note - Chord Expander",
 			"description": "Adds Chord Generation to Probably Not(e)",
+			"manualUrl": "https://github.com/almostEric/FrozenWasteland#probably-note---chord-expander",
 			"tags": ["Expander"]
 		},
 		{
 			"slug": "PWAlgorithmicExpander",
 			"name": "Portland Weather - Algorithmic Expander",
 			"description": "Allows Portland Weather to create Euclidean rhythms",
+			"manualUrl": "https://github.com/almostEric/FrozenWasteland#pw-algorithm-expander",
 			"tags": ["Expander"]
 		},
 		{
 			"slug": "PWGridControlExpander",
 			"name": "Portland Weather - Grid Control Expander",
 			"description": "Allows Portland Weather be modulated in a grid fashion",
+			"manualUrl": "https://github.com/almostEric/FrozenWasteland#pw-grid-control-expander",
 			"tags": ["Expander"]
 		},
 		{
 			"slug": "PWTapBreakoutExpander",
 			"name": "Portland Weather - Tap Breakoout Expander",
 			"description": "Individual Send/Returns for each PW Tap",
+			"manualUrl": "https://github.com/almostEric/FrozenWasteland#pw-tap-breakout-expander",
 			"tags": ["Expander"]
 		},
 		{
 			"slug": "QuadAlgorithmicRhythm",
 			"name": "Quad Algorithmic Rhythm Generator",
 			"description": "4 track Euclidean and Golumb Ruler Sequencer",
+			"manualUrl": "https://github.com/almostEric/FrozenWasteland#quad-algorithmic-rhythm",
 			"tags": ["Sequencer"]
 		},
 		{
 			"slug": "QARGrooveExpander",
 			"name": "QAR - Groove",
 			"description": "Create Grooves and Microrhythms for QAR",
+			"manualUrl": "https://github.com/almostEric/FrozenWasteland#qar-groove-expander",
 			"tags": ["Expander"]
 		},
 		{
 			"slug": "QARProbabilityExpander",
 			"name": "QAR - Probability",
 			"description": "Add Randomness to QAR Rhythms",
+			"manualUrl": "https://github.com/almostEric/FrozenWasteland#qar-probability-expander",
 			"tags": ["Expander","Random"]
 		},
 		{
 			"slug": "QARWarpedSpaceExpander",
 			"name": "QAR - Warped Space",
 			"description": "Make your QAR Rhythms explore non-linear space",
+			"manualUrl": "https://github.com/almostEric/FrozenWasteland#qar-warped-space-expander",
 			"tags": ["Expander"]
 		},
 		{
 			"slug": "QARWellFormedRhythmExpander",
 			"name": "QAR - Well Formed Rhythms",
 			"description": "Extra Parameters for Well Formed Algorithm",
+			"manualUrl": "https://github.com/almostEric/FrozenWasteland#qar-well-formed-rhythm-expander",
 			"tags": ["Expander"]
 		},
 		{
 			"slug": "QuantussyCell",
 			"name": "Quantussy Cell",
 			"description": "Chainable semi-chatotic CV generator",
+			"manualUrl": "https://github.com/almostEric/FrozenWasteland#quantussy-cell",
 			"tags": ["Logic"]
 		},
 		{
 			"slug": "RouletteLFO",
 			"name": "Roulette LFO",
 			"description": "LFO Based on based on rolling curves",
+			"manualUrl": "https://github.com/almostEric/FrozenWasteland#roulette-lfo",
 			"tags": ["LFO"]
 		},
 		{
 			"slug": "SeedsOfChange",
 			"name": "Seeds Of Change",
 			"description": "Repeatable Random Number Generator",
+			"manualUrl": "https://github.com/almostEric/FrozenWasteland#seeds-of-change",
 			"tags": ["Random"]
 		},
 		{
 			"slug": "SeedsOfChangeCVExpander",
 			"name": "Seeds Of Change - CV Expander",
 			"description": "Additional CV Outs for SoC",
+			"manualUrl": "https://github.com/almostEric/FrozenWasteland#seeds-of-change---cv-expander",
 			"tags": ["Expander","Random"]
 		},
 		{
 			"slug": "SeedsOfChangeGateExpander",
 			"name": "Seeds Of Change - Gate Expander",
 			"description": "Additional Gates for SoC",
+			"manualUrl": "https://github.com/almostEric/FrozenWasteland#seeds-of-change---gate-expander",
 			"tags": ["Expander","Random"]
 		},
 		{
 			"slug": "StringTheory",
 			"name": "String Theory",
 			"description": "Karpus-Strong String Synthesis",
+			"manualUrl": "https://github.com/almostEric/FrozenWasteland#string-theory-vco",
 			"tags": ["VCO"]
 		},
 		{
 			"slug": "SeriouslySlowEG",
 			"name": "Seriously Slow EG",
 			"description": "Envelope Generator for modulating CV over *very* long time periods",
+			"manualUrl": "https://github.com/almostEric/FrozenWasteland#seriously-envelope-generator",
 			"tags": ["Envelope generator"]
 		},
 		{
 			"slug": "SeriouslySlowLFO",
 			"name": "Seriously Slow LFO",
 			"description": "LFO for modulating CV over *very* long time periods",
+			"manualUrl": "https://github.com/almostEric/FrozenWasteland#seriously-slow-lfo",
 			"tags": ["LFO"]
 		},
 		{
 			"slug": "VoxInhumana",
 			"name": "Vox Inhumana",
 			"description": "Formant/Vowel Filter",
+			"manualUrl": "https://github.com/almostEric/FrozenWasteland#vox-inhumana",
 			"tags": ["VCF"]
 		}		,
 		{
 			"slug": "VoxInhumanaExpander",
 			"name": "Vox Inhumana Expander",
 			"description": "Resonance and Slope Control",
+			"manualUrl": "https://github.com/almostEric/FrozenWasteland#vox-inhumana",
 			"tags": ["Expander"]
 		}
 	]
