@@ -2,12 +2,14 @@
 #include "ui/knobs.hpp"
 #include "ui/ports.hpp"
 
+#define NBR_SCENES 8
 #define TRACK_COUNT 4
 #define MAX_STEPS 18
 #define PASSTHROUGH_LEFT_VARIABLE_COUNT 13
-#define PASSTHROUGH_RIGHT_VARIABLE_COUNT 8
+#define PASSTHROUGH_RIGHT_VARIABLE_COUNT 9
+#define STEP_LEVEL_PARAM_COUNT 4
 #define TRACK_LEVEL_PARAM_COUNT TRACK_COUNT * 12
-#define PASSTHROUGH_OFFSET MAX_STEPS * TRACK_COUNT * 3 + TRACK_LEVEL_PARAM_COUNT
+#define PASSTHROUGH_OFFSET MAX_STEPS * TRACK_COUNT * STEP_LEVEL_PARAM_COUNT + TRACK_LEVEL_PARAM_COUNT
 
 struct QARProbabilityExpander : Module {
 	enum ParamIds {
@@ -56,6 +58,10 @@ struct QARProbabilityExpander : Module {
 	bool trackProbabilitySelected[TRACK_COUNT];
 	int probabilityGroupMode[MAX_STEPS] = {0};
 
+	float sceneData[NBR_SCENES][59] = {{0}};
+	int sceneChangeMessage = 0;
+
+
 	QARProbabilityExpander() {
 		config(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS, NUM_LIGHTS);
 		
@@ -103,6 +109,12 @@ struct QARProbabilityExpander : Module {
 			json_object_set_new(rootJ, buf, json_integer((int) probabilityGroupMode[i]));			
 		}
 		
+		for(int scene=0;scene<NBR_SCENES;scene++) {
+			for(int i=0;i<59;i++) {
+				std::string buf = "sceneData-" + std::to_string(scene) + "-" + std::to_string(i) ;
+				json_object_set_new(rootJ, buf.c_str(), json_real(sceneData[scene][i]));
+			}
+		}
 		return rootJ;
 	}
 
@@ -133,7 +145,41 @@ struct QARProbabilityExpander : Module {
 			}
 		}	
 
+		for(int scene=0;scene<NBR_SCENES;scene++) {
+			for(int i=0;i<59;i++) {
+				std::string buf = "sceneData-" + std::to_string(scene) + "-" + std::to_string(i) ;
+				json_t *sdJ = json_object_get(rootJ, buf.c_str());
+				if (json_real_value(sdJ)) {
+					sceneData[scene][i] = json_real_value(sdJ);
+				}
+			}
+		}
 	}
+
+	void saveScene(int scene) {
+		sceneData[scene][0] = stepsOrDivs;
+		for(int trackNumber=0;trackNumber<TRACK_COUNT;trackNumber++) {
+			sceneData[scene][trackNumber+1] = trackProbabilitySelected[trackNumber];
+		}
+		for(int stepNumber=0;stepNumber<MAX_STEPS;stepNumber++) {
+			sceneData[scene][stepNumber+5] = params[PROBABILITY_1_PARAM+stepNumber].getValue();
+			sceneData[scene][stepNumber+23] = params[PROBABILITY_ATTEN_1_PARAM+stepNumber].getValue();
+			sceneData[scene][stepNumber+41] = params[PROBABILITY_GROUP_MODE_1_PARAM+stepNumber].getValue();
+		}
+	}
+
+	void loadScene(int scene) {
+		stepsOrDivs = sceneData[scene][0];
+		for(int trackNumber=0;trackNumber<TRACK_COUNT;trackNumber++) {
+			trackProbabilitySelected[trackNumber] = sceneData[scene][trackNumber+1];
+		}
+		for(int stepNumber=0;stepNumber<MAX_STEPS;stepNumber++) {
+			 params[PROBABILITY_1_PARAM+stepNumber].setValue(sceneData[scene][stepNumber+5]);
+			 params[PROBABILITY_ATTEN_1_PARAM+stepNumber].setValue(sceneData[scene][stepNumber+23]);
+			 params[PROBABILITY_GROUP_MODE_1_PARAM+stepNumber].setValue(sceneData[scene][stepNumber+41]);
+		}
+	}
+
 
 	void process(const ProcessArgs &args) override {
 		for(int i=0; i< TRACK_COUNT; i++) {
@@ -157,39 +203,44 @@ struct QARProbabilityExpander : Module {
 		}
 		
 
-		bool motherPresent = (leftExpander.module && (leftExpander.module->model == modelQuadAlgorithmicRhythm || leftExpander.module->model == modelQARWellFormedRhythmExpander || leftExpander.module->model == modelQARProbabilityExpander || leftExpander.module->model == modelQARGrooveExpander || leftExpander.module->model == modelQARWarpedSpaceExpander || leftExpander.module->model == modelPWAlgorithmicExpander));
+		bool motherPresent = (leftExpander.module && (leftExpander.module->model == modelQuadAlgorithmicRhythm || leftExpander.module->model == modelQARWellFormedRhythmExpander || 
+								leftExpander.module->model == modelQARProbabilityExpander || leftExpander.module->model == modelQARGrooveExpander || 
+								leftExpander.module->model == modelQARIrrationalityExpander || leftExpander.module->model == modelPWAlgorithmicExpander));
 		if (motherPresent) {
 			// To Mother
 			float *messagesFromMother = (float*)leftExpander.consumerMessage;
 			float *messagesToMother = (float*)leftExpander.module->rightExpander.producerMessage;
 
-			//Initalize
-			for (int i = 0; i < PASSTHROUGH_OFFSET + PASSTHROUGH_LEFT_VARIABLE_COUNT + PASSTHROUGH_RIGHT_VARIABLE_COUNT; i++) {
-                messagesToMother[i] = 0.0;
+			sceneChangeMessage = messagesFromMother[PASSTHROUGH_OFFSET + PASSTHROUGH_LEFT_VARIABLE_COUNT+ 0];
+			if(sceneChangeMessage >= 20) {
+				saveScene(sceneChangeMessage-20);
+			} else if (sceneChangeMessage >=10) {
+				loadScene(sceneChangeMessage-10);
 			}
 
+
+			//Initalize
+			std::fill(messagesToMother, messagesToMother+PASSTHROUGH_OFFSET + PASSTHROUGH_LEFT_VARIABLE_COUNT + PASSTHROUGH_RIGHT_VARIABLE_COUNT, 0.0);
+
 			//If another expander is present, get its values (we can overwrite them)
-			bool anotherExpanderPresent = (rightExpander.module && (rightExpander.module->model == modelQARWellFormedRhythmExpander || rightExpander.module->model == modelQARGrooveExpander || rightExpander.module->model == modelQARProbabilityExpander || rightExpander.module->model == modelQARWarpedSpaceExpander || rightExpander.module->model == modelQuadAlgorithmicRhythm));
+			bool anotherExpanderPresent = (rightExpander.module && (rightExpander.module->model == modelQARWellFormedRhythmExpander || rightExpander.module->model == modelQARGrooveExpander || 
+											rightExpander.module->model == modelQARProbabilityExpander || rightExpander.module->model == modelQARIrrationalityExpander || 
+											rightExpander.module->model == modelQuadAlgorithmicRhythm));
 			if(anotherExpanderPresent)
 			{			
 				float *messagesFromExpander = (float*)rightExpander.consumerMessage;
 				float *messageToExpander = (float*)(rightExpander.module->leftExpander.producerMessage);
 
-                if(rightExpander.module->model != modelQuadAlgorithmicRhythm) { // Get QRE values							
-					for(int i = 0; i < PASSTHROUGH_OFFSET; i++) {
-                        messagesToMother[i] = messagesFromExpander[i];
-					}
+                if(rightExpander.module->model != modelQuadAlgorithmicRhythm) { // Get QRE values		
+					std::copy(messagesFromExpander,messagesFromExpander + PASSTHROUGH_OFFSET,messagesToMother);		
 				}
 
 				//QAR Pass through left
-				for(int i = 0; i < PASSTHROUGH_LEFT_VARIABLE_COUNT; i++) {
-					messagesToMother[PASSTHROUGH_OFFSET + i] = messagesFromExpander[PASSTHROUGH_OFFSET + i];
-				}
+				std::copy(messagesFromExpander+PASSTHROUGH_OFFSET,messagesFromExpander+PASSTHROUGH_OFFSET+PASSTHROUGH_LEFT_VARIABLE_COUNT,messagesToMother+PASSTHROUGH_OFFSET);		
 
 				//QAR Pass through right
-				for(int i = 0; i < PASSTHROUGH_RIGHT_VARIABLE_COUNT;i++) {
-					messageToExpander[PASSTHROUGH_OFFSET + PASSTHROUGH_LEFT_VARIABLE_COUNT + i] = messagesFromMother[PASSTHROUGH_OFFSET + PASSTHROUGH_LEFT_VARIABLE_COUNT + i];
-				}	
+				std::copy(messagesFromMother+PASSTHROUGH_OFFSET + PASSTHROUGH_LEFT_VARIABLE_COUNT,messagesFromMother+PASSTHROUGH_OFFSET + PASSTHROUGH_LEFT_VARIABLE_COUNT + PASSTHROUGH_RIGHT_VARIABLE_COUNT,
+									messageToExpander+PASSTHROUGH_OFFSET + PASSTHROUGH_LEFT_VARIABLE_COUNT);			
 
 				rightExpander.module->leftExpander.messageFlipRequested = true;
 			}
@@ -244,7 +295,6 @@ struct QARProbabilityExpanderWidget : ModuleWidget {
 		addChild(createWidget<ScrewSilver>(Vec(box.size.x - 2 * RACK_GRID_WIDTH + 12, RACK_GRID_HEIGHT - RACK_GRID_WIDTH)));
 
 
-		addParam(createParam<LEDButton>(Vec(12, 324), module, QARProbabilityExpander::STEP_OR_DIV_PARAM));
 
          for(int i=0; i<MAX_STEPS / 3;i++) {
 		    addParam(createParam<RoundSmallFWKnob>(Vec(10, 30 + i*46), module, QARProbabilityExpander::PROBABILITY_1_PARAM + i));
@@ -271,6 +321,7 @@ struct QARProbabilityExpanderWidget : ModuleWidget {
 
 		//addChild(createLight<LargeLight<GreenLight>>(Vec(190, 284), module, QuadRhythmExpander::CONNECTED_LIGHT));
 
+		addParam(createParam<LEDButton>(Vec(12, 324), module, QARProbabilityExpander::STEP_OR_DIV_PARAM));
         addChild(createLight<LargeLight<BlueLight>>(Vec(13.5, 325.5), module, QARProbabilityExpander::USING_DIVS_LIGHT));
 
 		for(int i=0;i<TRACK_COUNT; i++) {

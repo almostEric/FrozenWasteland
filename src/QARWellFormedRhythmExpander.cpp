@@ -2,13 +2,15 @@
 #include "ui/knobs.hpp"
 #include "ui/ports.hpp"
 
+#define NBR_SCENES 8
 #define TRACK_COUNT 4
 #define MAX_STEPS 18
 #define NUM_TAPS 16
 #define PASSTHROUGH_LEFT_VARIABLE_COUNT 13
-#define PASSTHROUGH_RIGHT_VARIABLE_COUNT 8
+#define PASSTHROUGH_RIGHT_VARIABLE_COUNT 9
+#define STEP_LEVEL_PARAM_COUNT 4
 #define TRACK_LEVEL_PARAM_COUNT TRACK_COUNT * 12
-#define PASSTHROUGH_OFFSET MAX_STEPS * TRACK_COUNT * 3 + TRACK_LEVEL_PARAM_COUNT
+#define PASSTHROUGH_OFFSET MAX_STEPS * TRACK_COUNT * STEP_LEVEL_PARAM_COUNT + TRACK_LEVEL_PARAM_COUNT
 
 
 struct QARWellFormedRhythmExpander : Module {
@@ -60,7 +62,10 @@ struct QARWellFormedRhythmExpander : Module {
 	dsp::SchmittTrigger trackHierarchicalTrigger[TRACK_COUNT],trackComplementTrigger[TRACK_COUNT];
 	bool trackHierachical[TRACK_COUNT] = {0};
 	int trackComplement[TRACK_COUNT] = {0};
-	
+
+	float sceneData[NBR_SCENES][12] = {{0}};
+	int sceneChangeMessage = 0;
+
 
     float lerp(float v0, float v1, float t) {
 	  return (1 - t) * v0 + t * v1;
@@ -93,12 +98,14 @@ struct QARWellFormedRhythmExpander : Module {
 			buf = "complement-" + std::to_string(i);
 			json_object_set(rootJ, buf.c_str(),json_integer(trackComplement[i]));
         }
-        
-        // json_object_set_new(rootJ, "constantTime", json_integer((bool) constantTime));
-		// json_object_set_new(rootJ, "masterTrack", json_integer((int) masterTrack));
-		// json_object_set_new(rootJ, "chainMode", json_integer((int) chainMode));
-		// json_object_set_new(rootJ, "muted", json_integer((bool) muted));
 
+		for(int scene=0;scene<NBR_SCENES;scene++) {
+			for(int i=0;i<12;i++) {
+				std::string buf = "sceneData-" + std::to_string(scene) + "-" + std::to_string(i) ;
+				json_object_set_new(rootJ, buf.c_str(), json_real(sceneData[scene][i]));
+			}
+		}
+        
 		return rootJ;
 	}
 
@@ -115,21 +122,31 @@ struct QARWellFormedRhythmExpander : Module {
                 trackComplement[i] = json_integer_value(ctCl);
         }
 
-		// json_t *ctJ = json_object_get(rootJ, "constantTime");
-		// if (ctJ)
-		// 	constantTime = json_integer_value(ctJ);
+		for(int scene=0;scene<NBR_SCENES;scene++) {
+			for(int i=0;i<12;i++) {
+				std::string buf = "sceneData-" + std::to_string(scene) + "-" + std::to_string(i) ;
+				json_t *sdJ = json_object_get(rootJ, buf.c_str());
+				if (json_real_value(sdJ)) {
+					sceneData[scene][i] = json_real_value(sdJ);
+				}
+			}
+		}
+	}
 
-		// json_t *mtJ = json_object_get(rootJ, "masterTrack");
-		// if (mtJ)
-		// 	masterTrack = json_integer_value(mtJ);
+	void saveScene(int scene) {
+		for(int trackNumber=0;trackNumber<TRACK_COUNT;trackNumber++) {
+			sceneData[scene][trackNumber+0] = params[TRACK_1_EXTRA_VALUE_PARAM+trackNumber].getValue();
+			sceneData[scene][trackNumber+4] = params[TRACK_1_HIERARCHICAL_PARAM+trackNumber].getValue();
+			sceneData[scene][trackNumber+8] = params[TRACK_1_COMPLEMENT_PARAM+trackNumber].getValue();
+		}
+	}
 
-		// json_t *cmJ = json_object_get(rootJ, "chainMode");
-		// if (cmJ)
-		// 	chainMode = json_integer_value(cmJ);
-
-		// json_t *mutedJ = json_object_get(rootJ, "muted");
-		// if (mutedJ)
-		// 	muted = json_integer_value(mutedJ);
+	void loadScene(int scene) {
+		for(int trackNumber=0;trackNumber<TRACK_COUNT;trackNumber++) {
+			params[TRACK_1_EXTRA_VALUE_PARAM+trackNumber].setValue(sceneData[scene][trackNumber+0]);
+			params[TRACK_1_HIERARCHICAL_PARAM+trackNumber].setValue(sceneData[scene][trackNumber+4]);
+			params[TRACK_1_COMPLEMENT_PARAM+trackNumber].setValue(sceneData[scene][trackNumber+8]);
+		}
 	}
 
 
@@ -150,22 +167,30 @@ struct QARWellFormedRhythmExpander : Module {
 			lights[TRACK_1_COMPLEMENT_LIGHT + (i * 3) + 1].value = trackComplement[i] > 0;
 		}        
 
-		bool motherPresent = (leftExpander.module && (leftExpander.module->model == modelQARWarpedSpaceExpander || leftExpander.module->model == modelQARProbabilityExpander || leftExpander.module->model == modelQARGrooveExpander || leftExpander.module->model == modelQuadAlgorithmicRhythm));
+		bool motherPresent = (leftExpander.module && (leftExpander.module->model == modelQuadAlgorithmicRhythm || leftExpander.module->model == modelQARWellFormedRhythmExpander || 
+								leftExpander.module->model == modelQARProbabilityExpander || leftExpander.module->model == modelQARGrooveExpander || 
+								leftExpander.module->model == modelQARIrrationalityExpander || leftExpander.module->model == modelPWAlgorithmicExpander));
 		//lights[CONNECTED_LIGHT].value = motherPresent;
 		if (motherPresent) {
 			// To Mother
 			float *messagesFromMother = (float*)leftExpander.consumerMessage;
 			float *messagesToMother = (float*)leftExpander.module->rightExpander.producerMessage;
 
-
-//USE MEMSSET!
-			//Initalize
-			for (int i = 0; i < PASSTHROUGH_OFFSET + PASSTHROUGH_LEFT_VARIABLE_COUNT + PASSTHROUGH_RIGHT_VARIABLE_COUNT; i++) {
-                messagesToMother[i] = 0.0;
+			sceneChangeMessage = messagesFromMother[PASSTHROUGH_OFFSET + PASSTHROUGH_LEFT_VARIABLE_COUNT+ 0];
+			if(sceneChangeMessage >= 20) {
+				saveScene(sceneChangeMessage-20);
+			} else if (sceneChangeMessage >=10) {
+				loadScene(sceneChangeMessage-10);
 			}
 
+
+			//Initalize
+			std::fill(messagesToMother, messagesToMother+PASSTHROUGH_OFFSET + PASSTHROUGH_LEFT_VARIABLE_COUNT + PASSTHROUGH_RIGHT_VARIABLE_COUNT, 0.0);
+
 			//If another expander is present, get its values (we can overwrite them)
-			bool anotherExpanderPresent = (rightExpander.module && (rightExpander.module->model == modelQARWarpedSpaceExpander || rightExpander.module->model == modelQARProbabilityExpander || rightExpander.module->model == modelQARGrooveExpander || rightExpander.module->model == modelQuadAlgorithmicRhythm));
+			bool anotherExpanderPresent = (rightExpander.module && (rightExpander.module->model == modelQARWellFormedRhythmExpander || rightExpander.module->model == modelQARGrooveExpander || 
+											rightExpander.module->model == modelQARProbabilityExpander || rightExpander.module->model == modelQARIrrationalityExpander || 
+											rightExpander.module->model == modelQuadAlgorithmicRhythm));
 			if(anotherExpanderPresent)
 			{			
 				float *messagesFromExpander = (float*)rightExpander.consumerMessage;
@@ -177,17 +202,12 @@ struct QARWellFormedRhythmExpander : Module {
 					}
 				}
 
-
-//USE MEMCPY!
 				//QAR Pass through left
-				for(int i = 0; i < PASSTHROUGH_LEFT_VARIABLE_COUNT; i++) {
-					messagesToMother[PASSTHROUGH_OFFSET + i] = messagesFromExpander[PASSTHROUGH_OFFSET + i];
-				}
+				std::copy(messagesFromExpander+PASSTHROUGH_OFFSET,messagesFromExpander+PASSTHROUGH_OFFSET+PASSTHROUGH_LEFT_VARIABLE_COUNT,messagesToMother+PASSTHROUGH_OFFSET);		
 
 				//QAR Pass through right
-				for(int i = 0; i < PASSTHROUGH_RIGHT_VARIABLE_COUNT;i++) {
-					messageToExpander[PASSTHROUGH_OFFSET + PASSTHROUGH_LEFT_VARIABLE_COUNT + i] = messagesFromMother[PASSTHROUGH_OFFSET + PASSTHROUGH_LEFT_VARIABLE_COUNT + i];
-				}	
+				std::copy(messagesFromMother+PASSTHROUGH_OFFSET + PASSTHROUGH_LEFT_VARIABLE_COUNT,messagesFromMother+PASSTHROUGH_OFFSET + PASSTHROUGH_LEFT_VARIABLE_COUNT + PASSTHROUGH_RIGHT_VARIABLE_COUNT,
+									messageToExpander+PASSTHROUGH_OFFSET + PASSTHROUGH_LEFT_VARIABLE_COUNT);			
 
 				rightExpander.module->leftExpander.messageFlipRequested = true;
 			}

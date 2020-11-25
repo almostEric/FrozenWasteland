@@ -13,10 +13,12 @@
 #define EXPANDER_MAX_STEPS 18
 #define NUM_RULERS 10
 #define MAX_DIVISIONS 6
+
 #define PASSTHROUGH_LEFT_VARIABLE_COUNT 13
-#define PASSTHROUGH_RIGHT_VARIABLE_COUNT 8
+#define PASSTHROUGH_RIGHT_VARIABLE_COUNT 9
+#define STEP_LEVEL_PARAM_COUNT 4
 #define TRACK_LEVEL_PARAM_COUNT TRACK_COUNT * 12
-#define PASSTHROUGH_OFFSET EXPANDER_MAX_STEPS * TRACK_COUNT * 3 + TRACK_LEVEL_PARAM_COUNT
+#define PASSTHROUGH_OFFSET EXPANDER_MAX_STEPS * TRACK_COUNT * STEP_LEVEL_PARAM_COUNT + TRACK_LEVEL_PARAM_COUNT
 
 using namespace frozenwasteland::dsp;
 
@@ -229,7 +231,8 @@ struct PWAlgorithmicExpander : Module {
 		expanderClockValue = 0; 
 
 		//See if a master is passing through an expander
-		bool leftExpanderPresent = (leftExpander.module && (leftExpander.module->model == modelPortlandWeather || leftExpander.module->model == modelPWTapBreakoutExpander || leftExpander.module->model == modelPWGridControlExpander));
+		bool leftExpanderPresent = (leftExpander.module && (leftExpander.module->model == modelPortlandWeather || leftExpander.module->model == modelPWTapBreakoutExpander || 
+                                    leftExpander.module->model == modelPWGridControlExpander));
 		if(leftExpanderPresent)
 		{
             float *messagesFromMother = (float*)leftExpander.consumerMessage;
@@ -437,7 +440,8 @@ struct PWAlgorithmicExpander : Module {
 
 		//Get Expander Info
         //bool rightExpanderPresent = false;
-		if(rightExpander.module && (rightExpander.module->model == modelQARProbabilityExpander || rightExpander.module->model == modelQARGrooveExpander || rightExpander.module->model == modelQARWarpedSpaceExpander))
+		if(rightExpander.module && (rightExpander.module->model == modelQARProbabilityExpander || rightExpander.module->model == modelQARGrooveExpander || 
+                                    rightExpander.module->model == modelQARWarpedSpaceExpander || rightExpander.module->model == modelQARIrrationalityExpander))
 		{			
 			QARExpanderDisconnectReset = true;
             //rightExpanderPresent = true;
@@ -455,7 +459,12 @@ struct PWAlgorithmicExpander : Module {
                     int stepIndex = j;
                     bool stepFound = true;
                     if(useDivs) { //Use j as a count to the div # we are looking for
-                        stepIndex = beatLocation[j];                        
+                        if(j < beatCount) {
+                            stepIndex = beatLocation[j];
+                            // fprintf(stderr, "Probability Track:%i step:%i BL:%i \n",i,j,stepIndex);
+                        } else {
+                            stepFound = false;
+                        }               
                     }
                     
                     if(stepFound) {

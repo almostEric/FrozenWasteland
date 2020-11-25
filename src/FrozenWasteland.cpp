@@ -25,6 +25,7 @@ void init(rack::Plugin *p) {
 	//p->addModel(modelHoldingPattern);
 	p->addModel(modelJustAPhaser);
 	p->addModel(modelLissajousLFO);
+	p->addModel(modelManicCompression);
 	p->addModel(modelMidichlorian);
 	p->addModel(modelMrBlueSky);
 	p->addModel(modelTheOneRingModulator);
@@ -41,6 +42,7 @@ void init(rack::Plugin *p) {
 	p->addModel(modelPWTapBreakoutExpander);
 	p->addModel(modelQuadAlgorithmicRhythm);
 	p->addModel(modelQARGrooveExpander);
+	p->addModel(modelQARIrrationalityExpander);
 	p->addModel(modelQARProbabilityExpander);
 	p->addModel(modelQARWarpedSpaceExpander);
 	p->addModel(modelQARWellFormedRhythmExpander);

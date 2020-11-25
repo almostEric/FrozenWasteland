@@ -530,6 +530,8 @@ struct PortlandWeather : Module {
 
 			//Get Delay Times
 			for(int tap=0;tap<NUM_TAPS;tap++) {
+
+				// fprintf(stderr, "Tap:%i delay:%f \n",tap,expanderDelayTime[tap]);
 				expanderDelayTime[tap] = messagesFromExpander[NUM_TAPS * 7 + tap];
 				expanderMuteTaps[tap] = (expanderDelayTime[tap] < 0);
 			}
