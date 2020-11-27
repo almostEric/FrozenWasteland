@@ -30,6 +30,9 @@ struct ManicCompression : Module {
 		RMS_WINDOW_PARAM,
 		RMS_WINDOW_CV_ATTENUVERTER_PARAM,
 		FILTER_MODE_PARAM,
+		MS_MODE_PARAM,
+		COMPRESS_M_PARAM,
+		COMPRESS_S_PARAM,
 		NUM_PARAMS
 	};
 	enum InputIds {
@@ -49,6 +52,9 @@ struct ManicCompression : Module {
 		SOURCE_R_INPUT,
 		SIDECHAIN_INPUT,
 		FILTER_MODE_INPUT,
+		MS_MODE_INPUT,
+		COMPRESS_M_INPUT,
+		COMPRESS_S_INPUT,
 		NUM_INPUTS
 	};
 	enum OutputIds {
@@ -60,12 +66,16 @@ struct ManicCompression : Module {
 		BYPASS_LIGHT,
 		RMS_MODE_LIGHT,
 		FILTER_LIGHT,
+		MS_MODE_LIGHT,
+		COMPRESS_MID_LIGHT,
+		COMPRESS_SIDE_LIGHT,
 		NUM_LIGHTS
 	};
 
 
 	//Stuff for S&Hs
-	dsp::SchmittTrigger bypassTrigger,	rmsTrigger, lpFilterTrigger, bypassInputTrigger, rmsInputTrigger, lpFilterInputTrigger;
+	dsp::SchmittTrigger bypassTrigger,	rmsTrigger, lpFilterTrigger, bypassInputTrigger, rmsInputTrigger, lpFilterInputTrigger,
+						midSideModeTrigger,midSideModeInputTrigger,compressMidTrigger,compressMidInputTrigger,compressSideTrigger,compressSideInputTrigger;
 	
 	chunkware_simple::SimpleComp compressor;
 	chunkware_simple::SimpleCompRms compressorRms;
@@ -78,6 +88,15 @@ struct ManicCompression : Module {
 	bool gateFlippedRMS =  false;
 	bool filterMode = false;
 	bool gateFlippedFilter =  false;
+
+	bool midSideMode = false;
+	bool gateFlippedMidSideMode =  false;
+	bool compressMid = false;
+	bool gateFlippedCompressMid =  false;
+	bool compressSide = false;
+	bool gateFlippedCompressSide =  false;
+
+
 	bool gateMode = false;
 
 	Biquad* filterBank[3]; // 3 filters 2 for stereo inputs, one for sidechain
@@ -140,6 +159,12 @@ json_t *ManicCompression::dataToJson() {
 	json_object_set_new(rootJ, "bypassed", json_integer((bool) bypassed));
 	json_object_set_new(rootJ, "rmsMode", json_integer((bool) rmsMode));
 	json_object_set_new(rootJ, "filterMode", json_integer((bool) filterMode));
+
+	json_object_set_new(rootJ, "midSideMode", json_integer((bool) midSideMode));
+	json_object_set_new(rootJ, "compressMid", json_integer((bool) compressMid));
+	json_object_set_new(rootJ, "compressSide", json_integer((bool) compressSide));
+
+
 	json_object_set_new(rootJ, "gateMode", json_integer((bool) gateMode));
 
 	return rootJ;
@@ -158,6 +183,19 @@ void ManicCompression::dataFromJson(json_t *rootJ) {
 	json_t *fmJ = json_object_get(rootJ, "filterMode");
 	if (fmJ)
 		filterMode = json_integer_value(fmJ);
+
+	json_t *msmJ = json_object_get(rootJ, "midSideMode");
+	if (msmJ)
+		midSideMode = json_integer_value(msmJ);
+
+	json_t *cmJ = json_object_get(rootJ, "compressMid");
+	if (cmJ)
+		compressMid = json_integer_value(cmJ);
+
+	json_t *csJ = json_object_get(rootJ, "compressSide");
+	if (csJ)
+		compressSide = json_integer_value(csJ);
+
 
 	json_t *gmJ = json_object_get(rootJ, "gateMode");
 	if (gmJ)
@@ -230,6 +268,65 @@ void ManicCompression::process(const ProcessArgs &args) {
 	}
 	lights[FILTER_LIGHT].value = filterMode ? 1.0 : 0.0;
 
+	float msModeInput = inputs[MS_MODE_INPUT].getVoltage();
+	if(gateMode) {
+		if(midSideMode != (msModeInput !=0) && gateFlippedMidSideMode ) {
+			midSideMode = msModeInput != 0;
+			gateFlippedMidSideMode = true;
+		} else if (midSideMode == (msModeInput !=0)) {
+			gateFlippedMidSideMode = true;
+		}
+	} else {
+		if(midSideModeInputTrigger.process(msModeInput)) {
+			midSideMode = !midSideMode;
+			gateFlippedMidSideMode= false;
+		}
+	}
+	if(midSideModeTrigger.process(params[MS_MODE_PARAM].getValue())) {
+		midSideMode = !midSideMode;
+		gateFlippedMidSideMode= false;
+	}
+	lights[MS_MODE_LIGHT].value = midSideMode ? 1.0 : 0.0;
+
+	float compressMidInput = inputs[COMPRESS_M_INPUT].getVoltage();
+	if(gateMode) {
+		if(compressMid != (compressMidInput !=0) && gateFlippedCompressMid ) {
+			compressMid = compressMidInput != 0;
+			gateFlippedCompressMid = true;
+		} else if (compressMid == (compressMidInput !=0)) {
+			gateFlippedCompressMid = true;
+		}
+	} else {
+		if(compressMidInputTrigger.process(compressMidInput)) {
+			compressMid = !compressMid;
+			gateFlippedCompressMid= false;
+		}
+	}
+	if(compressMidTrigger.process(params[COMPRESS_M_PARAM].getValue())) {
+		compressMid = !compressMid;
+		gateFlippedCompressMid= false;
+	}
+	lights[COMPRESS_MID_LIGHT].value = compressMid ? (midSideMode ? 1.0 : 0.1) : 0.0;
+
+	float compressSideInput = inputs[COMPRESS_S_INPUT].getVoltage();
+	if(gateMode) {
+		if(compressSide != (compressSideInput !=0) && gateFlippedCompressSide ) {
+			compressSide = compressSideInput != 0;
+			gateFlippedCompressSide = true;
+		} else if (compressSide == (compressSideInput !=0)) {
+			gateFlippedCompressSide = true;
+		}
+	} else {
+		if(compressSideInputTrigger.process(compressSideInput)) {
+			compressSide = !compressSide;
+			gateFlippedCompressSide= false;
+		}
+	}
+	if(compressSideTrigger.process(params[COMPRESS_S_PARAM].getValue())) {
+		compressSide = !compressSide;
+		gateFlippedCompressSide= false;
+	}
+	lights[COMPRESS_SIDE_LIGHT].value = compressSide ? (midSideMode ? 1.0 : 0.1) : 0.0;
 
 
 	float paramRatio = clamp(params[RATIO_PARAM].getValue() + (inputs[RATIO_CV_INPUT].getVoltage() * 0.1 * params[RATIO_CV_ATTENUVERTER_PARAM].getValue()),0.0f,1.0f);
@@ -255,6 +352,15 @@ void ManicCompression::process(const ProcessArgs &args) {
 	double inputR = inputL;
 	if(inputs[SOURCE_R_INPUT].isConnected()) {
 		inputR = inputs[SOURCE_R_INPUT].getVoltage();
+	}
+
+	//In Mid-Side Mode, L=mid, R=side
+	if(midSideMode) {
+		//Encode
+		double mid = inputL + inputR;
+		double side = inputL - inputR;
+		inputL = mid;
+		inputR = side;
 	}
 
 	double processedL = inputL;
@@ -322,8 +428,23 @@ void ManicCompression::process(const ProcessArgs &args) {
 	double outputR;
 
 	if(!bypassed) {
-		outputL = lerp(inputL,inputL * finalGainLin,mix);
-		outputR = lerp(inputR,inputR * finalGainLin,mix);
+		
+		double processedOutputL;
+		double processedOutputR;
+		if(!midSideMode) {
+			processedOutputL = inputL * finalGainLin; 
+			processedOutputR = inputR * finalGainLin;
+		} else {
+			double processedMid =  compressMid ? inputL * finalGainLin : inputL;
+			double processedSide =  compressSide ? inputR * finalGainLin : inputR;
+			//Decode
+			processedOutputL = processedMid + processedSide;
+			processedOutputR = processedMid - processedSide;
+			
+		}
+
+		outputL = lerp(inputL,processedOutputL,mix);
+		outputR = lerp(inputR,processedOutputR,mix);
 	} else {
 		outputL = inputL;
 		outputR = inputR;
@@ -450,9 +571,9 @@ struct ManicCompressionWidget : ModuleWidget {
 		addChild(createLight<LargeLight<BlueLight>>(Vec(11.5, 196.5), module, ManicCompression::RMS_MODE_LIGHT));
 		addInput(createInput<FWPortInReallySmall>(Vec(13, 216), module, ManicCompression::RMS_MODE_INPUT));
 
-		addParam(createParam<LEDButton>(Vec(10, 245), module, ManicCompression::FILTER_MODE_PARAM));
-		addChild(createLight<LargeLight<BlueLight>>(Vec(11.5, 246.5), module, ManicCompression::FILTER_LIGHT));
-		addInput(createInput<FWPortInReallySmall>(Vec(31, 248), module, ManicCompression::FILTER_MODE_INPUT));
+		addParam(createParam<LEDButton>(Vec(10, 247), module, ManicCompression::FILTER_MODE_PARAM));
+		addChild(createLight<LargeLight<BlueLight>>(Vec(11.5, 248.5), module, ManicCompression::FILTER_LIGHT));
+		addInput(createInput<FWPortInReallySmall>(Vec(31, 250), module, ManicCompression::FILTER_MODE_INPUT));
 
 
 		addParam(createParam<RoundSmallFWKnob>(Vec(30, 195), module, ManicCompression::RMS_WINDOW_PARAM));
@@ -493,6 +614,20 @@ struct ManicCompressionWidget : ModuleWidget {
 		addParam(createParam<LEDButton>(Vec(190, 280), module, ManicCompression::BYPASS_PARAM));
 		addChild(createLight<LargeLight<RedLight>>(Vec(191.5, 281.5), module, ManicCompression::BYPASS_LIGHT));
 		addInput(createInput<FWPortInReallySmall>(Vec(215, 283), module, ManicCompression::BYPASS_INPUT));
+
+		
+		addParam(createParam<LEDButton>(Vec(110, 247), module, ManicCompression::MS_MODE_PARAM));
+		addChild(createLight<LargeLight<BlueLight>>(Vec(111.5, 248.5), module, ManicCompression::MS_MODE_LIGHT));
+		addInput(createInput<FWPortInReallySmall>(Vec(131, 250), module, ManicCompression::MS_MODE_INPUT));
+
+
+		addParam(createParam<LEDButton>(Vec(157, 247), module, ManicCompression::COMPRESS_M_PARAM));
+		addChild(createLight<LargeLight<BlueLight>>(Vec(158.5, 248.5), module, ManicCompression::COMPRESS_MID_LIGHT));
+		addInput(createInput<FWPortInReallySmall>(Vec(178, 250), module, ManicCompression::COMPRESS_M_INPUT));
+
+		addParam(createParam<LEDButton>(Vec(201, 247), module, ManicCompression::COMPRESS_S_PARAM));
+		addChild(createLight<LargeLight<BlueLight>>(Vec(202.5, 248.5), module, ManicCompression::COMPRESS_SIDE_LIGHT));
+		addInput(createInput<FWPortInReallySmall>(Vec(222, 250), module, ManicCompression::COMPRESS_S_INPUT));
 
 
 		addInput(createInput<PJ301MPort>(Vec(115, 335), module, ManicCompression::SIDECHAIN_INPUT));
