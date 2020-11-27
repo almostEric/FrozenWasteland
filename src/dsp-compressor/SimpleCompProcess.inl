@@ -55,7 +55,7 @@ namespace chunkware_simple
 
 		overdB += DC_OFFSET;					// add DC offset to avoid denormal
 		AttRelEnvelope::run( overdB, envdB_ );	// run attack/release envelope
-		overdB = envdB_ - DC_OFFSET;			// subtract DC offset
+		envdB_ -= DC_OFFSET;					// subtract DC offset
 
 		/* REGARDING THE DC OFFSET: In this case, since the offset is added before 
 		 * the attack/release processes, the envelope will never fall below the offset,
@@ -63,16 +63,19 @@ namespace chunkware_simple
 		 * constant gain reduction, we must subtract it from the envelope, yielding
 		 * a minimum value of 0dB.
 		 */
-		if(overdB < kneedB_) {
-			//double a = overdB + kneedB_/2.0;
-			double a = overdB + kneedB_;
+		if(envdB_ > 0 && envdB_ < kneedB_) {
+			double a = envdB_ + kneedB_/2.0;
 			double gain = (((1/ratio_)-1.0) * a * a) / (2 * kneedB_);
 			gainReduction_ = -gain;
-			//fprintf(stderr, "ratio: %f  knee: %f  odb:%f cdb: %f  a: %f, gr: %f   gr. %f\n", ratio_,kneedB_,overdB, kneeOverdB,a,gainReduction_,dB2lin( -gainReduction_ ));
+			// fprintf(stderr, "ratio: %f  knee: %f  odb:%f   a: %f, gr: %f   gr. %f\n", ratio_,kneedB_,overdB, a,gainReduction_,dB2lin( -gainReduction_ ));
 		} else {
-			gainReduction_ = overdB * ( ratio_ - 1.0 );	// gain reduction (dB)
-			//fprintf(stderr, "odb:%f gr: %f   gr. %f\n", overdB, gainReduction_,dB2lin( -gainReduction_ ));
+			gainReduction_ = envdB_ * ( ratio_ - 1.0 );	// gain reduction (dB)
+			// fprintf(stderr, "odb:%f gr: %f   gr. %f\n", overdB, gainReduction_,dB2lin( -gainReduction_ ));
 		}
+
+		overdB = envdB_;			// save state
+
+
 	}
 
 

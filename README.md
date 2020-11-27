@@ -101,6 +101,17 @@ A collection of unusual plugins that will add a certain coolness to your patches
 - Output 7: y1 * y2
 - Output 8: x1 * x2 * y1 * y2
 
+## Manic Compression
+
+![Manic Compression](./doc/mc.png)
+
+- This is a fully CV controllable compressor
+- Controls are standard for most compressors (threshold, ratio, attack, release)
+- RMS mode uses a window (whose length is controlled by the RMS window controls) to find peaks, otherwise is an instantaneous peak detector
+- Attack and Release curves can make curves range from exponential to linear to logarithmic depending on input. 
+- Old Opto compressors were famous for having non-linear (exponential in their case) release times
+- LP Filter applies a Low pass filter onto the input before it is sent to level detector. This can allow transients to go through before compressor kicks in (great for drums)
+
 ## Midichlorian
 
 ![Midichlorian](./doc/midichlorian.png)
@@ -331,6 +342,9 @@ When they are connected this way, the Clock, Mute and Reset signals, and Eoc out
 ### Perfect Balanced Rhythms
 - Based on the work of A. J. Milne
 - https://www.researchgate.net/publication/302345911_XronoMorph_Algorithmic_generation_of_perfectly_balanced_and_well-formed_rhythms
+### Manual Mode
+- Click on steps to turn beat on/off.
+- Offset is still CV controllable
 ### Boolean Logic
 - Uses a boolean operator to combine the previous two tracks (so 3 = 1 & 2, 4 = 2 & 3)
 - Length can't be longer than shortest of the 2 tracks combined
@@ -359,6 +373,18 @@ When they are connected this way, the Clock, Mute and Reset signals, and Eoc out
 - Gaussian mode uses a distribution pattern so that most beats are close to the original
 - Expanders can be chained, so putting another Groove Expander before can allow each track to have its own groove 
 - Can also be chained with QAR Probability
+
+## QAR Irrational Rhythm Expander
+
+![QAR Irrational Rhythm Expander](./doc/QARIR.png)
+
+- Expander Module for Quad Algorithmic Rhythm
+- Allows for creating irrational rhythms within a track (triplets are the most common).
+- Length and Ratio controls create the rhythm - ex: a triplet would be 3:2, a septuplet 7:6.
+- If DIVS mode is on, then the IR start on the selected beat, no matter which step it fall on
+- Expanders can be chained so tracks can have their own IRs, or multiple IRs on a track
+- Right expander(s) have priority over expander on left
+- Can also be chained with QAR Groove and any other QAR expander
 
 ## QAR Probability Expander
 

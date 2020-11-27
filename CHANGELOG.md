@@ -1,3 +1,8 @@
+### 1.16.0 (2020-11-27)
+- Added Manic Compression - CV Compressor
+- Added QAR Irrational Rhythm expander
+- Added Scenes and Manual mode to Quad Algorithmic Rhythm
+
 ### 1.15.8 (2020-10-03)
 - Fixed Random Number Bug
 

@@ -79,7 +79,7 @@ namespace chunkware_simple
 	}
 
 	//-------------------------------------------------------------
-	void SimpleCompRms::setSampleRate( double sampleRate )
+	void SimpleCompRms::setSampleRate( double sampleRate ) 
 	{
 		SimpleComp::setSampleRate( sampleRate );
 		ave_.setSampleRate( sampleRate );
@@ -92,7 +92,7 @@ namespace chunkware_simple
 	}
 
 	//-------------------------------------------------------------
-	void SimpleCompRms::initRuntime( void )
+	void SimpleCompRms::initRuntime( void ) 
 	{
 		SimpleComp::initRuntime();
 		aveOfSqrs_ = DC_OFFSET;

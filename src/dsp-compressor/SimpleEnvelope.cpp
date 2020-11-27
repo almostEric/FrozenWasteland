@@ -6,7 +6,7 @@
  *  Version		: 1.12
  *  Implements	: EnvelopeDetector, AttRelEnvelope
  *
- *	© 2006, ChunkWare Music Software, OPEN-SOURCE
+ *	ï¿½ 2006, ChunkWare Music Software, OPEN-SOURCE
  *
  *	Permission is hereby granted, free of charge, to any person obtaining a
  *	copy of this software and associated documentation files (the "Software"),
@@ -35,13 +35,13 @@ namespace chunkware_simple
 	//-------------------------------------------------------------
 	// envelope detector
 	//-------------------------------------------------------------
-	EnvelopeDetector::EnvelopeDetector( double ms, double sampleRate )
+	EnvelopeDetector::EnvelopeDetector( double ms, double linearity, double sampleRate )
 	{
 		assert( sampleRate > 0.0 );
 		assert( ms > 0.0 );
 		sampleRate_ = sampleRate;
+		linearity_ = linearity;
 		ms_ = ms;
-		setCoef();
 	}
 
 	//-------------------------------------------------------------
@@ -49,7 +49,12 @@ namespace chunkware_simple
 	{
 		assert( ms > 0.0 );
 		ms_ = ms;
-		setCoef();
+	}
+
+	//-------------------------------------------------------------
+	void EnvelopeDetector::setLinearity( double linearity )
+	{
+		linearity_ = linearity;
 	}
 
 	//-------------------------------------------------------------
@@ -57,13 +62,15 @@ namespace chunkware_simple
 	{
 		assert( sampleRate > 0.0 );
 		sampleRate_ = sampleRate;
-		setCoef();
 	}
 
 	//-------------------------------------------------------------
-	void EnvelopeDetector::setCoef( void )
+	double EnvelopeDetector::getCoef( double delta )
 	{
-		coef_ = exp( -1000.0 / ( ms_ * sampleRate_ ) );
+		delta = std::min(delta,18.0);
+		const double slopeContstant = 1.2;
+		double adjustment = pow(slopeContstant,linearity_ * delta); 
+		return exp( -1000.0 / ( ms_ * sampleRate_ * adjustment) );
 	}
 
 	//-------------------------------------------------------------
@@ -85,6 +92,18 @@ namespace chunkware_simple
 	void AttRelEnvelope::setRelease( double ms )
 	{
 		rel_.setTc( ms );
+	}
+
+	//-------------------------------------------------------------
+	void AttRelEnvelope::setAttackCurve( double linearity )
+	{
+		att_.setLinearity( linearity );
+	}
+
+	//-------------------------------------------------------------
+	void AttRelEnvelope::setReleaseCurve( double linearity )
+	{
+		rel_.setLinearity( linearity );
 	}
 
 	//-------------------------------------------------------------

@@ -6,7 +6,7 @@
  *  Version		: 1.12
  *  Class		: EnvelopeDetector, AttRelEnvelope
  *
- *	© 2006, ChunkWare Music Software, OPEN-SOURCE
+ *	ï¿½ 2006, ChunkWare Music Software, OPEN-SOURCE
  *
  *	Permission is hereby granted, free of charge, to any person obtaining a
  *	copy of this software and associated documentation files (the "Software"),
@@ -52,6 +52,7 @@ namespace chunkware_simple
 	public:
 		EnvelopeDetector(
 			  double ms = 1.0
+			, double linarity = 1.0
 			, double sampleRate = 44100.0
 			);
 		virtual ~EnvelopeDetector() {}
@@ -64,8 +65,16 @@ namespace chunkware_simple
 		virtual void   setSampleRate( double sampleRate );
 		virtual double getSampleRate( void ) const { return sampleRate_; }
 
+		// time constant
+		virtual void   setLinearity( double linearity_ );
+		virtual double getLinearity( void ) const { return linearity_; }
+
 		// runtime function
 		INLINE void run( double in, double &state ) {
+			double delta = std::abs(in-state);
+
+			coef_ = getCoef(delta);
+
 			state = in + coef_ * ( state - in );
 		}
 
@@ -73,8 +82,9 @@ namespace chunkware_simple
 			
 		double sampleRate_;		// sample rate
 		double ms_;				// time constant in ms
+		double linearity_;      // Slope adjuster
 		double coef_;			// runtime coefficient
-		virtual void setCoef( void );	// coef calculation
+		double getCoef( double delta );	// coef calculation
 
 	};	// end SimpleComp class
 
@@ -98,6 +108,14 @@ namespace chunkware_simple
 		// release time constant
 		virtual void   setRelease( double ms );
 		virtual double getRelease( void ) const { return rel_.getTc(); }
+
+		// attack time slope
+		virtual void   setAttackCurve( double linearity );
+		virtual double getAttackCurve( void ) const { return att_.getLinearity(); }
+
+		// release time slope
+		virtual void   setReleaseCurve( double linearity );
+		virtual double getReleaseCurve( void ) const { return rel_.getLinearity(); }
 
 		// sample rate dependencies
 		virtual void   setSampleRate( double sampleRate );

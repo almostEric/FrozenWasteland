@@ -1,4 +1,4 @@
-#include "FrozenWasteland.hpp"
+	#include "FrozenWasteland.hpp"
 #include "dsp-compressor/SimpleComp.h"
 #include "dsp-compressor/SimpleGain.h"
 #include "ui/knobs.hpp"
@@ -65,7 +65,7 @@ struct ManicCompression : Module {
 
 
 	//Stuff for S&Hs
-	dsp::SchmittTrigger bypassTrigger,	rmsTrigger, lpFilterTrigger;
+	dsp::SchmittTrigger bypassTrigger,	rmsTrigger, lpFilterTrigger, bypassInputTrigger, rmsInputTrigger, lpFilterInputTrigger;
 	
 	chunkware_simple::SimpleComp compressor;
 	chunkware_simple::SimpleCompRms compressorRms;
@@ -73,8 +73,12 @@ struct ManicCompression : Module {
 	double threshold, ratio, knee;
 
 	bool bypassed =  false;
+	bool gateFlippedBypassed =  false;
 	bool rmsMode = false;
+	bool gateFlippedRMS =  false;
 	bool filterMode = false;
+	bool gateFlippedFilter =  false;
+	bool gateMode = false;
 
 	Biquad* filterBank[3]; // 3 filters 2 for stereo inputs, one for sidechain
 
@@ -82,9 +86,11 @@ struct ManicCompression : Module {
 		config(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS, NUM_LIGHTS);
 
 		configParam(THRESHOLD_PARAM, -50.0, 0.0, -30.0,"Threshold", " db");
-		configParam(RATIO_PARAM, 1.0, 20.0, 1.0,"Ratio");	
-		configParam(ATTACK_PARAM, 0.02, 100.0, 2.0,"Attack", " ms");
-		configParam(RELEASE_PARAM, 40.0, 5000.0, 100.0,"Release"," ms");	
+		configParam(RATIO_PARAM, 0.0, 1.0, 0.1,"Ratio","",20,1.0);	
+		configParam(ATTACK_PARAM, 0.0, 1.0, 0.1,"Attack", " ms",13.4975,8.0,-7.98);
+		configParam(RELEASE_PARAM, 0.0, 1.0, 0.1,"Release"," ms",629.0,8.0,32.0);	
+		configParam(ATTACK_CURVE_PARAM, -1.0, 1.0, 0.0,"Attack Curve");
+		configParam(RELEASE_CURVE_PARAM, -1.0, 1.0, 0.0,"Release Curve");	
 		configParam(KNEE_PARAM, 0.0, 10.0, 0.0,"Knee", " db");	
 		configParam(RMS_WINDOW_PARAM, 0.02, 50.0, 5.0,"RMS Window", " ms");
 		configParam(MAKEUP_GAIN_PARAM, 0.0, 30.0, 0.0,"Makeup Gain", " db");
@@ -94,6 +100,8 @@ struct ManicCompression : Module {
 		configParam(RATIO_CV_ATTENUVERTER_PARAM, -1.0, 1.0, 0.0,"Ratio CV Attenuation","%",0,100);	
 		configParam(ATTACK_CV_ATTENUVERTER_PARAM, -1.0, 1.0, 0.0,"Attack CV Attenuation","%",0,100);
 		configParam(RELEASE_CV_ATTENUVERTER_PARAM, -1.0, 1.0, 0.0,"Release CV Attenuation","%",0,100);	
+		configParam(ATTACK_CURVE_CV_ATTENUVERTER_PARAM, -1.0, 1.0, 0.0,"Attack Curve CV Attenuation","%",0,100);
+		configParam(RELEASE_CURVE_CV_ATTENUVERTER_PARAM, -1.0, 1.0, 0.0,"Release Curve CV Attenuation","%",0,100);	
 		configParam(KNEE_CV_ATTENUVERTER_PARAM, -1.0, 1.0, 0.0,"Knee CV Attenuation","%",0,100);	
 		configParam(RMS_WINDOW_CV_ATTENUVERTER_PARAM, -1.0, 1.0, 0.0,"RMS Windows CV Attenuation","%",0,100);	
 		configParam(MAKEUP_CV_ATTENUVERTER_GAIN_PARAM, -1.0, 1.0, 0.0,"Makeup Gain CV Attenuation","%",0,100);
@@ -109,6 +117,8 @@ struct ManicCompression : Module {
 
 	}
 	void process(const ProcessArgs &args) override;
+    void dataFromJson(json_t *) override;
+    json_t *dataToJson() override;
 
 	// For more advanced Module features, read Rack's engine.hpp header file
 	// - dataToJson, dataFromJson: serialization of internal data
@@ -120,38 +130,120 @@ double lerp(double v0, double v1, double t) {
 		return (1 - t) * v0 + t * v1;
 }
 
+double sgn(double val) {
+    return (double(0) < val) - (val < double(0));
+}	
+
+json_t *ManicCompression::dataToJson() {
+	json_t *rootJ = json_object();
+	
+	json_object_set_new(rootJ, "bypassed", json_integer((bool) bypassed));
+	json_object_set_new(rootJ, "rmsMode", json_integer((bool) rmsMode));
+	json_object_set_new(rootJ, "filterMode", json_integer((bool) filterMode));
+	json_object_set_new(rootJ, "gateMode", json_integer((bool) gateMode));
+
+	return rootJ;
+}
+
+void ManicCompression::dataFromJson(json_t *rootJ) {
+
+	json_t *bpJ = json_object_get(rootJ, "bypassed");
+	if (bpJ)
+		bypassed = json_integer_value(bpJ);
+
+	json_t *rmsJ = json_object_get(rootJ, "rmsMode");
+	if (rmsJ)
+		rmsMode = json_integer_value(rmsJ);
+
+	json_t *fmJ = json_object_get(rootJ, "filterMode");
+	if (fmJ)
+		filterMode = json_integer_value(fmJ);
+
+	json_t *gmJ = json_object_get(rootJ, "gateMode");
+	if (gmJ)
+		gateMode = json_integer_value(gmJ);
+
+}
+
+
 void ManicCompression::process(const ProcessArgs &args) {
 	compressor.setSampleRate(double(args.sampleRate));
 	compressorRms.setSampleRate(double(args.sampleRate));
 
 	float bypassInput = inputs[BYPASS_INPUT].getVoltage();
-	bypassInput += params[BYPASS_PARAM].getValue(); //BYPASS BUTTON ALWAYS WORKS		
-	if(bypassTrigger.process(bypassInput)) {
+	if(gateMode) {
+		if(bypassed != (bypassInput !=0) && gateFlippedBypassed ) {
+			bypassed = bypassInput != 0;
+			gateFlippedBypassed = true;
+		} else if (bypassed == (bypassInput !=0)) {
+			gateFlippedBypassed = true;
+		}
+	} else {
+		if(bypassInputTrigger.process(bypassInput)) {
+			bypassed = !bypassed;
+			gateFlippedBypassed= false;
+		}
+	}
+	if(bypassTrigger.process(params[BYPASS_PARAM].getValue())) {
 		bypassed = !bypassed;
+		gateFlippedBypassed= false;
 	}
 	lights[BYPASS_LIGHT].value = bypassed ? 1.0 : 0.0;
 
 	float rmsInput = inputs[RMS_MODE_INPUT].getVoltage();
-	rmsInput += params[RMS_MODE_PARAM].getValue(); //RMS BUTTON ALWAYS WORKS		
-	if(rmsTrigger.process(rmsInput)) {
+	if(gateMode) {
+		if(rmsMode != (rmsInput !=0) && gateFlippedRMS ) {
+			rmsMode = rmsInput != 0;
+			gateFlippedRMS = true;
+		} else if (rmsMode == (rmsInput !=0)) {
+			gateFlippedRMS = true;
+		}
+	} else {
+		if(rmsInputTrigger.process(rmsInput)) {
+			rmsMode = !rmsMode;
+			gateFlippedRMS= false;
+		}
+	}
+	if(rmsTrigger.process(params[RMS_MODE_PARAM].getValue())) {
 		rmsMode = !rmsMode;
+		gateFlippedRMS= false;
 	}
 	lights[RMS_MODE_LIGHT].value = rmsMode ? 1.0 : 0.0;
 
 	float filterInput = inputs[FILTER_MODE_INPUT].getVoltage();
-	filterInput += params[FILTER_MODE_PARAM].getValue(); //Filter BUTTON ALWAYS WORKS		
-	if(lpFilterTrigger.process(filterInput)) {
+	if(gateMode) {
+		if(filterMode != (filterInput !=0) && gateFlippedFilter ) {
+			filterMode = filterInput != 0;
+			gateFlippedFilter = true;
+		} else if (filterMode == (filterInput !=0)) {
+			gateFlippedFilter = true;
+		}
+	} else {
+		if(lpFilterInputTrigger.process(filterInput)) {
+			filterMode = !filterMode;
+			gateFlippedFilter= false;
+		}
+	}
+	if(lpFilterTrigger.process(params[FILTER_MODE_PARAM].getValue())) {
 		filterMode = !filterMode;
+		gateFlippedFilter= false;
 	}
 	lights[FILTER_LIGHT].value = filterMode ? 1.0 : 0.0;
 
 
 
-	ratio = clamp(params[RATIO_PARAM].getValue() + (inputs[RATIO_CV_INPUT].getVoltage() * 2.0 * params[RATIO_CV_ATTENUVERTER_PARAM].getValue()),1.0f,20.0f);
+	float paramRatio = clamp(params[RATIO_PARAM].getValue() + (inputs[RATIO_CV_INPUT].getVoltage() * 0.1 * params[RATIO_CV_ATTENUVERTER_PARAM].getValue()),0.0f,1.0f);
+	ratio = pow(20.0,paramRatio);
 	threshold = clamp(params[THRESHOLD_PARAM].getValue() + (inputs[THRESHOLD_CV_INPUT].getVoltage() * 3.0 * params[THRESHOLD_CV_ATTENUVERTER_PARAM].getValue()),-50.0f,0.0f);
-	double attack = clamp(params[ATTACK_PARAM].getValue() + (inputs[ATTACK_CV_INPUT].getVoltage() * 10.0 * params[ATTACK_CV_ATTENUVERTER_PARAM].getValue()),0.02f,100.0f);
-	double release = clamp(params[RELEASE_PARAM].getValue() + (inputs[RELEASE_CV_INPUT].getVoltage() * 500.0 * params[RELEASE_CV_ATTENUVERTER_PARAM].getValue()),20.0f,5000.0f);
+	float paramAttack = clamp(params[ATTACK_PARAM].getValue() + (inputs[ATTACK_CV_INPUT].getVoltage() * 10.0 * params[ATTACK_CV_ATTENUVERTER_PARAM].getValue()),0.0f,1.0f);
+	double attack = pow(13.4975,paramAttack) * 8.0 - 7.98;
+	float paramRelease = clamp(params[RELEASE_PARAM].getValue() + (inputs[RELEASE_CV_INPUT].getVoltage() * 500.0 * params[RELEASE_CV_ATTENUVERTER_PARAM].getValue()),0.0f,1.0f);
+	double release = pow(629.0,paramRelease) * 8.0 + 32.0;
+
 	double rmsWindow = clamp(params[RMS_WINDOW_PARAM].getValue() + (inputs[RMS_WINDOW_INPUT].getVoltage() * 500.0 * params[RMS_WINDOW_CV_ATTENUVERTER_PARAM].getValue()),0.02f,50.0f);
+
+	double attackCurve = clamp(params[ATTACK_CURVE_PARAM].getValue() + (inputs[ATTACK_CV_INPUT].getVoltage() * 0.1 * params[ATTACK_CURVE_CV_ATTENUVERTER_PARAM].getValue()),-1.0f,1.0f);
+	double releaseCurve = clamp(params[RELEASE_CURVE_PARAM].getValue() + (inputs[RELEASE_CV_INPUT].getVoltage() * 0.1 * params[RELEASE_CV_ATTENUVERTER_PARAM].getValue()),-1.0f,1.0f);
 
 	knee = clamp(params[KNEE_PARAM].getValue() + (inputs[KNEE_CV_INPUT].getVoltage() * params[KNEE_CV_ATTENUVERTER_PARAM].getValue()),0.0f,10.0f);
 
@@ -174,12 +266,16 @@ void ManicCompression::process(const ProcessArgs &args) {
 	compressor.setKnee(knee);
 	compressor.setAttack(attack);
 	compressor.setRelease(release);
+	compressor.setAttackCurve(attackCurve);
+	compressor.setReleaseCurve(releaseCurve);
 
 	compressorRms.setRatio(ratio);
 	compressorRms.setThresh(50.0+threshold);
 	compressorRms.setKnee(knee);
 	compressorRms.setAttack(attack);
 	compressorRms.setRelease(release);
+	compressorRms.setAttackCurve(attackCurve);
+	compressorRms.setReleaseCurve(releaseCurve);
 	compressorRms.setWindow(rmsWindow);
 
 	
@@ -282,7 +378,12 @@ struct ManicCompressionDisplay : TransparentWidget {
 	}
 
 	void drawGainReduction(const DrawArgs &args, Vec pos, float gainReduction) {
-		gainReduction = 63-std::pow(std::min(gainReduction,20.0f),0.78); //scale meter
+
+		double gainDirection = sgn(gainReduction);
+		float scaling = 0.88;
+		if (gainReduction >=10) 
+			scaling =0.76;
+		gainReduction = 63.25-std::pow(std::min(std::abs(gainReduction),20.0f),scaling) * gainDirection; //scale meter
 		
 		double position = 2.0 * M_PI / 60.0 * gainReduction - M_PI / 2.0; // Rotate 90 degrees
 		double cx= cos(position);
@@ -336,13 +437,13 @@ struct ManicCompressionWidget : ModuleWidget {
 
 
 		addParam(createParam<RoundSmallFWKnob>(Vec(15, 140), module, ManicCompression::THRESHOLD_PARAM));
-		addParam(createParam<RoundReallySmallFWKnob>(Vec(39, 158), module, ManicCompression::THRESHOLD_CV_ATTENUVERTER_PARAM));
-		addInput(createInput<FWPortInReallySmall>(Vec(43, 143), module, ManicCompression::THRESHOLD_CV_INPUT));
+		addParam(createParam<RoundReallySmallFWKnob>(Vec(40, 158), module, ManicCompression::THRESHOLD_CV_ATTENUVERTER_PARAM));
+		addInput(createInput<FWPortInReallySmall>(Vec(44, 143), module, ManicCompression::THRESHOLD_CV_INPUT));
 
 
 		addParam(createParam<RoundSmallFWKnob>(Vec(75, 140), module, ManicCompression::RATIO_PARAM));
-		addParam(createParam<RoundReallySmallFWKnob>(Vec(99, 158), module, ManicCompression::RATIO_CV_ATTENUVERTER_PARAM));
-		addInput(createInput<FWPortInReallySmall>(Vec(103, 143), module, ManicCompression::RATIO_CV_INPUT));
+		addParam(createParam<RoundReallySmallFWKnob>(Vec(100, 158), module, ManicCompression::RATIO_CV_ATTENUVERTER_PARAM));
+		addInput(createInput<FWPortInReallySmall>(Vec(104, 143), module, ManicCompression::RATIO_CV_INPUT));
 
 
 		addParam(createParam<LEDButton>(Vec(10, 195), module, ManicCompression::RMS_MODE_PARAM));
@@ -355,30 +456,39 @@ struct ManicCompressionWidget : ModuleWidget {
 
 
 		addParam(createParam<RoundSmallFWKnob>(Vec(30, 195), module, ManicCompression::RMS_WINDOW_PARAM));
-		addParam(createParam<RoundReallySmallFWKnob>(Vec(54, 213), module, ManicCompression::RMS_WINDOW_CV_ATTENUVERTER_PARAM));
-		addInput(createInput<FWPortInReallySmall>(Vec(58, 198), module, ManicCompression::RMS_WINDOW_INPUT));
+		addParam(createParam<RoundReallySmallFWKnob>(Vec(55, 213), module, ManicCompression::RMS_WINDOW_CV_ATTENUVERTER_PARAM));
+		addInput(createInput<FWPortInReallySmall>(Vec(59, 198), module, ManicCompression::RMS_WINDOW_INPUT));
 
-		addParam(createParam<RoundSmallFWKnob>(Vec(80, 195), module, ManicCompression::KNEE_PARAM));
-		addParam(createParam<RoundReallySmallFWKnob>(Vec(104, 213), module, ManicCompression::KNEE_CV_ATTENUVERTER_PARAM));
-		addInput(createInput<FWPortInReallySmall>(Vec(108, 198), module, ManicCompression::KNEE_CV_INPUT));
+		addParam(createParam<RoundSmallFWKnob>(Vec(82, 195), module, ManicCompression::KNEE_PARAM));
+		addParam(createParam<RoundReallySmallFWKnob>(Vec(107, 213), module, ManicCompression::KNEE_CV_ATTENUVERTER_PARAM));
+		addInput(createInput<FWPortInReallySmall>(Vec(111, 198), module, ManicCompression::KNEE_CV_INPUT));
 
 
 		addParam(createParam<RoundSmallFWKnob>(Vec(135, 140), module, ManicCompression::ATTACK_PARAM));
-		addParam(createParam<RoundReallySmallFWKnob>(Vec(159, 158), module, ManicCompression::ATTACK_CV_ATTENUVERTER_PARAM));
-		addInput(createInput<FWPortInReallySmall>(Vec(163, 143), module, ManicCompression::ATTACK_CV_INPUT));
+		addParam(createParam<RoundReallySmallFWKnob>(Vec(160, 158), module, ManicCompression::ATTACK_CV_ATTENUVERTER_PARAM));
+		addInput(createInput<FWPortInReallySmall>(Vec(164, 143), module, ManicCompression::ATTACK_CV_INPUT));
 
 		addParam(createParam<RoundSmallFWKnob>(Vec(195, 140), module, ManicCompression::RELEASE_PARAM));
-		addParam(createParam<RoundReallySmallFWKnob>(Vec(219, 158), module, ManicCompression::RELEASE_CV_ATTENUVERTER_PARAM));
-		addInput(createInput<FWPortInReallySmall>(Vec(223, 143), module, ManicCompression::RELEASE_CV_INPUT));
+		addParam(createParam<RoundReallySmallFWKnob>(Vec(220, 158), module, ManicCompression::RELEASE_CV_ATTENUVERTER_PARAM));
+		addInput(createInput<FWPortInReallySmall>(Vec(224, 143), module, ManicCompression::RELEASE_CV_INPUT));
+
+
+		addParam(createParam<RoundSmallFWKnob>(Vec(135, 200), module, ManicCompression::ATTACK_CURVE_PARAM));
+		addParam(createParam<RoundReallySmallFWKnob>(Vec(160, 213), module, ManicCompression::ATTACK_CURVE_CV_ATTENUVERTER_PARAM));
+		addInput(createInput<FWPortInReallySmall>(Vec(164, 198), module, ManicCompression::ATTACK_CURVE_CV_INPUT));
+
+		addParam(createParam<RoundSmallFWKnob>(Vec(195, 200), module, ManicCompression::RELEASE_CURVE_PARAM));
+		addParam(createParam<RoundReallySmallFWKnob>(Vec(220, 213), module, ManicCompression::RELEASE_CURVE_CV_ATTENUVERTER_PARAM));
+		addInput(createInput<FWPortInReallySmall>(Vec(224, 198), module, ManicCompression::RELEASE_CURVE_CV_INPUT));
 
 
 		addParam(createParam<RoundSmallFWKnob>(Vec(15, 280), module, ManicCompression::MAKEUP_GAIN_PARAM));
-		addParam(createParam<RoundReallySmallFWKnob>(Vec(39, 298), module, ManicCompression::MAKEUP_CV_ATTENUVERTER_GAIN_PARAM));
-		addInput(createInput<FWPortInReallySmall>(Vec(43, 283), module, ManicCompression::MAKEUP_GAIN_INPUT));
+		addParam(createParam<RoundReallySmallFWKnob>(Vec(40, 298), module, ManicCompression::MAKEUP_CV_ATTENUVERTER_GAIN_PARAM));
+		addInput(createInput<FWPortInReallySmall>(Vec(44, 283), module, ManicCompression::MAKEUP_GAIN_INPUT));
 
 		addParam(createParam<RoundSmallFWKnob>(Vec(105, 280), module, ManicCompression::MIX_PARAM));
-		addParam(createParam<RoundReallySmallFWKnob>(Vec(129, 298), module, ManicCompression::MIX_CV_ATTENUVERTER_PARAM));
-		addInput(createInput<FWPortInReallySmall>(Vec(133, 283), module, ManicCompression::MIX_CV_INPUT));
+		addParam(createParam<RoundReallySmallFWKnob>(Vec(130, 298), module, ManicCompression::MIX_CV_ATTENUVERTER_PARAM));
+		addInput(createInput<FWPortInReallySmall>(Vec(134, 283), module, ManicCompression::MIX_CV_INPUT));
 
 		addParam(createParam<LEDButton>(Vec(190, 280), module, ManicCompression::BYPASS_PARAM));
 		addChild(createLight<LargeLight<RedLight>>(Vec(191.5, 281.5), module, ManicCompression::BYPASS_LIGHT));
@@ -395,6 +505,30 @@ struct ManicCompressionWidget : ModuleWidget {
 
 
 		//addChild(createLight<LargeLight<BlueLight>>(Vec(69,58), module, ManicCompression::BLINK_LIGHT));
+	}
+
+	struct TriggerGateItem : MenuItem {
+		ManicCompression *module;
+		void onAction(const event::Action &e) override {
+			module->gateMode = !module->gateMode;
+		}
+		void step() override {
+			text = "Gete Mode";
+			rightText = (module->gateMode) ? "✔" : "";
+		}
+	};
+	
+	void appendContextMenu(Menu *menu) override {
+		MenuLabel *spacerLabel = new MenuLabel();
+		menu->addChild(spacerLabel);
+
+		ManicCompression *module = dynamic_cast<ManicCompression*>(this->module);
+		assert(module);
+
+		TriggerGateItem *triggerGateItem = new TriggerGateItem();
+		triggerGateItem->module = module;
+		menu->addChild(triggerGateItem);
+			
 	}
 };
 
