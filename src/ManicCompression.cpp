@@ -22,7 +22,7 @@ struct ManicCompression : Module {
 		KNEE_PARAM,
 		KNEE_CV_ATTENUVERTER_PARAM,
 		MAKEUP_GAIN_PARAM,
-		MAKEUP_CV_ATTENUVERTER_GAIN_PARAM,
+		MAKEUP_GAIN_CV_ATTENUVERTER_PARAM,
 		MIX_PARAM,
 		MIX_CV_ATTENUVERTER_PARAM,
 		BYPASS_PARAM,
@@ -33,6 +33,8 @@ struct ManicCompression : Module {
 		MS_MODE_PARAM,
 		COMPRESS_M_PARAM,
 		COMPRESS_S_PARAM,
+		IN_GAIN_PARAM,
+		IN_GAIN_CV_ATTENUVERTER_PARAM,
 		NUM_PARAMS
 	};
 	enum InputIds {
@@ -55,11 +57,13 @@ struct ManicCompression : Module {
 		MS_MODE_INPUT,
 		COMPRESS_M_INPUT,
 		COMPRESS_S_INPUT,
+		IN_GAIN_INPUT,
 		NUM_INPUTS
 	};
 	enum OutputIds {
 		OUTPUT_L,
 		OUTPUT_R,
+		ENVELOPE_OUT,
 		NUM_OUTPUTS
 	};
 	enum LightIds {
@@ -99,7 +103,7 @@ struct ManicCompression : Module {
 
 	bool gateMode = false;
 
-	Biquad* filterBank[3]; // 3 filters 2 for stereo inputs, one for sidechain
+	Biquad* filterBank[6]; // 3 filters 2 for stereo inputs, one for sidechain x 2 to increase slope
 
 	ManicCompression() {
 		config(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS, NUM_LIGHTS);
@@ -112,6 +116,7 @@ struct ManicCompression : Module {
 		configParam(RELEASE_CURVE_PARAM, -1.0, 1.0, 0.0,"Release Curve");	
 		configParam(KNEE_PARAM, 0.0, 10.0, 0.0,"Knee", " db");	
 		configParam(RMS_WINDOW_PARAM, 0.02, 50.0, 5.0,"RMS Window", " ms");
+		configParam(IN_GAIN_PARAM, 0.0, 30.0, 0.0,"Input Gain", " db");
 		configParam(MAKEUP_GAIN_PARAM, 0.0, 30.0, 0.0,"Makeup Gain", " db");
 		configParam(MIX_PARAM, 0.0, 1.0, 1.0,"Mix","%",0,100);	
 
@@ -123,12 +128,13 @@ struct ManicCompression : Module {
 		configParam(RELEASE_CURVE_CV_ATTENUVERTER_PARAM, -1.0, 1.0, 0.0,"Release Curve CV Attenuation","%",0,100);	
 		configParam(KNEE_CV_ATTENUVERTER_PARAM, -1.0, 1.0, 0.0,"Knee CV Attenuation","%",0,100);	
 		configParam(RMS_WINDOW_CV_ATTENUVERTER_PARAM, -1.0, 1.0, 0.0,"RMS Windows CV Attenuation","%",0,100);	
-		configParam(MAKEUP_CV_ATTENUVERTER_GAIN_PARAM, -1.0, 1.0, 0.0,"Makeup Gain CV Attenuation","%",0,100);
+		configParam(IN_GAIN_CV_ATTENUVERTER_PARAM, -1.0, 1.0, 0.0,"Input Gain CV Attenuation","%",0,100);
+		configParam(MAKEUP_GAIN_CV_ATTENUVERTER_PARAM, -1.0, 1.0, 0.0,"Makeup Gain CV Attenuation","%",0,100);
 		configParam(MIX_CV_ATTENUVERTER_PARAM, -1.0, 1.0, 0.0,"Mix CV Attenuation","%",0,100);	
 
 
-		for(int f=0;f<3;f++) {
-			filterBank[f] = new Biquad(bq_type_lowpass, 0.15 , 0.707, 0);
+		for(int f=0;f<6;f++) {
+			filterBank[f] = new Biquad(bq_type_lowpass, 0.1 , 0.707, 0);
 		}
 
 		compressor.initRuntime();
@@ -344,7 +350,9 @@ void ManicCompression::process(const ProcessArgs &args) {
 
 	knee = clamp(params[KNEE_PARAM].getValue() + (inputs[KNEE_CV_INPUT].getVoltage() * params[KNEE_CV_ATTENUVERTER_PARAM].getValue()),0.0f,10.0f);
 
-	double makeupGain = clamp(params[MAKEUP_GAIN_PARAM].getValue() + (inputs[MAKEUP_GAIN_INPUT].getVoltage() * 3.0 * params[MAKEUP_CV_ATTENUVERTER_GAIN_PARAM].getValue()), 0.0f,30.0f);
+	double inputGain = clamp(params[IN_GAIN_PARAM].getValue() + (inputs[IN_GAIN_INPUT].getVoltage() * 3.0 * params[IN_GAIN_CV_ATTENUVERTER_PARAM].getValue()), 0.0f,30.0f);
+	inputGain = chunkware_simple::dB2lin(inputGain);
+	double makeupGain = clamp(params[MAKEUP_GAIN_PARAM].getValue() + (inputs[MAKEUP_GAIN_INPUT].getVoltage() * 3.0 * params[MAKEUP_GAIN_CV_ATTENUVERTER_PARAM].getValue()), 0.0f,30.0f);
 	double mix = clamp(params[MIX_PARAM].getValue() + (inputs[MIX_CV_INPUT].getVoltage() * 0.1 * params[MIX_CV_ATTENUVERTER_PARAM].getValue()),0.0f,1.0f);
 
 
@@ -391,12 +399,12 @@ void ManicCompression::process(const ProcessArgs &args) {
 		sidechain = inputs[SIDECHAIN_INPUT].getVoltage();
 		usingSidechain = true;
 		if(filterMode) {
-			sidechain = filterBank[2]->process(sidechain);
+			sidechain = filterBank[5]->process(filterBank[4]->process(sidechain));
 		}
 	} else {
 		if(filterMode) {
-			processedL = filterBank[0]->process(inputL);
-			processedR = filterBank[1]->process(inputR);
+			processedL = filterBank[1]->process(filterBank[0]->process(inputL));
+			processedR = filterBank[3]->process(filterBank[2]->process(inputR));
 		}
 	}
 
@@ -407,7 +415,7 @@ void ManicCompression::process(const ProcessArgs &args) {
 			double inSq1 = processedL * processedL;	// square input
 			double inSq2 = processedR * processedR;
 			double sum = inSq1 + inSq2;			// power summing
-			compressorRms.process(sum);
+			compressorRms.process(sum * inputGain);
 		}
 		gainReduction = compressorRms.getGainReduction();
 	} else {
@@ -417,11 +425,12 @@ void ManicCompression::process(const ProcessArgs &args) {
 			double rect1 = fabs( processedL );	// rectify input
 			double rect2 = fabs( processedR );
 			double link = std::max( rect1, rect2 );	// link channels with greater of 2
-			compressor.process(link);
+			compressor.process(link * inputGain);
 		}
 		gainReduction = compressor.getGainReduction();
 	}		
 	
+	outputs[ENVELOPE_OUT].setVoltage(clamp(chunkware_simple::dB2lin(gainReduction) / 3.0f,-10.0f,10.0f));
 	double finalGainLin = chunkware_simple::dB2lin(makeupGain-gainReduction);
 
 	double outputL;
@@ -603,17 +612,21 @@ struct ManicCompressionWidget : ModuleWidget {
 		addInput(createInput<FWPortInReallySmall>(Vec(224, 198), module, ManicCompression::RELEASE_CURVE_CV_INPUT));
 
 
-		addParam(createParam<RoundSmallFWKnob>(Vec(15, 280), module, ManicCompression::MAKEUP_GAIN_PARAM));
-		addParam(createParam<RoundReallySmallFWKnob>(Vec(40, 298), module, ManicCompression::MAKEUP_CV_ATTENUVERTER_GAIN_PARAM));
-		addInput(createInput<FWPortInReallySmall>(Vec(44, 283), module, ManicCompression::MAKEUP_GAIN_INPUT));
+		addParam(createParam<RoundSmallFWKnob>(Vec(15, 280), module, ManicCompression::IN_GAIN_PARAM));
+		addParam(createParam<RoundReallySmallFWKnob>(Vec(40, 298), module, ManicCompression::IN_GAIN_CV_ATTENUVERTER_PARAM));
+		addInput(createInput<FWPortInReallySmall>(Vec(44, 283), module, ManicCompression::IN_GAIN_INPUT));
 
-		addParam(createParam<RoundSmallFWKnob>(Vec(105, 280), module, ManicCompression::MIX_PARAM));
-		addParam(createParam<RoundReallySmallFWKnob>(Vec(130, 298), module, ManicCompression::MIX_CV_ATTENUVERTER_PARAM));
-		addInput(createInput<FWPortInReallySmall>(Vec(134, 283), module, ManicCompression::MIX_CV_INPUT));
+		addParam(createParam<RoundSmallFWKnob>(Vec(75, 280), module, ManicCompression::MAKEUP_GAIN_PARAM));
+		addParam(createParam<RoundReallySmallFWKnob>(Vec(100, 298), module, ManicCompression::MAKEUP_GAIN_CV_ATTENUVERTER_PARAM));
+		addInput(createInput<FWPortInReallySmall>(Vec(104, 283), module, ManicCompression::MAKEUP_GAIN_INPUT));
 
-		addParam(createParam<LEDButton>(Vec(190, 280), module, ManicCompression::BYPASS_PARAM));
-		addChild(createLight<LargeLight<RedLight>>(Vec(191.5, 281.5), module, ManicCompression::BYPASS_LIGHT));
-		addInput(createInput<FWPortInReallySmall>(Vec(215, 283), module, ManicCompression::BYPASS_INPUT));
+		addParam(createParam<RoundSmallFWKnob>(Vec(135, 280), module, ManicCompression::MIX_PARAM));
+		addParam(createParam<RoundReallySmallFWKnob>(Vec(160, 298), module, ManicCompression::MIX_CV_ATTENUVERTER_PARAM));
+		addInput(createInput<FWPortInReallySmall>(Vec(164, 283), module, ManicCompression::MIX_CV_INPUT));
+
+		addParam(createParam<LEDButton>(Vec(192, 280), module, ManicCompression::BYPASS_PARAM));
+		addChild(createLight<LargeLight<RedLight>>(Vec(193.5, 281.5), module, ManicCompression::BYPASS_LIGHT));
+		addInput(createInput<FWPortInReallySmall>(Vec(213, 283), module, ManicCompression::BYPASS_INPUT));
 
 		
 		addParam(createParam<LEDButton>(Vec(110, 247), module, ManicCompression::MS_MODE_PARAM));
@@ -629,14 +642,15 @@ struct ManicCompressionWidget : ModuleWidget {
 		addChild(createLight<LargeLight<BlueLight>>(Vec(202.5, 248.5), module, ManicCompression::COMPRESS_SIDE_LIGHT));
 		addInput(createInput<FWPortInReallySmall>(Vec(222, 250), module, ManicCompression::COMPRESS_S_INPUT));
 
-
-		addInput(createInput<PJ301MPort>(Vec(115, 335), module, ManicCompression::SIDECHAIN_INPUT));
-
 		addInput(createInput<PJ301MPort>(Vec(10, 335), module, ManicCompression::SOURCE_L_INPUT));
 		addInput(createInput<PJ301MPort>(Vec(40, 335), module, ManicCompression::SOURCE_R_INPUT));
 
-		addOutput(createOutput<PJ301MPort>(Vec(180, 335), module, ManicCompression::OUTPUT_L));
-		addOutput(createOutput<PJ301MPort>(Vec(210, 335), module, ManicCompression::OUTPUT_R));
+		addInput(createInput<PJ301MPort>(Vec(85, 335), module, ManicCompression::SIDECHAIN_INPUT));
+
+		addOutput(createOutput<PJ301MPort>(Vec(140, 335), module, ManicCompression::ENVELOPE_OUT));
+
+		addOutput(createOutput<PJ301MPort>(Vec(186, 335), module, ManicCompression::OUTPUT_L));
+		addOutput(createOutput<PJ301MPort>(Vec(216, 335), module, ManicCompression::OUTPUT_R));
 
 
 		//addChild(createLight<LargeLight<BlueLight>>(Vec(69,58), module, ManicCompression::BLINK_LIGHT));

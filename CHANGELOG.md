@@ -1,3 +1,6 @@
+### 1.16.0 (2020-11-28)
+- Added Input Gain and Envelope Out to Manic Compression
+
 ### 1.16.0 (2020-11-27)
 - Added Manic Compression - CV Compressor
 - Added QAR Irrational Rhythm expander
