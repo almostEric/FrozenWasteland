@@ -111,6 +111,8 @@ A collection of unusual plugins that will add a certain coolness to your patches
 - Attack and Release curves can make curves range from exponential to linear to logarithmic depending on input. 
 - Old Opto compressors were famous for having non-linear (exponential in their case) release times
 - LP Filter applies a Low pass filter onto the input before it is sent to level detector. This can allow transients to go through before compressor kicks in (great for drums)
+- Mid-Side mode encodes the inputs into mid-side format and allows compression of either the mid or side portion, then the signal is converted back to stereo
+- In the menu, there is an option for "Gate Mode". all of the CV inputs for switches (Bypass, RMS, LP Filter, etc.) are normally triggers. Gate Mode turns them into gate inputs
 
 ## Midichlorian
 
