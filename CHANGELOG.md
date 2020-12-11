@@ -1,4 +1,7 @@
-### 1.16.0 (2020-11-28)
+### 1.16.2 (2020-12-11)
+- Added Manual Accent control and Ratcheting to QAR
+
+### 1.16.1 (2020-11-28)
 - Added Input Gain and Envelope Out to Manic Compression
 
 ### 1.16.0 (2020-11-27)

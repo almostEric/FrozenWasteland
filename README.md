@@ -250,6 +250,7 @@ A collection of unusual plugins that will add a certain coolness to your patches
 - Weight outputs the current notes probability weight so it can be used to affect other modules
 - Change outputs a trigger anytime the quantized note changes
 - Weighting changes the overall weighting from linear (0%) to logarithmic (100%). 
+- The trigger is monophoic for all voices unless the polyphonic mode button next to it is enabled. Then each polyphonic voice is triggered by a corresponding polyphonic trigger
 - A more detailed manual will be available soon
 
 ## Probably Not(e) - Bohlen Pierce
@@ -328,26 +329,28 @@ When they are connected this way, the Clock, Mute and Reset signals, and Eoc out
 - If X sync is selected, all tracks sync to the number of steps set by the X Sync control
 - If a track's Run Free is enabled, it will not sync to master track - this allows combinations of polyrhythms and polymeters
 - https://www.youtube.com/watch?v=eCErJMKAlVY is an example of the QAR with Time Sync enabled
-### Euclidean Rhythms
+- Reset input and trigger now just reset beat to 0, allowing ratcheting. Holding SHIFT key while doing a reset, performs a hard reset of all timing info like previously
+### Euclidean Rhythms (Yellow)
 - Euclidean are based upon attempting to equally distribute the divisions among the steps available
 - Basic example, with a step count of 16, and 2 divisions, the divisions will be on the 1 and the 9.
 - A division of 4 would give you a basic 4 on the floor rhythm
 - The Offset control lets you move the starting point of the rhythm to something other than the 1
-### Golomb Ruler Rhythms
+### Golomb Ruler Rhythms (Blue)
 - Unlike Euclidean Rhythms which seek to evenly distribute the divisions, Golomb Rulers try to ensure unequal distribution
 - Basic example, with a step count of 16, and 4 divisions, the divisions will be on the 1,4,9 and 13.
-### Well Formed Rulers
+### Well Formed Rulers (Green)
 - Based on the work of A. J. Milne
 - https://www.researchgate.net/publication/302345911_XronoMorph_Algorithmic_generation_of_perfectly_balanced_and_well-formed_rhythms
 - Needs Well Formed Expander to take full advantage, as there are some additional parameters
 - Works best with multiple WF rhythms in a hierarchy
-### Perfect Balanced Rhythms
+### Perfect Balanced Rhythms (Orange)
 - Based on the work of A. J. Milne
 - https://www.researchgate.net/publication/302345911_XronoMorph_Algorithmic_generation_of_perfectly_balanced_and_well-formed_rhythms
-### Manual Mode
+### Manual Mode (White)
 - Click on steps to turn beat on/off.
+- Hold SHIFT key while clicking to turn Accents on/off
 - Offset is still CV controllable
-### Boolean Logic
+### Boolean Logic (Purple)
 - Uses a boolean operator to combine the previous two tracks (so 3 = 1 & 2, 4 = 2 & 3)
 - Length can't be longer than shortest of the 2 tracks combined
 - Division controls the logical operator.

@@ -228,6 +228,7 @@ struct QuadAlgorithmicRhythm : Module {
 	int wellFormedComplement[TRACK_COUNT] = {0};
 
 	uint16_t manualBeatMatrix[TRACK_COUNT][5] = {{0}}; //5 should hold 84 beats, so good for our max of 73
+	uint16_t manualAccentMatrix[TRACK_COUNT][5] = {{0}}; //5 should hold 84 beats, so good for our max of 73
 
 	bool dirty[TRACK_COUNT] = {true};
 
@@ -270,10 +271,10 @@ struct QuadAlgorithmicRhythm : Module {
 	int lastScene = 0;
 	int lastCVScene = 0;
 	bool saveMode = false;
-	float sceneData[NBR_SCENES][55] = {{0}};
+	float sceneData[NBR_SCENES][75] = {{0}};
 	int sceneChangeMessage = 0;
 
-
+	bool hardReset = false;
 
 	//GOLOMB RULER PATTERNS
     const int rulerOrders[NUM_RULERS] = {1,2,3,4,5,5,6,6,6,6,7,7,7,7,7,8,9,10,11,11};
@@ -549,16 +550,17 @@ struct QuadAlgorithmicRhythm : Module {
 		sceneData[scene][1] = masterTrack;
 		sceneData[scene][2] = params[META_STEP_PARAM].getValue();
 		for(int trackNumber=0;trackNumber<TRACK_COUNT;trackNumber++) {
-			sceneData[scene][trackNumber*13+3] = algorithmMatrix[trackNumber];
-			sceneData[scene][trackNumber*13+4] = params[(trackNumber * 8) + STEPS_1_PARAM].getValue();
-			sceneData[scene][trackNumber*13+5] = params[(trackNumber * 8) + DIVISIONS_1_PARAM].getValue();
-			sceneData[scene][trackNumber*13+6] = params[(trackNumber * 8) + OFFSET_1_PARAM].getValue();
-			sceneData[scene][trackNumber*13+7] = params[(trackNumber * 8) + PAD_1_PARAM].getValue();
-			sceneData[scene][trackNumber*13+8] = params[(trackNumber * 8) + ACCENTS_1_PARAM].getValue();
-			sceneData[scene][trackNumber*13+9] = params[(trackNumber * 8) + ACCENT_ROTATE_1_INPUT].getValue();
-			sceneData[scene][trackNumber*13+10] = trackIndependent[trackNumber];
+			sceneData[scene][trackNumber*18+3] = algorithmMatrix[trackNumber];
+			sceneData[scene][trackNumber*18+4] = params[(trackNumber * 8) + STEPS_1_PARAM].getValue();
+			sceneData[scene][trackNumber*18+5] = params[(trackNumber * 8) + DIVISIONS_1_PARAM].getValue();
+			sceneData[scene][trackNumber*18+6] = params[(trackNumber * 8) + OFFSET_1_PARAM].getValue();
+			sceneData[scene][trackNumber*18+7] = params[(trackNumber * 8) + PAD_1_PARAM].getValue();
+			sceneData[scene][trackNumber*18+8] = params[(trackNumber * 8) + ACCENTS_1_PARAM].getValue();
+			sceneData[scene][trackNumber*18+9] = params[(trackNumber * 8) + ACCENT_ROTATE_1_INPUT].getValue();
+			sceneData[scene][trackNumber*18+10] = trackIndependent[trackNumber];
 			for(int index=0;index<5;index++) {
-				sceneData[scene][trackNumber*13+11+index] = manualBeatMatrix[trackNumber][index];
+				sceneData[scene][trackNumber*18+11+index] = manualBeatMatrix[trackNumber][index];
+				sceneData[scene][trackNumber*18+16+index] = manualAccentMatrix[trackNumber][index];
 			}
 		}
 	}
@@ -569,16 +571,17 @@ struct QuadAlgorithmicRhythm : Module {
 			constantTime = masterTrack > 0;
 			params[META_STEP_PARAM].setValue(sceneData[scene][2]);
 			for(int trackNumber=0;trackNumber<TRACK_COUNT;trackNumber++) {
-				algorithmMatrix[trackNumber] = sceneData[scene][trackNumber*13+3];
-				params[(trackNumber * 8) + STEPS_1_PARAM].setValue(sceneData[scene][trackNumber*13+4]);
-				params[(trackNumber * 8) + DIVISIONS_1_PARAM].setValue(sceneData[scene][trackNumber*13+5]);
-				params[(trackNumber * 8) + OFFSET_1_PARAM].setValue(sceneData[scene][trackNumber*13+6]);
-				params[(trackNumber * 8) + PAD_1_PARAM].setValue(sceneData[scene][trackNumber*13+7]);
-				params[(trackNumber * 8) + ACCENTS_1_PARAM].setValue(sceneData[scene][trackNumber*13+8]);
-				params[(trackNumber * 8) + ACCENT_ROTATE_1_INPUT].setValue(sceneData[scene][trackNumber*13+9]);
-				trackIndependent[trackNumber] = sceneData[scene][trackNumber*13+10];
+				algorithmMatrix[trackNumber] = sceneData[scene][trackNumber*18+3];
+				params[(trackNumber * 8) + STEPS_1_PARAM].setValue(sceneData[scene][trackNumber*18+4]);
+				params[(trackNumber * 8) + DIVISIONS_1_PARAM].setValue(sceneData[scene][trackNumber*18+5]);
+				params[(trackNumber * 8) + OFFSET_1_PARAM].setValue(sceneData[scene][trackNumber*18+6]);
+				params[(trackNumber * 8) + PAD_1_PARAM].setValue(sceneData[scene][trackNumber*18+7]);
+				params[(trackNumber * 8) + ACCENTS_1_PARAM].setValue(sceneData[scene][trackNumber*18+8]);
+				params[(trackNumber * 8) + ACCENT_ROTATE_1_INPUT].setValue(sceneData[scene][trackNumber*18+9]);
+				trackIndependent[trackNumber] = sceneData[scene][trackNumber*18+10];
 				for(int index=0;index<5;index++) {
-					manualBeatMatrix[trackNumber][index] = sceneData[scene][trackNumber*13+11+index];
+					manualBeatMatrix[trackNumber][index] = sceneData[scene][trackNumber*18+11+index];
+					manualAccentMatrix[trackNumber][index] = sceneData[scene][trackNumber*18+16+index];
 				}
 				dirty[trackNumber] = true;
 			}
@@ -588,18 +591,7 @@ struct QuadAlgorithmicRhythm : Module {
 		}
 	}
 
-	void setManualBeat(int trackNumber, uint8_t stepNumber, bool value) {
-		uint8_t index = stepNumber >> 2;
-		uint8_t bitPosition = stepNumber & 0x0F;
-
-		if(value) {
-			manualBeatMatrix[trackNumber][index] |= 1U << bitPosition;
-		} else {
-			manualBeatMatrix[trackNumber][index] &= ~(1U << bitPosition);;
-		}
-	}
-
-	void toggleManualBeat(int trackNumber, int8_t stepNumber) {
+	void toggleManualBeat(int trackNumber, int8_t stepNumber,bool accent) {
 
 		stepNumber -= lastOffsetSetting[trackNumber];
 		if(stepNumber < 0)
@@ -608,9 +600,13 @@ struct QuadAlgorithmicRhythm : Module {
 		uint8_t index = stepNumber >> 2;
 		uint8_t bitPosition = stepNumber & 0x0F;
 		
-		manualBeatMatrix[trackNumber][index]  ^= 1UL << bitPosition;
+		if(accent) {
+			manualAccentMatrix[trackNumber][index]  ^= 1UL << bitPosition;
+		} else {
+			manualBeatMatrix[trackNumber][index]  ^= 1UL << bitPosition;
+		}
 
-		fprintf(stderr, "track:%i step:%u index:%u bit:%u  value:%u \n", trackNumber, stepNumber, index,bitPosition,manualBeatMatrix[trackNumber][index]);
+		// fprintf(stderr, "track:%i step:%u index:%u bit:%u  value:%u \n", trackNumber, stepNumber, index,bitPosition,manualBeatMatrix[trackNumber][index]);
 		dirty[trackNumber] = true;
 	}
 
@@ -619,6 +615,13 @@ struct QuadAlgorithmicRhythm : Module {
 		uint8_t bitPosition = stepNumber & 0x0F;
 
 		return (manualBeatMatrix[trackNumber][index] >> bitPosition) & 1U;		
+	}
+
+	bool getManualAccent(int trackNumber, uint8_t stepNumber) {
+		uint8_t index = stepNumber >> 2;
+		uint8_t bitPosition = stepNumber & 0x0F;
+
+		return (manualAccentMatrix[trackNumber][index] >> bitPosition) & 1U;		
 	}
 
 	void process(const ProcessArgs &args) override  {
@@ -701,25 +704,39 @@ struct QuadAlgorithmicRhythm : Module {
 		}
 		resetInput += params[RESET_PARAM].getValue(); //RESET BUTTON ALWAYS WORKS		
 		if(resetTrigger.process(resetInput)) {
-			for(int trackNumber=0;trackNumber<TRACK_COUNT;trackNumber++)
-			{
-				beatIndex[trackNumber] = -1;
-				lastStepTime[trackNumber] = 0;
-				lastSwingDuration[trackNumber] = 0; // Not sure about this
-				expanderEocValue[trackNumber] = 0; 
-				lastExpanderEocValue[trackNumber] = 0;		
-				subBeatIndex[trackNumber] = -1;
-				swingRandomness[trackNumber] = 0.0f;
-				useGaussianDistribution[trackNumber] = false;
-				beatWarping[trackNumber] = 1.0;
-				beatWarpingPosition[trackNumber] = 8;
-				extraParameterValue[trackNumber] = 1.0;
+
+			int mods = APP->window->getMods();
+			hardReset = (mods & GLFW_MOD_SHIFT);
+
+			if(hardReset) { // With shift key down, do a full reset
+				for(int trackNumber=0;trackNumber<TRACK_COUNT;trackNumber++)
+				{
+					beatIndex[trackNumber] = -1;
+					lastStepTime[trackNumber] = 0;
+					lastSwingDuration[trackNumber] = 0; // Not sure about this
+					expanderEocValue[trackNumber] = 0; 
+					lastExpanderEocValue[trackNumber] = 0;		
+					subBeatIndex[trackNumber] = -1;
+					swingRandomness[trackNumber] = 0.0f;
+					useGaussianDistribution[trackNumber] = false;
+					beatWarping[trackNumber] = 1.0;
+					beatWarpingPosition[trackNumber] = 8;
+					extraParameterValue[trackNumber] = 1.0;
+				}
+				timeElapsed = 0;
+				firstClockReceived = false;
+				secondClockReceived = false;
+				duration = 0.0;				
+				setRunningState();
+			} else { //otherwise just reset beat for ratcheting
+				for(int trackNumber=0;trackNumber<TRACK_COUNT;trackNumber++)
+				{
+					beatIndex[trackNumber] = -1;
+					lastStepTime[trackNumber] = PTRDIFF_MAX; // this should force beat to fire immediately
+				}
+				timeElapsed = 0;
+				duration = 0; 
 			}
-			timeElapsed = 0;
-			firstClockReceived = false;
-			secondClockReceived = false;
-			duration = 0.0;
-			setRunningState();
 		}
 		
 		//Do scene stuff early so we can pass message along
@@ -1181,19 +1198,25 @@ struct QuadAlgorithmicRhythm : Module {
 						beatCount[trackNumber] = logicBeatCount;
 					}
 
-					bucket = division - 1;
-					for(int accentIndex = 0; accentIndex < division; accentIndex++)
-					{
-						bucket += accentDivision;
-						if(bucket >= division) {
-							bucket -= division;
-							accentMatrix[trackNumber][beatLocation[trackNumber][(accentIndex + accentRotation) % division]] = true;				
-						} else
+					if(algorithmMatrix[trackNumber] != MANUAL_MODE_ALGO) {
+						bucket = division - 1;
+						for(int accentIndex = 0; accentIndex < division; accentIndex++)
 						{
-							accentMatrix[trackNumber][beatLocation[trackNumber][(accentIndex + accentRotation) % division]] = false;
+							bucket += accentDivision;
+							if(bucket >= division) {
+								bucket -= division;
+								accentMatrix[trackNumber][beatLocation[trackNumber][(accentIndex + accentRotation) % division]] = true;				
+							} else
+							{
+								accentMatrix[trackNumber][beatLocation[trackNumber][(accentIndex + accentRotation) % division]] = false;
+							}						
+						}	 
+					} else {
+						for (int manualAccentIndex = 0; manualAccentIndex < stepsCount[trackNumber];manualAccentIndex++) {
+							bool isAccent = getManualAccent(trackNumber,manualAccentIndex) ;  
+							accentMatrix[trackNumber][(manualAccentIndex + offset) % stepsCount[trackNumber]] = isAccent;
 						}
-						
-					}	        	
+					}       	
 				} else {
 					trackPatternName[trackNumber] = "";
 					//Set all beats to false
@@ -1586,6 +1609,12 @@ struct QuadAlgorithmicRhythm : Module {
 				buf = "manualBeat-" + std::to_string(i) + "-" + std::to_string(j) ;
 				json_object_set_new(rootJ, buf.c_str(), json_integer((int) manualBeatMatrix[i][j]));				
 			}
+
+			for(int j=0;j<5;j++) {
+				buf = "manualAccent-" + std::to_string(i) + "-" + std::to_string(j) ;
+				json_object_set_new(rootJ, buf.c_str(), json_integer((int) manualAccentMatrix[i][j]));				
+			}
+
         }
         
         json_object_set_new(rootJ, "currentScene", json_integer((int) currentScene));
@@ -1596,7 +1625,7 @@ struct QuadAlgorithmicRhythm : Module {
 
 
 		for(int scene=0;scene<NBR_SCENES;scene++) {
-			for(int i=0;i<55;i++) {
+			for(int i=0;i<75;i++) {
 				std::string buf = "sceneData-" + std::to_string(scene) + "-" + std::to_string(i) ;
 				json_object_set_new(rootJ, buf.c_str(), json_real(sceneData[scene][i]));
 			}
@@ -1623,6 +1652,11 @@ struct QuadAlgorithmicRhythm : Module {
 				json_t *ctTmm = json_object_get(rootJ, buf.c_str());
 				if (ctTmm)
 					manualBeatMatrix[i][j] = json_integer_value(ctTmm);
+
+				buf = "manualAccent-" + std::to_string(i) + "-" + std::to_string(j) ;
+				json_t *ctTmma = json_object_get(rootJ, buf.c_str());
+				if (ctTmma)
+					manualAccentMatrix[i][j] = json_integer_value(ctTmma);
 			}
 
         }
@@ -1650,7 +1684,7 @@ struct QuadAlgorithmicRhythm : Module {
 			muted = json_integer_value(mutedJ);
 
 		for(int scene=0;scene<NBR_SCENES;scene++) {
-			for(int i=0;i<55;i++) {
+			for(int i=0;i<75;i++) {
 				std::string buf = "sceneData-" + std::to_string(scene) + "-" + std::to_string(i) ;
 				json_t *sdJ = json_object_get(rootJ, buf.c_str());
 				if (json_real_value(sdJ)) {
@@ -1767,9 +1801,10 @@ struct QuadAlgorithmicRhythm : Module {
 			}
 			for(int j = 0; j < 5; j++) {
 				manualBeatMatrix[i][j] = 0;
+				manualAccentMatrix[i][j] = 0;
 			}
 			for(int scene=0;scene<NBR_SCENES;scene++) {
-				std::fill(sceneData[scene], sceneData[scene]+58, 0.0);
+				std::fill(sceneData[scene], sceneData[scene]+75, 0.0);
 			}
 			
 		}	
@@ -1991,6 +2026,8 @@ struct QARBeatDisplay : FramebufferWidget {
     if (e.action == GLFW_PRESS && e.button == GLFW_MOUSE_BUTTON_LEFT) {
 		e.consume(this);
 
+		bool accent = (e.mods & GLFW_MOD_SHIFT);
+
 
 		float initX = e.pos.x - 113;
 		float initY = e.pos.y - 106;
@@ -2011,7 +2048,7 @@ struct QARBeatDisplay : FramebufferWidget {
 							break;
 						}
 					}
-					module->toggleManualBeat(trackNumber,stepNumber);
+					module->toggleManualBeat(trackNumber,stepNumber,accent);
 					fprintf(stderr, "click distance:%f theta:%f track:%i step:%i \n", distance, theta, trackNumber,stepNumber);
 				}
 			}
@@ -2022,8 +2059,11 @@ struct QARBeatDisplay : FramebufferWidget {
 
 
 struct QuadAlgorithmicRhythmWidget : ModuleWidget {
+	QuadAlgorithmicRhythm *module_;
+
 	QuadAlgorithmicRhythmWidget(QuadAlgorithmicRhythm *module) {
 		setModule(module);
+		module_ = module;
 
 		setPanel(APP->window->loadSvg(asset::plugin(pluginInstance, "res/QuadAlgorithmicRhythm.svg")));
 
@@ -2114,7 +2154,7 @@ struct QuadAlgorithmicRhythmWidget : ModuleWidget {
 		addChild(createLight<LargeLight<BlueLight>>(Vec(122.5, 294), module, QuadAlgorithmicRhythm::SAVE_MODE_LIGHT));
 
 
-	}
+	}	
 };
 
 Model *modelQuadAlgorithmicRhythm = createModel<QuadAlgorithmicRhythm, QuadAlgorithmicRhythmWidget>("QuadAlgorithmicRhythm");

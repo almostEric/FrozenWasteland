@@ -662,7 +662,7 @@ struct ManicCompressionWidget : ModuleWidget {
 			module->gateMode = !module->gateMode;
 		}
 		void step() override {
-			text = "Gete Mode";
+			text = "Gate Mode";
 			rightText = (module->gateMode) ? "✔" : "";
 		}
 	};
