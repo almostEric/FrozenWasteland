@@ -194,7 +194,7 @@ struct QARGrooveExpander : Module {
 		}
 		for(int stepNumber=0;stepNumber<MAX_STEPS;stepNumber++) {
 			sceneData[scene][stepNumber+12] = params[STEP_1_SWING_AMOUNT_PARAM+stepNumber].getValue();
-			sceneData[scene][stepNumber+30] = params[STEP_1_SWING_AMOUNT_PARAM+stepNumber].getValue();
+			sceneData[scene][stepNumber+30] = params[STEP_1_SWING_CV_ATTEN_PARAM+stepNumber].getValue();
 		}
 	}
 
