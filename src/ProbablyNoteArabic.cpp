@@ -80,7 +80,9 @@ struct ProbablyNoteArabic : Module {
 		AJNAS_WEIGHT_PARAM = AJNAS_ACTIVE_PARAM + MAX_AJNAS_IN_SAYR+1,
         NOTE_ACTIVE_PARAM = AJNAS_WEIGHT_PARAM + MAX_AJNAS_IN_SAYR+1,
         NOTE_WEIGHT_PARAM = NOTE_ACTIVE_PARAM + MAX_JINS_NOTES,
-		NUM_PARAMS = NOTE_WEIGHT_PARAM + MAX_JINS_NOTES
+		NON_REPEATABILITY_PARAM = NOTE_WEIGHT_PARAM + MAX_JINS_NOTES,
+		NON_REPEATABILITY_CV_ATTENUVERTER_PARAM,
+		NUM_PARAMS		
 	};
 	enum InputIds {
 		NOTE_INPUT,
@@ -102,7 +104,8 @@ struct ProbablyNoteArabic : Module {
 		JINS_SELECT_INPUT,
         AJNAS_WEIGHT_INPUT,
         NOTE_WEIGHT_INPUT = AJNAS_WEIGHT_INPUT + MAX_AJNAS_IN_SAYR+1,
-		NUM_INPUTS = NOTE_WEIGHT_INPUT + MAX_JINS_NOTES
+		NON_REPEATABILITY_INPUT = NOTE_WEIGHT_INPUT + MAX_JINS_NOTES,
+		NUM_INPUTS
 	};
 	enum OutputIds {
 		QUANT_OUTPUT,
@@ -415,16 +418,14 @@ struct ProbablyNoteArabic : Module {
 	int currentScaleAjnasOverlap[MAX_AJNAS_IN_SCALE];
 	int currentScaleAjnasDirection[MAX_AJNAS_IN_SCALE];
 
-	bool triggerDelayEnabled = false;
-	float triggerDelay[TRIGGER_DELAY_SAMPLES] = {0};
-	int triggerDelayIndex = 0;
-
     int octave = 0;
     int spread = 0;
 	float upperSpread = 0.0;
 	float lowerSpread = 0.0;
 	float slant = 0;
 	float focus = 0; 
+	float nonRepeat = 0;
+	int lastRandomNote = -1; 
 	int currentNote = 0;
 	int probabilityNote = 0;
 	float lastQuantizedCV = 0;
@@ -435,7 +436,6 @@ struct ProbablyNoteArabic : Module {
 	int lastSlant = -1;
 	float lastFocus = -1;
 	bool pitchRandomGaussian = false;
-
 
 	int family = 0;
 	int lastFamily = -1;
@@ -468,6 +468,12 @@ struct ProbablyNoteArabic : Module {
 	int numberMaqams;
 	int numberTonics;
 	int availableTonics[MAX_NOTES];
+
+
+	bool triggerDelayEnabled = false;
+	float triggerDelay[TRIGGER_DELAY_SAMPLES] = {0};
+	int triggerDelayIndex = 0;
+
     
 
 	ProbablyNoteArabic() {
@@ -479,6 +485,10 @@ struct ProbablyNoteArabic : Module {
         configParam(ProbablyNoteArabic::SLANT_CV_ATTENUVERTER_PARAM, -1.0, 1.0, 0.0,"Slant CV Attenuation" ,"%",0,100);
 		configParam(ProbablyNoteArabic::FOCUS_PARAM, 0.0, 1.0, 0.0,"Focus");
 		configParam(ProbablyNoteArabic::FOCUS_CV_ATTENUVERTER_PARAM, -1.0, 1.0, 0.0,"Focus CV Attenuation");
+		configParam(ProbablyNoteArabic::NON_REPEATABILITY_PARAM, 0.0, 1.0, 0.0,"Non Repeat Probability"," %",0,100);
+        configParam(ProbablyNoteArabic::NON_REPEATABILITY_CV_ATTENUVERTER_PARAM, -1.0, 1.0, 0.0,"Non Repeat Probability CV Attenuation","%",0,100);
+
+		
 		configParam(ProbablyNoteArabic::FAMILY_PARAM, 0.0, (float)MAX_FAMILIES-1, 0.0,"Family (Root Jins)");
 		configParam(ProbablyNoteArabic::MAQAM_PARAM, 0.0, 1.0, 0.0,"Maqam");
 		
@@ -590,9 +600,9 @@ struct ProbablyNoteArabic : Module {
 	json_t *dataToJson() override {
 		json_t *rootJ = json_object();
 
-		json_object_set_new(rootJ, "triggerDelayEnabled", json_integer((bool) triggerDelayEnabled));
-		json_object_set_new(rootJ, "maqamScaleMode", json_integer((bool) maqamScaleMode));
-		json_object_set_new(rootJ, "pitchRandomGaussian", json_integer((bool) pitchRandomGaussian));
+		json_object_set_new(rootJ, "triggerDelayEnabled", json_boolean(triggerDelayEnabled));
+		json_object_set_new(rootJ, "maqamScaleMode", json_boolean(maqamScaleMode));
+		json_object_set_new(rootJ, "pitchRandomGaussian", json_boolean(pitchRandomGaussian));
 
 		
 
@@ -631,7 +641,7 @@ struct ProbablyNoteArabic : Module {
 			strcpy(buf, "ajnasActive-"); 
 			sprintf(notebuf, "%i", i);
 			strcat(buf, notebuf);
-			json_object_set_new(rootJ, buf, json_integer((bool) currentAjnasActive[i]));			
+			json_object_set_new(rootJ, buf, json_boolean(currentAjnasActive[i]));			
 		}
 
 		return rootJ;
@@ -641,15 +651,16 @@ struct ProbablyNoteArabic : Module {
 
 
 		json_t *ctTd = json_object_get(rootJ, "triggerDelayEnabled");
-		if (ctTd)
-			triggerDelayEnabled = json_integer_value(ctTd);
+		if (ctTd) {
+			triggerDelayEnabled = json_boolean_value(ctTd);
+		}
 
 		json_t *ctMs = json_object_get(rootJ, "maqamScaleMode");
 		if (ctMs)
-			maqamScaleMode = json_integer_value(ctMs);
+			maqamScaleMode = json_boolean_value(ctMs);
 		json_t *ctRg = json_object_get(rootJ, "pitchRandomGaussian");
 		if (ctRg)
-			pitchRandomGaussian = json_integer_value(ctRg);
+			pitchRandomGaussian = json_boolean_value(ctRg);
 
 
 
@@ -696,7 +707,7 @@ struct ProbablyNoteArabic : Module {
 			strcat(buf, notebuf);
 			json_t *sumJ = json_object_get(rootJ, buf);
 			if (sumJ) {
-				currentAjnasActive[i] = json_integer_value(sumJ);
+				currentAjnasActive[i] = json_boolean_value(sumJ);
 			}
 		}
 
@@ -743,6 +754,8 @@ struct ProbablyNoteArabic : Module {
 		slant = clamp(params[SLANT_PARAM].getValue() + (inputs[SLANT_INPUT].getVoltage() / 10.0f * params[SLANT_CV_ATTENUVERTER_PARAM].getValue()),-1.0f,1.0f);
 
         focus = clamp(params[FOCUS_PARAM].getValue() + (inputs[FOCUS_INPUT].getVoltage() / 10.0f * params[FOCUS_CV_ATTENUVERTER_PARAM].getValue()),0.0f,1.0f);
+
+		nonRepeat = clamp(params[NON_REPEATABILITY_PARAM].getValue() + (inputs[NON_REPEATABILITY_INPUT].getVoltage() / 10.0f * params[NON_REPEATABILITY_CV_ATTENUVERTER_PARAM].getValue()),0.0f,1.0f);
 
 		family = clamp(params[FAMILY_PARAM].getValue() + (inputs[FAMILY_INPUT].getVoltage() * (MAX_FAMILIES-1) / 10.0),0.0,MAX_FAMILIES-1);
 		if(family != lastFamily) {
@@ -1060,19 +1073,28 @@ struct ProbablyNoteArabic : Module {
         }
 
 		if(inputs[TRIGGER_INPUT].active) {
+				// fprintf(stderr, "P(N) A Triggered Input Connected %i \n",triggerDelayIndex);
 
 			float currentTriggerInput = inputs[TRIGGER_INPUT].getVoltage();
 			triggerDelay[triggerDelayIndex] = currentTriggerInput;
 			int delayedIndex = (triggerDelayIndex + 1) % TRIGGER_DELAY_SAMPLES;
 			float triggerInputValue = triggerDelayEnabled ? triggerDelay[delayedIndex] : currentTriggerInput;
 			triggerDelayIndex = delayedIndex;
+			
 
 			if (clockTrigger.process(triggerInputValue) ) {		
+
 				float rnd = ((float) rand()/RAND_MAX);
 				if(inputs[EXTERNAL_RANDOM_INPUT].isConnected()) {
 					rnd = inputs[EXTERNAL_RANDOM_INPUT].getVoltage() / 10.0f;
-				}	
-			
+				}
+
+				float repeatProbability = ((double) rand()/RAND_MAX);
+				if (spread > 0 && nonRepeat > 0.0 && repeatProbability < nonRepeat && lastRandomNote >=0 ) {
+					actualNoteProbability[lastRandomNote] = 0; //Last note has no chance of repeating 						
+				}
+
+
 				int randomNote = weightedProbability(actualNoteProbability,MAX_JINS_NOTES,params[NOTE_WEIGHT_SCALING_PARAM].getValue(),rnd);
 				if(randomNote == -1) { //Couldn't find a note, so find first active
 					bool noteOk = false;
@@ -1084,6 +1106,7 @@ struct ProbablyNoteArabic : Module {
 						noteOk = noteActive[randomNote] || notesSearched >= MAX_JINS_NOTES;
 					} while(!noteOk);
 				}
+				lastRandomNote = randomNote; // for repeatability
 
 
 				probabilityNote = randomNote;
@@ -1106,13 +1129,13 @@ struct ProbablyNoteArabic : Module {
 					pitchRandomness = (1.0 - ((double) rand()/RAND_MAX)) * randomRange / 600.0;
 				}
 
-
+				
 				//quantitizedNoteCV =(currentIntonation[notePosition] / 1200.0) + (maqamScaleMode ? 0.0 : (tonic /12.0)); 
 				quantitizedNoteCV =(currentIntonation[notePosition] / 1200.0) + (tonic /12.0); 
 				quantitizedNoteCV += octaveIn + octave + octaveAdjust; 
 				outputs[QUANT_OUTPUT].setVoltage(quantitizedNoteCV + pitchRandomness);
 				outputs[WEIGHT_OUTPUT].setVoltage(clamp((params[NOTE_WEIGHT_PARAM+randomNote].getValue() + (inputs[NOTE_WEIGHT_INPUT+randomNote].getVoltage() / 10.0f) * 10.0f),0.0f,10.0f));
-				
+
 				if(lastQuantizedCV != quantitizedNoteCV) {
 					noteChangePulse.trigger(1e-3);	
 					lastQuantizedCV = quantitizedNoteCV;
@@ -1404,17 +1427,22 @@ struct ProbablyNoteArabicWidget : ModuleWidget {
 		addChild(createWidget<ScrewSilver>(Vec(RACK_GRID_WIDTH - 12, RACK_GRID_HEIGHT - RACK_GRID_WIDTH)));
 		addChild(createWidget<ScrewSilver>(Vec(box.size.x - 2 * RACK_GRID_WIDTH + 12, RACK_GRID_HEIGHT - RACK_GRID_WIDTH)));
 
-        addParam(createParam<RoundSmallFWSnapKnob>(Vec(18,25), module, ProbablyNoteArabic::SPREAD_PARAM));			
-        addParam(createParam<RoundReallySmallFWKnob>(Vec(44,50), module, ProbablyNoteArabic::SPREAD_CV_ATTENUVERTER_PARAM));			
-		addInput(createInput<FWPortInSmall>(Vec(46, 28), module, ProbablyNoteArabic::SPREAD_INPUT));
+        addParam(createParam<RoundSmallFWSnapKnob>(Vec(8,25), module, ProbablyNoteArabic::SPREAD_PARAM));			
+        addParam(createParam<RoundReallySmallFWKnob>(Vec(34,50), module, ProbablyNoteArabic::SPREAD_CV_ATTENUVERTER_PARAM));			
+		addInput(createInput<FWPortInSmall>(Vec(36, 28), module, ProbablyNoteArabic::SPREAD_INPUT));
 
-        addParam(createParam<RoundSmallFWKnob>(Vec(93,25), module, ProbablyNoteArabic::SLANT_PARAM));			
-        addParam(createParam<RoundReallySmallFWKnob>(Vec(119,49), module, ProbablyNoteArabic::SLANT_CV_ATTENUVERTER_PARAM));			
-		addInput(createInput<FWPortInSmall>(Vec(121, 29), module, ProbablyNoteArabic::SLANT_INPUT));
+        addParam(createParam<RoundSmallFWKnob>(Vec(65,25), module, ProbablyNoteArabic::SLANT_PARAM));			
+        addParam(createParam<RoundReallySmallFWKnob>(Vec(91,49), module, ProbablyNoteArabic::SLANT_CV_ATTENUVERTER_PARAM));			
+		addInput(createInput<FWPortInSmall>(Vec(93, 29), module, ProbablyNoteArabic::SLANT_INPUT));
 
-		addParam(createParam<RoundSmallFWKnob>(Vec(168, 25), module, ProbablyNoteArabic::FOCUS_PARAM));
-        addParam(createParam<RoundReallySmallFWKnob>(Vec(194,49), module, ProbablyNoteArabic::FOCUS_CV_ATTENUVERTER_PARAM));			
-		addInput(createInput<FWPortInSmall>(Vec(196, 29), module, ProbablyNoteArabic::FOCUS_INPUT));
+		addParam(createParam<RoundSmallFWKnob>(Vec(122, 25), module, ProbablyNoteArabic::FOCUS_PARAM));
+        addParam(createParam<RoundReallySmallFWKnob>(Vec(148,49), module, ProbablyNoteArabic::FOCUS_CV_ATTENUVERTER_PARAM));			
+		addInput(createInput<FWPortInSmall>(Vec(150, 29), module, ProbablyNoteArabic::FOCUS_INPUT));
+
+		addParam(createParam<RoundSmallFWKnob>(Vec(179, 25), module, ProbablyNoteArabic::NON_REPEATABILITY_PARAM));
+        addParam(createParam<RoundReallySmallFWKnob>(Vec(205,51), module, ProbablyNoteArabic::NON_REPEATABILITY_CV_ATTENUVERTER_PARAM));			
+		addInput(createInput<FWPortInSmall>(Vec(207, 29), module, ProbablyNoteArabic::NON_REPEATABILITY_INPUT));
+
 
 		addParam(createParam<RoundSmallFWSnapKnob>(Vec(243,25), module, ProbablyNoteArabic::OCTAVE_PARAM));			
         addParam(createParam<RoundReallySmallFWKnob>(Vec(269,49), module, ProbablyNoteArabic::OCTAVE_CV_ATTENUVERTER_PARAM));			
@@ -1492,6 +1520,7 @@ struct ProbablyNoteArabicWidget : ModuleWidget {
 		ProbablyNoteArabic *module;
 		void onAction(const event::Action &e) override {
 			module->triggerDelayEnabled = !module->triggerDelayEnabled;
+			fprintf(stderr, "P(N) A Triggered Delay Changed %i \n",module->triggerDelayEnabled);
 		}
 		void step() override {
 			text = "Trigger Delay";

@@ -497,7 +497,7 @@
      id="tspan19159"
      sodipodi:role="line">WRAP</tspan></text>
 <g
-   transform="translate(217.18801,-4.9442579)"
+   transform="translate(193.18766,-4.9442579)"
    id="g18813"
    style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:8px;line-height:1.25;font-family:Homenaje;-inkscape-font-specification:'Homenaje Bold';letter-spacing:0px;word-spacing:0px;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:1"
    aria-label="SPREAD"><path
@@ -525,7 +525,7 @@
      id="path18811"
      style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:8px;font-family:Homenaje;-inkscape-font-specification:'Homenaje Bold';stroke-width:1"
      d="m 377.35209,232.4 h 0.68 q 0.368,0 0.592,-0.208 0.232,-0.216 0.232,-0.568 v -2.96 q 0,-0.352 -0.232,-0.56 -0.224,-0.216 -0.592,-0.216 h -0.68 z m -0.712,0.544 v -5.6 h 1.392 q 0.728,0 1.128,0.368 0.4,0.368 0.4,1.08 v 2.704 q 0,0.712 -0.4,1.08 -0.4,0.36 -1.128,0.368 z" /></g><g
-   transform="translate(302.21536,-5.0002579)"
+   transform="translate(252.00001,-5.0002579)"
    id="g18827"
    style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:8px;line-height:1.25;font-family:Homenaje;-inkscape-font-specification:'Homenaje Bold';letter-spacing:0px;word-spacing:0px;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:1"
    aria-label="FOCUS"><path
@@ -551,12 +551,12 @@
      d="m 431.77599,232.416 q 0.456,0 0.656,-0.272 0.208,-0.272 0.208,-0.632 0,-0.36 -0.136,-0.608 -0.128,-0.256 -0.328,-0.4 -0.2,-0.152 -0.432,-0.328 -0.232,-0.176 -0.432,-0.336 -0.2,-0.168 -0.336,-0.448 -0.128,-0.28 -0.128,-0.64 0,-0.64 0.384,-1.024 0.384,-0.384 1.064,-0.384 h 0.648 v 0.528 h -0.616 q -0.384,0 -0.584,0.248 -0.2,0.248 -0.2,0.536 0,0.288 0.128,0.496 0.136,0.208 0.336,0.344 0.2,0.136 0.432,0.32 0.24,0.184 0.44,0.376 0.2,0.184 0.328,0.504 0.136,0.32 0.136,0.728 0,0.752 -0.432,1.136 -0.424,0.384 -1.168,0.384 h -0.84 v -0.528 z" /></g><text
    id="text19169-9"
    y="227.99976"
-   x="649.28333"
+   x="610.28302"
    style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:6.66667px;line-height:1.25;font-family:Homenaje;-inkscape-font-specification:'Homenaje Bold';letter-spacing:0px;word-spacing:0px;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:1"
    xml:space="preserve"><tspan
      style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:8px;font-family:Homenaje;-inkscape-font-specification:'Homenaje Bold';stroke-width:1"
      y="227.99976"
-     x="649.28333"
+     x="610.28302"
      id="tspan19167-7"
      sodipodi:role="line">SLANT</tspan></text>
 <g
@@ -1013,4 +1013,14 @@
      id="tspan19159-3-6-4-4"
      x="605.40002"
      y="338.71335"
-     style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:6.66667px;font-family:Homenaje;-inkscape-font-specification:'Homenaje Bold';stroke-width:1">v/O</tspan></text></svg>
+     style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:6.66667px;font-family:Homenaje;-inkscape-font-specification:'Homenaje Bold';stroke-width:1">v/O</tspan></text><text
+   xml:space="preserve"
+   style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:6.66667px;line-height:1.25;font-family:Homenaje;-inkscape-font-specification:'Homenaje Bold';letter-spacing:0px;word-spacing:0px;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:1"
+   x="723.14099"
+   y="227.944"
+   id="text19169-6"><tspan
+     sodipodi:role="line"
+     id="tspan19167-6-6"
+     x="723.14099"
+     y="227.944"
+     style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:8px;font-family:Homenaje;-inkscape-font-specification:'Homenaje Bold';stroke-width:1">NO REPEAT</tspan></text></svg>

@@ -234,7 +234,8 @@ A collection of unusual plugins that will add a certain coolness to your patches
 - Input voltage is first quantized to nearest note
 - Spread Control allows other notes to be possibly chosen
 - Slant Control controls the direction of notes to choose (either below, above, or both)
-- Focus Control controls initial probability, at 1 all notes have equal probability, at 0 furthest notes have a probability of 10%, with a linear increase towards center note
+- Focus Control controls initial probability, at 100% all notes have equal probability, at 0% furthest notes have a probability of 10%, with a linear increase towards center note
+- No Repeat controls the probablilty that a note can repeat - at 100% a note will never repeat
 - Then within the context of key/scale an additional probability is used - by default, the root and fifth (V) of the scale have the highest proability of being selected.
 - If a note is off (red) it will not be selected by the Quantizer
 - These probabilities can be changed by the knobs or CV.
@@ -251,7 +252,6 @@ A collection of unusual plugins that will add a certain coolness to your patches
 - Change outputs a trigger anytime the quantized note changes
 - Weighting changes the overall weighting from linear (0%) to logarithmic (100%). 
 - The trigger is monophoic for all voices unless the polyphonic mode button next to it is enabled. Then each polyphonic voice is triggered by a corresponding polyphonic trigger
-- A more detailed manual will be available soon
 
 ## Probably Not(e) - Bohlen Pierce
 ![Probably Not(e) - Bohlen Pierce](./doc/pnbp.png)

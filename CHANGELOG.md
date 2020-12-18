@@ -1,3 +1,6 @@
+### 1.16.3 (2020-12-18)
+- Added No Repeat control to Probably Not(e)s
+
 ### 1.16.2 (2020-12-11)
 - Added Manual Accent control and Ratcheting to QAR
 

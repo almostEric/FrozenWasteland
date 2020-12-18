@@ -94,7 +94,9 @@ struct ProbablyNoteMN : Module {
 		PITCH_RANDOMNESS_GAUSSIAN_PARAM,
         NOTE_ACTIVE_PARAM,
         NOTE_WEIGHT_PARAM = NOTE_ACTIVE_PARAM + MAX_NOTES,
-		NUM_PARAMS = NOTE_WEIGHT_PARAM + MAX_NOTES
+		NON_REPEATABILITY_PARAM = NOTE_WEIGHT_PARAM + MAX_NOTES,
+		NON_REPEATABILITY_CV_ATTENUVERTER_PARAM,
+		NUM_PARAMS
 	};
 	enum InputIds {
 		NOTE_INPUT,
@@ -119,7 +121,8 @@ struct ProbablyNoteMN : Module {
 		OCTAVE_WRAP_INPUT,
 		PITCH_RANDOMNESS_INPUT,
         NOTE_WEIGHT_INPUT,
-		NUM_INPUTS = NOTE_WEIGHT_INPUT + MAX_NOTES
+		NON_REPEATABILITY_INPUT = NOTE_WEIGHT_INPUT + MAX_NOTES,
+		NUM_INPUTS
 	};
 	enum OutputIds {
 		QUANT_OUTPUT,
@@ -437,7 +440,7 @@ struct ProbablyNoteMN : Module {
     float noteProbability[POLYPHONY][MAX_PITCHES] = {{0.0f}};
     float currentScaleNoteWeighting[MAX_NOTES] = {0.0f};
 	bool currentScaleNoteStatus[MAX_NOTES] = {false};
-	float actualProbability[POLYPHONY][MAX_NOTES] = {{0.0f}};
+	float actualProbability[POLYPHONY][MAX_PITCHES] = {{0.0f}};
 	int controlIndex[MAX_NOTES] = {0};
 
 	float factors[MAX_FACTORS] = {0};
@@ -497,6 +500,8 @@ struct ProbablyNoteMN : Module {
 	float slant = 0;
 	float focus = 0; 
 	float dissonanceProbability = 0; 
+	float nonRepeat = 0;
+	int lastRandomNote[POLYPHONY] = {-1}; 
 	int currentNote[POLYPHONY] = {0};
 	uint64_t probabilityNote[POLYPHONY] = {0};
 	double lastQuantizedCV[POLYPHONY] = {0.0};
@@ -524,6 +529,9 @@ struct ProbablyNoteMN : Module {
         configParam(ProbablyNoteMN::SLANT_CV_ATTENUVERTER_PARAM, -1.0, 1.0, 0.0,"Slant CV Attenuation" ,"%",0,100);
 		configParam(ProbablyNoteMN::DISTRIBUTION_PARAM, 0.0, 1.0, 0.0,"Distribution");
 		configParam(ProbablyNoteMN::DISTRIBUTION_CV_ATTENUVERTER_PARAM, -1.0, 1.0, 0.0,"Distribution CV Attenuation");
+		configParam(ProbablyNoteMN::NON_REPEATABILITY_PARAM, 0.0, 1.0, 0.0,"Non Repeat Probability"," %",0,100);
+        configParam(ProbablyNoteMN::NON_REPEATABILITY_CV_ATTENUVERTER_PARAM, -1.0, 1.0, 0.0,"Non Repeat Probability CV Attenuation","%",0,100);
+
 		configParam(ProbablyNoteMN::SHIFT_PARAM, -12.0, 12.0, 0.0,"Weight Shift");
         configParam(ProbablyNoteMN::SHIFT_CV_ATTENUVERTER_PARAM, -1.0, 1.0, 0.0,"Weight Shift CV Attenuation" ,"%",0,100);
 		configParam(ProbablyNoteMN::KEY_PARAM, 0.0, 10.0, 0.0,"Key");
@@ -1091,6 +1099,8 @@ struct ProbablyNoteMN : Module {
 
         focus = clamp(params[DISTRIBUTION_PARAM].getValue() + (inputs[DISTRIBUTION_INPUT].getVoltage() / 10.0f * params[DISTRIBUTION_CV_ATTENUVERTER_PARAM].getValue()),0.0f,1.0f);
 
+		nonRepeat = clamp(params[NON_REPEATABILITY_PARAM].getValue() + (inputs[NON_REPEATABILITY_INPUT].getVoltage() / 10.0f * params[NON_REPEATABILITY_CV_ATTENUVERTER_PARAM].getValue()),0.0f,1.0f);
+
         dissonanceProbability = clamp(params[DISSONANCE_PARAM].getValue() + (inputs[DISSONANCE_INPUT].getVoltage() / 10.0f * params[DISSONANCE_CV_ATTENUVERTER_PARAM].getValue()),-1.0f,1.0f);
         
 		scaleSize = clamp(params[NUMBER_OF_NOTES_PARAM].getValue() + (inputs[NUMBER_OF_NOTES_INPUT].getVoltage() * 11.5f * params[NUMBER_OF_NOTES_CV_ATTENUVERTER_PARAM].getValue()),1.0f,115.0);
@@ -1213,9 +1223,7 @@ struct ProbablyNoteMN : Module {
 			}
 		}
 
-        
-
-
+    
 		key = params[KEY_PARAM].getValue();
 		if(keyLogarithmic) {
 			double inputKey = inputs[KEY_INPUT].getVoltage() * params[KEY_CV_ATTENUVERTER_PARAM].getValue();
@@ -1350,6 +1358,7 @@ struct ProbablyNoteMN : Module {
 
 			if (clockTrigger.process(triggerInputValue) ) {		
 				for(int channel=0;channel<currentPolyphony;channel++) {
+
 					float rnd = ((float) rand()/RAND_MAX);
 					if(inputs[EXTERNAL_RANDOM_INPUT].isConnected()) {
 						int randomPolyphony = inputs[EXTERNAL_RANDOM_INPUT].getChannels(); //Use as many random channels as possible
@@ -1358,9 +1367,18 @@ struct ProbablyNoteMN : Module {
 							randomChannel = randomPolyphony - 1;
 						}
 						rnd = inputs[EXTERNAL_RANDOM_INPUT].getVoltage(randomChannel) / 10.0f;
+					}
+
+					for(int i=0;i<MAX_PITCHES;i++) {
+						actualProbability[channel][i] = noteProbability[channel][i];
 					}	
+
+					float repeatProbability = ((double) rand()/RAND_MAX);
+					if (spread > 0 && nonRepeat > 0.0 && repeatProbability < nonRepeat && lastRandomNote[channel] >= 0) {
+						actualProbability[channel][lastRandomNote[channel]] = 0; //Last note has no chance of repeating 						
+					}
 			
-					int randomNote = weightedProbability(noteProbability[channel],params[WEIGHT_SCALING_PARAM].getValue(), rnd);
+					int randomNote = weightedProbability(actualProbability[channel],params[WEIGHT_SCALING_PARAM].getValue(), rnd);
 					if(randomNote == -1) { //Couldn't find a note, so find first active
 						bool noteOk = false;
 						uint64_t notesSearched = 0;
@@ -1372,9 +1390,9 @@ struct ProbablyNoteMN : Module {
 						} while(!noteOk);
 					}
 
-
-
+					lastRandomNote[channel] = randomNote; // for repeatability					
 					probabilityNote[channel] = randomNote;
+
 					float octaveAdjust = 0.0;
 					if(!octaveWrapAround) {
 						if(randomNote > currentNote[channel] && randomNote - currentNote[channel] > upperSpread)
@@ -1597,17 +1615,22 @@ struct ProbablyNoteMNWidget : ModuleWidget {
 		addInput(createInput<FWPortInSmall>(Vec(298, 345), module, ProbablyNoteMN::TRIGGER_INPUT));
 		addInput(createInput<FWPortInSmall>(Vec(335, 345), module, ProbablyNoteMN::EXTERNAL_RANDOM_INPUT));
 
-        addParam(createParam<RoundSmallFWKnob>(Vec(278,25), module, ProbablyNoteMN::SPREAD_PARAM));			
-        addParam(createParam<RoundReallySmallFWKnob>(Vec(304,51), module, ProbablyNoteMN::SPREAD_CV_ATTENUVERTER_PARAM));			
-		addInput(createInput<FWPortInSmall>(Vec(306, 29), module, ProbablyNoteMN::SPREAD_INPUT));
+        addParam(createParam<RoundSmallFWKnob>(Vec(268,25), module, ProbablyNoteMN::SPREAD_PARAM));			
+        addParam(createParam<RoundReallySmallFWKnob>(Vec(294,51), module, ProbablyNoteMN::SPREAD_CV_ATTENUVERTER_PARAM));			
+		addInput(createInput<FWPortInSmall>(Vec(296, 29), module, ProbablyNoteMN::SPREAD_INPUT));
 
-        addParam(createParam<RoundSmallFWKnob>(Vec(353,25), module, ProbablyNoteMN::SLANT_PARAM));			
-        addParam(createParam<RoundReallySmallFWKnob>(Vec(379,51), module, ProbablyNoteMN::SLANT_CV_ATTENUVERTER_PARAM));			
-		addInput(createInput<FWPortInSmall>(Vec(381, 29), module, ProbablyNoteMN::SLANT_INPUT));
+        addParam(createParam<RoundSmallFWKnob>(Vec(325,25), module, ProbablyNoteMN::SLANT_PARAM));			
+        addParam(createParam<RoundReallySmallFWKnob>(Vec(351,51), module, ProbablyNoteMN::SLANT_CV_ATTENUVERTER_PARAM));			
+		addInput(createInput<FWPortInSmall>(Vec(353, 29), module, ProbablyNoteMN::SLANT_INPUT));
 
-		addParam(createParam<RoundSmallFWKnob>(Vec(423, 25), module, ProbablyNoteMN::DISTRIBUTION_PARAM));
-        addParam(createParam<RoundReallySmallFWKnob>(Vec(449,51), module, ProbablyNoteMN::DISTRIBUTION_CV_ATTENUVERTER_PARAM));			
-		addInput(createInput<FWPortInSmall>(Vec(451, 29), module, ProbablyNoteMN::DISTRIBUTION_INPUT));
+		addParam(createParam<RoundSmallFWKnob>(Vec(382, 25), module, ProbablyNoteMN::DISTRIBUTION_PARAM));
+        addParam(createParam<RoundReallySmallFWKnob>(Vec(408,51), module, ProbablyNoteMN::DISTRIBUTION_CV_ATTENUVERTER_PARAM));			
+		addInput(createInput<FWPortInSmall>(Vec(410, 29), module, ProbablyNoteMN::DISTRIBUTION_INPUT));
+
+		addParam(createParam<RoundSmallFWKnob>(Vec(439, 25), module, ProbablyNoteMN::NON_REPEATABILITY_PARAM));
+        addParam(createParam<RoundReallySmallFWKnob>(Vec(465,51), module, ProbablyNoteMN::NON_REPEATABILITY_CV_ATTENUVERTER_PARAM));			
+		addInput(createInput<FWPortInSmall>(Vec(467, 29), module, ProbablyNoteMN::NON_REPEATABILITY_INPUT));
+
 
         addParam(createParam<RoundSmallFWKnob>(Vec(263,86), module, ProbablyNoteMN::OCTAVE_SIZE_PARAM));			
         addParam(createParam<RoundReallySmallFWKnob>(Vec(289,112), module, ProbablyNoteMN::OCTAVE_SIZE_CV_ATTENUVERTER_PARAM));			
