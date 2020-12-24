@@ -29,7 +29,8 @@ struct ManicCompression : Module {
 		RMS_MODE_PARAM,
 		RMS_WINDOW_PARAM,
 		RMS_WINDOW_CV_ATTENUVERTER_PARAM,
-		FILTER_MODE_PARAM,
+		LP_FILTER_MODE_PARAM,
+		HP_FILTER_MODE_PARAM,
 		MS_MODE_PARAM,
 		COMPRESS_M_PARAM,
 		COMPRESS_S_PARAM,
@@ -53,7 +54,8 @@ struct ManicCompression : Module {
 		SOURCE_L_INPUT,
 		SOURCE_R_INPUT,
 		SIDECHAIN_INPUT,
-		FILTER_MODE_INPUT,
+		LP_FILTER_MODE_INPUT,
+		HP_FILTER_MODE_INPUT,
 		MS_MODE_INPUT,
 		COMPRESS_M_INPUT,
 		COMPRESS_S_INPUT,
@@ -69,7 +71,8 @@ struct ManicCompression : Module {
 	enum LightIds {
 		BYPASS_LIGHT,
 		RMS_MODE_LIGHT,
-		FILTER_LIGHT,
+		LP_FILTER_LIGHT,
+		HP_FILTER_LIGHT,
 		MS_MODE_LIGHT,
 		COMPRESS_MID_LIGHT,
 		COMPRESS_SIDE_LIGHT,
@@ -78,7 +81,7 @@ struct ManicCompression : Module {
 
 
 	//Stuff for S&Hs
-	dsp::SchmittTrigger bypassTrigger,	rmsTrigger, lpFilterTrigger, bypassInputTrigger, rmsInputTrigger, lpFilterInputTrigger,
+	dsp::SchmittTrigger bypassTrigger,	rmsTrigger, lpFilterTrigger, hpFilterTrigger, bypassInputTrigger, rmsInputTrigger, lpFilterInputTrigger, hpFilterInputTrigger,
 						midSideModeTrigger,midSideModeInputTrigger,compressMidTrigger,compressMidInputTrigger,compressSideTrigger,compressSideInputTrigger;
 	
 	chunkware_simple::SimpleComp compressor;
@@ -90,8 +93,10 @@ struct ManicCompression : Module {
 	bool gateFlippedBypassed =  false;
 	bool rmsMode = false;
 	bool gateFlippedRMS =  false;
-	bool filterMode = false;
-	bool gateFlippedFilter =  false;
+	bool lpFilterMode = false;
+	bool hpFilterMode = false;
+	bool gateFlippedLPFilter =  false;
+	bool gateFlippedHPFilter =  false;
 
 	bool midSideMode = false;
 	bool gateFlippedMidSideMode =  false;
@@ -103,7 +108,8 @@ struct ManicCompression : Module {
 
 	bool gateMode = false;
 
-	Biquad* filterBank[6]; // 3 filters 2 for stereo inputs, one for sidechain x 2 to increase slope
+	Biquad* lpFilterBank[6]; // 3 filters 2 for stereo inputs, one for sidechain x 2 to increase slope
+	Biquad* hpFilterBank[6]; // 3 filters 2 for stereo inputs, one for sidechain x 2 to increase slope
 
 	ManicCompression() {
 		config(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS, NUM_LIGHTS);
@@ -133,8 +139,13 @@ struct ManicCompression : Module {
 		configParam(MIX_CV_ATTENUVERTER_PARAM, -1.0, 1.0, 0.0,"Mix CV Attenuation","%",0,100);	
 
 
+		float sampleRate = APP->engine->getSampleRate();
+		double lpCutoff = 4000/sampleRate;
+		double hpCutoff = 240/sampleRate;
+
 		for(int f=0;f<6;f++) {
-			filterBank[f] = new Biquad(bq_type_lowpass, 0.1 , 0.707, 0);
+			lpFilterBank[f] = new Biquad(bq_type_lowpass, lpCutoff , 0.707, 0);
+			hpFilterBank[f] = new Biquad(bq_type_highpass, hpCutoff , 0.707, 0);
 		}
 
 		compressor.initRuntime();
@@ -143,6 +154,7 @@ struct ManicCompression : Module {
 	}
 	void process(const ProcessArgs &args) override;
     void dataFromJson(json_t *) override;
+	void onSampleRateChange() override;
     json_t *dataToJson() override;
 
 	// For more advanced Module features, read Rack's engine.hpp header file
@@ -164,7 +176,8 @@ json_t *ManicCompression::dataToJson() {
 	
 	json_object_set_new(rootJ, "bypassed", json_integer((bool) bypassed));
 	json_object_set_new(rootJ, "rmsMode", json_integer((bool) rmsMode));
-	json_object_set_new(rootJ, "filterMode", json_integer((bool) filterMode));
+	json_object_set_new(rootJ, "lpFilterMode", json_integer((bool) lpFilterMode));
+	json_object_set_new(rootJ, "hpFilterMode", json_integer((bool) hpFilterMode));
 
 	json_object_set_new(rootJ, "midSideMode", json_integer((bool) midSideMode));
 	json_object_set_new(rootJ, "compressMid", json_integer((bool) compressMid));
@@ -186,9 +199,13 @@ void ManicCompression::dataFromJson(json_t *rootJ) {
 	if (rmsJ)
 		rmsMode = json_integer_value(rmsJ);
 
-	json_t *fmJ = json_object_get(rootJ, "filterMode");
-	if (fmJ)
-		filterMode = json_integer_value(fmJ);
+	json_t *lfmJ = json_object_get(rootJ, "lpFilterMode");
+	if (lfmJ)
+		lpFilterMode = json_integer_value(lfmJ);
+
+	json_t *hfmJ = json_object_get(rootJ, "hpFilterMode");
+	if (hfmJ)
+		hpFilterMode = json_integer_value(hfmJ);
 
 	json_t *msmJ = json_object_get(rootJ, "midSideMode");
 	if (msmJ)
@@ -209,6 +226,16 @@ void ManicCompression::dataFromJson(json_t *rootJ) {
 
 }
 
+void ManicCompression::onSampleRateChange() {
+	float sampleRate = APP->engine->getSampleRate();
+	double lpCutoff = 4000/sampleRate;
+	double hpCutoff = 240/sampleRate;
+
+	for(int f=0;f<6;f++) {
+		lpFilterBank[f]->setFc(lpCutoff);
+		hpFilterBank[f]->setFc(hpCutoff);
+	}
+}
 
 void ManicCompression::process(const ProcessArgs &args) {
 	compressor.setSampleRate(double(args.sampleRate));
@@ -254,25 +281,45 @@ void ManicCompression::process(const ProcessArgs &args) {
 	}
 	lights[RMS_MODE_LIGHT].value = rmsMode ? 1.0 : 0.0;
 
-	float filterInput = inputs[FILTER_MODE_INPUT].getVoltage();
+	float lpFilterInput = inputs[LP_FILTER_MODE_INPUT].getVoltage();
 	if(gateMode) {
-		if(filterMode != (filterInput !=0) && gateFlippedFilter ) {
-			filterMode = filterInput != 0;
-			gateFlippedFilter = true;
-		} else if (filterMode == (filterInput !=0)) {
-			gateFlippedFilter = true;
+		if(lpFilterMode != (lpFilterInput !=0) && gateFlippedLPFilter ) {
+			lpFilterMode = lpFilterInput != 0;
+			gateFlippedLPFilter = true;
+		} else if (lpFilterMode == (lpFilterInput !=0)) {
+			gateFlippedLPFilter = true;
 		}
 	} else {
-		if(lpFilterInputTrigger.process(filterInput)) {
-			filterMode = !filterMode;
-			gateFlippedFilter= false;
+		if(lpFilterInputTrigger.process(lpFilterInput)) {
+			lpFilterMode = !lpFilterMode;
+			gateFlippedLPFilter= false;
 		}
 	}
-	if(lpFilterTrigger.process(params[FILTER_MODE_PARAM].getValue())) {
-		filterMode = !filterMode;
-		gateFlippedFilter= false;
+	if(lpFilterTrigger.process(params[LP_FILTER_MODE_PARAM].getValue())) {
+		lpFilterMode = !lpFilterMode;
+		gateFlippedLPFilter= false;
 	}
-	lights[FILTER_LIGHT].value = filterMode ? 1.0 : 0.0;
+	lights[LP_FILTER_LIGHT].value = lpFilterMode ? 1.0 : 0.0;
+
+	float hpFilterInput = inputs[HP_FILTER_MODE_INPUT].getVoltage();
+	if(gateMode) {
+		if(hpFilterMode != (hpFilterInput !=0) && gateFlippedHPFilter ) {
+			hpFilterMode = hpFilterInput != 0;
+			gateFlippedHPFilter = true;
+		} else if (hpFilterMode == (hpFilterInput !=0)) {
+			gateFlippedHPFilter = true;
+		}
+	} else {
+		if(hpFilterInputTrigger.process(hpFilterInput)) {
+			hpFilterMode = !hpFilterMode;
+			gateFlippedHPFilter= false;
+		}
+	}
+	if(hpFilterTrigger.process(params[HP_FILTER_MODE_PARAM].getValue())) {
+		hpFilterMode = !hpFilterMode;
+		gateFlippedHPFilter= false;
+	}
+	lights[HP_FILTER_LIGHT].value = hpFilterMode ? 1.0 : 0.0;
 
 	float msModeInput = inputs[MS_MODE_INPUT].getVoltage();
 	if(gateMode) {
@@ -398,13 +445,20 @@ void ManicCompression::process(const ProcessArgs &args) {
 	if(inputs[SIDECHAIN_INPUT].isConnected()) {
 		sidechain = inputs[SIDECHAIN_INPUT].getVoltage();
 		usingSidechain = true;
-		if(filterMode) {
-			sidechain = filterBank[5]->process(filterBank[4]->process(sidechain));
+		if(lpFilterMode) {
+			sidechain = lpFilterBank[5]->process(lpFilterBank[4]->process(sidechain));
+		}
+		if(hpFilterMode) {
+			sidechain = hpFilterBank[5]->process(hpFilterBank[4]->process(sidechain));
 		}
 	} else {
-		if(filterMode) {
-			processedL = filterBank[1]->process(filterBank[0]->process(inputL));
-			processedR = filterBank[3]->process(filterBank[2]->process(inputR));
+		if(lpFilterMode) {
+			processedL = lpFilterBank[1]->process(lpFilterBank[0]->process(processedL));
+			processedR = lpFilterBank[3]->process(lpFilterBank[2]->process(processedR));
+		}
+		if(hpFilterMode) {
+			processedL = hpFilterBank[1]->process(hpFilterBank[0]->process(processedL));
+			processedR = hpFilterBank[3]->process(hpFilterBank[2]->process(processedR));
 		}
 	}
 
@@ -580,9 +634,13 @@ struct ManicCompressionWidget : ModuleWidget {
 		addChild(createLight<LargeLight<BlueLight>>(Vec(11.5, 196.5), module, ManicCompression::RMS_MODE_LIGHT));
 		addInput(createInput<FWPortInReallySmall>(Vec(13, 216), module, ManicCompression::RMS_MODE_INPUT));
 
-		addParam(createParam<LEDButton>(Vec(10, 247), module, ManicCompression::FILTER_MODE_PARAM));
-		addChild(createLight<LargeLight<BlueLight>>(Vec(11.5, 248.5), module, ManicCompression::FILTER_LIGHT));
-		addInput(createInput<FWPortInReallySmall>(Vec(31, 250), module, ManicCompression::FILTER_MODE_INPUT));
+		addParam(createParam<LEDButton>(Vec(10, 247), module, ManicCompression::LP_FILTER_MODE_PARAM));
+		addChild(createLight<LargeLight<BlueLight>>(Vec(11.5, 248.5), module, ManicCompression::LP_FILTER_LIGHT));
+		addInput(createInput<FWPortInReallySmall>(Vec(31, 250), module, ManicCompression::LP_FILTER_MODE_INPUT));
+
+		addParam(createParam<LEDButton>(Vec(60, 247), module, ManicCompression::HP_FILTER_MODE_PARAM));
+		addChild(createLight<LargeLight<BlueLight>>(Vec(61.5, 248.5), module, ManicCompression::HP_FILTER_LIGHT));
+		addInput(createInput<FWPortInReallySmall>(Vec(81, 250), module, ManicCompression::HP_FILTER_MODE_INPUT));
 
 
 		addParam(createParam<RoundSmallFWKnob>(Vec(30, 195), module, ManicCompression::RMS_WINDOW_PARAM));

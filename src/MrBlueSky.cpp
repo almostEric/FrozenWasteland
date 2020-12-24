@@ -94,6 +94,7 @@ struct MrBlueSky : Module {
 	}
 
 	void process(const ProcessArgs &args) override;
+	void onSampleRateChange() override;
 
 	// void reset() override {
 	// 	bandOffset =0;
@@ -114,6 +115,15 @@ struct MrBlueSky : Module {
 	}
 
 };
+
+void MrBlueSky::onSampleRateChange() {
+	float sampleRate = APP->engine->getSampleRate();
+
+	for(int i=0; i<2*BANDS; i++) {
+		iFilter[i]->setFc(freq[i%BANDS] / sampleRate);
+		cFilter[i]->setFc(freq[i%BANDS] / sampleRate);
+	};
+}
 
 
 void MrBlueSky::process(const ProcessArgs &args) {
@@ -281,7 +291,7 @@ struct MrBlueSkyBandDisplay : TransparentWidget {
 			char fVal[10];
 			snprintf(fVal, sizeof(fVal), "%1i", (int)module->freq[i]);
 			nvgFillColor(args.vg,nvgRGBA(255, rescale(clamp(module->peaks[i],0.0f,1.0f),0,1,255,0), rescale(clamp(module->peaks[i],0.0f,1.0f),0,1,255,0), 255));
-			nvgText(args.vg, 56 + 24*i, 30, fVal, NULL);
+			nvgText(args.vg, 14, 19 + 22*i, fVal, NULL);
 		}
 	}
 };
@@ -295,7 +305,7 @@ struct BandOffsetDisplay : TransparentWidget {
 		font = APP->window->loadFont(asset::plugin(pluginInstance, "res/fonts/01 Digit.ttf"));
 	}
 
-	void drawDuration(const DrawArgs &args, Vec pos, float bandOffset) {
+	void drawOffset(const DrawArgs &args, Vec pos, float bandOffset) {
 		nvgFontSize(args.vg, 20);
 		nvgFontFaceId(args.vg, font->handle);
 		nvgTextLetterSpacing(args.vg, 0);
@@ -309,7 +319,7 @@ struct BandOffsetDisplay : TransparentWidget {
 	void draw(const DrawArgs &args) override {
 		if (!module)
 			return;
-		drawDuration(args, Vec(0, box.size.y - 150), module->bandOffset);
+		drawOffset(args, Vec(0, box.size.y - 150), module->bandOffset);
 	}
 };
 
@@ -319,61 +329,59 @@ struct MrBlueSkyWidget : ModuleWidget {
 
 		setPanel(APP->window->loadSvg(asset::plugin(pluginInstance, "res/MrBlueSky.svg")));
 		
-
-		MrBlueSkyBandDisplay *bandDisplay = new MrBlueSkyBandDisplay();
-		bandDisplay->module = module;
-		bandDisplay->box.pos = Vec(14, 12);
-		bandDisplay->box.size = Vec(400, 70);
-		addChild(bandDisplay);
-
+		{
+			MrBlueSkyBandDisplay *bandDisplay = new MrBlueSkyBandDisplay();
+			bandDisplay->module = module;
+			bandDisplay->box.pos = Vec(14, 12);
+			bandDisplay->box.size = Vec(100, 370);
+			addChild(bandDisplay);
+		}
 		{
 			BandOffsetDisplay *offsetDisplay = new BandOffsetDisplay();
 			offsetDisplay->module = module;
-			offsetDisplay->box.pos = Vec(339, 200);
+			offsetDisplay->box.pos = Vec(214, 232);
 			offsetDisplay->box.size = Vec(box.size.x, 150);
 			addChild(offsetDisplay);
 		}
 
 		for (int i = 0; i < BANDS; i++) {
-			addParam( createParam<RoundReallySmallFWKnob>(Vec(60 + 24*i, 120), module, MrBlueSky::BG_PARAM + i));
+			addOutput(createOutput<FWPortOutSmall>(Vec(44,	 20 + 22*i), module, MrBlueSky::MOD_OUT + i));
+			addInput(createInput<FWPortInSmall>(Vec(84, 20 + 22*i), module, MrBlueSky::CARRIER_IN + i));
+			addParam(createParam<RoundReallySmallFWKnob>(Vec(116 , 18 + 22*i), module, MrBlueSky::BG_PARAM + i));
 		}
-		addParam(createParam<RoundFWKnob>(Vec(34, 177), module, MrBlueSky::ATTACK_PARAM));
-		addParam(createParam<RoundFWKnob>(Vec(94, 177), module, MrBlueSky::DECAY_PARAM));
-		addParam(createParam<RoundFWKnob>(Vec(154, 177), module, MrBlueSky::CARRIER_Q_PARAM));
-		addParam(createParam<RoundFWKnob>(Vec(214, 177), module, MrBlueSky::MOD_Q_PARAM));
-		addParam(createParam<RoundFWSnapKnob>(Vec(300, 177), module, MrBlueSky::BAND_OFFSET_PARAM));
-		addParam(createParam<RoundFWKnob>(Vec(40, 284), module, MrBlueSky::GMOD_PARAM));
-		addParam(createParam<RoundFWKnob>(Vec(120, 284), module, MrBlueSky::GCARR_PARAM));
-		addParam(createParam<RoundFWKnob>(Vec(207, 284), module, MrBlueSky::G_PARAM));
+
+
+		addParam(createParam<RoundFWKnob>(Vec(156, 50), module, MrBlueSky::ATTACK_PARAM));
+		addParam(createParam<RoundFWKnob>(Vec(216, 50), module, MrBlueSky::DECAY_PARAM));
+		addParam(createParam<RoundReallySmallFWKnob>(Vec(190, 75), module, MrBlueSky::CARRIER_Q_CV_ATTENUVERTER_PARAM));
+		addParam(createParam<RoundReallySmallFWKnob>(Vec(250, 75), module, MrBlueSky::MODIFER_Q_CV_ATTENUVERTER_PARAM));
+		addInput(createInput<FWPortInSmall>(Vec(190, 52), module, MrBlueSky::ATTACK_INPUT));
+		addInput(createInput<FWPortInSmall>(Vec(250, 52), module, MrBlueSky::DECAY_INPUT));
+
+		addParam(createParam<RoundFWKnob>(Vec(156, 130), module, MrBlueSky::CARRIER_Q_PARAM));
+		addParam(createParam<RoundFWKnob>(Vec(216, 130), module, MrBlueSky::MOD_Q_PARAM));
+		addParam(createParam<RoundReallySmallFWKnob>(Vec(190, 155), module, MrBlueSky::ATTACK_CV_ATTENUVERTER_PARAM));
+		addParam(createParam<RoundReallySmallFWKnob>(Vec(250, 155), module, MrBlueSky::DECAY_CV_ATTENUVERTER_PARAM));
+		addInput(createInput<FWPortInSmall>(Vec(190, 132), module, MrBlueSky::CARRIER_Q_INPUT));
+		addInput(createInput<FWPortInSmall>(Vec(250, 132), module, MrBlueSky::MOD_Q_INPUT));
+
+		addParam(createParam<RoundFWSnapKnob>(Vec(174, 202), module, MrBlueSky::BAND_OFFSET_PARAM));
+		addParam(createParam<RoundReallySmallFWKnob>(Vec(204, 230), module, MrBlueSky::SHIFT_BAND_OFFSET_CV_ATTENUVERTER_PARAM));
+		addInput(createInput<FWPortInSmall>(Vec(148, 207), module, MrBlueSky::SHIFT_BAND_OFFSET_LEFT_INPUT));
+		addInput(createInput<FWPortInSmall>(Vec(212, 207), module, MrBlueSky::SHIFT_BAND_OFFSET_RIGHT_INPUT));
+		addInput(createInput<FWPortInSmall>(Vec(179, 234), module, MrBlueSky::SHIFT_BAND_OFFSET_INPUT));
+
+		addParam(createParam<LEDButton>(Vec(250, 262), module, MrBlueSky::MOD_INVERT_PARAM));
+		addChild(createLight<LargeLight<BlueLight>>(Vec(251.5, 263.5), module, MrBlueSky::MOD_INVERT_LIGHT));
+
+		addParam(createParam<RoundFWKnob>(Vec(154, 290), module, MrBlueSky::GMOD_PARAM));
+		addParam(createParam<RoundFWKnob>(Vec(204, 290	), module, MrBlueSky::GCARR_PARAM));
+		addParam(createParam<RoundFWKnob>(Vec(254, 290), module, MrBlueSky::G_PARAM));
 		
-		addParam(createParam<LEDButton>(Vec(305, 289), module, MrBlueSky::MOD_INVERT_PARAM));
-		addChild(createLight<LargeLight<BlueLight>>(Vec(306.5, 290.5), module, MrBlueSky::MOD_INVERT_LIGHT));
+		addInput(createInput<PJ301MPort>(Vec(154, 335), module, MrBlueSky::IN_MOD));
+		addInput(createInput<PJ301MPort>(Vec(204, 335), module, MrBlueSky::IN_CARR));
 
-
-		addParam(createParam<RoundReallySmallFWKnob>(Vec(38, 238), module, MrBlueSky::ATTACK_CV_ATTENUVERTER_PARAM));
-		addParam(createParam<RoundReallySmallFWKnob>(Vec(98, 238), module, MrBlueSky::DECAY_CV_ATTENUVERTER_PARAM));
-		addParam(createParam<RoundReallySmallFWKnob>(Vec(158, 238), module, MrBlueSky::CARRIER_Q_CV_ATTENUVERTER_PARAM));
-		addParam(createParam<RoundReallySmallFWKnob>(Vec(218, 238), module, MrBlueSky::MODIFER_Q_CV_ATTENUVERTER_PARAM));
-		addParam(createParam<RoundReallySmallFWKnob>(Vec(304, 238), module, MrBlueSky::SHIFT_BAND_OFFSET_CV_ATTENUVERTER_PARAM));
-
-
-		for (int i = 0; i < BANDS; i++) {
-			addInput(createInput<FWPortInSmall>(Vec(62 + 24*i, 85), module, MrBlueSky::CARRIER_IN + i));
-		}
-		addInput(createInput<PJ301MPort>(Vec(42, 330), module, MrBlueSky::IN_MOD));
-		addInput(createInput<PJ301MPort>(Vec(122, 330), module, MrBlueSky::IN_CARR));
-		addInput(createInput<PJ301MPort>(Vec(36, 209), module, MrBlueSky::ATTACK_INPUT));
-		addInput(createInput<PJ301MPort>(Vec(96, 209), module, MrBlueSky::DECAY_INPUT));
-		addInput(createInput<PJ301MPort>(Vec(156, 209), module, MrBlueSky::CARRIER_Q_INPUT));
-		addInput(createInput<PJ301MPort>(Vec(216, 209), module, MrBlueSky::MOD_Q_INPUT));
-		addInput(createInput<PJ301MPort>(Vec(270, 183), module, MrBlueSky::SHIFT_BAND_OFFSET_LEFT_INPUT));
-		addInput(createInput<PJ301MPort>(Vec(334, 183), module, MrBlueSky::SHIFT_BAND_OFFSET_RIGHT_INPUT));
-		addInput(createInput<PJ301MPort>(Vec(302, 209), module, MrBlueSky::SHIFT_BAND_OFFSET_INPUT));
-
-		for (int i = 0; i < BANDS; i++) {
-			addOutput(createOutput<FWPortInSmall>(Vec(62 + 24*i, 45), module, MrBlueSky::MOD_OUT + i));
-		}
-		addOutput(createOutput<PJ301MPort>(Vec(210, 330), module, MrBlueSky::OUT));
+		addOutput(createOutput<PJ301MPort>(Vec(256, 335), module, MrBlueSky::OUT));
 
 		addChild(createWidget<ScrewSilver>(Vec(RACK_GRID_WIDTH - 12, 0)));
 		addChild(createWidget<ScrewSilver>(Vec(box.size.x - 2 * RACK_GRID_WIDTH + 12, 0)));

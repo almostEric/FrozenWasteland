@@ -1,3 +1,7 @@
+### 1.16.4 (2020-12-24)
+- Added HP Filter to Manic Compression
+- Mr Blue Sky is 50% smaller
+
 ### 1.16.3 (2020-12-18)
 - Added No Repeat control to Probably Not(e)s
 

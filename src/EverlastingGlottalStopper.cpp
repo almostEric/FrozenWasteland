@@ -62,6 +62,7 @@ struct EverlastingGlottalStopper : Module {
 
 
 	void process(const ProcessArgs &args) override;
+	void onSampleRateChange() override;
 };
 
 
@@ -87,6 +88,12 @@ inline float quadraticBipolarEG(float x) {
 	float x2 = x*x;
 	return (x >= 0.f) ? x2 : -x2;
 }
+
+void EverlastingGlottalStopper::onSampleRateChange() {
+	float sampleRate = APP->engine->getSampleRate();
+	deemphasisFilter->setFc(2000 / sampleRate);	
+}
+
 
 void EverlastingGlottalStopper::process(const ProcessArgs &args) {
 	
