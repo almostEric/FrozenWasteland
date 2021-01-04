@@ -115,6 +115,16 @@ A collection of unusual plugins that will add a certain coolness to your patches
 - Mid-Side mode encodes the inputs into mid-side format and allows compression of either the mid or side portion, then the signal is converted back to stereo
 - In the menu, there is an option for "Gate Mode". all of the CV inputs for switches (Bypass, RMS, LP Filter, etc.) are normally triggers. Gate Mode turns them into gate inputs
 
+## Meglomanic Compression
+
+![Meglomanic Compression](./doc/mmc.png)
+
+- Basically 5 band band version of Manic Compression
+- Each band's Compressor are same as above 
+- Each Band has a Filter Cutoff, Band is a low pass, band 5 is high pass, the rest are band pass with controllable bandwidth
+- By using Bands' Envelope outs and ins, you can have the detector of one band control another. 
+- Band Sidechain allows the filtered signal (whether source or sidechain) to be fed into the detector of another band (or something else)
+
 ## Midichlorian
 
 ![Midichlorian](./doc/midichlorian.png)

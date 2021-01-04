@@ -1,3 +1,6 @@
+### 1.16.5 (2021-01-05)
+- Added Meglamanical Compressor
+
 ### 1.16.4 (2020-12-24)
 - Added HP Filter to Manic Compression
 - Mr Blue Sky is 50% smaller
