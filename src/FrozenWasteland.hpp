@@ -18,6 +18,7 @@ extern Model *modelHairPick;
 extern Model *modelJustAPhaser;
 extern Model *modelLissajousLFO;
 extern Model *modelManicCompression;
+extern Model *modelManicCompressionMB;
 extern Model *modelMidichlorian;
 extern Model *modelMrBlueSky;
 extern Model *modelTheOneRingModulator;

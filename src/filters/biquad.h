@@ -41,6 +41,7 @@ public:
     void setPeakGain(double peakGainDB);
     void setBiquad(int type, double Fc, double Q, double peakGain);
     float process(float in);
+    double frequencyResponse(double in);
 
 protected:
     void calcBiquad(void);

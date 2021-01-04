@@ -201,3 +201,13 @@ void Biquad::calcBiquad(void) {
 
     return;
 }
+
+
+double Biquad::frequencyResponse(double frequency)  {
+    double w = 2.0*M_PI*frequency;  
+    double numerator = a0*a0 + a1*a1 + a2*a2 + 2.0*(a0*a1 + a1*a2)*cos(w) + 2.0*a0*a2*cos(2.0*w);
+    double denominator = 1.0 + b1*b1 + b2*b2 + 2.0*(b1 + b1*b2)*cos(w) + 2.0*b2*cos(2.0*w);
+    double magnitude = sqrt(numerator / denominator);
+
+    return magnitude;
+  }

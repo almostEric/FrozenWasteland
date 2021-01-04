@@ -408,6 +408,8 @@ void ManicCompression::process(const ProcessArgs &args) {
 	if(inputs[SOURCE_R_INPUT].isConnected()) {
 		inputR = inputs[SOURCE_R_INPUT].getVoltage();
 	}
+	double originalInputL = inputL;
+	double originalInputR = inputR;
 
 	//In Mid-Side Mode, L=mid, R=side
 	if(midSideMode) {
@@ -506,11 +508,11 @@ void ManicCompression::process(const ProcessArgs &args) {
 			
 		}
 
-		outputL = lerp(inputL,processedOutputL,mix);
-		outputR = lerp(inputR,processedOutputR,mix);
+		outputL = lerp(originalInputL,processedOutputL,mix);
+		outputR = lerp(originalInputR,processedOutputR,mix);
 	} else {
-		outputL = inputL;
-		outputR = inputR;
+		outputL = originalInputL;
+		outputR = originalInputR;
 	}
 
 
