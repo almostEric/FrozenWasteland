@@ -117,11 +117,11 @@ A collection of unusual plugins that will add a certain coolness to your patches
 
 ## Meglomanic Compression
 
-![Meglomanic Compression](./doc/mmc.png)
+![Megalomanic Compression](./doc/mmc.png)
 
-- Basically 5 band band version of Manic Compression
-- Each band's Compressor are same as above 
-- Each Band has a Filter Cutoff, Band is a low pass, band 5 is high pass, the rest are band pass with controllable bandwidth
+- Basically 5 band version of Manic Compression
+- Each Band has a Filter Cutoff, band 1 is low pass, band 5 is high pass, the rest are band pass with controllable bandwidth
+- Each Band compressor's features are the same as above 
 - By using Bands' Envelope outs and ins, you can have the detector of one band control another. 
 - Band Sidechain allows the filtered signal (whether source or sidechain) to be fed into the detector of another band (or something else)
 
