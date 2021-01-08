@@ -114,6 +114,7 @@ A collection of unusual plugins that will add a certain coolness to your patches
 - HP Filter applies a Hi pass filter onto the input before it is sent to level detector. This prevents detector reacting to harder to hear low frequencies before compressor kicks in (great for bass)
 - Mid-Side mode encodes the inputs into mid-side format and allows compression of either the mid or side portion, then the signal is converted back to stereo
 - In the menu, there is an option for "Gate Mode". all of the CV inputs for switches (Bypass, RMS, LP Filter, etc.) are normally triggers. Gate Mode turns them into gate inputs
+- In the menu there are three options for the Envelope out - gain reduced linear, linear and exponential. If the last two are used, the output voltage very high with large gain reduction amounts
 
 ## Meglomanic Compression
 

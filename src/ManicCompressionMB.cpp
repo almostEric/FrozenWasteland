@@ -3,6 +3,7 @@
 #include "dsp-compressor/SimpleGain.h"
 #include "ui/knobs.hpp"
 #include "ui/ports.hpp"
+#include "ui/menu.hpp"
 #include "filters/biquad.h"
 
 #define BANDS 5
@@ -130,6 +131,8 @@ struct ManicCompressionMB : Module {
 
 
 	bool gateMode = false;
+    int envelopeMode = 0;
+
 
 	Biquad* lpFilterBank[6]; // 3 filters 2 for stereo inputs, one for sidechain x 2 to increase slope
 	Biquad* hpFilterBank[6]; // 3 filters 2 for stereo inputs, one for sidechain x 2 to increase slope
@@ -230,6 +233,7 @@ json_t *ManicCompressionMB::dataToJson() {
 	json_object_set_new(rootJ, "compressMid", json_boolean(compressMid));
 	json_object_set_new(rootJ, "compressSide", json_boolean(compressSide));
 	json_object_set_new(rootJ, "gateMode", json_boolean(gateMode));
+    json_object_set_new(rootJ, "envelopeMode", json_integer(envelopeMode));
 
     for(int i=0;i<BANDS;i++) {
         std::string buf = "bandEnabled-" + std::to_string(i) ;
@@ -266,6 +270,10 @@ void ManicCompressionMB::dataFromJson(json_t *rootJ) {
 	json_t *gmJ = json_object_get(rootJ, "gateMode");
 	if (gmJ)
 		gateMode = json_boolean_value(gmJ);
+
+    json_t *emJ = json_object_get(rootJ, "envelopeMode");
+	if (emJ)
+		envelopeMode = json_integer_value(emJ);
 
     for(int i=0;i<BANDS;i++) {
         std::string buf = "bandEnabled-" + std::to_string(i) ;
@@ -584,8 +592,33 @@ void ManicCompressionMB::process(const ProcessArgs &args) {
                 compressor[b].process(inputs[BAND_SIDECHAIN_INPUT + b].isConnected() ? inputs[BAND_SIDECHAIN_INPUT + b].getVoltage() : detectorInput);
                 calculatedGainReduction = compressor[b].getGainReduction();
             }		
-            outputs[ENVELOPE_OUT+b].setVoltage(clamp(chunkware_simple::dB2lin(calculatedGainReduction) / 3.0f,-10.0f,10.0f));
-            gainReduction[b] = inputs[ENVELOPE_INPUT+b].isConnected() ? chunkware_simple::lin2dB(inputs[ENVELOPE_INPUT+b].getVoltage() * 3.0)  : calculatedGainReduction;
+            switch(envelopeMode) {
+                case 0 : // original gain reduced linear
+                    outputs[ENVELOPE_OUT+b].setVoltage(clamp(chunkware_simple::dB2lin(calculatedGainReduction) / 3.0f,-10.0f,10.0f));
+                    break;
+                case 1 : // linear
+                    outputs[ENVELOPE_OUT+b].setVoltage(chunkware_simple::dB2lin(calculatedGainReduction));
+                    break;
+                case 2 : // exponential
+                    outputs[ENVELOPE_OUT+b].setVoltage(calculatedGainReduction);
+                    break;
+            }
+
+            if(!inputs[ENVELOPE_INPUT+b].isConnected()) {
+                gainReduction[b] = calculatedGainReduction;
+            } else {
+                switch(envelopeMode) {
+                    case 0 : // original gain reduced linear
+                        gainReduction[b] = chunkware_simple::lin2dB(inputs[ENVELOPE_INPUT+b].getVoltage() * 3.0);
+                        break;
+                    case 1 : // linear
+                        gainReduction[b] = chunkware_simple::lin2dB(inputs[ENVELOPE_INPUT+b].getVoltage());
+                        break;
+                    case 2 : // exponential
+                        gainReduction[b] = inputs[ENVELOPE_INPUT+b].getVoltage();
+                        break;
+                }                
+            }
             
             double finalGainLin = chunkware_simple::dB2lin(makeupGain-gainReduction[b]);
 
@@ -1006,6 +1039,16 @@ struct ManicCompressionMBWidget : ModuleWidget {
 		TriggerGateItem *triggerGateItem = new TriggerGateItem();
 		triggerGateItem->module = module;
 		menu->addChild(triggerGateItem);
+
+        {
+			OptionsMenuItem* mi = new OptionsMenuItem("Envelope Mode");
+			mi->addItem(OptionMenuItem("Linear - Gain Reduced", [module]() { return module->envelopeMode == 0; }, [module]() { module->envelopeMode = 0; }));
+			mi->addItem(OptionMenuItem("Linear", [module]() { return module->envelopeMode == 1; }, [module]() { module->envelopeMode = 1; }));
+			mi->addItem(OptionMenuItem("Exponential", [module]() { return module->envelopeMode == 2; }, [module]() { module->envelopeMode = 2; }));
+			//OptionsMenuItem::addToMenu(mi, menu);
+			menu->addChild(mi);
+		}
+
 			
 	}
 };

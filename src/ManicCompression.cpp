@@ -1,8 +1,9 @@
-	#include "FrozenWasteland.hpp"
+#include "FrozenWasteland.hpp"
 #include "dsp-compressor/SimpleComp.h"
 #include "dsp-compressor/SimpleGain.h"
 #include "ui/knobs.hpp"
 #include "ui/ports.hpp"
+#include "ui/menu.hpp"
 #include "filters/biquad.h"
 
 struct ManicCompression : Module {
@@ -107,6 +108,7 @@ struct ManicCompression : Module {
 
 
 	bool gateMode = false;
+	int envelopeMode = 0;
 
 	Biquad* lpFilterBank[6]; // 3 filters 2 for stereo inputs, one for sidechain x 2 to increase slope
 	Biquad* hpFilterBank[6]; // 3 filters 2 for stereo inputs, one for sidechain x 2 to increase slope
@@ -185,6 +187,7 @@ json_t *ManicCompression::dataToJson() {
 
 
 	json_object_set_new(rootJ, "gateMode", json_integer((bool) gateMode));
+	json_object_set_new(rootJ, "envelopeMode", json_integer(envelopeMode));
 
 	return rootJ;
 }
@@ -219,10 +222,13 @@ void ManicCompression::dataFromJson(json_t *rootJ) {
 	if (csJ)
 		compressSide = json_integer_value(csJ);
 
-
 	json_t *gmJ = json_object_get(rootJ, "gateMode");
 	if (gmJ)
 		gateMode = json_integer_value(gmJ);
+
+	json_t *emJ = json_object_get(rootJ, "envelopeMode");
+	if (emJ)
+		envelopeMode = json_integer_value(emJ);
 
 }
 
@@ -486,7 +492,17 @@ void ManicCompression::process(const ProcessArgs &args) {
 		gainReduction = compressor.getGainReduction();
 	}		
 	
-	outputs[ENVELOPE_OUT].setVoltage(clamp(chunkware_simple::dB2lin(gainReduction) / 3.0f,-10.0f,10.0f));
+	switch(envelopeMode) {
+		case 0 : // original gain reduced linear
+			outputs[ENVELOPE_OUT].setVoltage(clamp(chunkware_simple::dB2lin(gainReduction) / 3.0f,-10.0f,10.0f));
+			break;
+		case 1 : // linear
+			outputs[ENVELOPE_OUT].setVoltage(chunkware_simple::dB2lin(gainReduction));
+			break;
+		case 2 : // exponential
+			outputs[ENVELOPE_OUT].setVoltage(gainReduction);
+			break;
+	}
 	double finalGainLin = chunkware_simple::dB2lin(makeupGain-gainReduction);
 
 	double outputL;
@@ -722,12 +738,14 @@ struct ManicCompressionWidget : ModuleWidget {
 			module->gateMode = !module->gateMode;
 		}
 		void step() override {
-			text = "Gate Mode";
+			text = "CV Gate Mode";
 			rightText = (module->gateMode) ? "✔" : "";
 		}
 	};
+
 	
-	void appendContextMenu(Menu *menu) override {
+	
+	void appendContextMenu(Menu* menu) override {
 		MenuLabel *spacerLabel = new MenuLabel();
 		menu->addChild(spacerLabel);
 
@@ -737,7 +755,14 @@ struct ManicCompressionWidget : ModuleWidget {
 		TriggerGateItem *triggerGateItem = new TriggerGateItem();
 		triggerGateItem->module = module;
 		menu->addChild(triggerGateItem);
-			
+		{
+			OptionsMenuItem* mi = new OptionsMenuItem("Envelope Mode");
+			mi->addItem(OptionMenuItem("Linear - Gain Reduced", [module]() { return module->envelopeMode == 0; }, [module]() { module->envelopeMode = 0; }));
+			mi->addItem(OptionMenuItem("Linear", [module]() { return module->envelopeMode == 1; }, [module]() { module->envelopeMode = 1; }));
+			mi->addItem(OptionMenuItem("Exponential", [module]() { return module->envelopeMode == 2; }, [module]() { module->envelopeMode = 2; }));
+			//OptionsMenuItem::addToMenu(mi, menu);
+			menu->addChild(mi);
+		}
 	}
 };
 

@@ -1,3 +1,6 @@
+### 1.16.6 (2021-01-05)
+- Added different Envelope out/in modes to the Manic Compressors
+
 ### 1.16.5 (2021-01-05)
 - Added Meglamanical Compressor
 
