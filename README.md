@@ -133,6 +133,14 @@ A collection of unusual plugins that will add a certain coolness to your patches
 - Polyphonic CV input gets broken into a Polyphonic CV out for Host's CV input and a polyphonc Pitch Bend output for Host
 - Set Pitch Bend in VST to +/- 1 half step
 
+## Midi Recorder
+
+![Midi Recorder](./doc/midirecorder.png)
+- Records Gate events and allows saving them to a MIDI file for use elsewhere.
+- Gate and Accent inputs are polyphonic
+- Record button starts recording - recommend using something like the Run output of Impomptu Modular's Clocked module to syncronize recording
+- BPM input uses Impromptu Modular's BPM output standard (0V = 120BPM)
+
 ## Mr. Blue Sky
 
 ![Mr. Blue Sky](./doc/mrbluesky.png)
@@ -347,7 +355,7 @@ When they are connected this way, the Clock, Mute and Reset signals, and Eoc out
 - Basic example, with a step count of 16, and 2 divisions, the divisions will be on the 1 and the 9.
 - A division of 4 would give you a basic 4 on the floor rhythm
 - The Offset control lets you move the starting point of the rhythm to something other than the 1
-### Golomb Ruler Rhythms (Blue)
+### Golomb Ruler Rhythms (Turquoise)
 - Unlike Euclidean Rhythms which seek to evenly distribute the divisions, Golomb Rulers try to ensure unequal distribution
 - Basic example, with a step count of 16, and 4 divisions, the divisions will be on the 1,4,9 and 13.
 ### Well Formed Rulers (Green)
@@ -362,6 +370,8 @@ When they are connected this way, the Clock, Mute and Reset signals, and Eoc out
 - Click on steps to turn beat on/off.
 - Hold SHIFT key while clicking to turn Accents on/off
 - Offset is still CV controllable
+### Fibonacci Mode (Blue)
+- Steps based on the Fibonacci sequence.
 ### Boolean Logic (Purple)
 - Uses a boolean operator to combine the previous two tracks (so 3 = 1 & 2, 4 = 2 & 3)
 - Length can't be longer than shortest of the 2 tracks combined

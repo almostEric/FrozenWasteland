@@ -20,6 +20,7 @@ extern Model *modelLissajousLFO;
 extern Model *modelManicCompression;
 extern Model *modelManicCompressionMB;
 extern Model *modelMidichlorian;
+extern Model *modelMidiRecorder;
 extern Model *modelMrBlueSky;
 extern Model *modelTheOneRingModulator;
 extern Model *modelPhasedLockedLoop;

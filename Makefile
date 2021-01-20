@@ -1,5 +1,6 @@
 # FLAGS will be passed to both the C and C++ compiler
 FLAGS += \
+	-I./src/xml \
 	-I./src/ui \
 	-I./src/model \
 	-I./src/dsp-compressor \
@@ -13,7 +14,7 @@ FLAGS += \
 
 
 # Add .cpp and .c files to the build
-SOURCES += $(wildcard src/*.cpp src/filters/*.cpp src/dsp-compressor/*.cpp src/dsp-noise/*.cpp src/dsp-filter/*.cpp  src/stmlib/*.cc)
+SOURCES += $(wildcard src/*.cpp src/xml/*.cpp src/filters/*.cpp src/dsp-compressor/*.cpp src/dsp-noise/*.cpp src/dsp-filter/*.cpp  src/stmlib/*.cc)
 
 # Add files to the ZIP package when running `make dist`
 # The compiled plugin is automatically added.

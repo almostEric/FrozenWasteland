@@ -10,7 +10,7 @@
 
 #define TRACK_COUNT 4
 #define MAX_STEPS 73
-#define NUM_ALGORITHMS 6
+#define NUM_ALGORITHMS 7
 #define EXPANDER_MAX_STEPS 18
 //GOLOMB RULER
 #define NUM_RULERS 20 
@@ -161,6 +161,7 @@ struct QuadAlgorithmicRhythm : Module {
 		WELL_FORMED_ALGO,
 		PERFECT_BALANCE_ALGO,
 		MANUAL_MODE_ALGO,
+		FIBONACCI_MODE_ALGO,
 		BOOLEAN_LOGIC_ALGO
 	};
 	enum ProbabilityGroupTriggerModes {
@@ -856,7 +857,14 @@ struct QuadAlgorithmicRhythm : Module {
 					lights[ALGORITHM_1_LIGHT + trackNumber*3 + 1].value = 0;
 					lights[ALGORITHM_1_LIGHT + trackNumber*3 + 2].value = .9;
 					break;
+				case FIBONACCI_MODE_ALGO :
+					lights[ALGORITHM_1_LIGHT + trackNumber*3].value = .04;
+					lights[ALGORITHM_1_LIGHT + trackNumber*3 + 1].value = .04;
+					lights[ALGORITHM_1_LIGHT + trackNumber*3 + 2].value = .58;
+					break;
 			}
+			            
+
 			if(trackIndependentTrigger[trackNumber].process(params[(TRACK_1_INDEPENDENT_PARAM + trackNumber * 8)].getValue())) {
                 trackIndependent[trackNumber] = !trackIndependent[trackNumber]; 
             }
@@ -1005,9 +1013,6 @@ struct QuadAlgorithmicRhythm : Module {
 				dirty[trackNumber] = true;
 			}
 
-
-
-
 			if(dirty[trackNumber]) {
 				beatCount[trackNumber] = 0;
 
@@ -1150,7 +1155,7 @@ struct QuadAlgorithmicRhythm : Module {
 					} else if(algorithmMatrix[trackNumber] == MANUAL_MODE_ALGO) {
 						int manualBeatCount = 0;
 
-						trackPatternName[trackNumber] = std::to_string(stepsCount[trackNumber])+"-"+"Manual";
+						trackPatternName[trackNumber] = std::to_string(stepsCount[trackNumber]);
 
 						for (int manualBeatIndex = 0; manualBeatIndex < stepsCount[trackNumber];manualBeatIndex++) {
 							bool isBeat = getManualBeat(trackNumber,manualBeatIndex) ;  
@@ -1161,6 +1166,34 @@ struct QuadAlgorithmicRhythm : Module {
 							}
 						}
 						beatCount[trackNumber] = manualBeatCount;
+					} else if(algorithmMatrix[trackNumber] == FIBONACCI_MODE_ALGO) { //FIBONACCi
+					
+						int actualStepCount = stepsCount[trackNumber] - pad;						
+						//Set all beats to false
+						for(int j=0;j<stepsCount[trackNumber];j++)
+						{
+							beatMatrix[trackNumber][j] = false; 			
+						}
+
+						int startPos = 1;
+						int lastStartPos = 0;
+						int fbBeatCount = 0;
+						for (int fibIndex = 0; fibIndex < division;fibIndex++)
+						{
+							int divisionLocation = startPos + lastStartPos;
+							lastStartPos = startPos;
+							startPos = divisionLocation;
+
+							//Subtract 1 since position is 0 based
+							divisionLocation = (divisionLocation - 1 + pad);
+							if(divisionLocation < actualStepCount) {
+								fbBeatCount++;
+								beatMatrix[trackNumber][(divisionLocation + offset) % actualStepCount] = true;
+								beatLocation[trackNumber][fibIndex] = (divisionLocation + offset) % actualStepCount;	
+							} 							          
+						}
+						beatCount[trackNumber] = fbBeatCount;
+						trackPatternName[trackNumber] =std::to_string(stepsCount[trackNumber])+"-"+std::to_string(fbBeatCount); 
 					} else if(algorithmMatrix[trackNumber] == BOOLEAN_LOGIC_ALGO) { //Boolean Logic only for tracs 3 and 4
 						int logicBeatCount = 0;
 						int logicMode = (division-1) % 6; 
@@ -1855,6 +1888,9 @@ struct QARBeatDisplay : FramebufferWidget {
 		} else if(algorithm == module->MANUAL_MODE_ALGO ) { 
             strokeColor = nvgRGBA(0xe0, 0xe0, 0xef, 0xff);
 			fillColor = nvgRGBA(0xe0,0xe0,0xef,opacity);        
+		} else if(algorithm == module->FIBONACCI_MODE_ALGO ) { 
+            strokeColor = nvgRGBA(0x1a, 0x13, 0xc7, 0xff);
+			fillColor = nvgRGBA(0x1a,0x13,0xc7,opacity);        
 		}
 
 
@@ -1949,6 +1985,47 @@ struct QARBeatDisplay : FramebufferWidget {
 		nvgText(args.vg, pos.x, pos.y, text, NULL);
 	}
 
+	void drawTrackAlgotrithm(const DrawArgs &args, Vec pos, int algorithm) {
+		nvgFontSize(args.vg, 8);
+		nvgFontFaceId(args.vg, textFont->handle);
+		nvgTextAlign(args.vg,NVG_ALIGN_CENTER);
+		nvgTextLetterSpacing(args.vg, -1.2);
+
+		std::string algorithmName = "";
+		switch(algorithm) {
+			case module->EUCLIDEAN_ALGO :
+				algorithmName = "Eucldiean";
+				nvgFillColor(args.vg, nvgRGBA(0xef, 0xe0, 0, 0xff));
+				break;
+			case module->GOLUMB_RULER_ALGO :
+				algorithmName = "Golumb Ruler";
+				nvgFillColor(args.vg, nvgRGBA(0, 0xe0, 0xef, 0xff));
+				break;
+			case module->WELL_FORMED_ALGO :
+				algorithmName = "Well Formed";
+				nvgFillColor(args.vg, nvgRGBA(0x10, 0xcf, 0x20, 0xff));
+				break;
+			case module->PERFECT_BALANCE_ALGO :
+				algorithmName = "Perfect Balance";
+				nvgFillColor(args.vg, nvgRGBA(0xe0, 0x70, 0, 0xff));
+				break;
+			case module->MANUAL_MODE_ALGO :
+				algorithmName = "Manual";
+				nvgFillColor(args.vg, nvgRGBA(0xe0, 0xe0, 0xef, 0xff));
+				break;
+			case module->BOOLEAN_LOGIC_ALGO :
+				algorithmName = "Boolean";
+				nvgFillColor(args.vg, nvgRGBA(0xe0, 0, 0xef, 0xff));
+				break;
+			case module->FIBONACCI_MODE_ALGO :
+				algorithmName = "Fibonacci";
+				nvgFillColor(args.vg, nvgRGBA(0x7a, 0x73, 0xfe, 0xff));
+				break;
+		}
+		char text[32];
+		snprintf(text, sizeof(text), "%s", algorithmName.c_str() );
+		nvgText(args.vg, pos.x, pos.y, text, NULL);
+	}
 
 	void drawPatternNameTrack(const DrawArgs &args, Vec pos, std::string trackPatternName) {
 		nvgFontSize(args.vg, 10);
@@ -1991,7 +2068,8 @@ struct QARBeatDisplay : FramebufferWidget {
 
 
 			
-			drawPatternNameTrack(args, Vec(294 + trackNumber*62, 25), module->trackPatternName[trackNumber]);
+			drawTrackAlgotrithm(args, Vec(294 + trackNumber*62, 19), module->algorithmMatrix[trackNumber]);
+			drawPatternNameTrack(args, Vec(294 + trackNumber*62, 35), module->trackPatternName[trackNumber]);
 			// if(trackNumber == 0) {
 			// 	fprintf(stderr, "%f %f \n", wfTrackDurationAdjustment, module->wellFormedTrackDuration[trackNumber]);
 			// }
@@ -2082,24 +2160,24 @@ struct QuadAlgorithmicRhythmWidget : ModuleWidget {
 		}
 
 		for(int track=0;track<TRACK_COUNT;track++) {
-			addParam(createParam<LEDButton>(Vec(290+(track*62), 27), module, QuadAlgorithmicRhythm::ALGORITHM_1_PARAM+(track*8)));
-			addChild(createLight<LargeLight<RedGreenBlueLight>>(Vec(291.5+(track*62), 28.5), module, QuadAlgorithmicRhythm::ALGORITHM_1_LIGHT+(track*3)));
-			addParam(createParam<RoundSmallFWSnapKnob>(Vec(286+(track*62), 68), module, QuadAlgorithmicRhythm::STEPS_1_PARAM+(track*8)));
-			addParam(createParam<RoundSmallFWSnapKnob>(Vec(286+(track*62), 98), module, QuadAlgorithmicRhythm::DIVISIONS_1_PARAM+(track*8)));
-			addParam(createParam<RoundSmallFWSnapKnob>(Vec(286+(track*62), 128), module, QuadAlgorithmicRhythm::OFFSET_1_PARAM+(track*8)));
-			addParam(createParam<RoundSmallFWSnapKnob>(Vec(286+(track*62), 158), module, QuadAlgorithmicRhythm::PAD_1_PARAM+(track*8)));
-			addParam(createParam<RoundSmallFWSnapKnob>(Vec(286+(track*62), 188), module, QuadAlgorithmicRhythm::ACCENTS_1_PARAM+(track*8)));
-			addParam(createParam<RoundSmallFWSnapKnob>(Vec(286+(track*62), 218), module, QuadAlgorithmicRhythm::ACCENT_ROTATE_1_PARAM+(track*8)));
-			addParam(createParam<LEDButton>(Vec(290+(track*62), 248), module, QuadAlgorithmicRhythm::TRACK_1_INDEPENDENT_PARAM+(track*8)));
-			addChild(createLight<LargeLight<RedGreenBlueLight>>(Vec(291.5+(track*62), 249.5), module, QuadAlgorithmicRhythm::TRACK_INDEPENDENT_1_LIGHT+(track*3)));
+			addParam(createParam<LEDButton>(Vec(290+(track*62), 24), module, QuadAlgorithmicRhythm::ALGORITHM_1_PARAM+(track*8)));
+			addChild(createLight<LargeLight<RedGreenBlueLight>>(Vec(291.5+(track*62), 25.5), module, QuadAlgorithmicRhythm::ALGORITHM_1_LIGHT+(track*3)));
+			addParam(createParam<RoundSmallFWSnapKnob>(Vec(286+(track*62), 78), module, QuadAlgorithmicRhythm::STEPS_1_PARAM+(track*8)));
+			addParam(createParam<RoundSmallFWSnapKnob>(Vec(286+(track*62), 108), module, QuadAlgorithmicRhythm::DIVISIONS_1_PARAM+(track*8)));
+			addParam(createParam<RoundSmallFWSnapKnob>(Vec(286+(track*62), 138), module, QuadAlgorithmicRhythm::OFFSET_1_PARAM+(track*8)));
+			addParam(createParam<RoundSmallFWSnapKnob>(Vec(286+(track*62), 168), module, QuadAlgorithmicRhythm::PAD_1_PARAM+(track*8)));
+			addParam(createParam<RoundSmallFWSnapKnob>(Vec(286+(track*62), 198), module, QuadAlgorithmicRhythm::ACCENTS_1_PARAM+(track*8)));
+			addParam(createParam<RoundSmallFWSnapKnob>(Vec(286+(track*62), 228), module, QuadAlgorithmicRhythm::ACCENT_ROTATE_1_PARAM+(track*8)));
+			addParam(createParam<LEDButton>(Vec(290+(track*62), 258), module, QuadAlgorithmicRhythm::TRACK_1_INDEPENDENT_PARAM+(track*8)));
+			addChild(createLight<LargeLight<RedGreenBlueLight>>(Vec(291.5+(track*62), 259.5), module, QuadAlgorithmicRhythm::TRACK_INDEPENDENT_1_LIGHT+(track*3)));
 
-			addInput(createInput<FWPortInSmall>(Vec(316+(track*62), 27), module, QuadAlgorithmicRhythm::ALGORITHM_1_INPUT+(track*8)));
-			addInput(createInput<FWPortInSmall>(Vec(316+(track*62), 72), module, QuadAlgorithmicRhythm::STEPS_1_INPUT+(track*8)));
-			addInput(createInput<FWPortInSmall>(Vec(316+(track*62), 102), module, QuadAlgorithmicRhythm::DIVISIONS_1_INPUT+(track*8)));
-			addInput(createInput<FWPortInSmall>(Vec(316+(track*62), 132), module, QuadAlgorithmicRhythm::OFFSET_1_INPUT+(track*8)));
-			addInput(createInput<FWPortInSmall>(Vec(316+(track*62), 162), module, QuadAlgorithmicRhythm::PAD_1_INPUT+(track*8)));
-			addInput(createInput<FWPortInSmall>(Vec(316+(track*62), 192), module, QuadAlgorithmicRhythm::ACCENTS_1_INPUT+(track*8)));
-			addInput(createInput<FWPortInSmall>(Vec(316+(track*62), 222), module, QuadAlgorithmicRhythm::ACCENT_ROTATE_1_INPUT+(track*8)));
+			addInput(createInput<FWPortInSmall>(Vec(316+(track*62), 24), module, QuadAlgorithmicRhythm::ALGORITHM_1_INPUT+(track*8)));
+			addInput(createInput<FWPortInSmall>(Vec(316+(track*62), 82), module, QuadAlgorithmicRhythm::STEPS_1_INPUT+(track*8)));
+			addInput(createInput<FWPortInSmall>(Vec(316+(track*62), 112), module, QuadAlgorithmicRhythm::DIVISIONS_1_INPUT+(track*8)));
+			addInput(createInput<FWPortInSmall>(Vec(316+(track*62), 142), module, QuadAlgorithmicRhythm::OFFSET_1_INPUT+(track*8)));
+			addInput(createInput<FWPortInSmall>(Vec(316+(track*62), 172), module, QuadAlgorithmicRhythm::PAD_1_INPUT+(track*8)));
+			addInput(createInput<FWPortInSmall>(Vec(316+(track*62), 202), module, QuadAlgorithmicRhythm::ACCENTS_1_INPUT+(track*8)));
+			addInput(createInput<FWPortInSmall>(Vec(316+(track*62), 232), module, QuadAlgorithmicRhythm::ACCENT_ROTATE_1_INPUT+(track*8)));
 
 			addInput(createInput<FWPortInSmall>(Vec(290+(track*62), 282), module, QuadAlgorithmicRhythm::START_1_INPUT+(track*8)));
 			addOutput(createOutput<FWPortOutSmall>(Vec(290+(track*62), 304), module, QuadAlgorithmicRhythm::EOC_OUTPUT_1+(track*3)));

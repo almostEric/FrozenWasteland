@@ -1,3 +1,7 @@
+### 1.17.0 (2021-01-20)
+- Added Midi Recorder Module
+- Added algorithm display and Fibonacci algorithm to QAR
+
 ### 1.16.6 (2021-01-05)
 - Added different Envelope out/in modes to the Manic Compressors
 

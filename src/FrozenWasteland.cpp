@@ -28,6 +28,7 @@ void init(rack::Plugin *p) {
 	p->addModel(modelManicCompression);
 	p->addModel(modelManicCompressionMB);
 	p->addModel(modelMidichlorian);
+	p->addModel(modelMidiRecorder);
 	p->addModel(modelMrBlueSky);
 	p->addModel(modelTheOneRingModulator);
 	p->addModel(modelPhasedLockedLoop);
