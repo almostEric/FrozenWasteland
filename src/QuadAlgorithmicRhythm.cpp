@@ -1993,31 +1993,31 @@ struct QARBeatDisplay : FramebufferWidget {
 
 		std::string algorithmName = "";
 		switch(algorithm) {
-			case module->EUCLIDEAN_ALGO :
+			case QuadAlgorithmicRhythm::EUCLIDEAN_ALGO :
 				algorithmName = "Eucldiean";
 				nvgFillColor(args.vg, nvgRGBA(0xef, 0xe0, 0, 0xff));
 				break;
-			case module->GOLUMB_RULER_ALGO :
+			case QuadAlgorithmicRhythm::GOLUMB_RULER_ALGO :
 				algorithmName = "Golumb Ruler";
 				nvgFillColor(args.vg, nvgRGBA(0, 0xe0, 0xef, 0xff));
 				break;
-			case module->WELL_FORMED_ALGO :
+			case QuadAlgorithmicRhythm::WELL_FORMED_ALGO :
 				algorithmName = "Well Formed";
 				nvgFillColor(args.vg, nvgRGBA(0x10, 0xcf, 0x20, 0xff));
 				break;
-			case module->PERFECT_BALANCE_ALGO :
+			case QuadAlgorithmicRhythm::PERFECT_BALANCE_ALGO :
 				algorithmName = "Perfect Balance";
 				nvgFillColor(args.vg, nvgRGBA(0xe0, 0x70, 0, 0xff));
 				break;
-			case module->MANUAL_MODE_ALGO :
+			case QuadAlgorithmicRhythm::MANUAL_MODE_ALGO :
 				algorithmName = "Manual";
 				nvgFillColor(args.vg, nvgRGBA(0xe0, 0xe0, 0xef, 0xff));
 				break;
-			case module->BOOLEAN_LOGIC_ALGO :
+			case QuadAlgorithmicRhythm::BOOLEAN_LOGIC_ALGO :
 				algorithmName = "Boolean";
 				nvgFillColor(args.vg, nvgRGBA(0xe0, 0, 0xef, 0xff));
 				break;
-			case module->FIBONACCI_MODE_ALGO :
+			case QuadAlgorithmicRhythm::FIBONACCI_MODE_ALGO :
 				algorithmName = "Fibonacci";
 				nvgFillColor(args.vg, nvgRGBA(0x7a, 0x73, 0xfe, 0xff));
 				break;
