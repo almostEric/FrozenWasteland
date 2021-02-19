@@ -187,7 +187,7 @@ A collection of unusual plugins that will add a certain coolness to your patches
 - Low **LPF FREQ** settings create a warbling effect, high = craziness
 - **EXTERNAL IN** overrides interal VCO
 - The **LPF OUT** is normalled to the **VCO CV**, try patching something in between the two
-- Four comparator modes: XOR, D type Flip Flop use different boolean logic. Fuzzy XOR and Fuzzy Hyperbolic XOR use logic operators based on work by Lofti Zadeh and hyperbolic parabolas respectively
+- Five comparator modes: XOR, D type Flip Flop use different boolean logic. Coincidence is based on which signal is "ahead". Fuzzy XOR and Fuzzy Hyperbolic XOR use logic operators based on work by Lofti Zadeh and hyperbolic parabolas respectively
 - Does not make pretty sounds, but can be a lot of fun.
 
 ## Portland Weather

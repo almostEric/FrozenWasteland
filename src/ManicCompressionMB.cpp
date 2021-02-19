@@ -545,29 +545,19 @@ void ManicCompressionMB::process(const ProcessArgs &args) {
             double inputGain = clamp(params[IN_GAIN_PARAM + b].getValue() + (inputs[IN_GAIN_INPUT + b].getVoltage() * 3.0 * params[IN_GAIN_CV_ATTENUVERTER_PARAM + b].getValue()), 0.0f,30.0f);
             inputGain = chunkware_simple::dB2lin(inputGain);
             double makeupGain = clamp(params[MAKEUP_GAIN_PARAM + b].getValue() + (inputs[MAKEUP_GAIN_INPUT + b].getVoltage() * 3.0 * params[MAKEUP_GAIN_CV_ATTENUVERTER_PARAM + b].getValue()), 0.0f,30.0f);
-
-
-            compressor[b].setRatio(ratio[b]);
-            compressor[b].setThresh(50.0+threshold[b]);
-            compressor[b].setKnee(knee[b]);
-            compressor[b].setAttack(attack);
-            compressor[b].setRelease(release);
-            compressor[b].setAttackCurve(attackCurve);
-            compressor[b].setReleaseCurve(releaseCurve);
-
-            compressorRms[b].setRatio(ratio[b]);
-            compressorRms[b].setThresh(50.0+threshold[b]);
-            compressorRms[b].setKnee(knee[b]);
-            compressorRms[b].setAttack(attack);
-            compressorRms[b].setRelease(release);
-            compressorRms[b].setAttackCurve(attackCurve);
-            compressorRms[b].setReleaseCurve(releaseCurve);
-            compressorRms[b].setWindow(rmsWindow);
-
             
             double detectorInput;
             double calculatedGainReduction = 0;
             if(rmsMode[b]) {
+                compressorRms[b].setRatio(ratio[b]);
+                compressorRms[b].setThresh(50.0+threshold[b]);
+                compressorRms[b].setKnee(knee[b]);
+                compressorRms[b].setAttack(attack);
+                compressorRms[b].setRelease(release);
+                compressorRms[b].setAttackCurve(attackCurve);
+                compressorRms[b].setReleaseCurve(releaseCurve);
+                compressorRms[b].setWindow(rmsWindow);
+
                 if(usingSidechain) {
                     detectorInput = sidechainBand * sidechainBand;
                 } else {
@@ -580,6 +570,14 @@ void ManicCompressionMB::process(const ProcessArgs &args) {
                 compressorRms[b].process(inputs[BAND_SIDECHAIN_INPUT + b].isConnected() ? inputs[BAND_SIDECHAIN_INPUT + b].getVoltage() : detectorInput);
                 calculatedGainReduction = compressorRms[b].getGainReduction();
             } else {
+                compressor[b].setRatio(ratio[b]);
+                compressor[b].setThresh(50.0+threshold[b]);
+                compressor[b].setKnee(knee[b]);
+                compressor[b].setAttack(attack);
+                compressor[b].setRelease(release);
+                compressor[b].setAttackCurve(attackCurve);
+                compressor[b].setReleaseCurve(releaseCurve);
+                
                 if(usingSidechain) {
                     detectorInput = sidechainBand;
                 } else {

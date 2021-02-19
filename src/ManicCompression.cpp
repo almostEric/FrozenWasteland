@@ -428,25 +428,6 @@ void ManicCompression::process(const ProcessArgs &args) {
 
 	double processedL = inputL;
 	double processedR = inputR;
-
-
-	compressor.setRatio(ratio);
-	compressor.setThresh(50.0+threshold);
-	compressor.setKnee(knee);
-	compressor.setAttack(attack);
-	compressor.setRelease(release);
-	compressor.setAttackCurve(attackCurve);
-	compressor.setReleaseCurve(releaseCurve);
-
-	compressorRms.setRatio(ratio);
-	compressorRms.setThresh(50.0+threshold);
-	compressorRms.setKnee(knee);
-	compressorRms.setAttack(attack);
-	compressorRms.setRelease(release);
-	compressorRms.setAttackCurve(attackCurve);
-	compressorRms.setReleaseCurve(releaseCurve);
-	compressorRms.setWindow(rmsWindow);
-
 	
 	double sidechain;
 	bool usingSidechain = false;
@@ -471,6 +452,15 @@ void ManicCompression::process(const ProcessArgs &args) {
 	}
 
 	if(rmsMode) {
+		compressorRms.setRatio(ratio);
+		compressorRms.setThresh(50.0+threshold);
+		compressorRms.setKnee(knee);
+		compressorRms.setAttack(attack);
+		compressorRms.setRelease(release);
+		compressorRms.setAttackCurve(attackCurve);
+		compressorRms.setReleaseCurve(releaseCurve);
+		compressorRms.setWindow(rmsWindow);
+
 		if(usingSidechain) {
 			compressorRms.process(sidechain * sidechain);
 		} else {
@@ -481,6 +471,14 @@ void ManicCompression::process(const ProcessArgs &args) {
 		}
 		gainReduction = compressorRms.getGainReduction();
 	} else {
+		compressor.setRatio(ratio);
+		compressor.setThresh(50.0+threshold);
+		compressor.setKnee(knee);
+		compressor.setAttack(attack);
+		compressor.setRelease(release);
+		compressor.setAttackCurve(attackCurve);
+		compressor.setReleaseCurve(releaseCurve);
+
 		if(usingSidechain) {
 			compressor.process(sidechain);
 		} else {

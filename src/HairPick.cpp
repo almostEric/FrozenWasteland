@@ -295,6 +295,10 @@ struct HairPick : Module {
 			case FEEDBACK_SITAR :
 				feedbackValue.l = (feedbackWeight * feedbackValue.l) + ((1-feedbackWeight) * lastFeedback.l);
 				feedbackValue.r = (feedbackWeight * feedbackValue.r) + ((1-feedbackWeight) * lastFeedback.r);
+
+				// T cx = std::max(std::min(drive * x, (T) 1.0), (T) -1.0);
+				// T y = std::max(std::min(cx - cx*cx*cx / (T) 3, (T) 2.0/3.0), (T) -2.0/3.0) / drive;
+
 				break;
 			case FEEDBACK_CLARINET :
 				feedbackValue.l = (feedbackWeight * feedbackValue.l) + ((1-feedbackWeight) * lastFeedback.l);

@@ -1,3 +1,8 @@
+### 1.17.1 (2011-02-20)
+- Fixed some bugs and timing issues in QAR
+- Fixed Seriously Slow EG Bug
+- Added new Coincidence Comparator mode to PLL
+
 ### 1.17.0 (2021-01-20)
 - Added Midi Recorder Module
 - Added algorithm display and Fibonacci algorithm to QAR

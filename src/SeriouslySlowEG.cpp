@@ -125,7 +125,8 @@ struct SeriouslySlowEG : Module {
 
 	Stage stage = STOPPED_STAGE;
 	double stageProgress, holdProgress;
-	double envelope, releaseLevel;
+	double envelope = 0;
+	double releaseLevel = 0;
 	float sustainLevel;
 
 

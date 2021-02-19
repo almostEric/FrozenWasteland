@@ -737,6 +737,7 @@ struct QuadAlgorithmicRhythm : Module {
 				}
 				timeElapsed = 0;
 				duration = 0; 
+				secondClockReceived = false;
 			}
 		}
 		
@@ -1498,7 +1499,7 @@ struct QuadAlgorithmicRhythm : Module {
 				if(startTrigger[trackNumber].process(startInput)) {
 					running[trackNumber] = true;
 					beatIndex[trackNumber] = -1;
-					lastStepTime[trackNumber] = 200000; //Trying some arbitrary large value
+					lastStepTime[trackNumber] = PTRDIFF_MAX; //Trying some arbitrary large value
 				}
 			}
 		}
@@ -1511,7 +1512,8 @@ struct QuadAlgorithmicRhythm : Module {
 
 		if((inputs[CLOCK_INPUT].isConnected() || masterQARPresent)) {
 			//Calculate clock duration
-			double timeAdvance =1.0 / args.sampleRate;
+			//double timeAdvance =1.0 / args.sampleRate;
+			double timeAdvance =1.0 ;
 			timeElapsed += timeAdvance;
 
 			if(clockTrigger.process(clockInput)) {
@@ -1532,7 +1534,8 @@ struct QuadAlgorithmicRhythm : Module {
 				       (algorithmMatrix[trackNumber] == WELL_FORMED_ALGO ? wellFormedStepDurations[trackNumber][beatIndex[trackNumber]] : 1.0) * 
 					   beatWarpMatrix[trackNumber][beatIndex[trackNumber]] * irrationalRhythmMatrix[trackNumber][beatIndex[trackNumber]] : 1.0;
 
-				if(stepsCount[trackNumber] > 0 && constantTime && !trackIndependent[trackNumber] && beatIndex[trackNumber] >= 0 ) {
+				//if(stepsCount[trackNumber] > 0 && constantTime && !trackIndependent[trackNumber] && beatIndex[trackNumber] >= 0 ) {
+				if(stepsCount[trackNumber] > 0 && constantTime && !trackIndependent[trackNumber]  ) {
 					double constantNumerator = masterTrack <= TRACK_COUNT ? (algorithmMatrix[masterTrack-1] != WELL_FORMED_ALGO ? masterStepCount : wellFormedTrackDuration[masterTrack-1]) : metaStepCount;
 					double constantDenominator;
 					if(algorithmMatrix[trackNumber] != WELL_FORMED_ALGO) {
@@ -1545,7 +1548,7 @@ struct QuadAlgorithmicRhythm : Module {
 
 					stepDuration[trackNumber] = duration * beatSizeAdjustment * constantTimeAdjustment; //Constant Time scales duration based on a master track
 					// if(trackNumber == 1) {
-					// 	fprintf(stderr, "%i %i %f %f %i\n", beatIndex[0], beatIndex[trackNumber],constantTimeAdjustment,duration,firstClockReceived );
+						// fprintf(stderr, "%i %5.10f\n", trackNumber,stepDuration[trackNumber]);
 					// }
 				}
 				else {
@@ -1559,10 +1562,15 @@ struct QuadAlgorithmicRhythm : Module {
                 double swingDuration = (calculatedSwingRandomness[trackNumber] + swingMatrix[trackNumber][nextBeat]) * stepDuration[trackNumber];
                 
 				if(running[trackNumber]) {
-					lastStepTime[trackNumber] +=timeAdvance;
-					if(stepDuration[trackNumber] > 0.0 && lastStepTime[trackNumber] >= stepDuration[trackNumber] + swingDuration - lastSwingDuration[trackNumber]) {
+					lastStepTime[trackNumber] +=timeAdvance; //Just chaged below to > instead of >=
+					double totalStepDuration = stepDuration[trackNumber] + swingDuration - lastSwingDuration[trackNumber];
+					if(stepDuration[trackNumber] > 0.0 && lastStepTime[trackNumber] >= totalStepDuration) {
 						lastSwingDuration[trackNumber] = swingDuration;
 						lastStepsCount[trackNumber] = stepsCount[trackNumber];
+						lastStepTime[trackNumber] -= totalStepDuration;
+						lastStepTime[trackNumber] -= trunc(lastStepTime[trackNumber]);
+						// lastStepTime[trackNumber] = 0;
+						//  fprintf(stderr, "%i %5.10f %5.10f\n", trackNumber,totalStepDuration,lastStepTime[trackNumber]);
 						advanceBeat(trackNumber);					
 					}					
 				}	
@@ -1742,7 +1750,6 @@ struct QuadAlgorithmicRhythm : Module {
 	void advanceBeat(int trackNumber) {
        
 		beatIndex[trackNumber]++;
-		lastStepTime[trackNumber] = 0.0;
     
 		//End of Cycle
 		if(beatIndex[trackNumber] >= stepsCount[trackNumber]) {
