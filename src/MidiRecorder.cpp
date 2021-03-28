@@ -69,6 +69,7 @@ struct MidiRecorder : Module {
 
     bool midiNoteDisplayMode = false;
     bool recording = false;
+    bool firstEventReceived = false;
     uint16_t ticksPerQN = 960;
     float bpm;
     dsp::SchmittTrigger recordingTrigger;
@@ -82,7 +83,7 @@ struct MidiRecorder : Module {
     long totalTime = 0;
     int tickCount = 0;
     long ticksSinceLastEvent;
-    long stepCount;
+    double stepCount;
 
     uint8_t notes[CHANNEL_COUNT] = {0};
     uint8_t velocity[CHANNEL_COUNT] = {0};
@@ -278,7 +279,7 @@ struct MidiRecorder : Module {
 
 	void process(const ProcessArgs &args) override {
 
-        float sampleRate = APP->engine->getSampleRate();
+        float sampleRate = args.sampleRate;
         bpm = powf(2.0,clamp(inputs[BPM_INPUT].getVoltage(),-3.0,3.0)) * 120.0;
         float tickLength = (sampleRate * 60) / (bpm * ticksPerQN);
 
@@ -301,6 +302,7 @@ struct MidiRecorder : Module {
                 stepCount = 0;
                 midiEvents.resize(0);
                 eventCount = 0;
+                firstEventReceived = false;
             }
         }
         lights[RECORDING_LIGHT].value = recording;
@@ -309,10 +311,11 @@ struct MidiRecorder : Module {
         
         if(recording) {
             for(int i=0;i<nbrChannels;i++) {
-                int noteIn = inputs[GATE_INPUT].getVoltage(i);
+                int noteIn = inputs[GATE_INPUT].getVoltage(i);  
                 float accentIn = inputs[ACCENT_INPUT].getVoltage(i);
                 if(noteIn ^ currentNoteInputValue[i]) {
-
+                    firstEventReceived = true;
+                    currentNoteInputValue[i] = noteIn;
                     float rnd = ((float) rand()/RAND_MAX) - 0.5f;
 
                     MidiEvent newEvent;
@@ -323,23 +326,22 @@ struct MidiRecorder : Module {
                     midiEvents.push_back(newEvent);
                     eventCount = midiEvents.size();
 
-                    currentNoteInputValue[i] = noteIn;
                     ticksSinceLastEvent = 0;
                 }
-
             }
 
-            stepCount++;
-            if(stepCount > tickLength) {
-                stepCount = 0;
-                ticksSinceLastEvent++;
-                tickCount++;
-                if(tickCount >= ticksPerQN) {
-                    totalTime++;
-                    tickCount=0;
-                }                
+            if(firstEventReceived) {//Don't start counting until we get our first event, so there isn't a bunch of empty space
+                stepCount++;
+                if(stepCount >= tickLength) {
+                    stepCount -= tickLength;
+                    ticksSinceLastEvent++;
+                    tickCount++;
+                    if(tickCount >= ticksPerQN) {
+                        totalTime++;
+                        tickCount=0;
+                    }                
+                }
             }
-
         }
 	}
 
@@ -600,6 +602,8 @@ struct MidiRecorderWidget : ModuleWidget {
 			mi->addItem(OptionMenuItem("480", [module]() { return module->ticksPerQN == 480; }, [module]() { module->ticksPerQN = 480; }));
 			mi->addItem(OptionMenuItem("882", [module]() { return module->ticksPerQN == 882; }, [module]() { module->ticksPerQN = 882; }));
 			mi->addItem(OptionMenuItem("960", [module]() { return module->ticksPerQN == 960; }, [module]() { module->ticksPerQN = 960; }));
+			mi->addItem(OptionMenuItem("15360 (Cubase)", [module]() { return module->ticksPerQN == 15360; }, [module]() { module->ticksPerQN = 15360; }));
+			mi->addItem(OptionMenuItem("16384 (Bitwig)", [module]() { return module->ticksPerQN == 16384; }, [module]() { module->ticksPerQN = 16384; }));
 			//OptionsMenuItem::addToMenu(mi, menu);
 			menu->addChild(mi);
 		}

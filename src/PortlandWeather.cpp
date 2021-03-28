@@ -4,7 +4,8 @@
 #include "ui/ports.hpp"
 #include "ringbuffer.hpp"
 #include "StateVariableFilter.h"
-#include "filters/Compressor.hpp"
+#include "dsp-compressor/SimpleComp.h"
+#include "dsp-compressor/SimpleGain.h"
 #include <iostream>
 #include <time.h>
 
@@ -54,6 +55,10 @@ struct PortlandWeather : Module {
 		MUTE_TRIGGER_MODE_PARAM,
 		COMPRESSION_MODE_PARAM,
 		CLOCK_MULT_PARAM,
+		DUCKING_AMOUNT_PARAM,
+		DUCKING_FB_AMOUNT_PARAM,
+		PHASE_REVERSE_L_PARAM,
+		PHASE_REVERSE_R_PARAM,
 		NUM_PARAMS
 	};
 	enum InputIds {
@@ -90,6 +95,10 @@ struct PortlandWeather : Module {
 		IN_L_INPUT = TAP_DETUNE_CV_INPUT+NUM_TAPS,
 		IN_R_INPUT,
 		CLOCK_MULT_CV_INPUT,
+		DUCKING_AMOUNT_CV_INPUT,
+		DUCKING_FB_AMOUNT_CV_INPUT,
+		PHASE_REVERSE_L_INPUT,
+		PHASE_REVERSE_R_INPUT,
 		NUM_INPUTS
 	};
 	enum OutputIds {
@@ -105,7 +114,10 @@ struct PortlandWeather : Module {
 		COMPRESSION_MODE_LIGHT,
 		TAP_MUTED_LIGHT = COMPRESSION_MODE_LIGHT+3,
 		TAP_STACKED_LIGHT = TAP_MUTED_LIGHT+NUM_TAPS,
-		FREQ_LIGHT = TAP_STACKED_LIGHT+NUM_TAPS,		
+		FREQ_LIGHT = TAP_STACKED_LIGHT+NUM_TAPS,	
+		DUCKING_LIGHT,	
+		PHASE_REVERSE_L_LIGHT,
+		PHASE_REVERSE_R_LIGHT,
 		NUM_LIGHTS
 	};
 	enum FilterModes {
@@ -139,7 +151,7 @@ struct PortlandWeather : Module {
 
 	bool usingAlgorithm = false;
 	
-	Compressor compressor[CHANNELS];
+	chunkware_simple::SimpleComp compressor[CHANNELS + 1]; //2 = ducking
 
 	uint8_t compressionMode = COMPRESSION_NONE;
 
@@ -150,8 +162,8 @@ struct PortlandWeather : Module {
 
 		if (newMode == COMPRESSION_HARD) {
 			// reset to hard compression
-			for (uint8_t i = 0; i < 2; i++) {
-				compressor[i].setCoefficients(1.0f, 30.0f, 5.0f, 20.0f, sampleRate);
+			for (uint8_t i = 0; i < CHANNELS; i++) {
+				compressor[i].setRatio(20.0);
 			}
 		}
 
@@ -160,17 +172,23 @@ struct PortlandWeather : Module {
 
 	
 	inline float limit (float in, uint8_t which) {
+		compressor[which].process(in);
 		if (compressionMode == COMPRESSION_NONE) {
 			return in;
 		} else if (compressionMode == COMPRESSION_CLAMP) {
 			return clamp(in, -6.0f, 6.0f);
 		} else if (compressionMode == COMPRESSION_HARD) {
-			return compressor[which].process(in);
+			float gainReduction = compressor[which].getGainReduction();
+			double finalGainLin = chunkware_simple::dB2lin(-gainReduction);
+			return in * finalGainLin;
 		} else {
 			// adaptive compression
-			float ratio = fabs(in) / 4.0f;
-			compressor[which].setCoefficients(1.0f, 30.0f, 5.0f, ratio, sampleRate);
-			return compressor[which].process(in);
+			// float ratio = fabs(in) / 4.0f;
+			float ratio = 5; //hack
+			compressor[which].setRatio(ratio);
+			float gainReduction = compressor[which].getGainReduction();
+			double finalGainLin = chunkware_simple::dB2lin(-gainReduction);
+			return in * finalGainLin;
 		}
 	}
 
@@ -204,6 +222,8 @@ struct PortlandWeather : Module {
 
 	bool pingPong = false;
 	bool reverse = false;
+	bool phaseReverseL = false;
+	bool phaseReverseR = false;
 	int grainCount = 3; //NOTE Should be 3
 	float grainSize = 0.5f; //Can be between 0 and 1			
 	bool tapMuted[NUM_TAPS];
@@ -263,7 +283,7 @@ struct PortlandWeather : Module {
 	
 
 	
-	dsp::SchmittTrigger clockTrigger,pingPongTrigger,reverseTrigger,clearBufferTrigger,compressionModeTrigger,mutingTrigger[NUM_TAPS],stackingTrigger[NUM_TAPS];
+	dsp::SchmittTrigger clockTrigger,pingPongTrigger,reverseTrigger,clearBufferTrigger,compressionModeTrigger,phaseReverseLTrigger,phaseReverseRTrigger,mutingTrigger[NUM_TAPS],stackingTrigger[NUM_TAPS];
 	//double divisions[DIVISIONS] = {1/256.0,1/192.0,1/128.0,1/96.0,1/64.0,1/48.0,1/32.0,1/24.0,1/16.0,1/13.0,1/12.0,1/11.0,1/8.0,1/7.0,1/6.0,1/5.0,1/4.0,1/3.0,1/2.0,1/1.5,1,1/1.5,2.0,3.0,4.0,5.0,6.0,7.0,8.0,9.0,10.0,11.0,12.0,13.0,16.0,24.0};
 	//const char* divisionNames[DIVISIONS] = {"/256","/192","/128","/96","/64","/48","/32","/24","/16","/13","/12","/11","/8","/7","/6","/5","/4","/3","/2","/1.5","x 1","x 1.5","x 2","x 3","x 4","x 5","x 6","x 7","x 8","x 9","x 10","x 11","x 12","x 13","x 16","x 24"};
 	double division = 1;
@@ -339,6 +359,7 @@ struct PortlandWeather : Module {
 		}
 
 		configParam(MIX_PARAM, 0.0f, 1.0f, 0.5f,"Mix","%",0,100);
+		configParam(DUCKING_AMOUNT_PARAM, 0.0f, 1.0f, 0.0f,"Ducking","%",0,100);
 
 		configParam(REVERSE_TRIGGER_MODE_PARAM, 0.0f, 1.0f, 0.0f);
 		configParam(PING_PONG_TRIGGER_MODE_PARAM, 0.0f, 1.0f, 0.0f);
@@ -351,6 +372,17 @@ struct PortlandWeather : Module {
 
 		sampleRate = APP->engine->getSampleRate();
 		
+		for (uint8_t i = 0; i < CHANNELS + 1; i++) {
+			compressor[i].initRuntime();
+			compressor[i].setRatio(20.0);
+			compressor[i].setThresh(i < CHANNELS ? 45.0 : 5.0);
+			compressor[i].setKnee(0.0);
+			compressor[i].setAttack(1.0);
+			compressor[i].setRelease(30.0);
+			compressor[i].setAttackCurve(0.0);
+			compressor[i].setReleaseCurve(0.0);
+		}
+
 
 		for (int i = 0; i < NUM_TAPS; ++i) {
 			tapMuted[i] = false;
@@ -376,8 +408,9 @@ struct PortlandWeather : Module {
 	json_t *dataToJson() override {
 		json_t *rootJ = json_object();
 		json_object_set_new(rootJ, "pingPong", json_integer((int) pingPong));
-
 		json_object_set_new(rootJ, "reverse", json_integer((int) reverse));
+		json_object_set_new(rootJ, "phaseReverseL", json_boolean(phaseReverseL));
+		json_object_set_new(rootJ, "phaseReverseR", json_boolean(phaseReverseR));
 
 		json_object_set_new(rootJ, "compressionMode", json_integer((int) compressionMode));
 
@@ -407,6 +440,16 @@ struct PortlandWeather : Module {
 		json_t *sumR = json_object_get(rootJ, "reverse");
 		if (sumR) {
 			reverse = json_integer_value(sumR);			
+		}
+
+		json_t *sumPL = json_object_get(rootJ, "phaseReverseL");
+		if (sumPL) {
+			phaseReverseL = json_boolean_value(sumPL);			
+		}
+
+		json_t *sumPR = json_object_get(rootJ, "phaseReverseR");
+		if (sumPR) {
+			phaseReverseR = json_boolean_value(sumPR);			
 		}
 
 		json_t *sumCM = json_object_get(rootJ, "compressionMode");
@@ -601,6 +644,18 @@ struct PortlandWeather : Module {
 			reverseHistoryBuffer[1].clear();		
 		}
 
+		// Phase Reverse L
+		if (phaseReverseLTrigger.process(params[PHASE_REVERSE_L_PARAM].getValue())) {
+			phaseReverseL = !phaseReverseL;
+		}
+		lights[PHASE_REVERSE_L_LIGHT].value = phaseReverseL;
+
+		// Phase Reverse R
+		if (phaseReverseRTrigger.process(params[PHASE_REVERSE_R_PARAM].getValue())) {
+			phaseReverseR = !phaseReverseR;
+		}
+		lights[PHASE_REVERSE_R_LIGHT].value = phaseReverseR;
+
 
 		if(compressionModeTrigger.process(params[COMPRESSION_MODE_PARAM].getValue())) {
 			compressionMode = (compressionMode + 1) % NUM_COMPRESSION_MODES;
@@ -633,6 +688,8 @@ struct PortlandWeather : Module {
 		FloatFrame dryFrame = {0.0, 0.0};
 		FloatFrame inFrame = {0.0, 0.0};
 		for(int channel = 0;channel < CHANNELS;channel++) {
+			compressor[channel].setSampleRate(double(args.sampleRate));
+			
 			// Get input to delay block
 			feedbackTap[channel] = (int)clamp(params[FEEDBACK_TAP_L_PARAM+channel].getValue() + (inputs[FEEDBACK_TAP_L_INPUT+channel].isConnected() ? (inputs[FEEDBACK_TAP_L_INPUT+channel].getVoltage() / 10.0f) : 0),0.0f,17.0);
 			feedbackSlip[channel] = clamp(params[FEEDBACK_L_SLIP_PARAM+channel].getValue() + (inputs[FEEDBACK_L_SLIP_CV_INPUT+channel].isConnected() ? (inputs[FEEDBACK_L_SLIP_CV_INPUT+channel].getVoltage() / 10.0f) : 0),-0.5f,0.5);
@@ -653,6 +710,11 @@ struct PortlandWeather : Module {
 			feedbackPitch[channel] = floor(params[FEEDBACK_L_PITCH_SHIFT_PARAM+channel].getValue() + (inputs[FEEDBACK_L_PITCH_SHIFT_CV_INPUT+channel].isConnected() ? (inputs[FEEDBACK_L_PITCH_SHIFT_CV_INPUT+channel].getVoltage()*2.4f) : 0));
 			feedbackDetune[channel] = floor(params[FEEDBACK_L_DETUNE_PARAM+channel].getValue() + (inputs[FEEDBACK_L_DETUNE_CV_INPUT+channel].isConnected() ? (inputs[FEEDBACK_L_DETUNE_CV_INPUT+channel].getVoltage()*10.0f) : 0));		
 		}
+		float inLeval = std::max(abs(inFrame.l),abs(inFrame.r));		
+		compressor[2].setSampleRate(double(args.sampleRate));
+		compressor[2].process(inLeval);
+		double duckingGainReduction = compressor[2].getGainReduction();
+
 		FloatFrame dryToUse = dryFrame; //Normally the same as dry unless in reverse mode
 
 		// Push dry sample into reverse history buffers
@@ -967,6 +1029,12 @@ struct PortlandWeather : Module {
 		if(inputs[FEEDBACK_R_RETURN].isConnected()) {
 			feedbackValue.r = inputs[FEEDBACK_R_RETURN].getVoltage();
 		}
+
+		float fbDuckAmount = clamp(params[DUCKING_FB_AMOUNT_PARAM].getValue() + inputs[DUCKING_FB_AMOUNT_CV_INPUT].getVoltage() / 10.0f, 0.0f, 1.0f);
+		double fbdDucking = chunkware_simple::dB2lin(-duckingGainReduction * fbDuckAmount );
+
+		feedbackValue.l *= fbdDucking;
+		feedbackValue.r *= fbdDucking;
 		
 		if (pingPong) {
 			lastFeedback.l = limit(feedbackValue.r,1);
@@ -978,8 +1046,13 @@ struct PortlandWeather : Module {
 		}
 		
 		float mix = clamp(params[MIX_PARAM].getValue() + inputs[MIX_INPUT].getVoltage() / 10.0f, 0.0f, 1.0f);
-		float outL = crossfade(inFrame.l, wet.l, mix);  // Not sure this should be wet
-		float outR = crossfade(inFrame.r, wet.r, mix);  // Not sure this should be wet
+		float duckAmount = clamp(params[DUCKING_AMOUNT_PARAM].getValue() + inputs[DUCKING_AMOUNT_CV_INPUT].getVoltage() / 10.0f, 0.0f, 1.0f);			
+		double ducking = chunkware_simple::dB2lin(-duckingGainReduction * duckAmount );
+		float phaseL = phaseReverseL ? -1.0 : 1.0;
+		float phaseR = phaseReverseR ? -1.0 : 1.0;
+
+		float outL = crossfade(inFrame.l, wet.l * ducking * phaseL, mix);  // Not sure this should be wet
+		float outR = crossfade(inFrame.r, wet.r * ducking * phaseR, mix);  // Not sure this should be wet
 		
 		outputs[OUT_L_OUTPUT].setVoltage(outL);
 		outputs[OUT_R_OUTPUT].setVoltage(outR);
@@ -1166,7 +1239,7 @@ struct PWStatusDisplay : TransparentWidget {
 		for(int i=0;i<CHANNELS;i++) {
 			char text[128];
 			snprintf(text, sizeof(text), "%s", module->tapNames[feedbackTaps[i]]);
-			nvgText(args.vg, pos.x + i*46, pos.y, text, NULL);
+			nvgText(args.vg, pos.x + i*42, pos.y, text, NULL);
 		}
 	}
 
@@ -1180,7 +1253,7 @@ struct PWStatusDisplay : TransparentWidget {
 		snprintf(text, sizeof(text), "%-2.0f", feedbackPitch[0]);
 		nvgText(args.vg, pos.x , pos.y, text, NULL);
 		snprintf(text, sizeof(text), "%2.0f", feedbackPitch[1]);
-		nvgText(args.vg, pos.x + 45, pos.y, text, NULL);
+		nvgText(args.vg, pos.x + 42, pos.y, text, NULL);
 	}
 
 	void drawFeedbackDetune(const DrawArgs &args, Vec pos, float *feedbackDetune) {
@@ -1193,7 +1266,7 @@ struct PWStatusDisplay : TransparentWidget {
 		snprintf(text, sizeof(text), "%-2.0f", feedbackDetune[0]);
 		nvgText(args.vg, pos.x , pos.y, text, NULL);
 		snprintf(text, sizeof(text), "%2.0f", feedbackDetune[1]);
-		nvgText(args.vg, pos.x + 45, pos.y, text, NULL);
+		nvgText(args.vg, pos.x + 42, pos.y, text, NULL);
 	}
 
 
@@ -1293,6 +1366,7 @@ struct PortlandWeatherWidget : ModuleWidget {
 		addParam(createParam<RoundLargeFWKnob>(Vec(12, 230), module, PortlandWeather::GROOVE_AMOUNT_PARAM));
 
 		addParam(createParam<RoundLargeFWKnob>(Vec(217, 55), module, PortlandWeather::FEEDBACK_PARAM));
+		addParam(createParam<RoundLargeFWKnob>(Vec(287, 55), module, PortlandWeather::DUCKING_FB_AMOUNT_PARAM));
 		addParam(createParam<RoundLargeFWKnob>(Vec(349, 55), module, PortlandWeather::FEEDBACK_TONE_PARAM));
 
 		addParam(createParam<RoundFWSnapKnob>(Vec(223, 153), module, PortlandWeather::FEEDBACK_TAP_L_PARAM));
@@ -1307,14 +1381,19 @@ struct PortlandWeatherWidget : ModuleWidget {
 		
 		addParam(createParam<LEDButton>(Vec(236,116), module, PortlandWeather::REVERSE_PARAM));
 		addChild(createLight<LargeLight<BlueLight>>(Vec(237.5, 117.5), module, PortlandWeather::REVERSE_LIGHT));
-		addInput(createInput<PJ301MPort>(Vec(260, 112), module, PortlandWeather::REVERSE_INPUT));
+		addInput(createInput<FWPortInSmall>(Vec(260, 112), module, PortlandWeather::REVERSE_INPUT));
 
 		addParam( createParam<LEDButton>(Vec(371,116), module, PortlandWeather::PING_PONG_PARAM));
 		addChild(createLight<LargeLight<BlueLight>>(Vec(372.5, 117.5), module, PortlandWeather::PING_PONG_LIGHT));
-		addInput(createInput<PJ301MPort>(Vec(395, 112), module, PortlandWeather::PING_PONG_INPUT));
+		addInput(createInput<FWPortInSmall>(Vec(395, 112), module, PortlandWeather::PING_PONG_INPUT));
 
 		addParam(createParam<LEDButton>(Vec(332, 330), module, PortlandWeather::COMPRESSION_MODE_PARAM));
 		addChild(createLight<LargeLight<RedGreenBlueLight>>(Vec(333.5, 331.5), module, PortlandWeather::COMPRESSION_MODE_LIGHT));
+
+		addParam( createParam<LEDButton>(Vec(127, 340), module, PortlandWeather::PHASE_REVERSE_L_PARAM));
+		addChild(createLight<LargeLight<BlueLight>>(Vec(128.5, 341.5), module, PortlandWeather::PHASE_REVERSE_L_LIGHT));
+		addParam( createParam<LEDButton>(Vec(200, 340), module, PortlandWeather::PHASE_REVERSE_R_PARAM));
+		addChild(createLight<LargeLight<BlueLight>>(Vec(201.5, 341.5), module, PortlandWeather::PHASE_REVERSE_R_LIGHT));
 
 
 		//last tap isn't stacked
@@ -1349,35 +1428,36 @@ struct PortlandWeatherWidget : ModuleWidget {
 		addParam( createParam<HCKSS>(Vec(437 + 14, 37), module, PortlandWeather::STACK_TRIGGER_MODE_PARAM));
 		addParam( createParam<HCKSS>(Vec(437 + 14, 77), module, PortlandWeather::MUTE_TRIGGER_MODE_PARAM));
 
+		addInput(createInput<FWPortInSmall>(Vec(55, 66), module, PortlandWeather::CLOCK_MULT_CV_INPUT));
+		addInput(createInput<FWPortInSmall>(Vec(146, 66), module, PortlandWeather::CLOCK_DIVISION_CV_INPUT));
+		addInput(createInput<FWPortInSmall>(Vec(55, 110), module, PortlandWeather::TIME_CV_INPUT));
 		
+		addInput(createInput<FWPortInSmall>(Vec(55, 180), module, PortlandWeather::GROOVE_TYPE_CV_INPUT));
+		addInput(createInput<FWPortInSmall>(Vec(55, 235), module, PortlandWeather::GROOVE_AMOUNT_CV_INPUT));
 
 
-		addInput(createInput<PJ301MPort>(Vec(55, 66), module, PortlandWeather::CLOCK_MULT_CV_INPUT));
-		addInput(createInput<PJ301MPort>(Vec(146, 66), module, PortlandWeather::CLOCK_DIVISION_CV_INPUT));
-		addInput(createInput<PJ301MPort>(Vec(55, 110), module, PortlandWeather::TIME_CV_INPUT));
-		
-		addInput(createInput<PJ301MPort>(Vec(55, 180), module, PortlandWeather::GROOVE_TYPE_CV_INPUT));
-		addInput(createInput<PJ301MPort>(Vec(55, 235), module, PortlandWeather::GROOVE_AMOUNT_CV_INPUT));
+		addInput(createInput<FWPortInSmall>(Vec(260, 60), module, PortlandWeather::FEEDBACK_INPUT));
+		addInput(createInput<FWPortInSmall>(Vec(325, 60), module, PortlandWeather::DUCKING_FB_AMOUNT_CV_INPUT));
+		addInput(createInput<FWPortInSmall>(Vec(395, 60), module, PortlandWeather::FEEDBACK_TONE_INPUT));
 
-
-		addInput(createInput<PJ301MPort>(Vec(260, 60), module, PortlandWeather::FEEDBACK_INPUT));
-		addInput(createInput<PJ301MPort>(Vec(395, 60), module, PortlandWeather::FEEDBACK_TONE_INPUT));
-
-		addInput(createInput<PJ301MPort>(Vec(260, 157), module, PortlandWeather::FEEDBACK_TAP_L_INPUT));
-		addInput(createInput<PJ301MPort>(Vec(395, 157), module, PortlandWeather::FEEDBACK_TAP_R_INPUT));
-		addInput(createInput<PJ301MPort>(Vec(260, 197), module, PortlandWeather::FEEDBACK_L_SLIP_CV_INPUT));
-		addInput(createInput<PJ301MPort>(Vec(395, 197), module, PortlandWeather::FEEDBACK_R_SLIP_CV_INPUT));
-		addInput(createInput<PJ301MPort>(Vec(260, 237), module, PortlandWeather::FEEDBACK_L_PITCH_SHIFT_CV_INPUT));
-		addInput(createInput<PJ301MPort>(Vec(395, 237), module, PortlandWeather::FEEDBACK_R_PITCH_SHIFT_CV_INPUT));
-		addInput(createInput<PJ301MPort>(Vec(260, 277), module, PortlandWeather::FEEDBACK_L_DETUNE_CV_INPUT));
-		addInput(createInput<PJ301MPort>(Vec(395, 277), module, PortlandWeather::FEEDBACK_R_DETUNE_CV_INPUT));
+		addInput(createInput<FWPortInSmall>(Vec(260, 157), module, PortlandWeather::FEEDBACK_TAP_L_INPUT));
+		addInput(createInput<FWPortInSmall>(Vec(395, 157), module, PortlandWeather::FEEDBACK_TAP_R_INPUT));
+		addInput(createInput<FWPortInSmall>(Vec(260, 197), module, PortlandWeather::FEEDBACK_L_SLIP_CV_INPUT));
+		addInput(createInput<FWPortInSmall>(Vec(395, 197), module, PortlandWeather::FEEDBACK_R_SLIP_CV_INPUT));
+		addInput(createInput<FWPortInSmall>(Vec(260, 237), module, PortlandWeather::FEEDBACK_L_PITCH_SHIFT_CV_INPUT));
+		addInput(createInput<FWPortInSmall>(Vec(395, 237), module, PortlandWeather::FEEDBACK_R_PITCH_SHIFT_CV_INPUT));
+		addInput(createInput<FWPortInSmall>(Vec(260, 277), module, PortlandWeather::FEEDBACK_L_DETUNE_CV_INPUT));
+		addInput(createInput<FWPortInSmall>(Vec(395, 277), module, PortlandWeather::FEEDBACK_R_DETUNE_CV_INPUT));
 
 
 		addParam(createParam<CKD6>(Vec(25, 282), module, PortlandWeather::CLEAR_BUFFER_PARAM));
 
 
-		addParam(createParam<RoundLargeFWKnob>(Vec(110, 275), module, PortlandWeather::MIX_PARAM));
-		addInput(createInput<PJ301MPort>(Vec(155, 280), module, PortlandWeather::MIX_INPUT));
+		addParam(createParam<RoundLargeFWKnob>(Vec(75, 273), module, PortlandWeather::MIX_PARAM));
+		addInput(createInput<FWPortInSmall>(Vec(120, 280), module, PortlandWeather::MIX_INPUT));
+
+		addParam(createParam<RoundLargeFWKnob>(Vec(140, 273), module, PortlandWeather::DUCKING_AMOUNT_PARAM));
+		addInput(createInput<FWPortInSmall>(Vec(185, 280), module, PortlandWeather::DUCKING_AMOUNT_CV_INPUT));
 
 
 		addInput(createInput<PJ301MPort>(Vec(15, 330), module, PortlandWeather::CLOCK_INPUT));

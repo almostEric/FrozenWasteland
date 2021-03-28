@@ -353,15 +353,15 @@ struct MrBlueSkyWidget : ModuleWidget {
 
 		addParam(createParam<RoundFWKnob>(Vec(156, 50), module, MrBlueSky::ATTACK_PARAM));
 		addParam(createParam<RoundFWKnob>(Vec(216, 50), module, MrBlueSky::DECAY_PARAM));
-		addParam(createParam<RoundReallySmallFWKnob>(Vec(190, 75), module, MrBlueSky::CARRIER_Q_CV_ATTENUVERTER_PARAM));
-		addParam(createParam<RoundReallySmallFWKnob>(Vec(250, 75), module, MrBlueSky::MODIFER_Q_CV_ATTENUVERTER_PARAM));
+		addParam(createParam<RoundReallySmallFWKnob>(Vec(190, 75), module, MrBlueSky::ATTACK_CV_ATTENUVERTER_PARAM));
+		addParam(createParam<RoundReallySmallFWKnob>(Vec(250, 75), module, MrBlueSky::DECAY_CV_ATTENUVERTER_PARAM));
 		addInput(createInput<FWPortInSmall>(Vec(190, 52), module, MrBlueSky::ATTACK_INPUT));
 		addInput(createInput<FWPortInSmall>(Vec(250, 52), module, MrBlueSky::DECAY_INPUT));
 
 		addParam(createParam<RoundFWKnob>(Vec(156, 130), module, MrBlueSky::CARRIER_Q_PARAM));
 		addParam(createParam<RoundFWKnob>(Vec(216, 130), module, MrBlueSky::MOD_Q_PARAM));
-		addParam(createParam<RoundReallySmallFWKnob>(Vec(190, 155), module, MrBlueSky::ATTACK_CV_ATTENUVERTER_PARAM));
-		addParam(createParam<RoundReallySmallFWKnob>(Vec(250, 155), module, MrBlueSky::DECAY_CV_ATTENUVERTER_PARAM));
+		addParam(createParam<RoundReallySmallFWKnob>(Vec(190, 155), module, MrBlueSky::CARRIER_Q_CV_ATTENUVERTER_PARAM));
+		addParam(createParam<RoundReallySmallFWKnob>(Vec(250, 155), module, MrBlueSky::MODIFER_Q_CV_ATTENUVERTER_PARAM));
 		addInput(createInput<FWPortInSmall>(Vec(190, 132), module, MrBlueSky::CARRIER_Q_INPUT));
 		addInput(createInput<FWPortInSmall>(Vec(250, 132), module, MrBlueSky::MOD_Q_INPUT));
 

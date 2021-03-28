@@ -52,6 +52,17 @@ A collection of unusual plugins that will add a certain coolness to your patches
 - Can be a bit fussy to create harmonically "rich" waves, but playing with the "Closed" setting can find some sweet spots
 - Use the Noise parameter to add a "breathy" quality to wave
 
+## Filling Station
+![Filling Station](./doc/fs.png)
+- Allows pattern based mapping of 4 inputs to 16 outputs
+- This is ideal for creating complex sounding drum fills using multiple sound sources (but not limited to that)
+- Click on a box and then drag up/down to set the output - you need to start with the left most box and then work right
+- Each time an input is triggered, the matched output on that step is triggered, then the step for that input advances
+- If repeat mode is "None", once the pattern is finished, nothing will trigger until it is reset (with the RESET button or input)
+- In "Highest Step" repeat mode, the pattern will auto-reset when the track with the most steps reaches its end
+- In "Last Step" repeat mode, the pattern will auto-reset when all tracks have completed
+- In "Independent" repeat mode, each track will reset when it reaches its end.
+
 ## The Gardener
 ![The Gardener](./doc/tg.png)
 - Master controller for Seeds of Change (and other sequencers)
@@ -212,6 +223,8 @@ A collection of unusual plugins that will add a certain coolness to your patches
 - Ping Pong feeds the L feedback into the right channel and vise versa
 - FB Send and Returns allow you to insert FX into the feedback loop
 - If engaged, the compressor can limit the feedback.  Red = hard clip, Yellow = -6db compression, Green = adaptive compression
+- Ducking allows the input signal to control the volume of the delay, ducking is also available in the feedback loop
+- The θ buttons next to the outputs allow the delay signal in that channel to be phase reversed. In headphones, this can make the delay sound like it is behind you 
 - In Context Menu, the Grain Number and Grain Size control how the all the pitch shifters work. "RAW" is uses one grain sample but without the a triangle window
 
 ## PW Algorithm Expander

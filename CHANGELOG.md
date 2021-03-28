@@ -1,3 +1,9 @@
+### 1.18.0 (2011-03-28)
+- Added Filling Station Module
+- Added ducking and phase reversal to Portland Weather
+- Fixed timing issue in QAR with combining polyrhythms with irrational rhythms
+- Filed knob issue in Mr. Blue Sky
+
 ### 1.17.1 (2011-02-20)
 - Fixed some bugs and timing issues in QAR
 - Fixed Seriously Slow EG Bug

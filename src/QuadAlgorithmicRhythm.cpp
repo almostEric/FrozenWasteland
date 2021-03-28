@@ -24,7 +24,7 @@
 #define PASSTHROUGH_LEFT_VARIABLE_COUNT 13
 #define PASSTHROUGH_RIGHT_VARIABLE_COUNT 9
 #define STEP_LEVEL_PARAM_COUNT 4
-#define TRACK_LEVEL_PARAM_COUNT TRACK_COUNT * 12
+#define TRACK_LEVEL_PARAM_COUNT TRACK_COUNT * 14
 #define PASSTHROUGH_OFFSET EXPANDER_MAX_STEPS * TRACK_COUNT * STEP_LEVEL_PARAM_COUNT + TRACK_LEVEL_PARAM_COUNT
 
 using namespace frozenwasteland::dsp;
@@ -186,16 +186,19 @@ struct QuadAlgorithmicRhythm : Module {
 	std::string trackPatternName[TRACK_COUNT] = {""};
 
 	float probabilityMatrix[TRACK_COUNT][MAX_STEPS];
-	float swingMatrix[TRACK_COUNT][MAX_STEPS];
-	float beatWarpMatrix[TRACK_COUNT][MAX_STEPS];
+	double swingMatrix[TRACK_COUNT][MAX_STEPS];
+	double beatWarpMatrix[TRACK_COUNT][MAX_STEPS];
+	float beatRotateMatrix[TRACK_COUNT][MAX_STEPS];
 	float irrationalRhythmMatrix[TRACK_COUNT][MAX_STEPS];
+	double totalIrrationalAdjustment[TRACK_COUNT];
 	float probabilityGroupModeMatrix[TRACK_COUNT][MAX_STEPS];
 	int probabilityGroupTriggered[TRACK_COUNT];
 	int probabilityGroupFirstStep[TRACK_COUNT];
 	float workingProbabilityMatrix[TRACK_COUNT][MAX_STEPS];
-	float workingSwingMatrix[TRACK_COUNT][MAX_STEPS];
-	float workingBeatWarpMatrix[TRACK_COUNT][MAX_STEPS];
-	float workingIrrationalRhythmMatrix[TRACK_COUNT][MAX_STEPS];
+	double workingSwingMatrix[TRACK_COUNT][MAX_STEPS];
+	double workingBeatWarpMatrix[TRACK_COUNT][MAX_STEPS];
+	float workingBeatRotateMatrix[TRACK_COUNT][MAX_STEPS];
+	double workingIrrationalRhythmMatrix[TRACK_COUNT][MAX_STEPS];
 
 	int beatIndex[TRACK_COUNT];
 	int beatLocation[TRACK_COUNT][MAX_STEPS] = {{0}};
@@ -249,7 +252,7 @@ struct QuadAlgorithmicRhythm : Module {
 	float beatWarping[TRACK_COUNT];
 	int beatWarpingPosition[TRACK_COUNT];
 
-
+	float beatRotatingAmount[TRACK_COUNT];
 
 
 	float expanderOutputValue[TRACK_COUNT];
@@ -524,6 +527,7 @@ struct QuadAlgorithmicRhythm : Module {
 			probabilityGroupTriggered[i] = PENDING_PGTS;
 			beatWarping[i] = 1.0;
 			beatWarpingPosition[i] = 8;
+			beatRotatingAmount[i] = 0.0;
 			extraParameterValue[i] = 1.0;
 
 			expanderOutputValue[i] = 0.0;
@@ -531,6 +535,7 @@ struct QuadAlgorithmicRhythm : Module {
 			expanderEocValue[i] = 0.0;
 			lastExpanderEocValue[i] = 0.0;
 			
+			totalIrrationalAdjustment[i] = 1.0;
 			running[i] = true;
 			for(int j = 0; j < MAX_STEPS; j++) {
 				probabilityMatrix[i][j] = 1.0;
@@ -638,7 +643,7 @@ struct QuadAlgorithmicRhythm : Module {
 		bool rightExpanderPresent = (rightExpander.module 
 		&& (rightExpander.module->model == modelQuadAlgorithmicRhythm || rightExpander.module->model == modelQARWellFormedRhythmExpander || 
 			rightExpander.module->model == modelQARProbabilityExpander || rightExpander.module->model == modelQARGrooveExpander || 
-			rightExpander.module->model == modelQARWarpedSpaceExpander || rightExpander.module->model == modelQARIrrationalityExpander));
+			rightExpander.module->model == modelQARWarpedSpaceExpander || rightExpander.module->model == modelQARIrrationalityExpander ));
 		if(rightExpanderPresent)
 		{			
 			float *messagesFromExpander = (float*)rightExpander.consumerMessage;
@@ -1272,6 +1277,21 @@ struct QuadAlgorithmicRhythm : Module {
 			QARExpanderDisconnectReset = true;
 			float *messagesFromExpanders = (float*)rightExpander.consumerMessage;
 
+			//Process Beat Rotating Stuff									
+			// for(int i = 0; i < TRACK_COUNT; i++) {
+				// for(int j = 0; j < stepsCount[i]; j++) { //reset all warping
+				// 	workingBeatWarpMatrix[i][j] = 1.0;
+				// }
+
+				// if(messagesFromExpanders[TRACK_COUNT * 12 + i] > 0) { // 0 is track not selected
+				// 	beatRotateAmount[i] = (int)messagesFromExpanders[TRACK_COUNT * 13 + i];
+				// 	float trackStepCount = (float)stepsCount[i];
+				// 	for(int j = 0; j < stepsCount[i]; j++) {	
+				// 	}
+				// }
+			// }
+
+
 			//Process Probability Expander Stuff						
 			for(int i = 0; i < TRACK_COUNT; i++) {
 				probabilityGroupFirstStep[i] = -1;
@@ -1443,12 +1463,16 @@ struct QuadAlgorithmicRhythm : Module {
 			//set calculated probability and swing 
 			//switch to std::copy
 			for(int i = 0; i < TRACK_COUNT; i++) {
+				totalIrrationalAdjustment[i] = 1.0;
+				double runningTotal = 0.0;
 				for(int j = 0; j < stepsCount[i]; j++) { 
 					probabilityMatrix[i][j] = workingProbabilityMatrix[i][j];
 					swingMatrix[i][j] = workingSwingMatrix[i][j];
 					beatWarpMatrix[i][j] = workingBeatWarpMatrix[i][j];
 					irrationalRhythmMatrix[i][j] = workingIrrationalRhythmMatrix[i][j];
+					runningTotal += irrationalRhythmMatrix[i][j];
 				}
+				totalIrrationalAdjustment[i] = runningTotal / stepsCount[i];
 			}
 											
 		} else {
@@ -1456,7 +1480,9 @@ struct QuadAlgorithmicRhythm : Module {
 				for(int i = 0; i < TRACK_COUNT; i++) {
 					subBeatIndex[i] = 0;
 					beatWarping[i] = 1.0;
+					beatRotatingAmount[i] = 0.0;
 					extraParameterValue[i] = 1.0;
+					totalIrrationalAdjustment[i] = 1.0;
 					for(int j = 0; j < stepsCount[i]; j++) { //reset all probabilities
 						probabilityMatrix[i][j] = 1;
 						swingMatrix[i][j] = 0;
@@ -1534,21 +1560,20 @@ struct QuadAlgorithmicRhythm : Module {
 				       (algorithmMatrix[trackNumber] == WELL_FORMED_ALGO ? wellFormedStepDurations[trackNumber][beatIndex[trackNumber]] : 1.0) * 
 					   beatWarpMatrix[trackNumber][beatIndex[trackNumber]] * irrationalRhythmMatrix[trackNumber][beatIndex[trackNumber]] : 1.0;
 
-				//if(stepsCount[trackNumber] > 0 && constantTime && !trackIndependent[trackNumber] && beatIndex[trackNumber] >= 0 ) {
 				if(stepsCount[trackNumber] > 0 && constantTime && !trackIndependent[trackNumber]  ) {
-					double constantNumerator = masterTrack <= TRACK_COUNT ? (algorithmMatrix[masterTrack-1] != WELL_FORMED_ALGO ? masterStepCount : wellFormedTrackDuration[masterTrack-1]) : metaStepCount;
+					double constantNumerator = masterTrack <= TRACK_COUNT ? (algorithmMatrix[masterTrack-1] != WELL_FORMED_ALGO ? masterStepCount : wellFormedTrackDuration[masterTrack-1]) * totalIrrationalAdjustment[masterTrack] : metaStepCount;
 					double constantDenominator;
 					if(algorithmMatrix[trackNumber] != WELL_FORMED_ALGO) {
 						double stepsChangeAdjustemnt = (double)(lastStepsCount[trackNumber] / (double)stepsCount[trackNumber]); 
-						constantDenominator = (double)stepsCount[trackNumber] * stepsChangeAdjustemnt;
+						constantDenominator = (double)stepsCount[trackNumber] * totalIrrationalAdjustment[trackNumber] * stepsChangeAdjustemnt;
 					} else {
-						constantDenominator = wellFormedTrackDuration[trackNumber];
+						constantDenominator = wellFormedTrackDuration[trackNumber] * totalIrrationalAdjustment[trackNumber];
 					}
 					double constantTimeAdjustment = constantNumerator / constantDenominator;
 
 					stepDuration[trackNumber] = duration * beatSizeAdjustment * constantTimeAdjustment; //Constant Time scales duration based on a master track
 					// if(trackNumber == 1) {
-						// fprintf(stderr, "%i %5.10f\n", trackNumber,stepDuration[trackNumber]);
+						// fprintf(stderr, "%i %5.10f\n", trackNumber,totalIrrationalAdjustment[trackNumber]);
 					// }
 				}
 				else {
@@ -1571,7 +1596,7 @@ struct QuadAlgorithmicRhythm : Module {
 						lastStepTime[trackNumber] -= trunc(lastStepTime[trackNumber]);
 						// lastStepTime[trackNumber] = 0;
 						//  fprintf(stderr, "%i %5.10f %5.10f\n", trackNumber,totalStepDuration,lastStepTime[trackNumber]);
-						advanceBeat(trackNumber);					
+						advanceBeat(trackNumber, args.sampleRate);					
 					}					
 				}	
 			}			
@@ -1583,19 +1608,19 @@ struct QuadAlgorithmicRhythm : Module {
 
 
             //Send Out Beat	
-			float beatOutputValue = beatPulse[trackNumber].process(1.0 / args.sampleRate) ? 10.0 : 0;
+			float beatOutputValue = beatPulse[trackNumber].process(args.sampleTime) ? 10.0 : 0;
 			if(slavedQARPresent)
 				beatOutputValue =  clamp(beatOutputValue + expanderOutputValue[trackNumber],0.0f,10.0f);
             outputs[(trackNumber * 3) + OUTPUT_1].setVoltage(beatOutputValue);	
 
             //Send out Accent
-			float accentOutputValue = accentPulse[trackNumber].process(1.0 / args.sampleRate) ? 10.0 : 0;
+			float accentOutputValue = accentPulse[trackNumber].process(args.sampleTime) ? 10.0 : 0;
 			if(slavedQARPresent)
 				accentOutputValue = clamp(accentOutputValue + expanderAccentValue[trackNumber] ,0.0f,10.0f);
             outputs[(trackNumber * 3) + ACCENT_OUTPUT_1].setVoltage(accentOutputValue);	
 
 			//Send out End of Cycle
-			float eocOutputValue = eocPulse[trackNumber].process(1.0 / args.sampleRate) ? 10.0 : 0;
+			float eocOutputValue = eocPulse[trackNumber].process(args.sampleTime) ? 10.0 : 0;
 			outputs[(trackNumber * 3) + EOC_OUTPUT_1].setVoltage(eocOutputValue);				
 			
 			
@@ -1747,15 +1772,16 @@ struct QuadAlgorithmicRhythm : Module {
 		}
 	}
 
-	void advanceBeat(int trackNumber) {
+	void advanceBeat(int trackNumber,float sampleRate) {
        
 		beatIndex[trackNumber]++;
+		float pulseLength = std::floor(sampleRate/1000) / sampleRate;
     
 		//End of Cycle
 		if(beatIndex[trackNumber] >= stepsCount[trackNumber]) {
 			beatIndex[trackNumber] = 0;
 			beatCountAtIndex[trackNumber] = -1;
-			eocPulse[trackNumber].trigger(1e-3);
+			eocPulse[trackNumber].trigger(pulseLength);
 			probabilityGroupTriggered[trackNumber] = PENDING_PGTS;
 			if(chainMode != CHAIN_MODE_NONE) {
 				running[trackNumber] = false;
@@ -1786,13 +1812,13 @@ struct QuadAlgorithmicRhythm : Module {
 
         //Create Beat Trigger    
         if(beatMatrix[trackNumber][beatIndex[trackNumber]] == true && probabilityResult && running[trackNumber] && !muted) {
-            beatPulse[trackNumber].trigger(1e-3);
+            beatPulse[trackNumber].trigger(pulseLength);
 			beatCountAtIndex[trackNumber]++;
         } 
 
         //Create Accent Trigger
         if(accentMatrix[trackNumber][beatIndex[trackNumber]] == true && probabilityResult && running[trackNumber] && !muted) {
-            accentPulse[trackNumber].trigger(1e-3);
+            accentPulse[trackNumber].trigger(pulseLength);
         }
 
 		if(useGaussianDistribution[trackNumber]) {
