@@ -22,6 +22,10 @@ struct FillingStation : Module {
         SCENE_INPUT,
         TRACK_INPUT,
         RESET_INPUT = TRACK_INPUT + NBR_INPUTS,
+        SHIFT_UP_INPUT,
+        SHIFT_DOWN_INPUT,
+        FLIP_TRACKS_INPUT,
+        FLIP_STEPS_INPUT,
         NUM_INPUTS
 	};
 
@@ -56,7 +60,7 @@ struct FillingStation : Module {
 	int8_t trackIndex[NBR_INPUTS] = {-1};
 	int8_t trackLength[NBR_INPUTS] = {0};
 
-    dsp::SchmittTrigger clockTrigger[NBR_INPUTS],resetTrigger,repeatModeTrigger[NBR_REPEAT_MODES];
+    dsp::SchmittTrigger clockTrigger[NBR_INPUTS],resetTrigger,repeatModeTrigger[NBR_REPEAT_MODES],shiftUpTrigger,shiftDownTrigger,flipTracksTrigger,flipStepsTrigger;
     dsp::PulseGenerator beatPulse[NBR_OUTPUTS],eocPulse;
 	
 	FillingStation() {
@@ -176,6 +180,66 @@ struct FillingStation : Module {
             }
         }
 
+        if(shiftUpTrigger.process(inputs[SHIFT_UP_INPUT].getVoltage())) {
+            for (int s = 0; s<MAX_STEPS;s++) {
+                int v = trackMatrix[currentSceneNbr][0][s];
+                for(int i= 0;i<NBR_INPUTS-1;i++) {
+                    trackMatrix[currentSceneNbr][i][s]= trackMatrix[currentSceneNbr][i+1][s];
+                }
+                trackMatrix[currentSceneNbr][NBR_INPUTS-1][s] = v;
+            }
+            int l = trackLength[0];                
+            for(int i= 0;i<NBR_INPUTS-1;i++) {
+                trackLength[i] = trackLength[i+1];
+            }
+            trackLength[NBR_INPUTS-1] = l;
+        }
+
+        if(shiftDownTrigger.process(inputs[SHIFT_DOWN_INPUT].getVoltage())) {
+            for (int s = 0; s<MAX_STEPS;s++) {
+                int v = trackMatrix[currentSceneNbr][NBR_INPUTS-1][s];
+                for(int i= NBR_INPUTS-1;i>0;i--) {
+                    trackMatrix[currentSceneNbr][i][s]= trackMatrix[currentSceneNbr][i-1][s];
+                }
+                trackMatrix[currentSceneNbr][0][s] = v;
+            }
+            int l = trackLength[NBR_INPUTS-1];                
+            for(int i= NBR_INPUTS-1;i>0;i--) {
+                trackLength[i] = trackLength[i-1];
+            }
+            trackLength[0] = l;
+        }
+
+        if(flipTracksTrigger.process(inputs[FLIP_TRACKS_INPUT].getVoltage())) {
+            for (int s = 0; s<MAX_STEPS;s++) {
+                for(int i=0;i<(NBR_INPUTS/2);i++) {
+                    int v = trackMatrix[currentSceneNbr][i][s];
+                    trackMatrix[currentSceneNbr][i][s]= trackMatrix[currentSceneNbr][NBR_INPUTS-i-1][s];
+                    trackMatrix[currentSceneNbr][NBR_INPUTS-i-1][s] = v;
+                }
+            }
+            for(int i=0;i<(NBR_INPUTS/2);i++) {
+                int l = trackLength[i];                
+                trackLength[i] = trackLength[NBR_INPUTS-i-1];
+                trackLength[NBR_INPUTS-i-1] = l;
+            }
+        }
+
+        if(flipStepsTrigger.process(inputs[FLIP_STEPS_INPUT].getVoltage())) {
+            for(int i=0;i<NBR_INPUTS;i++) {
+                // fprintf(stderr, "I got clicked! %i %i\n",i,trackLength[i]);
+                if(trackLength[i] > 0) {
+                    for (int s = 0; s<(trackLength[i]/2);s++) {
+                        int v = trackMatrix[currentSceneNbr][i][s];
+                        trackMatrix[currentSceneNbr][i][s]= trackMatrix[currentSceneNbr][i][trackLength[i]-s-1];
+                        trackMatrix[currentSceneNbr][i][trackLength[i]-s-1] = v;
+                    }
+                }
+            }
+        }
+
+
+
         for(int i=0;i<NBR_REPEAT_MODES;i++) {
             if(repeatModeTrigger[i].process(params[REPEAT_MODE_SELECT_PARAM+i].getValue())) {
                 repeatMode = i;
@@ -194,6 +258,7 @@ struct FillingStation : Module {
         }
 
         bool atEnd = false;
+        bool trackEnd = false;
         for(int i=0;i<NBR_INPUTS;i++) {
                 // fprintf(stderr, "I got clicked! %i %i %i\n",i,trackIndex[i],trackLength[i]);
             if(clockTrigger[i].process(inputs[TRACK_INPUT + i].getVoltage())) {
@@ -205,6 +270,7 @@ struct FillingStation : Module {
                 }
                 if(repeatMode == REPEAT_MODE_INDEPENDENT && trackIndex[i] >= trackLength[i] - 1) {
                     trackIndex[i] = -1;
+                    trackEnd = true;
                 } 
                 if(repeatMode == REPEAT_MODE_LAST_STEP) {
                     bool stepsLeft = false;
@@ -222,8 +288,12 @@ struct FillingStation : Module {
             }
         }
         for(int o=0;o<NBR_OUTPUTS;o++) {
-            outputs[o].setVoltage(beatPulse[o].process(args.sampleTime) ? 10.0 : 0);			
+            outputs[TRACK_OUTPUT + o].setVoltage(beatPulse[o].process(args.sampleTime) ? 10.0 : 0);			
         }
+        if(atEnd || trackEnd) {
+            eocPulse.trigger(1e-3);
+        }
+        outputs[EOC_OUTPUT].setVoltage(eocPulse.process(args.sampleTime) ? 10.0 : 0);			        
         if(atEnd) {
             for(int i=0;i<NBR_INPUTS;i++) {
                 trackIndex[i] = -1;
@@ -413,8 +483,8 @@ struct FillingStationWidget : ModuleWidget {
         addParam(createParam<RoundFWSnapKnob>(Vec(20, 160), module, FillingStation::SCENE_PARAM));
         addInput(createInput<FWPortInSmall>(Vec(56, 172), module, FillingStation::SCENE_INPUT));
 
-		addParam(createParam<TL1105>(Vec(88, 328), module, FillingStation::RESET_PARAM));
-        addInput(createInput<FWPortInSmall>(Vec(108, 328), module, FillingStation::RESET_INPUT));
+		addParam(createParam<TL1105>(Vec(78, 328), module, FillingStation::RESET_PARAM));
+        addInput(createInput<FWPortInSmall>(Vec(98, 328), module, FillingStation::RESET_INPUT));
 
 		for(int i=0; i<NBR_INPUTS;i++) {
 			addInput(createInput<FWPortInSmall>(Vec(34, 250 + i*26), module, FillingStation::TRACK_INPUT + i));
@@ -426,9 +496,18 @@ struct FillingStationWidget : ModuleWidget {
         }
 
 		for(int i=0; i<NBR_REPEAT_MODES;i++) {
-			addParam(createParam<LEDButton>(Vec(160, 250 + i *26), module, FillingStation::REPEAT_MODE_SELECT_PARAM+i));
-			addChild(createLight<LargeLight<GreenLight>>(Vec(161.5, 251.5+i*26), module, FillingStation::REPEAT_MODE_LIGHT+i));
+			addParam(createParam<LEDButton>(Vec(140, 250 + i *26), module, FillingStation::REPEAT_MODE_SELECT_PARAM+i));
+			addChild(createLight<LargeLight<GreenLight>>(Vec(141.5, 251.5+i*26), module, FillingStation::REPEAT_MODE_LIGHT+i));
         }
+
+        addInput(createInput<FWPortInSmall>(Vec(149, 148), module, FillingStation::SHIFT_UP_INPUT));
+        addInput(createInput<FWPortInSmall>(Vec(149, 180), module, FillingStation::SHIFT_DOWN_INPUT));
+        addInput(createInput<FWPortInSmall>(Vec(188, 180), module, FillingStation::FLIP_TRACKS_INPUT));
+        addInput(createInput<FWPortInSmall>(Vec(209, 180), module, FillingStation::FLIP_STEPS_INPUT));
+
+
+        addOutput(createOutput<FWPortOutSmall>(Vec(223, 328), module, FillingStation::EOC_OUTPUT));
+
 	}
 };
 

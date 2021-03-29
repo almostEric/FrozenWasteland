@@ -1,3 +1,6 @@
+### 1.18.1 (2011-03-29)
+- Added EOC, pattern shifting and flipping to Filling Station
+ 
 ### 1.18.0 (2011-03-28)
 - Added Filling Station Module
 - Added ducking and phase reversal to Portland Weather
