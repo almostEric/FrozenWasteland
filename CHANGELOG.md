@@ -1,13 +1,16 @@
-### 1.18.1 (2011-03-29)
+### 1.18.2 (2021-04-03)
+- Added PN Octave Probability Module
+
+### 1.18.1 (2021-03-29)
 - Added EOC, pattern shifting and flipping to Filling Station
  
-### 1.18.0 (2011-03-28)
+### 1.18.0 (2021-03-28)
 - Added Filling Station Module
 - Added ducking and phase reversal to Portland Weather
 - Fixed timing issue in QAR with combining polyrhythms with irrational rhythms
 - Filed knob issue in Mr. Blue Sky
 
-### 1.17.1 (2011-02-20)
+### 1.17.1 (2021-02-20)
 - Fixed some bugs and timing issues in QAR
 - Fixed Seriously Slow EG Bug
 - Added new Coincidence Comparator mode to PLL

@@ -12,11 +12,16 @@
 #include <string>
 
 #define POLYPHONY 16
+#define MAX_OCTAVES 11
 #define MAX_NOTES 12
 #define MAX_SCALES 42
 #define MAX_TEMPERMENTS 3
 #define NUM_SHIFT_MODES 3
 #define TRIGGER_DELAY_SAMPLES 5
+
+#define EXPANDER_MOTHER_SEND_MESSAGE_COUNT 3 + 2 //3 chords plus curent note and octave
+#define EXPANDER_MOTHER_RECEIVE_MESSAGE_COUNT 7 + 11*12
+
 
 using namespace frozenwasteland::dsp;
 
@@ -93,9 +98,11 @@ struct ProbablyNote : Module {
 		SHIFT_STEP_BY_V_OCTAVE_ABSOLUTE,
 	};
 
+	
+
 	// Expander
-	float consumerMessage[12] = {};// this module must read from here
-	float producerMessage[12] = {};// mother will write into here
+	//float leftMessages[2][EXPANDER_MOTHER_SEND_MESSAGE_COUNT + EXPANDER_MOTHER_RECEIVE_MESSAGE_COUNT] = {};
+	float rightMessages[2][EXPANDER_MOTHER_SEND_MESSAGE_COUNT + EXPANDER_MOTHER_RECEIVE_MESSAGE_COUNT] = {};
 
 
 
@@ -291,6 +298,10 @@ struct ProbablyNote : Module {
 	int fifthOffset,seventhOffset,thirdOffset;
 	int currentPolyphony = 1;
     
+	float octaveProbability[MAX_NOTES][MAX_OCTAVES] = {{0.0}};
+	float totalAverage[MAX_NOTES] = {0};
+	int currentRandomOctave = 0;
+
 
 	ProbablyNote() {
 		// Configure the module
@@ -324,8 +335,8 @@ struct ProbablyNote : Module {
             configParam(ProbablyNote::NOTE_WEIGHT_PARAM + i, 0.0, 1.0, 0.0,"Note Weight");		
         }
 
-		rightExpander.producerMessage = producerMessage;
-		rightExpander.consumerMessage = consumerMessage;
+		rightExpander.producerMessage = rightMessages[0];
+		rightExpander.consumerMessage = rightMessages[1];
 
 		onReset();
 	}
@@ -334,11 +345,11 @@ struct ProbablyNote : Module {
         return (1 - t) * v0 + t * v1;
     }
 
-    int weightedProbability(float *weights,float scaling,float randomIn) {
+    int weightedProbability(float *weights,int count, float scaling,float randomIn) {
         double weightTotal = 0.0f;
 		double linearWeight, logWeight, weight;
             
-        for(int i = 0;i <MAX_NOTES; i++) {
+        for(int i = 0;i <count; i++) {
 			linearWeight = weights[i];
 			logWeight = (std::pow(10,weights[i]) - 1) / 10.0;
 			weight = lerp(linearWeight,logWeight,scaling);
@@ -347,7 +358,7 @@ struct ProbablyNote : Module {
 
         int chosenWeight = -1;        
         double rnd = randomIn * weightTotal;
-        for(int i = 0;i <MAX_NOTES;i++ ) {
+        for(int i = 0;i <count;i++ ) {
 			linearWeight = weights[i];
 			logWeight = (std::pow(10,weights[i]) - 1) / 10.0;
 			weight = lerp(linearWeight,logWeight,scaling);
@@ -514,9 +525,12 @@ struct ProbablyNote : Module {
 	void process(const ProcessArgs &args) override {
 
 		//Get Expander Info
-		if(rightExpander.module && rightExpander.module->model == modelPNChordExpander) {	
+		if(rightExpander.module && (rightExpander.module->model == modelPNChordExpander || rightExpander.module->model == modelPNOctaveProbabilityExpander)) {	
+			
+			
 			generateChords = true;		
 			float *messagesFromExpander = (float*)rightExpander.consumerMessage;
+			
 			dissonance5Prbability = messagesFromExpander[0];
 			dissonance7Prbability = messagesFromExpander[1];
 			suspensionProbability = messagesFromExpander[2];
@@ -527,10 +541,24 @@ struct ProbablyNote : Module {
 			//Send outputs to slaves if present		
 			float *messageToExpander = (float*)(rightExpander.module->leftExpander.producerMessage);
 			
-			messageToExpander[0] = thirdOffset; 
-			messageToExpander[1] = fifthOffset; 
-			messageToExpander[2] = seventhOffset; 
-			rightExpander.module->leftExpander.messageFlipRequested = true;					
+			messageToExpander[EXPANDER_MOTHER_RECEIVE_MESSAGE_COUNT + 0] = thirdOffset; 
+			messageToExpander[EXPANDER_MOTHER_RECEIVE_MESSAGE_COUNT + 1] = fifthOffset; 
+			messageToExpander[EXPANDER_MOTHER_RECEIVE_MESSAGE_COUNT + 2] = seventhOffset;
+
+
+			for(int i = 0;i < MAX_NOTES;i++) {
+				totalAverage[i] = 0.0;
+				for (int j = 0;j<MAX_OCTAVES;j++) {
+					octaveProbability[i][j] = messagesFromExpander[7 + i*MAX_OCTAVES + j];
+					totalAverage[i] += octaveProbability[i][j];
+				}
+			}
+			
+			//Add current note and octave
+			messageToExpander[EXPANDER_MOTHER_RECEIVE_MESSAGE_COUNT + 3] = probabilityNote[0]; 
+			messageToExpander[EXPANDER_MOTHER_RECEIVE_MESSAGE_COUNT + 4] = currentRandomOctave; 
+
+			rightExpander.module->leftExpander.messageFlipRequested = true;			
 		} else {
 			generateChords = false;
 		}
@@ -828,7 +856,7 @@ struct ProbablyNote : Module {
 						actualProbability[channel][lastRandomNote[channel]] = 0; //Last note has no chance of repeating 						
 					}
 			
-					int randomNote = weightedProbability(actualProbability[channel],params[WEIGHT_SCALING_PARAM].getValue(), rnd);
+					int randomNote = weightedProbability(actualProbability[channel],MAX_NOTES,params[WEIGHT_SCALING_PARAM].getValue(), rnd);
 					if(randomNote == -1) { //Couldn't find a note, so find first active
 						bool noteOk = false;
 						int notesSearched = 0;
@@ -849,6 +877,16 @@ struct ProbablyNote : Module {
 							octaveAdjust = -1.0;
 						if(randomNote < currentNote[channel] && currentNote[channel] - randomNote > lowerSpread)
 							octaveAdjust = 1.0;
+					}
+
+					if(totalAverage[probabilityNote[channel]] > 0 ) {
+						float rndO = ((float) rand()/RAND_MAX);
+						int randomOctave = weightedProbability(octaveProbability[probabilityNote[channel]],MAX_OCTAVES, params[WEIGHT_SCALING_PARAM].getValue(), rndO);
+						octaveAdjust += (5-randomOctave);
+						// fprintf(stderr, "random Octave:%i  total Average:%f\n",randomOctave,totalAverage[probabilityNote[channel]]);
+						if(channel == 0) {
+							currentRandomOctave = randomOctave; 
+						}
 					}
 
 					float pitchRandomness = 0;

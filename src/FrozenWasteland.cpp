@@ -23,7 +23,6 @@ void init(rack::Plugin *p) {
 	p->addModel(modelFillingStation);
 	p->addModel(modelTheGardener);
 	p->addModel(modelHairPick);
-	//p->addModel(modelHoldingPattern);
 	p->addModel(modelJustAPhaser);
 	p->addModel(modelLissajousLFO);
 	p->addModel(modelManicCompression);
@@ -38,13 +37,12 @@ void init(rack::Plugin *p) {
 	p->addModel(modelProbablyNoteArabic);
 	p->addModel(modelProbablyNoteBP);
 	p->addModel(modelProbablyNoteMN);
-	//p->addModel(modelProbablyNoteIndian);
 	p->addModel(modelPNChordExpander);
+	p->addModel(modelPNOctaveProbabilityExpander);
 	p->addModel(modelPWAlgorithmicExpander);
 	p->addModel(modelPWGridControlExpander);
 	p->addModel(modelPWTapBreakoutExpander);
 	p->addModel(modelQuadAlgorithmicRhythm);
-	//p->addModel(modelQARBeatRotatorExpander);
 	p->addModel(modelQARGrooveExpander);
 	p->addModel(modelQARIrrationalityExpander);
 	p->addModel(modelQARProbabilityExpander);

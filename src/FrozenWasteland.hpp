@@ -32,6 +32,7 @@ extern Model *modelProbablyNoteBP;
 extern Model *modelProbablyNoteMN;
 //extern Model *modelProbablyNoteIndian;
 extern Model *modelPNChordExpander;
+extern Model *modelPNOctaveProbabilityExpander;
 extern Model *modelPWAlgorithmicExpander;
 extern Model *modelPWGridControlExpander;
 extern Model *modelPWTapBreakoutExpander;

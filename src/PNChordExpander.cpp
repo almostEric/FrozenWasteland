@@ -2,14 +2,12 @@
 #include "ui/knobs.hpp"
 #include "ui/ports.hpp"
 
+#define EXPANDER_MOTHER_SEND_MESSAGE_COUNT 3 + 2 //3 chords plus curent note and octave
+#define EXPANDER_MOTHER_RECEIVE_MESSAGE_COUNT 7 + 11*12
+
+
 struct PNChordExpander : Module {
 	enum ParamIds {
-        // MIN_NOTE_PARAM,
-		// MIN_NOTE_CV_ATTENUVERTER_PARAM,
-        // MAX_NOTE_PARAM,
-		// MAX_NOTE_CV_ATTENUVERTER_PARAM,
-        // NOTE_NUMBER_BALANCE_PARAM,
-		// NOTE_NUMBER_BALANCE_CV_ATTENUVERTER_PARAM,
 		DISSONANCE5_PROBABILITY_PARAM,
 		DISSONANCE5_PROBABILITY_CV_ATTENUVERTER_PARAM,
 		DISSONANCE7_PROBABILITY_PARAM,
@@ -21,9 +19,6 @@ struct PNChordExpander : Module {
 		NUM_PARAMS
 	};
 	enum InputIds {
-        // MIN_NOTE_PARAM,
-        // MAX_NOTE_PARAM,
-        // NOTE_NUMBER_BALANCE_PARAM,
 		DISSONANCE5_PROBABILITY_INPUT,
 		DISSONANCE7_PROBABILITY_INPUT,
 		SUSPENSIONS_PROBABILITY_INPUT,
@@ -34,9 +29,6 @@ struct PNChordExpander : Module {
 		NUM_INPUTS
 	};
 	enum OutputIds {
-		// TEST1_OUTPUT,
-		// TEST2_OUTPUT,
-		// TEST3_OUTPUT,
 		NUM_OUTPUTS
 	};
 	enum LightIds {
@@ -47,8 +39,8 @@ struct PNChordExpander : Module {
 	float dissonance5Probability,dissonance7Probability,suspensionProbability;
 	
 	// Expander
-	float consumerMessage[12] = {};// this module must read from here
-	float producerMessage[12] = {};// mother will write into here
+	float leftMessages[2][EXPANDER_MOTHER_SEND_MESSAGE_COUNT + EXPANDER_MOTHER_RECEIVE_MESSAGE_COUNT] = {};
+	float rightMessages[2][EXPANDER_MOTHER_SEND_MESSAGE_COUNT + EXPANDER_MOTHER_RECEIVE_MESSAGE_COUNT] = {};
 
 
 	float thirdOffset,fifthOffset,seventhOffset;
@@ -70,21 +62,42 @@ struct PNChordExpander : Module {
 		configParam(INVERSION_PROBABILITY_PARAM, 0.0f, 1.0f, 0.0f,"Inversions Probability","%",0,100);
 		configParam(INVERSION_PROBABILITY_CV_ATTENUVERTER_PARAM, -1.0, 1.0, 0.0,"Inverions Probability CV Attenuation","%",0,100);
 
-		leftExpander.producerMessage = producerMessage;
-		leftExpander.consumerMessage = consumerMessage;
+		leftExpander.producerMessage = leftMessages[0];
+		leftExpander.consumerMessage = leftMessages[1];
 
-
+		rightExpander.producerMessage = rightMessages[0];
+		rightExpander.consumerMessage = rightMessages[1];
     }
 
 	
 
 	void process(const ProcessArgs &args) override {
 		
-		bool motherPresent = (leftExpander.module && leftExpander.module->model == modelProbablyNote);
+		bool motherPresent = (leftExpander.module && (leftExpander.module->model == modelProbablyNote || leftExpander.module->model == modelPNOctaveProbabilityExpander));
 		if (motherPresent) {
-			// To Mother
-			//float *producerMessage = (float*) leftExpander.producerMessage;
+			float *messagesFromMother = (float*)leftExpander.consumerMessage;
 			float *messagesToMother = (float*)leftExpander.module->rightExpander.producerMessage;
+
+			//Initalize
+			std::fill(messagesToMother, messagesToMother+EXPANDER_MOTHER_SEND_MESSAGE_COUNT + EXPANDER_MOTHER_RECEIVE_MESSAGE_COUNT, 0.0);
+
+			//If another expander is present, get its values (we can overwrite them)
+			bool anotherExpanderPresent = (rightExpander.module && (rightExpander.module->model == modelPNOctaveProbabilityExpander));
+			if(anotherExpanderPresent)
+			{			
+				float *messagesFromExpander = (float*)rightExpander.consumerMessage;
+				float *messageToExpander = (float*)(rightExpander.module->leftExpander.producerMessage);
+				
+				//PN Pass through left
+				std::copy(messagesFromExpander,messagesFromExpander+EXPANDER_MOTHER_RECEIVE_MESSAGE_COUNT,messagesToMother);		
+
+				//PN Pass through right
+				std::copy(messagesFromMother+EXPANDER_MOTHER_RECEIVE_MESSAGE_COUNT,messagesFromMother+EXPANDER_MOTHER_RECEIVE_MESSAGE_COUNT + EXPANDER_MOTHER_SEND_MESSAGE_COUNT,
+									messageToExpander+EXPANDER_MOTHER_RECEIVE_MESSAGE_COUNT);			
+
+				rightExpander.module->leftExpander.messageFlipRequested = true;
+			}
+
 
 			dissonance5Probability = clamp(params[DISSONANCE5_PROBABILITY_PARAM].getValue() + (inputs[DISSONANCE5_PROBABILITY_INPUT].isConnected() ? inputs[DISSONANCE5_PROBABILITY_INPUT].getVoltage() / 10 * params[DISSONANCE5_PROBABILITY_CV_ATTENUVERTER_PARAM].getValue() : 0.0f),0.0,1.0f);
 			dissonance7Probability = clamp(params[DISSONANCE7_PROBABILITY_PARAM].getValue() + (inputs[DISSONANCE7_PROBABILITY_INPUT].isConnected() ? inputs[DISSONANCE7_PROBABILITY_INPUT].getVoltage() / 10 * params[DISSONANCE7_PROBABILITY_CV_ATTENUVERTER_PARAM].getValue() : 0.0f),0.0,1.0f);
@@ -102,24 +115,15 @@ struct PNChordExpander : Module {
 
 
 			// From Mother	
-			float *messagesFromMother = (float*)leftExpander.consumerMessage;		
-			thirdOffset = messagesFromMother[0]; 
-			fifthOffset = messagesFromMother[1]; 
-			seventhOffset = messagesFromMother[2]; 
-
-			//thirdOffset = 1;
-			
-			//leftExpander.messageFlipRequested = true;
-			
+			thirdOffset = messagesFromMother[EXPANDER_MOTHER_RECEIVE_MESSAGE_COUNT + 0]; 
+			fifthOffset = messagesFromMother[EXPANDER_MOTHER_RECEIVE_MESSAGE_COUNT + 1]; 
+			seventhOffset = messagesFromMother[EXPANDER_MOTHER_RECEIVE_MESSAGE_COUNT + 2]; 			
 					
 		} else {
 			thirdOffset = 2.0f;
 			fifthOffset = 2.0f;
 			seventhOffset = 2.0f;
 		}	
-		// outputs[TEST1_OUTPUT].setVoltage(thirdOffset);
-		// outputs[TEST2_OUTPUT].setVoltage(fifthOffset);
-		// outputs[TEST3_OUTPUT].setVoltage(seventhOffset);
 		
 	}
 
