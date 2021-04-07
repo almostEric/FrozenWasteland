@@ -4,12 +4,14 @@
 
 #define NBR_SCENES 8
 #define TRACK_COUNT 4
-#define MAX_STEPS 18
+#define MAX_STEPS 73
+#define EXPANDER_MAX_STEPS 18
 #define NUM_TAPS 16
 #define PASSTHROUGH_LEFT_VARIABLE_COUNT 13
 #define PASSTHROUGH_RIGHT_VARIABLE_COUNT 9
-#define TRACK_LEVEL_PARAM_COUNT TRACK_COUNT * 14
-#define PASSTHROUGH_OFFSET MAX_STEPS * TRACK_COUNT * 3 + TRACK_LEVEL_PARAM_COUNT
+#define STEP_LEVEL_PARAM_COUNT 4
+#define TRACK_LEVEL_PARAM_COUNT TRACK_COUNT * 15
+#define PASSTHROUGH_OFFSET EXPANDER_MAX_STEPS * TRACK_COUNT * STEP_LEVEL_PARAM_COUNT + TRACK_LEVEL_PARAM_COUNT
 
 
 struct QARWarpedSpaceExpander : Module {
@@ -23,12 +25,17 @@ struct QARWarpedSpaceExpander : Module {
         WARP_AMOUNT_CV_ATTENUVETER_PARAM,
         WARP_POSITION_PARAM,
         WARP_POSITION_CV_ATTENUVETER_PARAM,
+        WARP_LENGTH_PARAM,
+        WARP_LENGTH_CV_ATTENUVETER_PARAM,
+		WS_ON_OFF_PARAM,
 		NUM_PARAMS
 	};
 
 	enum InputIds {
         WARP_AMOUNT_INPUT,
         WARP_POSITION_INPUT,
+		WARP_LENGTH_INPUT,
+        WS_ON_OFF_INPUT,
 		NUM_INPUTS
 	};
 
@@ -42,28 +49,32 @@ struct QARWarpedSpaceExpander : Module {
 		TRACK_2_WARP_ENABELED_LIGHT,
 		TRACK_3_WARP_ENABELED_LIGHT,
 		TRACK_4_WARP_ENABELED_LIGHT,
+		WS_ON_LIGHT,
 		NUM_LIGHTS 
 	};
 
 
 
-	const char* stepNames[MAX_STEPS] {"1","2","3","4","5","6","7","8","9","10","11","12","13","14","15","16","17","18"};
+	const char* stepNames[EXPANDER_MAX_STEPS] {"1","2","3","4","5","6","7","8","9","10","11","12","13","14","15","16","17","18"};
 
 	// Expander
 	float leftMessages[2][PASSTHROUGH_OFFSET + PASSTHROUGH_LEFT_VARIABLE_COUNT + PASSTHROUGH_RIGHT_VARIABLE_COUNT] = {};
 	float rightMessages[2][PASSTHROUGH_OFFSET + PASSTHROUGH_LEFT_VARIABLE_COUNT + PASSTHROUGH_RIGHT_VARIABLE_COUNT] = {};
 
-	float sceneData[NBR_SCENES][8] = {{0}};
+	float sceneData[NBR_SCENES][11] = {{0}};
 	int sceneChangeMessage = 0;
 
+	float warpAmount = 0;
+	float warpPosition = 0;
+	float warpLength = 0;
 
     float lerp(float v0, float v1, float t) {
 	  return (1 - t) * v0 + t * v1;
 	}
 
 	
-	dsp::SchmittTrigger trackWarpTrigger[TRACK_COUNT];
-	bool trackWarpSelected[TRACK_COUNT];
+	dsp::SchmittTrigger trackWarpTrigger[TRACK_COUNT],wsEnableTrigger;
+	bool trackWarpSelected[TRACK_COUNT],wsEnabled = true;
 
 	
 	QARWarpedSpaceExpander() {
@@ -74,6 +85,9 @@ struct QARWarpedSpaceExpander : Module {
 
         configParam(WARP_POSITION_PARAM, 0.0, MAX_STEPS-1, 0,"Warp Position");
         configParam(WARP_POSITION_CV_ATTENUVETER_PARAM, -1.0, 1.0, 0.0,"Warp Position CV Attenuation","%",0,100);		
+
+        configParam(WARP_LENGTH_PARAM, 1.0, MAX_STEPS, 1,"Warp Length");
+        configParam(WARP_LENGTH_CV_ATTENUVETER_PARAM, -1.0, 1.0, 0.0,"Warp Length CV Attenuation","%",0,100);		
 
         
 		leftExpander.producerMessage = leftMessages[0];
@@ -87,7 +101,9 @@ struct QARWarpedSpaceExpander : Module {
 
 	json_t *dataToJson() override {
 		json_t *rootJ = json_object();
-		
+
+		json_object_set_new(rootJ, "wsEnabled", json_boolean(wsEnabled));
+
 		for(int i=0;i<TRACK_COUNT;i++) {
 			//This is so stupid!!! why did he not use strings?
 			char buf[100];
@@ -106,7 +122,10 @@ struct QARWarpedSpaceExpander : Module {
 	}
 
 	void dataFromJson(json_t *rootJ) override {
-			
+		json_t *wseJ = json_object_get(rootJ, "wsEnabled");
+		if (wseJ)
+			wsEnabled = json_boolean_value(wseJ);			
+
 		for(int i=0;i<TRACK_COUNT;i++) {
 			char buf[100];
 			strcpy(buf, "trackWarpActive");
@@ -130,22 +149,28 @@ struct QARWarpedSpaceExpander : Module {
 	}
 
 	void saveScene(int scene) {
-		sceneData[scene][0] = params[WARP_AMOUNT_PARAM].getValue();
-		sceneData[scene][1] = params[WARP_AMOUNT_CV_ATTENUVETER_PARAM].getValue();
-		sceneData[scene][2] = params[WARP_POSITION_PARAM].getValue();
-		sceneData[scene][3] = params[WARP_POSITION_CV_ATTENUVETER_PARAM].getValue();
+		sceneData[scene][0] = wsEnabled;
+		sceneData[scene][1] = params[WARP_AMOUNT_PARAM].getValue();
+		sceneData[scene][2] = params[WARP_AMOUNT_CV_ATTENUVETER_PARAM].getValue();
+		sceneData[scene][3] = params[WARP_POSITION_PARAM].getValue();
+		sceneData[scene][4] = params[WARP_POSITION_CV_ATTENUVETER_PARAM].getValue();
+		sceneData[scene][5] = params[WARP_LENGTH_PARAM].getValue();
+		sceneData[scene][6] = params[WARP_LENGTH_CV_ATTENUVETER_PARAM].getValue();
 		for(int trackNumber=0;trackNumber<TRACK_COUNT;trackNumber++) {
-			sceneData[scene][trackNumber+4] = trackWarpSelected[trackNumber];
+			sceneData[scene][trackNumber+7] = trackWarpSelected[trackNumber];
 		}
 	}
 
 	void loadScene(int scene) {
-		params[WARP_AMOUNT_PARAM].setValue(sceneData[scene][0]);
-		params[WARP_AMOUNT_CV_ATTENUVETER_PARAM].setValue(sceneData[scene][1]);
-		params[WARP_POSITION_PARAM].setValue(sceneData[scene][2]);
-		params[WARP_POSITION_CV_ATTENUVETER_PARAM].setValue(sceneData[scene][3]);
+		wsEnabled = sceneData[scene][0];
+		params[WARP_AMOUNT_PARAM].setValue(sceneData[scene][1]);
+		params[WARP_AMOUNT_CV_ATTENUVETER_PARAM].setValue(sceneData[scene][2]);
+		params[WARP_POSITION_PARAM].setValue(sceneData[scene][3]);
+		params[WARP_POSITION_CV_ATTENUVETER_PARAM].setValue(sceneData[scene][4]);
+		params[WARP_LENGTH_PARAM].setValue(sceneData[scene][5]);
+		params[WARP_LENGTH_CV_ATTENUVETER_PARAM].setValue(sceneData[scene][6]);
 		for(int trackNumber=0;trackNumber<TRACK_COUNT;trackNumber++) {
-			trackWarpSelected[trackNumber] = sceneData[scene][trackNumber+4];
+			trackWarpSelected[trackNumber] = sceneData[scene][trackNumber+7];
 		}
 	}
 
@@ -157,10 +182,15 @@ struct QARWarpedSpaceExpander : Module {
 			}
 			lights[TRACK_1_WARP_ENABELED_LIGHT+i].value = trackWarpSelected[i];
 		}        
+		if (wsEnableTrigger.process(params[WS_ON_OFF_PARAM].getValue() + inputs[WS_ON_OFF_INPUT].getVoltage())) {
+			wsEnabled = !wsEnabled;
+		}
+		lights[WS_ON_LIGHT].value = wsEnabled;
 
 		bool motherPresent = (leftExpander.module && (leftExpander.module->model == modelQuadAlgorithmicRhythm || leftExpander.module->model == modelQARWellFormedRhythmExpander || 
 								leftExpander.module->model == modelQARProbabilityExpander || leftExpander.module->model == modelQARGrooveExpander || 
-								leftExpander.module->model == modelQARIrrationalityExpander || leftExpander.module->model == modelPWAlgorithmicExpander));
+								leftExpander.module->model == modelQARWarpedSpaceExpander || leftExpander.module->model == modelQARIrrationalityExpander || 
+								leftExpander.module->model == modelPWAlgorithmicExpander));
 		//lights[CONNECTED_LIGHT].value = motherPresent;
 		if (motherPresent) {
 			// To Mother
@@ -181,7 +211,7 @@ struct QARWarpedSpaceExpander : Module {
 			//If another expander is present, get its values (we can overwrite them)
 			bool anotherExpanderPresent = (rightExpander.module && (rightExpander.module->model == modelQARWellFormedRhythmExpander || rightExpander.module->model == modelQARGrooveExpander || 
 											rightExpander.module->model == modelQARProbabilityExpander || rightExpander.module->model == modelQARIrrationalityExpander || 
-											rightExpander.module->model == modelQuadAlgorithmicRhythm));
+											rightExpander.module->model == modelQARWarpedSpaceExpander || rightExpander.module->model == modelQuadAlgorithmicRhythm));
 			if(anotherExpanderPresent)
 			{			
 				float *messagesFromExpander = (float*)rightExpander.consumerMessage;
@@ -204,13 +234,15 @@ struct QARWarpedSpaceExpander : Module {
 			}
 
 
-            float warpAmount = clamp(params[WARP_AMOUNT_PARAM].getValue() + (inputs[WARP_AMOUNT_INPUT].isConnected() ? inputs[WARP_AMOUNT_INPUT].getVoltage() * 0.6f * params[WARP_AMOUNT_CV_ATTENUVETER_PARAM].getValue() : 0.0f),1.0,6.0);
-            float warpPosition = clamp(params[WARP_POSITION_PARAM].getValue() + (inputs[WARP_POSITION_INPUT].isConnected() ? inputs[WARP_POSITION_INPUT].getVoltage() / 1.8 * params[WARP_POSITION_CV_ATTENUVETER_PARAM].getValue() : 0.0f),0.0f,17.0);
+            warpAmount = clamp(params[WARP_AMOUNT_PARAM].getValue() + (inputs[WARP_AMOUNT_INPUT].isConnected() ? inputs[WARP_AMOUNT_INPUT].getVoltage() * 0.6f * params[WARP_AMOUNT_CV_ATTENUVETER_PARAM].getValue() : 0.0f),1.0,6.0);
+            warpPosition = clamp(params[WARP_POSITION_PARAM].getValue() + (inputs[WARP_POSITION_INPUT].isConnected() ? inputs[WARP_POSITION_INPUT].getVoltage() / (MAX_STEPS / 10.0) * params[WARP_POSITION_CV_ATTENUVETER_PARAM].getValue() : 0.0f),0.0f,MAX_STEPS-1.0);
+            warpLength = clamp(params[WARP_LENGTH_PARAM].getValue() + (inputs[WARP_LENGTH_INPUT].isConnected() ? inputs[WARP_LENGTH_INPUT].getVoltage() / (MAX_STEPS / 10.0) * params[WARP_LENGTH_CV_ATTENUVETER_PARAM].getValue() : 0.0f),0.0f,MAX_STEPS-1.0);
             for (int i = 0; i < TRACK_COUNT; i++) {
-                if(trackWarpSelected[i]) {
+                if(trackWarpSelected[i] && wsEnabled) {
                     messagesToMother[TRACK_COUNT * 9 + i] = 1;
                     messagesToMother[TRACK_COUNT * 10 + i] = warpAmount;                    
                     messagesToMother[TRACK_COUNT * 11 + i] = warpPosition;                    
+                    messagesToMother[TRACK_COUNT * 12 + i] = warpLength;                    
 				} 
 			}
 					
@@ -246,15 +278,56 @@ struct QARWarpedSpaceExpanderDisplay : TransparentWidget {
 		font = APP->window->loadFont(asset::plugin(pluginInstance, "res/fonts/DejaVuSansMono.ttf"));
 	}
 
+	void drawWarp(const DrawArgs &args, Vec pos, float warp) {
+		nvgFontSize(args.vg, 14);
+		nvgFontFaceId(args.vg, font->handle);
+		nvgTextLetterSpacing(args.vg, -1);
+
+		//nvgFillColor(args.vg, nvgRGBA(0x00, 0xff, 0x00, 0xff));
+		nvgFillColor(args.vg, nvgRGBA(0x4a, 0xc3, 0x27, 0xff));
+		char text[128];
+		snprintf(text, sizeof(text), " %1.2f", warp);
+		nvgTextAlign(args.vg,NVG_ALIGN_RIGHT);
+		nvgText(args.vg, pos.x, pos.y, text, NULL);
+	}
 
 
-	
+	void drawStartPosition(const DrawArgs &args, Vec pos, int startPosition) {
+		nvgFontSize(args.vg, 14);
+		nvgFontFaceId(args.vg, font->handle);
+		nvgTextLetterSpacing(args.vg, 0);
+
+		//nvgFillColor(args.vg, nvgRGBA(0x00, 0xff, 0x00, 0xff));
+		nvgFillColor(args.vg, nvgRGBA(0x4a, 0xc3, 0x27, 0xff));
+		char text[128];
+		snprintf(text, sizeof(text), " %i", startPosition);  
+		nvgTextAlign(args.vg,NVG_ALIGN_RIGHT);
+		nvgText(args.vg, pos.x, pos.y, text, NULL);
+	}
+
+	void drawLength(const DrawArgs &args, Vec pos, int length) {
+		nvgFontSize(args.vg, 14);
+		nvgFontFaceId(args.vg, font->handle);
+		nvgTextLetterSpacing(args.vg, 0);
+
+		//nvgFillColor(args.vg, nvgRGBA(0x00, 0xff, 0x00, 0xff));
+		nvgFillColor(args.vg, nvgRGBA(0x4a, 0xc3, 0x27, 0xff));
+		char text[128];
+		snprintf(text, sizeof(text), " %i", length);
+		nvgTextAlign(args.vg,NVG_ALIGN_RIGHT);
+		nvgText(args.vg, pos.x, pos.y, text, NULL);
+	}
 
 
 	void draw(const DrawArgs &args) override {
 		if (!module)
 			return; 		
+
+		drawWarp(args, Vec(97, 78), module->warpAmount);
+		drawStartPosition(args, Vec(97, 158), module->warpPosition);
+		drawLength(args, Vec(97, 238), module->warpLength);
 	}
+
 };
 
 struct QARWarpedSpaceExpanderWidget : ModuleWidget {
@@ -279,21 +352,27 @@ struct QARWarpedSpaceExpanderWidget : ModuleWidget {
 
 
 	
-        
+		addParam(createParam<LEDButton>(Vec(52, 294), module, QARWarpedSpaceExpander::WS_ON_OFF_PARAM));
+        addChild(createLight<LargeLight<GreenLight>>(Vec(53.5, 295.5), module, QARWarpedSpaceExpander::WS_ON_LIGHT));
+        addInput(createInput<FWPortInSmall>(Vec(77, 294), module, QARWarpedSpaceExpander::WS_ON_OFF_INPUT));
 
          for(int i=0;i<TRACK_COUNT; i++) {
-			addParam(createParam<LEDButton>(Vec(7 + i*24, 298), module, QARWarpedSpaceExpander::TRACK_1_WARP_ENABLED_PARAM + i));
-			addChild(createLight<LargeLight<BlueLight>>(Vec(8.5 + i*24, 299.5), module, QARWarpedSpaceExpander::TRACK_1_WARP_ENABELED_LIGHT + i));
+			addParam(createParam<LEDButton>(Vec(7 + i*24, 333), module, QARWarpedSpaceExpander::TRACK_1_WARP_ENABLED_PARAM + i));
+			addChild(createLight<LargeLight<BlueLight>>(Vec(8.5 + i*24, 334.5), module, QARWarpedSpaceExpander::TRACK_1_WARP_ENABELED_LIGHT + i));
 		}
 
 
-        addParam(createParam<RoundFWKnob>(Vec(22, 59), module, QARWarpedSpaceExpander::WARP_AMOUNT_PARAM));
-        addInput(createInput<FWPortInSmall>(Vec(57, 64), module, QARWarpedSpaceExpander::WARP_AMOUNT_INPUT));
-        addParam(createParam<RoundSmallFWKnob>(Vec(54, 87), module, QARWarpedSpaceExpander::WARP_AMOUNT_CV_ATTENUVETER_PARAM));
+        addParam(createParam<RoundFWKnob>(Vec(12, 59), module, QARWarpedSpaceExpander::WARP_AMOUNT_PARAM));
+        addInput(createInput<FWPortInSmall>(Vec(47, 64), module, QARWarpedSpaceExpander::WARP_AMOUNT_INPUT));
+        addParam(createParam<RoundSmallFWKnob>(Vec(44, 87), module, QARWarpedSpaceExpander::WARP_AMOUNT_CV_ATTENUVETER_PARAM));
 
-        addParam(createParam<RoundFWSnapKnob>(Vec(22, 159), module, QARWarpedSpaceExpander::WARP_POSITION_PARAM));
-        addInput(createInput<FWPortInSmall>(Vec(57, 164), module, QARWarpedSpaceExpander::WARP_POSITION_INPUT));
-        addParam(createParam<RoundSmallFWKnob>(Vec(54, 187), module, QARWarpedSpaceExpander::WARP_POSITION_CV_ATTENUVETER_PARAM));
+        addParam(createParam<RoundFWSnapKnob>(Vec(12, 139), module, QARWarpedSpaceExpander::WARP_POSITION_PARAM));
+        addInput(createInput<FWPortInSmall>(Vec(47, 144), module, QARWarpedSpaceExpander::WARP_POSITION_INPUT));
+        addParam(createParam<RoundSmallFWKnob>(Vec(44, 167), module, QARWarpedSpaceExpander::WARP_POSITION_CV_ATTENUVETER_PARAM));
+
+        addParam(createParam<RoundFWSnapKnob>(Vec(12, 219), module, QARWarpedSpaceExpander::WARP_LENGTH_PARAM));
+        addInput(createInput<FWPortInSmall>(Vec(47, 224), module, QARWarpedSpaceExpander::WARP_LENGTH_INPUT));
+        addParam(createParam<RoundSmallFWKnob>(Vec(44, 247), module, QARWarpedSpaceExpander::WARP_LENGTH_CV_ATTENUVETER_PARAM));
 
     
 	}

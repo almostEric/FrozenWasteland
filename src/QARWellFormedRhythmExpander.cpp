@@ -9,7 +9,7 @@
 #define PASSTHROUGH_LEFT_VARIABLE_COUNT 13
 #define PASSTHROUGH_RIGHT_VARIABLE_COUNT 9
 #define STEP_LEVEL_PARAM_COUNT 4
-#define TRACK_LEVEL_PARAM_COUNT TRACK_COUNT * 14
+#define TRACK_LEVEL_PARAM_COUNT TRACK_COUNT * 15
 #define PASSTHROUGH_OFFSET MAX_STEPS * TRACK_COUNT * STEP_LEVEL_PARAM_COUNT + TRACK_LEVEL_PARAM_COUNT
 
 
@@ -169,7 +169,8 @@ struct QARWellFormedRhythmExpander : Module {
 
 		bool motherPresent = (leftExpander.module && (leftExpander.module->model == modelQuadAlgorithmicRhythm || leftExpander.module->model == modelQARWellFormedRhythmExpander || 
 								leftExpander.module->model == modelQARProbabilityExpander || leftExpander.module->model == modelQARGrooveExpander || 
-								leftExpander.module->model == modelQARIrrationalityExpander || leftExpander.module->model == modelPWAlgorithmicExpander));
+								leftExpander.module->model == modelQARWarpedSpaceExpander || leftExpander.module->model == modelQARIrrationalityExpander || 
+								leftExpander.module->model == modelPWAlgorithmicExpander));
 		//lights[CONNECTED_LIGHT].value = motherPresent;
 		if (motherPresent) {
 			// To Mother
@@ -190,7 +191,7 @@ struct QARWellFormedRhythmExpander : Module {
 			//If another expander is present, get its values (we can overwrite them)
 			bool anotherExpanderPresent = (rightExpander.module && (rightExpander.module->model == modelQARWellFormedRhythmExpander || rightExpander.module->model == modelQARGrooveExpander || 
 											rightExpander.module->model == modelQARProbabilityExpander || rightExpander.module->model == modelQARIrrationalityExpander || 
-											rightExpander.module->model == modelQuadAlgorithmicRhythm));
+											rightExpander.module->model == modelQARWarpedSpaceExpander || rightExpander.module->model == modelQuadAlgorithmicRhythm));
 			if(anotherExpanderPresent)
 			{			
 				float *messagesFromExpander = (float*)rightExpander.consumerMessage;

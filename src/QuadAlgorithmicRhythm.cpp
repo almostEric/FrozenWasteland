@@ -24,7 +24,7 @@
 #define PASSTHROUGH_LEFT_VARIABLE_COUNT 13
 #define PASSTHROUGH_RIGHT_VARIABLE_COUNT 9
 #define STEP_LEVEL_PARAM_COUNT 4
-#define TRACK_LEVEL_PARAM_COUNT TRACK_COUNT * 14
+#define TRACK_LEVEL_PARAM_COUNT TRACK_COUNT * 15
 #define PASSTHROUGH_OFFSET EXPANDER_MAX_STEPS * TRACK_COUNT * STEP_LEVEL_PARAM_COUNT + TRACK_LEVEL_PARAM_COUNT
 
 using namespace frozenwasteland::dsp;
@@ -251,6 +251,7 @@ struct QuadAlgorithmicRhythm : Module {
 
 	float beatWarping[TRACK_COUNT];
 	int beatWarpingPosition[TRACK_COUNT];
+	int beatWarpingLength[TRACK_COUNT];
 
 	float beatRotatingAmount[TRACK_COUNT];
 
@@ -527,6 +528,7 @@ struct QuadAlgorithmicRhythm : Module {
 			probabilityGroupTriggered[i] = PENDING_PGTS;
 			beatWarping[i] = 1.0;
 			beatWarpingPosition[i] = 8;
+			beatWarpingLength[i] = 72;
 			beatRotatingAmount[i] = 0.0;
 			extraParameterValue[i] = 1.0;
 
@@ -727,6 +729,7 @@ struct QuadAlgorithmicRhythm : Module {
 					useGaussianDistribution[trackNumber] = false;
 					beatWarping[trackNumber] = 1.0;
 					beatWarpingPosition[trackNumber] = 8;
+					beatWarpingLength[trackNumber] = 72;
 					extraParameterValue[trackNumber] = 1.0;
 				}
 				timeElapsed = 0;
@@ -1410,16 +1413,18 @@ struct QuadAlgorithmicRhythm : Module {
 				if(messagesFromExpanders[TRACK_COUNT * 9 + i] > 0) { // 0 is track not selected
 					beatWarping[i] = messagesFromExpanders[TRACK_COUNT * 10 + i];
 					beatWarpingPosition[i] = (int)messagesFromExpanders[TRACK_COUNT * 11 + i];
-					float trackStepCount = (float)stepsCount[i];
-					float stepsToSpread = (trackStepCount / 2.0)-1;
+					beatWarpingLength[i] = (int)messagesFromExpanders[TRACK_COUNT * 12 + i];
+					float trackWarpedStepCount = (float)(std::min(beatWarpingLength[i],stepsCount[i]));
+					
+					float stepsToSpread = (trackWarpedStepCount / 2.0)-1;
 					float fraction = 1.0/beatWarping[i];
-					for(int j = 0; j < stepsCount[i]; j++) {	
+					for(int j = 0; j < trackWarpedStepCount; j++) {	
 						int actualBeat = (j + beatWarpingPosition[i]) % stepsCount[i]; 
 						float fj = (float)j;					 
 						if(j <= stepsToSpread)
 							workingBeatWarpMatrix[i][actualBeat] = (2-fraction)*(stepsToSpread-fj)/stepsToSpread + (fraction*fj/stepsToSpread); 
 						else							
-							workingBeatWarpMatrix[i][actualBeat] = (2-fraction)*(fj-stepsToSpread-1.0)/stepsToSpread + (fraction*(trackStepCount-fj-1.0)/stepsToSpread); 						
+							workingBeatWarpMatrix[i][actualBeat] = (2-fraction)*(fj-stepsToSpread-1.0)/stepsToSpread + (fraction*(trackWarpedStepCount-fj-1.0)/stepsToSpread); 						
 					}
 				}
 			}

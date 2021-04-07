@@ -17,7 +17,7 @@
 #define PASSTHROUGH_LEFT_VARIABLE_COUNT 13
 #define PASSTHROUGH_RIGHT_VARIABLE_COUNT 9
 #define STEP_LEVEL_PARAM_COUNT 4
-#define TRACK_LEVEL_PARAM_COUNT TRACK_COUNT * 12
+#define TRACK_LEVEL_PARAM_COUNT TRACK_COUNT * 15
 #define PASSTHROUGH_OFFSET EXPANDER_MAX_STEPS * TRACK_COUNT * STEP_LEVEL_PARAM_COUNT + TRACK_LEVEL_PARAM_COUNT
 
 using namespace frozenwasteland::dsp;
@@ -122,6 +122,7 @@ struct PWAlgorithmicExpander : Module {
 
 	float beatWarping;
 	int beatWarpingPosition;
+    int beatWarpingLength;
 
 
 
@@ -538,17 +539,20 @@ struct PWAlgorithmicExpander : Module {
             if(messagesFromExpanders[TRACK_COUNT * 9 + 0] > 0) { // 0 is track not selected
                 beatWarping = messagesFromExpanders[TRACK_COUNT * 10 + 0];
                 beatWarpingPosition = (int)messagesFromExpanders[TRACK_COUNT * 11 + 0];
-                float trackStepCount = (float)stepsCount;
-                float stepsToSpread = (trackStepCount / 2.0)-1;
+                beatWarpingLength = (int)messagesFromExpanders[TRACK_COUNT * 12 + 0];
+                
+                float trackWarpedStepCount = (float)(std::min(beatWarpingLength,stepsCount));					
+                float stepsToSpread = (trackWarpedStepCount / 2.0)-1;
                 float fraction = 1.0/beatWarping;
-                for(int j = 0; j < stepsCount; j++) {	
+                for(int j = 0; j < trackWarpedStepCount; j++) {	
                     int actualBeat = (j + beatWarpingPosition) % stepsCount; 
                     float fj = (float)j;					 
                     if(j <= stepsToSpread)
                         workingBeatWarpMatrix[actualBeat] = (2-fraction)*(stepsToSpread-fj)/stepsToSpread + (fraction*fj/stepsToSpread); 
                     else							
-                        workingBeatWarpMatrix[actualBeat] = (2-fraction)*(fj-stepsToSpread-1.0)/stepsToSpread + (fraction*(trackStepCount-fj-1.0)/stepsToSpread); 						
+                        workingBeatWarpMatrix[actualBeat] = (2-fraction)*(fj-stepsToSpread-1.0)/stepsToSpread + (fraction*(trackWarpedStepCount-fj-1.0)/stepsToSpread); 						
                 }
+
             }
 
             rightExpander.module->leftExpander.messageFlipRequested = true;			

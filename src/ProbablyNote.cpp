@@ -883,7 +883,7 @@ struct ProbablyNote : Module {
 						float rndO = ((float) rand()/RAND_MAX);
 						int randomOctave = weightedProbability(octaveProbability[probabilityNote[channel]],MAX_OCTAVES, params[WEIGHT_SCALING_PARAM].getValue(), rndO);
 						octaveAdjust += (5-randomOctave);
-						fprintf(stderr, "random Octave:%i  total Average:%f\n",randomOctave,totalAverage[probabilityNote[channel]]);
+						// fprintf(stderr, "random Octave:%i  total Average:%f\n",randomOctave,totalAverage[probabilityNote[channel]]);
 						if(channel == 0) {
 							currentRandomOctave = randomOctave; 
 						}
