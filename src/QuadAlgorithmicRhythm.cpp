@@ -1451,7 +1451,7 @@ struct QuadAlgorithmicRhythm : Module {
 							float ratio = messagesFromExpanders[TRACK_LEVEL_PARAM_COUNT + (EXPANDER_MAX_STEPS * TRACK_COUNT * 3) + (i * EXPANDER_MAX_STEPS) + j + 2];
 							float actualRatio = std::min(ratio/irNbrSteps,1.0f);
 							for(int k=0;k<irNbrSteps;k++) {
-								workingIrrationalRhythmMatrix[i][stepIndex+k] = actualRatio;
+								workingIrrationalRhythmMatrix[i][stepIndex+k] *= actualRatio; // allow rhythms to nest
 							}
 						} 
 					} else {

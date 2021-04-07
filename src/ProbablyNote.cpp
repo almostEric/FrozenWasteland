@@ -841,7 +841,7 @@ struct ProbablyNote : Module {
 									channel == 0 ? clockTrigger[0].process(triggerInputValue) : triggerFired;
 
 				if (triggerFired) {
-					float rnd = ((float) rand()/RAND_MAX);
+					float rnd = ((float) rand()/RAND_MAX);	
 					if(inputs[EXTERNAL_RANDOM_INPUT].isConnected()) {
 						int randomPolyphony = inputs[EXTERNAL_RANDOM_INPUT].getChannels(); //Use as many random channels as possible
 						int randomChannel = channel;
@@ -883,7 +883,7 @@ struct ProbablyNote : Module {
 						float rndO = ((float) rand()/RAND_MAX);
 						int randomOctave = weightedProbability(octaveProbability[probabilityNote[channel]],MAX_OCTAVES, params[WEIGHT_SCALING_PARAM].getValue(), rndO);
 						octaveAdjust += (5-randomOctave);
-						// fprintf(stderr, "random Octave:%i  total Average:%f\n",randomOctave,totalAverage[probabilityNote[channel]]);
+						fprintf(stderr, "random Octave:%i  total Average:%f\n",randomOctave,totalAverage[probabilityNote[channel]]);
 						if(channel == 0) {
 							currentRandomOctave = randomOctave; 
 						}

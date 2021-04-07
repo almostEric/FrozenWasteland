@@ -1,3 +1,6 @@
+### 1.18.3 (2021-04-08)
+- QAR Irrational Rhythms can now do nesting
+
 ### 1.18.2 (2021-04-03)
 - Added PN Octave Probability Module
 
