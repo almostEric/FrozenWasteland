@@ -1,6 +1,7 @@
 #include <string.h>
 #include "FrozenWasteland.hpp"
 #include "ui/knobs.hpp"
+#include "ui/ports.hpp"
 
 #define BUFFER_SIZE 512
 
@@ -15,6 +16,8 @@ struct TheOneRingModulator : Module {
 		SLOPE_ATTENUVERTER_PARAM,
 		NONLINEARITY_ATTENUVERTER_PARAM,
 		MIX_PARAM,
+		MIX_ATTENUVERTER_PARAM,
+		DROP_COMPENSATE_PARAM,
 		NUM_PARAMS
 	};
 	enum InputIds {
@@ -24,6 +27,7 @@ struct TheOneRingModulator : Module {
 		LINEAR_VOLTAGE_CV_INPUT,
 		SLOPE_CV_INPUT,
 		NONLINEARITY_CV_INPUT,
+		MIX_INPUT,
 		NUM_INPUTS
 	};
 	enum OutputIds {
@@ -32,13 +36,11 @@ struct TheOneRingModulator : Module {
 		NUM_OUTPUTS
 	};
 	enum LightIds {
-		BLINK_LIGHT_1,
-		BLINK_LIGHT_2,
-		BLINK_LIGHT_3,
-		BLINK_LIGHT_4,
+		DROP_COMPENSATE_LIGHT,
 		NUM_LIGHTS
 	};
 
+	bool dropCompensate = true;
 
 	float bufferX1[BUFFER_SIZE] = {};
 	float bufferY1[BUFFER_SIZE] = {};
@@ -53,7 +55,9 @@ struct TheOneRingModulator : Module {
 	float h = 1; //Slope
 	float nl = 2.0; //Non-Linearity
 
-	//SchmittTrigger resetTrigger;
+	float compensationCoefficient = 1.0;
+
+	dsp::SchmittTrigger dropCompensateTrigger;
 
 
 	inline float diode_sim(float inVoltage )
@@ -82,10 +86,14 @@ struct TheOneRingModulator : Module {
 		configParam(SLOPE_ATTENUVERTER_PARAM, -1.0, 1.0, 0.0,"Slope CV Attenuation","%",0,100);
 		// configParam(NONLINEARITY_PARAM, 0.5, 3.0, 2.0,"Nonlinearity");
 		// configParam(NONLINEARITY_ATTENUVERTER_PARAM, -1.0, 1.0, 0.0,"Nonlinearity CV Attenuation","%",0,100);
-		configParam(MIX_PARAM, -0.0, 1.0, 0.5,"Mix","%",0,100);
+		configParam(MIX_PARAM, 0.0, 1.0, 0.5,"Mix","%",0,100);
+		configParam(MIX_ATTENUVERTER_PARAM, -1.0, 1.0, 0.0,"Mix CV Attenuation","%",0,100);
 
 	}
+
 	void process(const ProcessArgs &args) override;
+	json_t* dataToJson() override;
+	void dataFromJson(json_t *rootJ) override;
 
 	// For more advanced Module features, read Rack's engine.hpp header file
 	// - dataToJson, dataFromJson: serialization of internal data
@@ -93,18 +101,41 @@ struct TheOneRingModulator : Module {
 	// - onReset, onRandomize, onCreate, onDelete: implements special behavior when user clicks these from the context menu
 };
 
+ json_t* TheOneRingModulator::dataToJson()  {
+	json_t *rootJ = json_object();
+
+	json_object_set_new(rootJ, "dropCompensate", json_integer(dropCompensate));
+	
+	return rootJ;
+};
+
+void TheOneRingModulator::dataFromJson(json_t *rootJ)  {
+	json_t *csnJ = json_object_get(rootJ, "dropCompensate");
+	if (csnJ) {
+		dropCompensate = json_integer_value(csnJ);			
+	}	
+}
+
 
 void TheOneRingModulator::process(const ProcessArgs &args) {
+
+	if (dropCompensateTrigger.process(params[DROP_COMPENSATE_PARAM].getValue())) {
+		dropCompensate = !dropCompensate;
+	}
+	lights[DROP_COMPENSATE_LIGHT].value = dropCompensate;
 
 	
     float vIn = inputs[ SIGNAL_INPUT ].getVoltage();
     float vC  = inputs[ CARRIER_INPUT ].getVoltage();
-    float wd  = params[ MIX_PARAM ].getValue();
+
+    float wd  = clamp(params[MIX_PARAM].getValue() + (inputs[MIX_INPUT].getVoltage() / 10.0 * params[MIX_ATTENUVERTER_PARAM].getValue()),0.0f,1.0f);
 
     voltageBias = clamp(params[FORWARD_BIAS_PARAM].getValue() + (inputs[FORWARD_BIAS_CV_INPUT].getVoltage() * params[FORWARD_BIAS_ATTENUVERTER_PARAM].getValue()),0.0,10.0);
 	voltageLinear = clamp(params[LINEAR_VOLTAGE_PARAM].getValue() + (inputs[LINEAR_VOLTAGE_CV_INPUT].getVoltage() * params[LINEAR_VOLTAGE_ATTENUVERTER_PARAM].getValue()),voltageBias + 0.001f,10.0);
     h = clamp(params[SLOPE_PARAM].getValue() + (inputs[SLOPE_CV_INPUT].getVoltage() / 10.0 * params[SLOPE_ATTENUVERTER_PARAM].getValue()),0.1f,1.0f);
 	//nl = clamp(params[NONLINEARITY_PARAM].getValue() + (inputs[NONLINEARITY_CV_INPUT].getVoltage() / 10.0 * params[NONLINEARITY_ATTENUVERTER_PARAM].getValue()),0.5f,3.0f);
+
+	compensationCoefficient = 10.0 / diode_sim(10.0);
 
     float A = 0.5 * vIn + vC;
     float B = vC - 0.5 * vIn;
@@ -115,6 +146,9 @@ void TheOneRingModulator::process(const ProcessArgs &args) {
     float dMB = diode_sim( -B );
 
     float res = dPA + dMA - dPB - dMB;
+	if(dropCompensate) {
+		res *= compensationCoefficient;
+	}
     //outputs[WET_OUTPUT].setVoltage(res);
     outputs[MIX_OUTPUT].setVoltage(wd * res + ( 1.0 - wd ) * vIn);
 }
@@ -127,24 +161,6 @@ struct DiodeResponseDisplay : TransparentWidget {
 	TheOneRingModulator *module;
 	int frame = 0;
 	std::shared_ptr<Font> font;
-
-	// struct Stats {
-	// 	float vrms, vpp, vmin, vmax;
-	// 	void calculate(float *values) {
-	// 		vrms = 0.0;
-	// 		vmax = -INFINITY;
-	// 		vmin = INFINITY;
-	// 		for (int i = 0; i < BUFFER_SIZE; i++) {
-	// 			float v = values[i];
-	// 			vrms += v*v;
-	// 			vmax = fmaxf(vmax, v);
-	// 			vmin = fminf(vmin, v);
-	// 		}
-	// 		vrms = sqrtf(vrms / BUFFER_SIZE);
-	// 		vpp = vmax - vmin;
-	// 	}
-	// };
-	// Stats statsX, statsY;
 
 	DiodeResponseDisplay() {
 		font = APP->window->loadFont(asset::plugin(pluginInstance, "res/fonts/Sudo.ttf"));
@@ -202,24 +218,30 @@ struct TheOneRingModulatorWidget : ModuleWidget {
 			addChild(display);
 		}
 
-		addParam(createParam<RoundFWKnob>(Vec(10, 190), module, TheOneRingModulator::FORWARD_BIAS_PARAM));
-		addParam(createParam<RoundSmallFWKnob>(Vec(13, 252), module, TheOneRingModulator::FORWARD_BIAS_ATTENUVERTER_PARAM));
-		addParam(createParam<RoundFWKnob>(Vec(60, 190), module, TheOneRingModulator::LINEAR_VOLTAGE_PARAM));
-		addParam(createParam<RoundSmallFWKnob>(Vec(63, 252), module, TheOneRingModulator::LINEAR_VOLTAGE_ATTENUVERTER_PARAM));
-		addParam(createParam<RoundFWKnob>(Vec(110, 190), module, TheOneRingModulator::SLOPE_PARAM));
-		addParam(createParam<RoundSmallFWKnob>(Vec(113, 252), module, TheOneRingModulator::SLOPE_ATTENUVERTER_PARAM));
+		addParam(createParam<LEDButton>(Vec(25, 264), module, TheOneRingModulator::DROP_COMPENSATE_PARAM));
+		addChild(createLight<LargeLight<BlueLight>>(Vec(26.5, 265.5), module, TheOneRingModulator::DROP_COMPENSATE_LIGHT));
+
+
+		addParam(createParam<RoundSmallFWKnob>(Vec(13, 190), module, TheOneRingModulator::FORWARD_BIAS_PARAM));
+		addParam(createParam<RoundReallySmallFWKnob>(Vec(27, 216), module, TheOneRingModulator::FORWARD_BIAS_ATTENUVERTER_PARAM));
+		addParam(createParam<RoundSmallFWKnob>(Vec(65, 190), module, TheOneRingModulator::LINEAR_VOLTAGE_PARAM));
+		addParam(createParam<RoundReallySmallFWKnob>(Vec(78, 216), module, TheOneRingModulator::LINEAR_VOLTAGE_ATTENUVERTER_PARAM));
+		addParam(createParam<RoundSmallFWKnob>(Vec(112, 190), module, TheOneRingModulator::SLOPE_PARAM));
+		addParam(createParam<RoundReallySmallFWKnob>(Vec(125, 216), module, TheOneRingModulator::SLOPE_ATTENUVERTER_PARAM));
 		// addParam(createParam<RoundFWKnob>(Vec(110, 270), module, TheOneRingModulator::NONLINEARITY_PARAM));
 		// addParam(createParam<RoundSmallFWKnob>(Vec(113, 302), module, TheOneRingModulator::NONLINEARITY_ATTENUVERTER_PARAM));
-		addParam(createParam<RoundFWKnob>(Vec(90, 327), module, TheOneRingModulator::MIX_PARAM));
+		addParam(createParam<RoundSmallFWKnob>(Vec(95, 264), module, TheOneRingModulator::MIX_PARAM));
+		addParam(createParam<RoundReallySmallFWKnob>(Vec(110, 290), module, TheOneRingModulator::MIX_ATTENUVERTER_PARAM));
 
-		addInput(createInput<PJ301MPort>(Vec(14, 330), module, TheOneRingModulator::CARRIER_INPUT));
-		addInput(createInput<PJ301MPort>(Vec(50, 330), module, TheOneRingModulator::SIGNAL_INPUT));
-		addInput(createInput<PJ301MPort>(Vec(13, 223), module, TheOneRingModulator::FORWARD_BIAS_CV_INPUT));
-		addInput(createInput<PJ301MPort>(Vec(63, 223), module, TheOneRingModulator::LINEAR_VOLTAGE_CV_INPUT));
-		addInput(createInput<PJ301MPort>(Vec(113, 223), module, TheOneRingModulator::SLOPE_CV_INPUT));
+		addInput(createInput<FWPortInSmall>(Vec(14, 340), module, TheOneRingModulator::CARRIER_INPUT));
+		addInput(createInput<FWPortInSmall>(Vec(35, 340), module, TheOneRingModulator::SIGNAL_INPUT));
+		addInput(createInput<FWPortInSmall>(Vec(6, 217), module, TheOneRingModulator::FORWARD_BIAS_CV_INPUT));
+		addInput(createInput<FWPortInSmall>(Vec(57, 217), module, TheOneRingModulator::LINEAR_VOLTAGE_CV_INPUT));
+		addInput(createInput<FWPortInSmall>(Vec(104, 217), module, TheOneRingModulator::SLOPE_CV_INPUT));
+		addInput(createInput<FWPortInSmall>(Vec(87, 291), module, TheOneRingModulator::MIX_INPUT));
 		// addInput(createInput<PJ301MPort>(Vec(113, 283), module, TheOneRingModulator::NONLINEARITY_CV_INPUT));
 
-		addOutput(createOutput<PJ301MPort>(Vec(122, 330), module, TheOneRingModulator::MIX_OUTPUT));
+		addOutput(createOutput<FWPortInSmall>(Vec(112, 340), module, TheOneRingModulator::MIX_OUTPUT));
 		
 	}
 };

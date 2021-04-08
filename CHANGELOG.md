@@ -1,5 +1,6 @@
 ### 1.18.3 (2021-04-08)
 - QAR Irrational Rhythms can now do nesting
+- Added CV control of Mix and Gain Leveling to THe One Ring
 
 ### 1.18.2 (2021-04-03)
 - Added PN Octave Probability Module
