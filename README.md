@@ -176,6 +176,7 @@ A collection of unusual plugins that will add a certain coolness to your patches
 - Bias is the input voltage level where the diode responds - below that the diode outputs 0V
 - Linear is the input voltage level where the diode outputs a linear response. Between the Bias and Linar levels, the diode acts 'weird' or let's say 'harmonically interesting'
 - Slope is the strength of the diode output
+- These controls can lower the overall output, Gain Compensation keeps output level constant
 - The graph display is useful for seeing the diodes' voltage responses
 - CV control over everything
 ### Ring Modulation
@@ -356,6 +357,7 @@ A collection of unusual plugins that will add a certain coolness to your patches
 - 5 Algorithms: Euclidean (yellow), Golumb Ruler (blue), Well Formed (green), Perfect Balance (orange) and Boolean (purple). Each track can use its own Algorithm (Boolean only available on tracks 3 & 4).
 - CV Control of Alogorithm. Try hooking EOC output to Algorithm trigger to get alternating rhythms
 - CV control of Steps, Divisions and Offset, Padding, Accents and Accent Rotation
+- EOC (t) triggers when the track reaches is end. EOC (g) triggers at then end of a groove pattern if a Groove Expander is being used
 - QARs can be chained together to create arbitrarily long sequences. This can either be done manually by patching the appropriate outputs and input triggers together, or just by having multiple QARs be adjacent.
 When they are connected this way, the Clock, Mute and Reset signals, and Eoc outputs and Start inputs are normallized, this means they are automatically patched together, but you can still override this by patching something in. Additionally the master QAR will output all of the triggers from the attached modules 
 - If Chain Mode is Boss, the QAR runs on start up, then stops if the track's Start input is patched, until a Start trigger is received - basically the first QAR should be set to this
@@ -471,13 +473,13 @@ When they are connected this way, the Clock, Mute and Reset signals, and Eoc out
 - Instantiate any number of cells (odd numbers work best - say 5 or 7)
 - This is what is called a **Quantussy Ring**
 
-![Quantussy Cell](./doc/qring.png)
+![Quantussy Ring](./doc/qring.png)
 
 - The Freq control sets the baseline value of the internal LFO
 - The Castle output should be connected to the next Cell's CV Input.
 - One of the outputs (usually triangle or saw) should be connected to the next Cell's Castle input
 - Repeat for each cell. The last cell is connected back to the first cell
-- Use any of the remaining wav outputs from any cell to provide semi-random bordering on chaotic CV
+- Use any of the wav outputs from any cell to provide semi-random bordering on chaotic CV
 - Check out http://pugix.com/synth/eurorack-quantussy-cells/
 
 ## Roulette LFO

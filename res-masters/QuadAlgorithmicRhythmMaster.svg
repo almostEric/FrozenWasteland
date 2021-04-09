@@ -60,8 +60,8 @@
      showgrid="false"
      inkscape:current-layer="layer1"
      inkscape:document-units="px"
-     inkscape:cy="173.93467"
-     inkscape:cx="352.55693"
+     inkscape:cy="306.25241"
+     inkscape:cx="-44.396289"
      inkscape:zoom="2.418421"
      inkscape:pageshadow="2"
      inkscape:pageopacity="0.0"
@@ -322,37 +322,37 @@
     <text
        transform="scale(1.0163587,0.9839046)"
        id="text5443-7-5-4-4-0"
-       y="128.4129"
-       x="48.512547"
+       y="128.83844"
+       x="42.250324"
        style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:3.59069px;line-height:1.25;font-family:Homenaje;-inkscape-font-specification:'Homenaje Bold';letter-spacing:0px;word-spacing:0px;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.269301"
        xml:space="preserve"><tspan
          style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:2.15441px;font-family:Homenaje;-inkscape-font-specification:'Homenaje Bold';stroke-width:0.269301"
-         y="128.4129"
-         x="48.512547"
+         y="128.83844"
+         x="42.250324"
          id="tspan5441-1-6-3-8-0"
          sodipodi:role="line">NONE</tspan></text>
     <text
        transform="scale(1.0163587,0.9839046)"
        id="text5443-7-5-4-4-0-2"
-       y="132.45242"
-       x="48.525455"
+       y="132.87796"
+       x="42.263233"
        style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:3.59069px;line-height:1.25;font-family:Homenaje;-inkscape-font-specification:'Homenaje Bold';letter-spacing:0px;word-spacing:0px;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.269301"
        xml:space="preserve"><tspan
          style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:2.15441px;font-family:Homenaje;-inkscape-font-specification:'Homenaje Bold';stroke-width:0.269301"
-         y="132.45242"
-         x="48.525455"
+         y="132.87796"
+         x="42.263233"
          id="tspan5441-1-6-3-8-0-1"
          sodipodi:role="line">BOSS</tspan></text>
     <text
        transform="scale(1.0163587,0.9839046)"
        id="text5443-7-5-4-4-0-8"
-       y="136.49194"
-       x="48.525455"
+       y="136.91748"
+       x="42.263233"
        style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:3.59069px;line-height:1.25;font-family:Homenaje;-inkscape-font-specification:'Homenaje Bold';letter-spacing:0px;word-spacing:0px;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.269301"
        xml:space="preserve"><tspan
          style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:2.15441px;font-family:Homenaje;-inkscape-font-specification:'Homenaje Bold';stroke-width:0.269301"
-         y="136.49194"
-         x="48.525455"
+         y="136.91748"
+         x="42.263233"
          id="tspan5441-1-6-3-8-0-11"
          sodipodi:role="line">EMPLOYEE</tspan></text>
     <text
@@ -676,5 +676,117 @@
        height="3.818162"
        x="159.84041"
        y="61.91407" />
+    <path
+       d="m 111.34631,130.29317 h 12.43542 v 17.4625 h -12.43542 z"
+       style="opacity:0.981;fill:#141061;fill-opacity:1;stroke:#000000;stroke-width:0;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       id="rect22843" />
+    <path
+       id="rect22843-5"
+       style="opacity:0.981;fill:#141061;fill-opacity:1;stroke:#000000;stroke-width:0;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       d="m 127.75048,130.29317 h 12.43542 v 17.4625 h -12.43542 z" />
+    <path
+       id="rect22843-3"
+       style="opacity:0.981;fill:#141061;fill-opacity:1;stroke:#000000;stroke-width:0;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       d="m 144.15464,130.29317 h 12.43542 v 17.4625 h -12.43542 z" />
+    <path
+       id="rect22843-37"
+       style="opacity:0.981;fill:#141061;fill-opacity:1;stroke:#000000;stroke-width:0;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       d="m 160.55881,130.29317 h 12.43542 v 17.4625 h -12.43542 z" />
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:1.41111px;line-height:1.25;font-family:Homenaje;-inkscape-font-specification:'Homenaje Bold';letter-spacing:0px;word-spacing:0px;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.269301"
+       x="120.68748"
+       y="138.25278"
+       id="text5443-7-5-4-4-0-0-0"
+       transform="scale(1.0163587,0.9839046)"><tspan
+         sodipodi:role="line"
+         id="tspan5441-1-6-3-8-0-6-8"
+         x="120.68748"
+         y="138.25278"
+         style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:1.41111px;font-family:Homenaje;-inkscape-font-specification:'Homenaje Bold';stroke-width:0.269301">G</tspan></text>
+    <text
+       transform="scale(1.0163587,0.9839046)"
+       id="text5443-7-5-4-4-0-0-0-2"
+       y="138.25278"
+       x="114.21178"
+       style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:1.41111px;line-height:1.25;font-family:Homenaje;-inkscape-font-specification:'Homenaje Bold';letter-spacing:0px;word-spacing:0px;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.269301"
+       xml:space="preserve"><tspan
+         style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:1.41111px;font-family:Homenaje;-inkscape-font-specification:'Homenaje Bold';stroke-width:0.269301"
+         y="138.25278"
+         x="114.21178"
+         id="tspan5441-1-6-3-8-0-6-8-6"
+         sodipodi:role="line">T</tspan></text>
+    <text
+       transform="scale(1.0163587,0.9839046)"
+       id="text5443-7-5-4-4-0-0-0-1"
+       y="138.25278"
+       x="136.82761"
+       style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:1.41111px;line-height:1.25;font-family:Homenaje;-inkscape-font-specification:'Homenaje Bold';letter-spacing:0px;word-spacing:0px;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.269301"
+       xml:space="preserve"><tspan
+         style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:1.41111px;font-family:Homenaje;-inkscape-font-specification:'Homenaje Bold';stroke-width:0.269301"
+         y="138.25278"
+         x="136.82761"
+         id="tspan5441-1-6-3-8-0-6-8-8"
+         sodipodi:role="line">G</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:1.41111px;line-height:1.25;font-family:Homenaje;-inkscape-font-specification:'Homenaje Bold';letter-spacing:0px;word-spacing:0px;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.269301"
+       x="130.35191"
+       y="138.25278"
+       id="text5443-7-5-4-4-0-0-0-2-2"
+       transform="scale(1.0163587,0.9839046)"><tspan
+         sodipodi:role="line"
+         id="tspan5441-1-6-3-8-0-6-8-6-4"
+         x="130.35191"
+         y="138.25278"
+         style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:1.41111px;font-family:Homenaje;-inkscape-font-specification:'Homenaje Bold';stroke-width:0.269301">T</tspan></text>
+    <text
+       transform="scale(1.0163587,0.9839046)"
+       id="text5443-7-5-4-4-0-0-0-0"
+       y="138.25278"
+       x="152.96776"
+       style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:1.41111px;line-height:1.25;font-family:Homenaje;-inkscape-font-specification:'Homenaje Bold';letter-spacing:0px;word-spacing:0px;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.269301"
+       xml:space="preserve"><tspan
+         style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:1.41111px;font-family:Homenaje;-inkscape-font-specification:'Homenaje Bold';stroke-width:0.269301"
+         y="138.25278"
+         x="152.96776"
+         id="tspan5441-1-6-3-8-0-6-8-0"
+         sodipodi:role="line">G</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:1.41111px;line-height:1.25;font-family:Homenaje;-inkscape-font-specification:'Homenaje Bold';letter-spacing:0px;word-spacing:0px;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.269301"
+       x="146.49205"
+       y="138.25278"
+       id="text5443-7-5-4-4-0-0-0-2-3"
+       transform="scale(1.0163587,0.9839046)"><tspan
+         sodipodi:role="line"
+         id="tspan5441-1-6-3-8-0-6-8-6-49"
+         x="146.49205"
+         y="138.25278"
+         style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:1.41111px;font-family:Homenaje;-inkscape-font-specification:'Homenaje Bold';stroke-width:0.269301">T</tspan></text>
+    <text
+       transform="scale(1.0163587,0.9839046)"
+       id="text5443-7-5-4-4-0-0-0-8"
+       y="138.25278"
+       x="169.10789"
+       style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:1.41111px;line-height:1.25;font-family:Homenaje;-inkscape-font-specification:'Homenaje Bold';letter-spacing:0px;word-spacing:0px;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.269301"
+       xml:space="preserve"><tspan
+         style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:1.41111px;font-family:Homenaje;-inkscape-font-specification:'Homenaje Bold';stroke-width:0.269301"
+         y="138.25278"
+         x="169.10789"
+         id="tspan5441-1-6-3-8-0-6-8-03"
+         sodipodi:role="line">G</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:1.41111px;line-height:1.25;font-family:Homenaje;-inkscape-font-specification:'Homenaje Bold';letter-spacing:0px;word-spacing:0px;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.269301"
+       x="162.63219"
+       y="138.25278"
+       id="text5443-7-5-4-4-0-0-0-2-35"
+       transform="scale(1.0163587,0.9839046)"><tspan
+         sodipodi:role="line"
+         id="tspan5441-1-6-3-8-0-6-8-6-9"
+         x="162.63219"
+         y="138.25278"
+         style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:1.41111px;font-family:Homenaje;-inkscape-font-specification:'Homenaje Bold';stroke-width:0.269301">T</tspan></text>
   </g>
 </svg>

@@ -1,5 +1,6 @@
-### 1.18.3 (2021-04-08)
+### 1.18.3 (2021-04-09)
 - QAR Irrational Rhythms can now do nesting
+- Added Groove EOC output to QAR
 - Added CV control of Mix and Gain Leveling to THe One Ring
 
 ### 1.18.2 (2021-04-03)

@@ -80,6 +80,7 @@ struct QARGrooveExpander : Module {
 
 	
 	dsp::SchmittTrigger stepDivTrigger,grooveLengthTrigger,randomDistributionTrigger,trackGrooveTrigger[TRACK_COUNT];
+
 	bool trackGrooveSelected[TRACK_COUNT];
     bool stepsOrDivs, grooveIsTrackLength,gaussianDistribution;
 

@@ -125,7 +125,8 @@ struct QuadAlgorithmicRhythm : Module {
 		OUTPUT_4,
 		ACCENT_OUTPUT_4,
 		EOC_OUTPUT_4,
-		TEST_OUTPUT,
+		GROOVE_EOC_OUTPUT_1,
+		TEST_OUTPUT = GROOVE_EOC_OUTPUT_1 + TRACK_COUNT,
 		NUM_OUTPUTS
 	};
 	enum LightIds {
@@ -452,7 +453,7 @@ struct QuadAlgorithmicRhythm : Module {
 	dsp::SchmittTrigger clockTrigger,resetTrigger,chainModeTrigger[3],constantTimeTrigger,muteTrigger,
 						algorithmTrigger[TRACK_COUNT],trackIndependentTrigger[TRACK_COUNT],startTrigger[TRACK_COUNT],
 						chooseSceneTrigger[NBR_SCENES],saveSceneTrigger;
-	dsp::PulseGenerator beatPulse[TRACK_COUNT],accentPulse[TRACK_COUNT],eocPulse[TRACK_COUNT];
+	dsp::PulseGenerator beatPulse[TRACK_COUNT],accentPulse[TRACK_COUNT],eocPulse[TRACK_COUNT],grooveEocPulse[TRACK_COUNT];
 
 	GaussianNoiseGenerator _gauss;
 
@@ -1628,6 +1629,8 @@ struct QuadAlgorithmicRhythm : Module {
 			float eocOutputValue = eocPulse[trackNumber].process(args.sampleTime) ? 10.0 : 0;
 			outputs[(trackNumber * 3) + EOC_OUTPUT_1].setVoltage(eocOutputValue);				
 			
+			float grooveEocOutputValue = grooveEocPulse[trackNumber].process(args.sampleTime) ? 10.0 : 0;
+			outputs[GROOVE_EOC_OUTPUT_1+trackNumber].setVoltage(grooveEocOutputValue);				
 			
 			if(leftExpanderPresent) {
 				float *messagesToMother = (float*)leftExpander.module->rightExpander.producerMessage;
@@ -1797,12 +1800,14 @@ struct QuadAlgorithmicRhythm : Module {
 			subBeatIndex[trackNumber]++;
 			if(subBeatIndex[trackNumber] >= subBeatLength[trackNumber]) { 
 				subBeatIndex[trackNumber] = 0;
+				grooveEocPulse[trackNumber].trigger(pulseLength);
 			}
 		} else if(trackSwingUsingDivs[trackNumber] && beatMatrix[trackNumber][beatIndex[trackNumber]] == true) {
 			subBeatIndex[trackNumber]++;
 			if(subBeatIndex[trackNumber] >= subBeatLength[trackNumber]) { 
 				subBeatIndex[trackNumber] = 0;
-			}
+				grooveEocPulse[trackNumber].trigger(pulseLength);
+				}
 		}
 
 
@@ -2219,6 +2224,7 @@ struct QuadAlgorithmicRhythmWidget : ModuleWidget {
 
 			addInput(createInput<FWPortInSmall>(Vec(290+(track*62), 282), module, QuadAlgorithmicRhythm::START_1_INPUT+(track*8)));
 			addOutput(createOutput<FWPortOutSmall>(Vec(290+(track*62), 304), module, QuadAlgorithmicRhythm::EOC_OUTPUT_1+(track*3)));
+			addOutput(createOutput<FWPortOutSmall>(Vec(315+(track*62), 304), module, QuadAlgorithmicRhythm::GROOVE_EOC_OUTPUT_1+track));
 			addOutput(createOutput<FWPortOutSmall>(Vec(290+(track*62), 326), module, QuadAlgorithmicRhythm::ACCENT_OUTPUT_1+(track*3)));
 			addOutput(createOutput<FWPortOutSmall>(Vec(290+(track*62), 348), module, QuadAlgorithmicRhythm::OUTPUT_1+(track*3)));
 
