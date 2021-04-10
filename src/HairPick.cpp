@@ -135,6 +135,13 @@ struct HairPick : Module {
         }
     }
 
+	float cubicSoftClip(float x, float drive) {
+		float cx = std::max(std::min(drive * x, 1.0f), -1.0f);
+		float y = std::max(std::min(cx - cx*cx*cx /  3.0f, 2.0f/3.0f), -2.0f/3.0f) / drive;
+		return y;
+	}
+
+
 	HairPick() {
 		config(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS, NUM_LIGHTS);
 
@@ -241,9 +248,8 @@ struct HairPick : Module {
 		float percentChange = 10.0f;
 		//Apply non-linearity
 		if(feedbackType == FEEDBACK_SITAR) {
-			if(in > 0) {
-				delayNonlinearity = 1 + ((in/10.0f) * (percentChange/100.0f)); //Test sitar will change length by up tp 10%
-			}
+			float rectIn = std::abs(in);
+			delayNonlinearity = 1 + ((rectIn/10.0f) * (percentChange/100.0f)); //Test sitar will change length by up tp 10%
 		}
 
 
@@ -301,6 +307,8 @@ struct HairPick : Module {
 
 				break;
 			case FEEDBACK_CLARINET :
+				feedbackValue.l = cubicSoftClip(feedbackValue.l / 10.0,1.0) * 13;
+				feedbackValue.r = cubicSoftClip(feedbackValue.r / 10.0,1.0) * 13;
 				feedbackValue.l = (feedbackWeight * feedbackValue.l) + ((1-feedbackWeight) * lastFeedback.l);
 				feedbackValue.r = (feedbackWeight * feedbackValue.r) + ((1-feedbackWeight) * lastFeedback.r);
 				break;
