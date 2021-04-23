@@ -953,11 +953,11 @@ struct ManicCompressionMBWidget : ModuleWidget {
 
             addParam(createParam<RoundSmallFWKnob>(Vec(15 + 255 + (b * 140), 290), module, ManicCompressionMB::ATTACK_CURVE_PARAM + b));
             addParam(createParam<RoundReallySmallFWKnob>(Vec(40 + 255 + (b * 140), 303), module, ManicCompressionMB::ATTACK_CURVE_CV_ATTENUVERTER_PARAM + b));
-            addInput(createInput<FWPortInReallySmall>(Vec(44 + 255 + (b * 140), 293), module, ManicCompressionMB::ATTACK_CURVE_CV_INPUT + b));
+            addInput(createInput<FWPortInReallySmall>(Vec(44 + 255 + (b * 140), 291), module, ManicCompressionMB::ATTACK_CURVE_CV_INPUT + b));
 
             addParam(createParam<RoundSmallFWKnob>(Vec(75 + 255 + (b * 140), 290), module, ManicCompressionMB::RELEASE_CURVE_PARAM + b));
             addParam(createParam<RoundReallySmallFWKnob>(Vec(40 + 255 + (b * 140), 303), module, ManicCompressionMB::RELEASE_CURVE_CV_ATTENUVERTER_PARAM + b));
-            addInput(createInput<FWPortInReallySmall>(Vec(104 + 255 + (b * 140), 293), module, ManicCompressionMB::RELEASE_CURVE_CV_INPUT + b));
+            addInput(createInput<FWPortInReallySmall>(Vec(104 + 255 + (b * 140), 291), module, ManicCompressionMB::RELEASE_CURVE_CV_INPUT + b));
 
 
             addParam(createParam<RoundSmallFWKnob>(Vec(15 + 255 + (b * 140), 341), module, ManicCompressionMB::IN_GAIN_PARAM + b));

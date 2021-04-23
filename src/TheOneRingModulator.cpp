@@ -57,24 +57,51 @@ struct TheOneRingModulator : Module {
 
 	float compensationCoefficient = 1.0;
 
+	///Advanced Model
+	double C=10e-9;
+	double Cp=10e-9;
+	double L=0.8;
+	double Ra = 600;
+	double Ri = 50;
+	double Rm = 80;
+
+	double lu1 = 0,lu2= 0,lu3= 0,li1= 0,li2 = 0.0;
+	double u1= 0,u2= 0,u3= 0,u4= 0,u5= 0,u6= 0,u7= 0,i1= 0,i2 = 0.0;
+	double g4=0.0,g5=0,g6=0,g7=0;
+
+
 	dsp::SchmittTrigger dropCompensateTrigger;
 
+int sampleCount = 0;
 
-	inline float diode_sim(float inVoltage )
-	  {
-	  	//Original
-	  	//if( inVoltage < 0 ) return 0;
-      	//	else return 0.2 * log( 1.0 + exp( 10 * ( inVoltage - 1 ) ) );
-	  	
-      	//Mine
-	  	if( inVoltage <= voltageBias ) 
-	  		return 0;
-	    if( inVoltage <= voltageLinear) {
-	    	return h * (inVoltage - voltageBias) * (inVoltage - voltageBias) / ((nl * voltageLinear) - (nl * voltageBias));
-	    } else {
-	    	return (h * inVoltage) - (h * voltageLinear) + (h * ((voltageLinear - voltageBias) * (voltageLinear - voltageBias) / ((nl * voltageLinear) - (nl * voltageBias))));
-	    }	    
-	  }
+	inline float diode_sim(float inVoltage ) {
+		//Original
+		//if( inVoltage < 0 ) return 0;
+		//	else return 0.2 * log( 1.0 + exp( 10 * ( inVoltage - 1 ) ) );
+		
+		//Mine
+		if( inVoltage <= voltageBias ) 
+			return 0;
+		if( inVoltage <= voltageLinear) {
+			return h * (inVoltage - voltageBias) * (inVoltage - voltageBias) / ((nl * voltageLinear) - (nl * voltageBias));
+		} else {
+			return (h * inVoltage) - (h * voltageLinear) + (h * ((voltageLinear - voltageBias) * (voltageLinear - voltageBias) / ((nl * voltageLinear) - (nl * voltageBias))));
+		}	    
+	}
+
+	inline double germainiun_diode(double inVoltage) {
+		if( inVoltage <= voltageBias ) 
+			return 0;
+		else
+			return 0.17 * std::pow(inVoltage,4.0);
+	}
+
+	inline double silicon_diode(double inVoltage) {
+		if( inVoltage <= voltageBias ) 
+			return 0;
+		else
+			return 40.67286402 * std::exp(-9.0) * (std::exp(17.7493332 * (inVoltage+0.3)) - 1.0);
+	}
 
 	TheOneRingModulator()  {
 		config(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS, NUM_LIGHTS);		
@@ -125,7 +152,10 @@ void TheOneRingModulator::process(const ProcessArgs &args) {
 	lights[DROP_COMPENSATE_LIGHT].value = dropCompensate;
 
 	
-    float vIn = inputs[ SIGNAL_INPUT ].getVoltage();
+    // double vIn = inputs[ SIGNAL_INPUT ].getVoltage() / 50.0; //scaling to +/- 200mv
+    // double vC  = inputs[ CARRIER_INPUT ].getVoltage() / 50.0;//scaling to +/- 200mv
+
+    float vIn = inputs[ SIGNAL_INPUT ].getVoltage(); 
     float vC  = inputs[ CARRIER_INPUT ].getVoltage();
 
     float wd  = clamp(params[MIX_PARAM].getValue() + (inputs[MIX_INPUT].getVoltage() / 10.0 * params[MIX_ATTENUVERTER_PARAM].getValue()),0.0f,1.0f);
@@ -137,7 +167,7 @@ void TheOneRingModulator::process(const ProcessArgs &args) {
 
 	compensationCoefficient = 10.0 / diode_sim(10.0);
 
-    float A = 0.5 * vIn + vC;
+    float A = vC + 0.5 * vIn;
     float B = vC - 0.5 * vIn;
 
     float dPA = diode_sim( A );
@@ -149,8 +179,44 @@ void TheOneRingModulator::process(const ProcessArgs &args) {
 	if(dropCompensate) {
 		res *= compensationCoefficient;
 	}
-    //outputs[WET_OUTPUT].setVoltage(res);
     outputs[MIX_OUTPUT].setVoltage(wd * res + ( 1.0 - wd ) * vIn);
+
+// 	double T = args.sampleTime;
+// 	// double T = 1.0;
+
+//    	g4 = germainiun_diode(u4);
+// 	g5 = germainiun_diode(u5);
+// 	g6 = germainiun_diode(u6);
+// 	g7 = germainiun_diode(u7);
+
+
+//    u1 = lu1 + (T/C) * (li1 - (g4 / 2.0) + (g7 / 2.0) + (g5 / 2.0) - (g6 / 2.0) - (lu1 - vIn) / Rm);
+//    u2 = lu2 + (T/C) * (li2 + (g4 / 2.0) - (g6 / 2.0) - (g5 / 2.0) + (g7 / 2.0) - (lu2 / Ra));
+//    u3 = lu3 + (T/Cp) * (g4 + g5 - g6 - g7 - (lu3 / Ri));
+//    i1 = li1 + (T/L)*(-lu1);
+//    i2 = li2 + (T/L)*(-lu2);
+
+//    u4 = (u1/2.0) - u3 - vC - (u2/2.0);
+//    u5 = (-u1/2.0) - u3 - vC + (u2/2.0);
+//    u6 = (u1/2.0) + u3 + vC + (u2/2.0);
+//    u7 = (-u1/2.0) + u3 + vC - (u2/2.0);
+
+//    lu1 = u1;
+//    lu2 = u2;
+//    lu3 = u3;
+//    li1 = i1;
+//    li2 = i2;
+
+// if(sampleCount < 20) {
+// 		fprintf(stderr, "sc:%i vIn:%f vC:%f u1:%f u2:%f u3:%f u4:%f u5:%f u6:%f u7:%f i1:%f i2:%f\n", sampleCount, vIn,vC,u1,u2,u3,u4,u5,u6,u7,i1,i2 );
+// 		fprintf(stderr, "     g4:%f g5:%f g6:%f g7:%f  t/c:%f\n", g4,g5,g6,g7,T/C);
+// 		sampleCount++;
+// }
+
+
+// 	float res = u2 * 50.0; // Scale back volrage
+// 	outputs[MIX_OUTPUT].setVoltage(wd * res + ( 1.0 - wd ) * vIn);
+
 }
 
 

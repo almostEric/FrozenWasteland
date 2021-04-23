@@ -17,7 +17,6 @@
 #define NUM_GROOVES 16
 #define SMOOTHING 100 //# of samples
 
-
 struct PortlandWeather : Module {
 	
 	enum ParamIds {

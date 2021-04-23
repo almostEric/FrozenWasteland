@@ -2,6 +2,7 @@
 - QAR Irrational Rhythms can now do nesting
 - Added Groove EOC output to QAR
 - Added CV control of Mix and Gain Leveling to THe One Ring
+- Improved Feedback Models in Hair Pick
 
 ### 1.18.2 (2021-04-03)
 - Added PN Octave Probability Module
