@@ -3,6 +3,7 @@
 #include <time.h>
 #include "FrozenWasteland.hpp"
 #include "model/ChristoffelWords.hpp"
+#include "ui/menu.hpp"
 #include "ui/knobs.hpp"
 #include "ui/ports.hpp"
 #include "ui/buttons.hpp"
@@ -186,6 +187,7 @@ struct QuadAlgorithmicRhythm : Module {
 	};
 
 	double bpm = 0;
+	bool bpmX4 = false;
 	bool usingBpm = false;
 	bool manualRun = false;
 
@@ -632,7 +634,7 @@ struct QuadAlgorithmicRhythm : Module {
 			manualBeatMatrix[trackNumber][index]  ^= 1UL << bitPosition;
 		}
 
-		fprintf(stderr, "track:%i step:%u index:%u bit:%u  value:%u   accent:%u\n", trackNumber, stepNumber, index,bitPosition,manualBeatMatrix[trackNumber][index],manualAccentMatrix[trackNumber][index]);
+		// fprintf(stderr, "track:%i step:%u index:%u bit:%u  value:%u   accent:%u\n", trackNumber, stepNumber, index,bitPosition,manualBeatMatrix[trackNumber][index],manualAccentMatrix[trackNumber][index]);
 		dirty[trackNumber] = true;
 	}
 
@@ -653,7 +655,8 @@ struct QuadAlgorithmicRhythm : Module {
 	void process(const ProcessArgs &args) override  {
 
 		if(inputs[BPM_INPUT].isConnected()) {
-			bpm = powf(2.0,clamp(inputs[BPM_INPUT].getVoltage(),-10.0,10.0)) * 120.0;
+			bpm = powf(2.0,clamp(inputs[BPM_INPUT].getVoltage(),-10.0f,10.0f)) * 120.0 * (bpmX4 ? 4 : 1);
+			// fprintf(stderr, "%f %i\n", bpm, bpmX4);
 			usingBpm = true;
 		} else {
 			usingBpm = false;	
@@ -1466,7 +1469,6 @@ struct QuadAlgorithmicRhythm : Module {
 			float *messagesFromExpanders = (float*)rightExpander.consumerMessage;
 
 
-
 			//Process Probability Expander Stuff						
 			for(int i = 0; i < TRACK_COUNT; i++) {
 				probabilityGroupFirstStep[i] = -1;
@@ -1874,6 +1876,7 @@ struct QuadAlgorithmicRhythm : Module {
 		json_object_set_new(rootJ, "masterTrack", json_integer((int) masterTrack));
 		json_object_set_new(rootJ, "chainMode", json_integer((int) chainMode));
 		json_object_set_new(rootJ, "muted", json_integer((bool) muted));
+		json_object_set_new(rootJ, "bpmX4", json_integer((bool) bpmX4));
 
 
 		for(int scene=0;scene<NBR_SCENES;scene++) {
@@ -1939,6 +1942,10 @@ struct QuadAlgorithmicRhythm : Module {
 		json_t *mutedJ = json_object_get(rootJ, "muted");
 		if (mutedJ)
 			muted = json_integer_value(mutedJ);
+
+		json_t *bpmx4J = json_object_get(rootJ, "bpmX4");
+		if (bpmx4J)
+			bpmX4 = json_integer_value(bpmx4J);
 
 		for(int scene=0;scene<NBR_SCENES;scene++) {
 			for(int i=0;i<75;i++) {
@@ -2331,11 +2338,7 @@ struct QARBeatDisplay : FramebufferWidget {
 
 	void onButton(const event::Button &e) override {
     if (e.action == GLFW_PRESS && e.button == GLFW_MOUSE_BUTTON_LEFT) {
-		e.consume(this);
-
 		bool accent = (e.mods & GLFW_MOD_SHIFT);
-
-
 		float initX = e.pos.x - 119;
 		float initY = e.pos.y - 120;
 		float distance = sqrt(initX * initX + initY * initY);
@@ -2357,6 +2360,7 @@ struct QARBeatDisplay : FramebufferWidget {
 						}
 					}
 					module->toggleManualBeat(trackNumber,stepNumber,accent);
+					e.consume(this);
 					// fprintf(stderr, "click distance:%f theta:%f track:%i step:%i \n", distance, theta, trackNumber,stepNumber);
 				}
 			}
@@ -2472,9 +2476,32 @@ struct QuadAlgorithmicRhythmWidget : ModuleWidget {
 		
 		addParam(createParam<LEDButton>(Vec(121, 292.5), module, QuadAlgorithmicRhythm::SAVE_SCENE_PARAM));
 		addChild(createLight<LargeLight<BlueLight>>(Vec(122.5, 294), module, QuadAlgorithmicRhythm::SAVE_MODE_LIGHT));
-
-
 	}	
+
+	struct BPMX4Item : MenuItem {
+		QuadAlgorithmicRhythm *module;
+		void onAction(const event::Action &e) override {
+			module->bpmX4 = !module->bpmX4;
+		}
+		void step() override {
+			text = "BPM x4";
+			rightText = (module->bpmX4) ? "✔" : "";
+		}
+	};
+
+	
+	void appendContextMenu(Menu *menu) override {
+		MenuLabel *spacerLabel = new MenuLabel();
+		menu->addChild(spacerLabel);
+
+		QuadAlgorithmicRhythm *module = dynamic_cast<QuadAlgorithmicRhythm*>(this->module);
+		assert(module);
+
+		BPMX4Item *bpmX4Item = new BPMX4Item();
+		bpmX4Item->module = module;
+		menu->addChild(bpmX4Item);
+
+	}
 };
 
 Model *modelQuadAlgorithmicRhythm = createModel<QuadAlgorithmicRhythm, QuadAlgorithmicRhythmWidget>("QuadAlgorithmicRhythm");
