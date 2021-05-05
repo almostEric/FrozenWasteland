@@ -65,6 +65,10 @@ struct TheGardener : Module {
 	float clockDelayLine[MAX_DELAY+1];
 	int delayIndex = 0;
 
+	//percentages
+	float reseedDivisionPercentage = 0;
+	float newSeedDivisionPercentage = 0;
+
 
 	json_t *dataToJson() override {
 		json_t *rootJ = json_object();
@@ -106,8 +110,11 @@ struct TheGardener : Module {
 
 	void process(const ProcessArgs &args) override {
 		sampleDelay = params[SEED_PROCESS_DELAY_COMPENSATION_PARAM].getValue();
-        reseedSteps = params[NUMBER_STEPS_RESEED_PARAM].getValue() + inputs[NUMBER_STEPS_RESEED_CV_INPUT].getVoltage() * params[NUMBER_STEPS_RESEED_CV_ATTENUVERTER_PARAM].getValue() / 10.0f; 
-        newSeedSteps = params[NUMBER_STEPS_NEW_SEED_PARAM].getValue() + inputs[NUMBER_STEPS_NEW_SEED_CV_INPUT].getVoltage() * params[NUMBER_STEPS_NEW_SEED_CV_ATTENUVERTER_PARAM].getValue() / 10.0f; 
+        reseedSteps = clamp(params[NUMBER_STEPS_RESEED_PARAM].getValue() + inputs[NUMBER_STEPS_RESEED_CV_INPUT].getVoltage() * params[NUMBER_STEPS_RESEED_CV_ATTENUVERTER_PARAM].getValue() * 100.0f,1.0f,999.0f); 
+        newSeedSteps = clamp(params[NUMBER_STEPS_NEW_SEED_PARAM].getValue() + inputs[NUMBER_STEPS_NEW_SEED_CV_INPUT].getVoltage() * params[NUMBER_STEPS_NEW_SEED_CV_ATTENUVERTER_PARAM].getValue() * 100.0f,1.0f,999.0f); 
+
+		reseedDivisionPercentage = reseedSteps / 999.0;
+		newSeedDivisionPercentage = newSeedSteps / 999.0;
 
 		if (resetModeTrigger.process(params[DIV_RESET_MODE_PARAM].getValue())) {
 			divResetMode = (divResetMode + 1) % 2; //Two reset modes for now
@@ -265,11 +272,19 @@ struct TheGardenerWidget : ModuleWidget {
 
 
 
-        addParam(createParam<RoundSmallFWSnapKnob>(Vec(5, 67), module, TheGardener::NUMBER_STEPS_RESEED_PARAM));
+		ParamWidget* reseedStepsParam = createParam<RoundSmallFWSnapKnob>(Vec(5, 67), module, TheGardener::NUMBER_STEPS_RESEED_PARAM);
+		if (module) {
+			dynamic_cast<RoundSmallFWSnapKnob*>(reseedStepsParam)->percentage = &module->reseedDivisionPercentage;
+		}
+		addParam(reseedStepsParam);							
         addInput(createInput<FWPortInSmall>(Vec(35, 69), module, TheGardener::NUMBER_STEPS_RESEED_CV_INPUT));
         addParam(createParam<RoundReallySmallFWKnob>(Vec(34, 90), module, TheGardener::NUMBER_STEPS_RESEED_CV_ATTENUVERTER_PARAM));
 
-        addParam(createParam<RoundSmallFWSnapKnob>(Vec(65, 67), module, TheGardener::NUMBER_STEPS_NEW_SEED_PARAM));
+		ParamWidget* newSeedParam = createParam<RoundSmallFWSnapKnob>(Vec(65, 67), module, TheGardener::NUMBER_STEPS_NEW_SEED_PARAM);
+		if (module) {
+			dynamic_cast<RoundSmallFWSnapKnob*>(newSeedParam)->percentage = &module->newSeedDivisionPercentage;
+		}
+		addParam(newSeedParam);							
         addInput(createInput<FWPortInSmall>(Vec(95, 69), module, TheGardener::NUMBER_STEPS_NEW_SEED_CV_INPUT));
         addParam(createParam<RoundReallySmallFWKnob>(Vec(94, 90), module, TheGardener::NUMBER_STEPS_NEW_SEED_CV_ATTENUVERTER_PARAM));
 	

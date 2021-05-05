@@ -44,6 +44,13 @@ struct EverlastingGlottalStopper : Module {
 
 	dsp::SchmittTrigger demphasisFilterTrigger; 
 
+	//percentages
+	float frequencyPercentage = 0;
+	float timeOpenPercentage = 0;
+	float timeClosedPercentage = 0;
+	float breathinessPercentage = 0;
+
+
 	EverlastingGlottalStopper() {
 		config(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS, NUM_LIGHTS);
 		configParam(FREQUENCY_PARAM, -54.0f, 54.0f, 0.0f,"Frequency", " Hz", dsp::FREQ_SEMITONE, dsp::FREQ_C4);
@@ -103,14 +110,15 @@ void EverlastingGlottalStopper::process(const ProcessArgs &args) {
 	lights[DEEMPHASIS_FILTER_LIGHT].value = demphasisFilterActive;
 
 	float pitch = params[FREQUENCY_PARAM].getValue();	
-	float pitchCv = 12.0f * inputs[PITCH_INPUT].getVoltage();
+	float pitchCv = inputs[PITCH_INPUT].getVoltage() * 12.0; 
 	float fm = 0;
 	if (inputs[FM_INPUT].isConnected()) {
 		//pitchCv += dsp::quadraticBipolar(params[FM_CV_ATTENUVERTER_PARAM].getValue()) * 12.0f * inputs[FM_INPUT].getVoltage();
 		fm = params[FM_CV_ATTENUVERTER_PARAM].getValue() * inputs[FM_INPUT].getVoltage() * 1000.0;
 	}
 
-	pitch += pitchCv;
+	pitch += clamp(pitchCv,-54.0f,54.0f);
+	frequencyPercentage = (pitch+54.0)/ 108.0; 
 		// Note C4
 	float freq = (261.626f * powf(2.0f, pitch / 12.0f)) + fm;
 
@@ -121,6 +129,10 @@ void EverlastingGlottalStopper::process(const ProcessArgs &args) {
 	float timeClosed = clamp(params[TIME_CLOSED_PARAM].getValue() + inputs[TIME_CLOSED_INPUT].getVoltage() * params[TIME_CLOSED_CV_ATTENUVERTER_PARAM].getValue(),0.0f,1.0f);
 	float timeOpen = clamp(1.0-timeClosed,timeOpening,1.0);
 
+	timeOpenPercentage = timeOpening;
+	timeClosedPercentage = timeClosed;
+
+
 	float dt = 1.0 / args.sampleRate;
 	float deltaPhase = fminf(freq * dt, 0.5);
 	phase += deltaPhase;
@@ -130,6 +142,7 @@ void EverlastingGlottalStopper::process(const ProcessArgs &args) {
 
 	float out = Rosenburg(timeOpening,timeOpen,phase);
 	float noiseLevel = clamp(params[BREATHINESS_PARAM].getValue() + inputs[BREATHINESS_INPUT].getVoltage() * params[BREATHINESS_CV_ATTENUVERTER_PARAM].getValue(),0.0f,1.0f);
+	breathinessPercentage = noiseLevel;
  	//Noise level follows glottal wave
 	// noise = _gauss.next() * out * noiseLevel;
 	float noise = _gauss.next() / 5.0 * noiseLevel * HanningWindow(phase);
@@ -154,10 +167,26 @@ struct EverlastingGlottalStopperWidget : ModuleWidget {
 		
 		
 
-		addParam(createParam<RoundFWKnob>(Vec(44, 60), module, EverlastingGlottalStopper::FREQUENCY_PARAM));
-		addParam(createParam<RoundSmallFWKnob>(Vec(12, 180), module, EverlastingGlottalStopper::TIME_OPEN_PARAM));
-		addParam(createParam<RoundSmallFWKnob>(Vec(52, 180), module, EverlastingGlottalStopper::TIME_CLOSED_PARAM));
-		addParam(createParam<RoundSmallFWKnob>(Vec(86, 180), module, EverlastingGlottalStopper::BREATHINESS_PARAM));
+		ParamWidget* frequencyParam = createParam<RoundFWKnob>(Vec(44, 60), module, EverlastingGlottalStopper::FREQUENCY_PARAM);
+		if (module) {
+			dynamic_cast<RoundFWKnob*>(frequencyParam)->percentage = &module->frequencyPercentage;
+		}
+		addParam(frequencyParam);							
+		ParamWidget* timeOpenParam = createParam<RoundSmallFWKnob>(Vec(12, 180), module, EverlastingGlottalStopper::TIME_OPEN_PARAM);
+		if (module) {
+			dynamic_cast<RoundSmallFWKnob*>(timeOpenParam)->percentage = &module->timeOpenPercentage;
+		}
+		addParam(timeOpenParam);							
+		ParamWidget* timeClosedParam = createParam<RoundSmallFWKnob>(Vec(52, 180), module, EverlastingGlottalStopper::TIME_CLOSED_PARAM);
+		if (module) {
+			dynamic_cast<RoundSmallFWKnob*>(timeClosedParam)->percentage = &module->timeClosedPercentage;
+		}
+		addParam(timeClosedParam);							
+		ParamWidget* breathinessParam = createParam<RoundSmallFWKnob>(Vec(86, 180), module, EverlastingGlottalStopper::BREATHINESS_PARAM);
+		if (module) {
+			dynamic_cast<RoundSmallFWKnob*>(breathinessParam)->percentage = &module->breathinessPercentage;
+		}
+		addParam(breathinessParam);							
 		addParam(createParam<RoundReallySmallFWKnob>(Vec(88, 132), module, EverlastingGlottalStopper::FM_CV_ATTENUVERTER_PARAM));
 		addParam(createParam<RoundReallySmallFWKnob>(Vec(12, 228), module, EverlastingGlottalStopper::TIME_OPEN_CV_ATTENUVERTER_PARAM));
 		addParam(createParam<RoundReallySmallFWKnob>(Vec(52, 228), module, EverlastingGlottalStopper::TIME_CLOSED_CV_ATTENUVERTER_PARAM));

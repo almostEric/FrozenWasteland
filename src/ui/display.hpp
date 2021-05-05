@@ -237,14 +237,19 @@ struct CellBarGrid : FramebufferWidget {
     nvgFill(args.vg);
 
     if (cells) {
-      nvgFillColor(args.vg, nvgRGB(0x3a, 0x73, 0x27)); //crt green
+      // nvgFillColor(args.vg, nvgRGB(0x3a, 0x73, 0x27)); //crt green
 
       for (uint16_t y = 0; y < cells->height; y++) {
         uint16_t x = cells->displayValueForPosition(y);
         nvgBeginPath(args.vg);
-        int16_t sizeOffset = x*1 >= yAxis ? 1 : -1;
-        int16_t placeOffset = x*1 >= yAxis ? 0 : 1;
-        nvgRect(args.vg, yAxis + placeOffset, y*8, x*1 + sizeOffset-yAxis, 8);
+
+        int16_t sizeOffset = x >= yAxis ? 1 : -1;
+        int16_t placeOffset = x >= yAxis ? 0 : 1;
+        
+        NVGpaint paint = sizeOffset == 1 ? nvgLinearGradient(args.vg, yAxis, 0, cells->width , 0, nvgRGBA(0x3a, 0xa3, 0x27, 0x20), nvgRGBA(0x3a, 0xa3, 0x27, 0xFF)) :
+                                           nvgLinearGradient(args.vg, 0, 0, cells->width - yAxis, 0, nvgRGBA(0x3a, 0xa3, 0x27, 0xff), nvgRGBA(0x3a, 0xa3, 0x27, 0x20));
+        nvgFillPaint(args.vg, paint);
+        nvgRect(args.vg, yAxis + placeOffset, y*8, x + sizeOffset-yAxis, 8);
         nvgFill(args.vg);
       }
 
@@ -254,7 +259,7 @@ struct CellBarGrid : FramebufferWidget {
         nvgStrokeColor(args.vg, nvgRGBA(0x1a, 0x13, 0xc7, 0xF0)); //translucent blue
         nvgStrokeWidth(args.vg, 1.0);
         nvgBeginPath(args.vg);
-        float x = cells->pinXAxisPosition * (cells->width-1) * 1 + 1;
+        float x = cells->pinXAxisPosition * (cells->width-1) + 1;
         nvgMoveTo(args.vg,x,0);
         nvgLineTo(args.vg,x,cells->height * 8);
         nvgStroke(args.vg);		

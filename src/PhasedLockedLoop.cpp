@@ -242,6 +242,11 @@ struct PhasedLockedLoop : Module {
 	float filterOutput = 0;
 	int currentComparatorType = XOR_COMPARATOR;
 
+	//percentages
+	float vcoFreqPercentage = 0;
+	float vcoPWPercentage = 0;
+	float lpfCutoffPercentage = 0;
+
 	
 	PhasedLockedLoop() {
 		config(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS, NUM_LIGHTS);
@@ -288,20 +293,21 @@ void PhasedLockedLoop::process(const ProcessArgs &args) {
 	lights[COINCIDENCE_COMPARATOR_LIGHT].value = currentComparatorType == COINCIDENCE_COMPARATOR ? 1.0 : 0.0;
 	lights[FUZZY_XOR_COMPARATOR_LIGHT].value = currentComparatorType == FUZZY_XOR_COMPARATOR ? 1.0 : 0.0;
 	lights[FUZZY_HYPERBOLIC_XOR_COMPARATOR_LIGHT].value = currentComparatorType == FUZZY_HYPERBOLIC_XOR_COMPARATOR ? 1.0 : 0.0;
-
+	float pitch = params[VCO_FREQ_PARAM].getValue();
 	float pitchCv;
 	if (inputs[VCO_CV_INPUT].isConnected()) {
 		pitchCv =  12.0 * inputs[VCO_CV_INPUT].getVoltage();
 	} else {
 		pitchCv = 12.0 * filterOutput;
 	}
+	vcoFreqPercentage = ((pitch + pitchCv / 12.0) + 54.0) / 108.0; 
 	float pulseWidth = params[VCO_PW_PARAM].getValue();
 	if(inputs[VCO_PW_INPUT].isConnected()) {
-		pulseWidth += inputs[VCO_PW_INPUT].getVoltage() * (params[VCO_PWCV_PARAM].getValue() / 10.0);
+		pulseWidth = clamp(pulseWidth + inputs[VCO_PW_INPUT].getVoltage() * (params[VCO_PWCV_PARAM].getValue() / 10.0),0.0f,1.0f);
 	}
-	//pitchCv = 0.0;// Test
+	vcoPWPercentage = pulseWidth;
 
-	oscillator.setPitch(params[VCO_FREQ_PARAM].getValue(), pitchCv);
+	oscillator.setPitch(pitch, pitchCv);
 	oscillator.setPulseWidth(pulseWidth);
 
 	oscillator.process(1.0 / args.sampleRate);
@@ -358,6 +364,7 @@ void PhasedLockedLoop::process(const ProcessArgs &args) {
 		cutoffExp += (inputs[LPF_FREQ_INPUT].getVoltage() / 5);
 	}
 	cutoffExp = clamp(cutoffExp, 0.0f, 1.0f);
+	lpfCutoffPercentage = cutoffExp;
 	const float minCutoff = 15.0;
 	const float maxCutoff = 8400.0;
 	filter.cutoff = minCutoff * powf(maxCutoff / minCutoff, cutoffExp);
@@ -378,15 +385,27 @@ struct PhasedLockedLoopWidget : ModuleWidget {
 
 		setPanel(APP->window->loadSvg(asset::plugin(pluginInstance, "res/PhasedLockedLoop.svg")));
 		
-		addChild(createWidget<ScrewSilver>(Vec(RACK_GRID_WIDTH-12, 0)));
-		addChild(createWidget<ScrewSilver>(Vec(box.size.x - 2 * RACK_GRID_WIDTH + 12, 0)));
-		addChild(createWidget<ScrewSilver>(Vec(RACK_GRID_WIDTH-12, RACK_GRID_HEIGHT - RACK_GRID_WIDTH)));
-		addChild(createWidget<ScrewSilver>(Vec(box.size.x - 2 * RACK_GRID_WIDTH + 12, RACK_GRID_HEIGHT - RACK_GRID_WIDTH)));
+		// addChild(createWidget<ScrewSilver>(Vec(RACK_GRID_WIDTH-12, 0)));
+		// addChild(createWidget<ScrewSilver>(Vec(box.size.x - 2 * RACK_GRID_WIDTH + 12, 0)));
+		// addChild(createWidget<ScrewSilver>(Vec(RACK_GRID_WIDTH-12, RACK_GRID_HEIGHT - RACK_GRID_WIDTH)));
+		// addChild(createWidget<ScrewSilver>(Vec(box.size.x - 2 * RACK_GRID_WIDTH + 12, RACK_GRID_HEIGHT - RACK_GRID_WIDTH)));
 
-		addParam(createParam<RoundSmallFWKnob>(Vec(100, 46), module, PhasedLockedLoop::VCO_FREQ_PARAM));
-		addParam(createParam<RoundSmallFWKnob>(Vec(85, 80), module, PhasedLockedLoop::VCO_PW_PARAM));
+		ParamWidget* vcoFreqParam = createParam<RoundSmallFWKnob>(Vec(100, 46), module, PhasedLockedLoop::VCO_FREQ_PARAM);
+		if (module) {
+			dynamic_cast<RoundSmallFWKnob*>(vcoFreqParam)->percentage = &module->vcoFreqPercentage;
+		}
+		addParam(vcoFreqParam);							
+		ParamWidget* vcoPWParam = createParam<RoundSmallFWKnob>(Vec(85, 80), module, PhasedLockedLoop::VCO_PW_PARAM);
+		if (module) {
+			dynamic_cast<RoundSmallFWKnob*>(vcoPWParam)->percentage = &module->vcoPWPercentage;
+		}
+		addParam(vcoPWParam);							
 		addParam(createParam<RoundSmallFWKnob>(Vec(118, 80), module, PhasedLockedLoop::VCO_PWCV_PARAM));
-		addParam(createParam<RoundFWKnob>(Vec(97, 323), module, PhasedLockedLoop::LPF_FREQ_PARAM));
+		ParamWidget* lpfCutoffParam = createParam<RoundFWKnob>(Vec(97, 323), module, PhasedLockedLoop::LPF_FREQ_PARAM);
+		if (module) {
+			dynamic_cast<RoundFWKnob*>(lpfCutoffParam)->percentage = &module->lpfCutoffPercentage;
+		}
+		addParam(lpfCutoffParam);							
 
 		addInput(createInput<PJ301MPort>(Vec(8, 30), module, PhasedLockedLoop::VCO_CV_INPUT));
 		addInput(createInput<PJ301MPort>(Vec(8, 62), module, PhasedLockedLoop::VCO_PW_INPUT));

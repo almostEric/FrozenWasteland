@@ -17,14 +17,81 @@ static const NVGcolor SCHEME_DARK_GRAY = nvgRGB(0x17, 0x17, 0x17);
 // Knobs
 ////////////////////
 
+struct BaseKnob : app::SvgKnob {
 
-struct RoundFWKnob : RoundKnob {
+float *percentage = nullptr;
+bool biDirectional = false;
+
+public:
+  BaseKnob() {
+		// minAngle = -0.83*M_PI;
+		// maxAngle = 0.83*M_PI;
+		minAngle = -0.68*M_PI;
+	    maxAngle = 0.68*M_PI;
+
+	}
+
+  void setSVG(std::shared_ptr<Svg> svg) {
+    app::SvgKnob::setSvg(svg);
+  }
+
+  void draw(const DrawArgs &args) override {
+    // /** shadow */
+    // shadow.draw(args.vg);
+
+    /** component */
+    ParamWidget::draw(args);
+
+	NVGcolor icol = nvgRGBAf(0.84f, 0.84f, 0.84f, 0.5);
+    NVGcolor ocol = nvgRGBAf(0.1f, 0.1f, 0.1f, 0.5);
+    NVGpaint paint = nvgLinearGradient(args.vg, 0, 0, box.size.x, box.size.y, icol, ocol);
+    nvgBeginPath(args.vg);
+    nvgFillPaint(args.vg, paint);
+    nvgCircle(args.vg, box.size.x / 2, box.size.y / 2, box.size.x / 2);
+    nvgClosePath(args.vg);
+    nvgFill(args.vg);
+
+	if (percentage == nullptr) {
+      return;
+    }
+
+    float minAngle = -3.65;
+    float maxAngle =  0.55;
+	float midAngle = (minAngle+maxAngle) / 2.0;
+    nvgBeginPath(args.vg);
+    nvgStrokeColor(args.vg, nvgRGBA(0xc8, 0xa1, 0x29, 0xff));
+    nvgStrokeWidth(args.vg, 2.0);
+	if(!biDirectional) {
+		float endAngle = ((maxAngle - minAngle) * *percentage) + minAngle;
+		nvgArc(args.vg, box.size.x / 2, box.size.y / 2, box.size.x / 2 - 4.0, minAngle, endAngle, NVG_CW);
+	} else {
+		float endAngle = ((maxAngle - midAngle) * *percentage) + midAngle;
+		nvgArc(args.vg, box.size.x / 2, box.size.y / 2, box.size.x / 2 - 4.0, midAngle, endAngle, endAngle > midAngle ? NVG_CW : NVG_CCW);
+	}
+    nvgStroke(args.vg);
+  }
+};
+
+// struct LightKnob : BaseKnob {
+//   LightKnob() {
+//     minAngle = -0.68*M_PI;
+//     maxAngle = 0.68*M_PI;
+
+//     setSvg(APP->window->loadSvg(asset::plugin(pluginInstance, "res/component/knob.svg")));
+//     shadow.setBox(box);
+//     shadow.setSize(0.8);
+//     shadow.setStrength(0.2);
+//     shadow.setShadowPosition(2, 3.5);
+//   }
+// };
+
+struct RoundFWKnob : BaseKnob {
 	RoundFWKnob() {
 		setSvg(APP->window->loadSvg(asset::plugin(pluginInstance,"res/ComponentLibrary/RoundFWKnob.svg")));
 	}
 };
 
-struct RoundFWSnapKnob : RoundKnob {
+struct RoundFWSnapKnob : BaseKnob {
 	RoundFWSnapKnob() {
 		setSvg(APP->window->loadSvg(asset::plugin(pluginInstance,"res/ComponentLibrary/RoundFWKnob.svg")));
 		snap = true;
@@ -32,33 +99,33 @@ struct RoundFWSnapKnob : RoundKnob {
 };
 
 
-struct RoundSmallFWKnob : RoundKnob {
+struct RoundSmallFWKnob : BaseKnob {
 	RoundSmallFWKnob() {
 		setSvg(APP->window->loadSvg(asset::plugin(pluginInstance,"res/ComponentLibrary/RoundSmallFWKnob.svg")));
 	}
 };
 
-struct RoundSmallFWSnapKnob : RoundKnob {
+struct RoundSmallFWSnapKnob : BaseKnob {
 	RoundSmallFWSnapKnob() {
 		setSvg(APP->window->loadSvg(asset::plugin(pluginInstance,"res/ComponentLibrary/RoundSmallFWKnob.svg")));
 		snap = true;
 	}
 };
 
-struct RoundReallySmallFWKnob : RoundKnob {
+struct RoundReallySmallFWKnob : BaseKnob {
 	RoundReallySmallFWKnob() {
 		setSvg(APP->window->loadSvg(asset::plugin(pluginInstance,"res/ComponentLibrary/RoundReallySmallFWKnob.svg")));
 	}
 };
 
-struct RoundReallySmallFWSnapKnob : RoundKnob {
+struct RoundReallySmallFWSnapKnob : BaseKnob {
 	RoundReallySmallFWSnapKnob() {
 		setSvg(APP->window->loadSvg(asset::plugin(pluginInstance,"res/ComponentLibrary/RoundReallySmallFWKnob.svg")));
 		snap = true;
 	}
 };
 
-struct RoundExtremelySmallFWKnob : RoundKnob {
+struct RoundExtremelySmallFWKnob : BaseKnob {
 	RoundExtremelySmallFWKnob() {
 		setSvg(APP->window->loadSvg(asset::plugin(pluginInstance,"res/ComponentLibrary/RoundExtremelySmallFWKnob.svg")));
 	}
@@ -67,13 +134,13 @@ struct RoundExtremelySmallFWKnob : RoundKnob {
 
 
 
-struct RoundLargeFWKnob : RoundKnob {
+struct RoundLargeFWKnob : BaseKnob {
 	RoundLargeFWKnob() {
 		setSvg(APP->window->loadSvg(asset::plugin(pluginInstance,"res/ComponentLibrary/RoundLargeFWKnob.svg")));
 	}
 };
 
-struct RoundLargeFWSnapKnob : RoundKnob {
+struct RoundLargeFWSnapKnob : BaseKnob {
 	RoundLargeFWSnapKnob() {
 		setSvg(APP->window->loadSvg(asset::plugin(pluginInstance,"res/ComponentLibrary/RoundLargeFWKnob.svg")));
 		snap = true;
@@ -82,13 +149,13 @@ struct RoundLargeFWSnapKnob : RoundKnob {
 
 
 
-struct RoundHugeFWKnob : RoundKnob {
+struct RoundHugeFWKnob : BaseKnob {
 	RoundHugeFWKnob() {
 		setSvg(APP->window->loadSvg(asset::plugin(pluginInstance,"res/ComponentLibrary/RoundHugeFWKnob.svg")));
 	}
 };
 
-struct RoundHugeFWSnapKnob : RoundKnob {
+struct RoundHugeFWSnapKnob : BaseKnob {
 	RoundHugeFWSnapKnob() {
 		setSvg(APP->window->loadSvg(asset::plugin(pluginInstance,"res/ComponentLibrary/RoundHugeFWKnob.svg")));
 		snap = true;

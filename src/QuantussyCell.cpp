@@ -102,6 +102,11 @@ struct QuantussyCell : Module {
 	float _value1, _value2;
 	//Castle S&H is #1, CV #2
 
+	//percentages
+	float cvAttenuverterPercentage = 0;
+	float lowLimitPercentage = 0;
+	float hiLimitPercentage = 0;
+
 	QuantussyCell() {
 		config(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS, NUM_LIGHTS);
 
@@ -125,8 +130,10 @@ struct QuantussyCell : Module {
 void QuantussyCell::process(const ProcessArgs &args) {
 	float deltaTime = args.sampleTime;
 
-	float lowLimit = params[LOW_LIMIT_PARAM].getValue() + (inputs[LOW_LIMIT_CV_INPUT].getVoltage());
-	float hiLimit = params[HI_LIMIT_PARAM].getValue() + (inputs[HI_LIMIT_CV_INPUT].getVoltage());
+	float lowLimit = clamp(params[LOW_LIMIT_PARAM].getValue() + (inputs[LOW_LIMIT_CV_INPUT].getVoltage()),-10.0f,10.0f);
+	lowLimitPercentage = (lowLimit + 10.0) / 20.0;
+	float hiLimit = clamp(params[HI_LIMIT_PARAM].getValue() + (inputs[HI_LIMIT_CV_INPUT].getVoltage()),-10.0f,10.0f);
+	hiLimitPercentage = (hiLimit + 10.0) / 20.0;
 	float pitch = clamp(params[FREQ_PARAM].getValue()  + _value2,lowLimit,hiLimit);
 
 	oscillator.setPitch(pitch);
@@ -153,9 +160,10 @@ void QuantussyCell::process(const ProcessArgs &args) {
 	outputs[CASTLE_OUTPUT].setVoltage(_value1);
 
 	//Process CV
+	float attenuverting = clamp(params[CV_ATTENUVERTER_PARAM].getValue() + (inputs[CV_AMOUNT_INPUT].getVoltage() / 10.0f),-1.0f,1.0f);
+	cvAttenuverterPercentage = attenuverting;
 	if (_cvTrigger.process(squareOutput)) {
 		if (inputs[CV_INPUT].isConnected()) {
-			float attenuverting = params[CV_ATTENUVERTER_PARAM].getValue() + (inputs[CV_AMOUNT_INPUT].getVoltage() * 10.0f);
 			_value2 = inputs[CV_INPUT].getVoltage() * attenuverting;
 		}
 		else {
@@ -174,17 +182,30 @@ struct QuantussyCellWidget : ModuleWidget {
 
 		setPanel(APP->window->loadSvg(asset::plugin(pluginInstance, "res/QuantussyCell.svg")));
 		
-		addChild(createWidget<ScrewSilver>(Vec(RACK_GRID_WIDTH - 14, 0)));	
-		addChild(createWidget<ScrewSilver>(Vec(box.size.x - 2 * RACK_GRID_WIDTH + 14, 0)));
-		addChild(createWidget<ScrewSilver>(Vec(RACK_GRID_WIDTH - 14, RACK_GRID_HEIGHT - RACK_GRID_WIDTH)));
-		addChild(createWidget<ScrewSilver>(Vec(box.size.x - 2 * RACK_GRID_WIDTH + 14, RACK_GRID_HEIGHT - RACK_GRID_WIDTH)));
+		// addChild(createWidget<ScrewSilver>(Vec(RACK_GRID_WIDTH - 14, 0)));	
+		// addChild(createWidget<ScrewSilver>(Vec(box.size.x - 2 * RACK_GRID_WIDTH + 14, 0)));
+		// addChild(createWidget<ScrewSilver>(Vec(RACK_GRID_WIDTH - 14, RACK_GRID_HEIGHT - RACK_GRID_WIDTH)));
+		// addChild(createWidget<ScrewSilver>(Vec(box.size.x - 2 * RACK_GRID_WIDTH + 14, RACK_GRID_HEIGHT - RACK_GRID_WIDTH)));
 
-		addParam(createParam<RoundLargeFWKnob>(Vec(28, 54), module, QuantussyCell::FREQ_PARAM));
-		addParam(createParam<RoundFWKnob>(Vec(13, 180), module, QuantussyCell::CV_ATTENUVERTER_PARAM));
+		addParam(createParam<RoundLargeFWKnob>(Vec(28, 54), module, QuantussyCell::FREQ_PARAM));							
+		ParamWidget* cvAttenuverterParam = createParam<RoundFWKnob>(Vec(13, 180), module, QuantussyCell::CV_ATTENUVERTER_PARAM);
+		if (module) {
+			dynamic_cast<RoundFWKnob*>(cvAttenuverterParam)->percentage = &module->cvAttenuverterPercentage;
+			dynamic_cast<RoundFWKnob*>(cvAttenuverterParam)->biDirectional = true;
+		}
+		addParam(cvAttenuverterParam);							
 
-		addParam(createParam<RoundSmallFWKnob>(Vec(5, 90), module, QuantussyCell::LOW_LIMIT_PARAM));
+		ParamWidget* lowLimitParam = createParam<RoundSmallFWKnob>(Vec(5, 90), module, QuantussyCell::LOW_LIMIT_PARAM);
+		if (module) {
+			dynamic_cast<RoundSmallFWKnob*>(lowLimitParam)->percentage = &module->lowLimitPercentage;
+		}
+		addParam(lowLimitParam);							
 		addInput(createInput<FWPortInSmall>(Vec(8, 116), module, QuantussyCell::LOW_LIMIT_CV_INPUT));
-		addParam(createParam<RoundSmallFWKnob>(Vec(60, 90), module, QuantussyCell::HI_LIMIT_PARAM));
+		ParamWidget* hiLimitParam = createParam<RoundSmallFWKnob>(Vec(60, 90), module, QuantussyCell::HI_LIMIT_PARAM);
+		if (module) {
+			dynamic_cast<RoundSmallFWKnob*>(hiLimitParam)->percentage = &module->hiLimitPercentage;
+		}
+		addParam(hiLimitParam);							
 		addInput(createInput<FWPortInSmall>(Vec(63, 116), module, QuantussyCell::HI_LIMIT_CV_INPUT));
 
 

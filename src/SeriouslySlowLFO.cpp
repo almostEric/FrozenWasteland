@@ -125,6 +125,10 @@ struct LowFrequencyOscillator {
 	double initialPhase = 0.0;
 	int timeBase = 0;
 	bool phase_quantized = false;
+
+
+	float durationPercentage = 0;
+	float phasePercentage = 0;
 	
 
 	SeriouslySlowLFO() {
@@ -183,6 +187,7 @@ struct LowFrequencyOscillator {
 			duration +=inputs[FM_INPUT].getVoltage() * params[FM_CV_ATTENUVERTER_PARAM].getValue();
 		}
 		duration = clamp(duration,1.0f,100.0f);
+		durationPercentage = duration / 100.0;
 
 		oscillator.setFrequency(1.0 / (duration * numberOfSeconds));
 
@@ -199,8 +204,10 @@ struct LowFrequencyOscillator {
 			initialPhase -= 1.0;
 		else if (initialPhase < 0)
 			initialPhase += 1.0;	
+		phasePercentage = initialPhase; 			
 		if(phase_quantized) // Limit to 90 degree increments
 			initialPhase = std::round(initialPhase * 4.0f) / 4.0f;
+
 		
 		oscillator.offset = (params[OFFSET_PARAM].getValue() > 0.0);
 		oscillator.setBasePhase(initialPhase);
@@ -317,20 +324,27 @@ struct SeriouslySlowLFOWidget : ModuleWidget {
 			addChild(display);
 		}
 
-		//addParam(createParam<CKD6>(Vec(8, 240), module, SeriouslySlowLFO::TIME_BASE_PARAM));
-		addParam(createParam<RoundLargeFWKnob>(Vec(56, 80), module, SeriouslySlowLFO::DURATION_PARAM));
+		ParamWidget* durationParam = createParam<RoundLargeFWKnob>(Vec(56, 80), module, SeriouslySlowLFO::DURATION_PARAM);
+		if (module) {
+			dynamic_cast<RoundLargeFWKnob*>(durationParam)->percentage = &module->durationPercentage;
+		}
+		addParam(durationParam);							
 		addParam(createParam<RoundSmallFWKnob>(Vec(99, 111), module, SeriouslySlowLFO::FM_CV_ATTENUVERTER_PARAM));
 
-		addParam(createParam<RoundFWKnob>(Vec(72, 162), module, SeriouslySlowLFO::PHASE_PARAM));
+		ParamWidget* phaseParam = createParam<RoundFWKnob>(Vec(72, 162), module, SeriouslySlowLFO::PHASE_PARAM);
+		if (module) {
+			dynamic_cast<RoundFWKnob*>(phaseParam)->percentage = &module->phasePercentage;
+		}
+		addParam(phaseParam);							
 		addParam(createParam<RoundSmallFWKnob>(Vec(75, 223), module, SeriouslySlowLFO::PHASE_CV_ATTENUVERTER_PARAM));
 		addParam(createParam<LEDButton>(Vec(58, 184), module, SeriouslySlowLFO::QUANTIZE_PHASE_PARAM));
 		
-		addParam(createParam<CKSS>(Vec(48, 266), module, SeriouslySlowLFO::OFFSET_PARAM));
-		addParam(createParam<TL1105>(Vec(106, 276), module, SeriouslySlowLFO::RESET_PARAM));
+		addParam(createParam<CKSS>(Vec(58, 266), module, SeriouslySlowLFO::OFFSET_PARAM));
+		addParam(createParam<TL1105>(Vec(116, 276), module, SeriouslySlowLFO::RESET_PARAM));
 		
 		addInput(createInput<PJ301MPort>(Vec(98, 83), module, SeriouslySlowLFO::FM_INPUT));
 		addInput(createInput<PJ301MPort>(Vec(74, 195), module, SeriouslySlowLFO::PHASE_INPUT));
-		addInput(createInput<PJ301MPort>(Vec(80, 272), module, SeriouslySlowLFO::RESET_INPUT));
+		addInput(createInput<PJ301MPort>(Vec(90, 272), module, SeriouslySlowLFO::RESET_INPUT));
 
 		addOutput(createOutput<PJ301MPort>(Vec(29, 320), module, SeriouslySlowLFO::SIN_OUTPUT));
 		addOutput(createOutput<PJ301MPort>(Vec(63, 320), module, SeriouslySlowLFO::TRI_OUTPUT));

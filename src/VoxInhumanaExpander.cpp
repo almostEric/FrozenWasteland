@@ -53,14 +53,17 @@ struct VoxInhumanaExpander : Module {
 	dsp::SchmittTrigger slopeTrigger[FORMANT_COUNT];
 	bool twelveDbSlopeSelected[FORMANT_COUNT];
 
+	//percentages
+	float qPercentage[FORMANT_COUNT] = {0};
+
 	VoxInhumanaExpander() {
 		config(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS, NUM_LIGHTS);
 		
-        configParam(Q_1_PARAM, -30.0, 100.0, 0,"Formant 1 Resonance");
-		configParam(Q_2_PARAM, -30.0, 100.0, 0,"Formant 2 Resonance");
-		configParam(Q_3_PARAM, -30.0, 100.0, 0,"Formant 3 Resonance");
-		configParam(Q_4_PARAM, -30.0, 100.0, 0,"Formant 4 Resonance");
-		configParam(Q_5_PARAM, -30.0, 100.0, 0,"Formant 5 Resonance");
+        configParam(Q_1_PARAM, 0.5, 20.0, 0,"Formant 1 Resonance");
+		configParam(Q_2_PARAM, 0.5, 20.0, 0,"Formant 2 Resonance");
+		configParam(Q_3_PARAM, 0.5, 20.0, 0,"Formant 3 Resonance");
+		configParam(Q_4_PARAM, 0.5, 20.0, 0,"Formant 4 Resonance");
+		configParam(Q_5_PARAM, 0.5, 20.0, 0,"Formant 5 Resonance");
 		configParam(Q_1_ATTENUVERTER_PARAM, -1.0, 1.0, 0,"Formant 1 Resonance CV Attenuation","%",0,100);
 		configParam(Q_2_ATTENUVERTER_PARAM, -1.0, 1.0, 0,"Formant 2 Resonance CV Attenuation","%",0,100);
 		configParam(Q_3_ATTENUVERTER_PARAM, -1.0, 1.0, 0,"Formant 3 Resonance CV Attenuation","%",0,100);
@@ -129,7 +132,9 @@ struct VoxInhumanaExpander : Module {
 			
 			
 			for (int i = 0; i < FORMANT_COUNT; i++) {
-                producerMessage[i * 2] = clamp(params[Q_1_PARAM+i].getValue() + (inputs[Q_1_INPUT + i].isConnected() ? inputs[Q_1_INPUT + i].getVoltage() * 10 * params[Q_2_ATTENUVERTER_PARAM + i].getValue() : 0.0f),1.0,100.0f);
+                float q = clamp(params[Q_1_PARAM+i].getValue() + (inputs[Q_1_INPUT + i].isConnected() ? inputs[Q_1_INPUT + i].getVoltage() * 10 * params[Q_2_ATTENUVERTER_PARAM + i].getValue() : 0.0f),0.5,20.0f);
+				qPercentage[i] = (q-0.5) / 19.5;
+                producerMessage[i * 2] = q;
                 producerMessage[i * 2 + 1] = twelveDbSlopeSelected[i];                 
 			}			
 						
@@ -169,11 +174,31 @@ struct VoxInhumanaExpanderWidget : ModuleWidget {
 
 
 	
-		addParam(createParam<RoundFWKnob>(Vec(10, 160), module, VoxInhumanaExpander::Q_1_PARAM));
-		addParam(createParam<RoundFWKnob>(Vec(10, 195), module, VoxInhumanaExpander::Q_2_PARAM));
-		addParam(createParam<RoundFWKnob>(Vec(10, 230), module, VoxInhumanaExpander::Q_3_PARAM));
-		addParam(createParam<RoundFWKnob>(Vec(10, 265), module, VoxInhumanaExpander::Q_4_PARAM));
-		addParam(createParam<RoundFWKnob>(Vec(10, 300), module, VoxInhumanaExpander::Q_5_PARAM));
+		ParamWidget* q1Param = createParam<RoundFWKnob>(Vec(10, 160), module, VoxInhumanaExpander::Q_1_PARAM);
+		if (module) {
+			dynamic_cast<RoundFWKnob*>(q1Param)->percentage = &module->qPercentage[0];
+		}
+		addParam(q1Param);							
+		ParamWidget* q2Param = createParam<RoundFWKnob>(Vec(10, 195), module, VoxInhumanaExpander::Q_2_PARAM);
+		if (module) {
+			dynamic_cast<RoundFWKnob*>(q2Param)->percentage = &module->qPercentage[1];
+		}
+		addParam(q2Param);							
+		ParamWidget* q3Param = createParam<RoundFWKnob>(Vec(10, 230), module, VoxInhumanaExpander::Q_3_PARAM);
+		if (module) {
+			dynamic_cast<RoundFWKnob*>(q3Param)->percentage = &module->qPercentage[2];
+		}
+		addParam(q3Param);							
+		ParamWidget* q4Param = createParam<RoundFWKnob>(Vec(10, 265), module, VoxInhumanaExpander::Q_4_PARAM);
+		if (module) {
+			dynamic_cast<RoundFWKnob*>(q4Param)->percentage = &module->qPercentage[3];
+		}
+		addParam(q4Param);							
+		ParamWidget* q5Param = createParam<RoundFWKnob>(Vec(10, 300), module, VoxInhumanaExpander::Q_5_PARAM);
+		if (module) {
+			dynamic_cast<RoundFWKnob*>(q5Param)->percentage = &module->qPercentage[4];
+		}
+		addParam(q5Param);							
 		addParam(createParam<RoundSmallFWKnob>(Vec(75, 162), module, VoxInhumanaExpander::Q_1_ATTENUVERTER_PARAM));
 		addParam(createParam<RoundSmallFWKnob>(Vec(75, 197), module, VoxInhumanaExpander::Q_2_ATTENUVERTER_PARAM));
 		addParam(createParam<RoundSmallFWKnob>(Vec(75, 232), module, VoxInhumanaExpander::Q_3_ATTENUVERTER_PARAM));

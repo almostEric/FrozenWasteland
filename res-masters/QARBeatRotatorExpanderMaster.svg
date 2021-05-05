@@ -8,7 +8,7 @@
    xmlns:xlink="http://www.w3.org/1999/xlink"
    xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
    xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
-   sodipodi:docname="QARIrrationalityExpander.svg"
+   sodipodi:docname="QARBeatRotatorExpanderMaster.svg"
    inkscape:version="1.0 (4035a4fb49, 2020-05-01)"
    id="svg11003"
    version="1.1"
@@ -21,17 +21,17 @@
        id="linearGradient4047"
        inkscape:collect="always">
       <stop
-         id="stop3387"
+         style="stop-color:#0c1622;stop-opacity:1"
          offset="0"
-         style="stop-color:#0c1622;stop-opacity:1" />
+         id="stop3387" />
       <stop
-         id="stop3388"
+         style="stop-color:#161625;stop-opacity:1"
          offset=".3"
-         style="stop-color:#161625;stop-opacity:1" />
+         id="stop3388" />
       <stop
-         id="stop3389"
+         style="stop-color:#081f35;stop-opacity:1"
          offset="1"
-         style="stop-color:#081f35;stop-opacity:1" />
+         id="stop3389" />
     </linearGradient>
     <linearGradient
        gradientTransform="matrix(0.5824096,0,0,1,14.70738,0)"
@@ -77,7 +77,7 @@
         <dc:format>image/svg+xml</dc:format>
         <dc:type
            rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
-        <dc:title />
+        <dc:title></dc:title>
       </cc:Work>
     </rdf:RDF>
   </metadata>
@@ -132,18 +132,18 @@
        id="text3885"
        y="54.071297"
        x="49.16748"
-       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:3.52778px;line-height:1.25;font-family:Quarca;-inkscape-font-specification:Quarca;text-align:start;letter-spacing:0px;word-spacing:0px;text-anchor:start;fill:#dddddd;fill-opacity:1;stroke:none;stroke-width:0.264583;"
+       style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:3.52778px;line-height:1.25;font-family:Homenaje;-inkscape-font-specification:'Quarca';text-align:start;letter-spacing:0px;word-spacing:0px;text-anchor:start;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.264583"
        xml:space="preserve"><tspan
          id="tspan1013"
-         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:3.88056px;font-family:Quarca;-inkscape-font-specification:Quarca;text-align:center;text-anchor:middle;stroke-width:0.264583;fill:#dddddd;fill-opacity:1;"
+         style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:3.88056px;font-family:Homenaje;-inkscape-font-specification:'Quarca';text-align:center;text-anchor:middle;stroke-width:0.264583"
          y="54.071297"
          x="49.16748"
          sodipodi:role="line">QAR</tspan><tspan
          id="tspan39170"
-         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:3.88056px;font-family:Quarca;-inkscape-font-specification:Quarca;text-align:center;text-anchor:middle;stroke-width:0.264583;fill:#dddddd;fill-opacity:1;"
+         style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:3.88056px;font-family:Homenaje;-inkscape-font-specification:'Quarca';text-align:center;text-anchor:middle;stroke-width:0.264583"
          y="58.921997"
          x="49.16748"
-         sodipodi:role="line">IRRATIONAL</tspan></text>
+         sodipodi:role="line">BEAT ROTATOR</tspan></text>
     <flowRoot
        transform="matrix(0.26458333,0,0,0.26458333,35.146312,50.389004)"
        style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:13.3333px;line-height:1.25;font-family:Consolas;-inkscape-font-specification:'Consolas Bold';text-align:center;letter-spacing:0px;word-spacing:0px;text-anchor:middle;fill:#000000;fill-opacity:1;stroke:none"
@@ -159,14 +159,14 @@
     <text
        id="text5443-7-5"
        y="64.941086"
-       x="45.878517"
-       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:3.52778px;line-height:1.25;font-family:Quarca;-inkscape-font-specification:Quarca;letter-spacing:0px;word-spacing:0px;fill:#dddddd;fill-opacity:1;stroke:none;stroke-width:0.264583;"
+       x="44.820183"
+       style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:3.52778px;line-height:1.25;font-family:Homenaje;-inkscape-font-specification:'Quarca';letter-spacing:0px;word-spacing:0px;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.264583"
        xml:space="preserve"><tspan
-         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:2.82222px;font-family:Quarca;-inkscape-font-specification:Quarca;stroke-width:0.264583;fill:#dddddd;fill-opacity:1;"
+         style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:2.82222px;font-family:Homenaje;-inkscape-font-specification:'Quarca';stroke-width:0.264583"
          y="64.941086"
-         x="45.878517"
+         x="44.820183"
          id="tspan5441-1-6"
-         sodipodi:role="line">START</tspan></text>
+         sodipodi:role="line">ROTATION</tspan></text>
     <flowRoot
        style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:13.3333px;line-height:1.25;font-family:Arial;-inkscape-font-specification:'Arial Bold';text-align:center;letter-spacing:0px;word-spacing:0px;text-anchor:middle;fill:#000000;fill-opacity:1;stroke:none"
        id="flowRoot1633"
@@ -180,15 +180,15 @@
          id="flowPara1639" /></flowRoot>
     <text
        id="text5443-7-5-4-2"
-       y="86.090469"
-       x="44.46529"
-       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:3.52778px;line-height:1.25;font-family:Quarca;-inkscape-font-specification:Quarca;letter-spacing:0px;word-spacing:0px;fill:#dddddd;fill-opacity:1;stroke:none;stroke-width:0.264583;"
+       y="91.382133"
+       x="42.348621"
+       style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:3.52778px;line-height:1.25;font-family:Homenaje;-inkscape-font-specification:'Quarca';letter-spacing:0px;word-spacing:0px;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.264583"
        xml:space="preserve"><tspan
-         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:2.82222px;font-family:Quarca;-inkscape-font-specification:Quarca;stroke-width:0.264583;fill:#dddddd;fill-opacity:1;"
-         y="86.090469"
-         x="44.46529"
+         style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:2.11667px;font-family:Homenaje;-inkscape-font-specification:'Quarca';stroke-width:0.264583"
+         y="91.382133"
+         x="42.348621"
          id="tspan5441-1-6-3-4"
-         sodipodi:role="line"># STEPS</tspan></text>
+         sodipodi:role="line">PHASE QUANTITIZE</tspan></text>
     <text
        transform="scale(1.0030227,0.99698641)"
        id="text3885-7"
@@ -203,70 +203,14 @@
          sodipodi:role="line">FW</tspan></text>
     <text
        id="text5443-7-5-4-2-0"
-       y="137.966"
+       y="128.70567"
        x="45.276325"
-       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:3.52778px;line-height:1.25;font-family:Quarca;-inkscape-font-specification:Quarca;letter-spacing:0px;word-spacing:0px;fill:#dddddd;fill-opacity:1;stroke:none;stroke-width:0.264583;"
+       style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:3.52778px;line-height:1.25;font-family:Homenaje;-inkscape-font-specification:'Quarca';letter-spacing:0px;word-spacing:0px;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.264583"
        xml:space="preserve"><tspan
-         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:2.82222px;font-family:Quarca;-inkscape-font-specification:Quarca;stroke-width:0.264583;fill:#dddddd;fill-opacity:1;"
-         y="137.966"
+         style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:2.82222px;font-family:Homenaje;-inkscape-font-specification:'Quarca';stroke-width:0.264583"
+         y="128.70567"
          x="45.276325"
          id="tspan5441-1-6-3-4-5"
          sodipodi:role="line">TRACKS</tspan></text>
-    <text
-       xml:space="preserve"
-       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:3.52777px;line-height:1.25;font-family:Quarca;-inkscape-font-specification:Quarca;letter-spacing:0px;word-spacing:0px;fill:#dddddd;fill-opacity:1;stroke:none;stroke-width:0.264583;"
-       x="45.989674"
-       y="107.13322"
-       id="text5443-7-5-4-2-8"><tspan
-         sodipodi:role="line"
-         id="tspan5441-1-6-3-4-1"
-         x="45.989674"
-         y="107.13322"
-         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:2.82223px;font-family:Quarca;-inkscape-font-specification:Quarca;stroke-width:0.264583;fill:#dddddd;fill-opacity:1;">RATIO</tspan></text>
-    <g
-       transform="translate(0.13233107,-4.8814781)"
-       aria-label="BEAT"
-       style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:3.52778px;line-height:1.25;font-family:Quarca;-inkscape-font-specification:'Quarca';letter-spacing:0px;word-spacing:0px;fill:#dddddd;fill-opacity:1;stroke:none;stroke-width:0.264583;"
-       id="text5443-0-6">
-      <path
-         d="m 39.169038,130.55185 v 0.48048 h 0.13335 q 0.127,0 0.19685,-0.0635 0.06985,-0.0656 0.06985,-0.18838 0,-0.2286 -0.2667,-0.2286 z m 0.427567,0.55456 q 0.08255,0.0444 0.135466,0.13335 0.05503,0.0889 0.05503,0.17992 0,0.091 -0.0085,0.14605 -0.0085,0.055 -0.0381,0.12065 -0.02752,0.0635 -0.07832,0.10583 -0.1143,0.1016 -0.351366,0.1016 h -0.328084 v -1.48166 h 0.359834 q 0.19685,0 0.294216,0.091 0.09737,0.0889 0.09737,0.28152 0,0.10583 -0.04022,0.19473 -0.0381,0.0868 -0.09737,0.127 z m -0.296334,0.6477 q 0.309034,0 0.309034,-0.29633 0,-0.15028 -0.09102,-0.2159 -0.09102,-0.0656 -0.2159,-0.0656 h -0.13335 v 0.57785 z"
-         style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:2.11667px;font-family:Quarca;-inkscape-font-specification:'Quarca';stroke-width:0.264583;fill:#dddddd;fill-opacity:1;"
-         id="path2945" />
-      <path
-         d="m 40.012166,131.89381 v -1.48166 h 0.645583 v 0.14393 h -0.459316 v 0.47413 h 0.372533 v 0.14394 h -0.372533 v 0.57573 h 0.480483 v 0.14393 z"
-         style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:2.11667px;font-family:Quarca;-inkscape-font-specification:'Quarca';stroke-width:0.264583;fill:#dddddd;fill-opacity:1;"
-         id="path2947" />
-      <path
-         d="m 41.139787,130.41215 h 0.281517 l 0.321733,1.48166 H 41.56947 l -0.103716,-0.43603 H 41.08052 l -0.09525,0.43603 h -0.179916 z m 0.294217,0.9017 -0.1524,-0.762 h -0.01482 l -0.154517,0.762 z"
-         style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:2.11667px;font-family:Quarca;-inkscape-font-specification:'Quarca';stroke-width:0.264583;fill:#dddddd;fill-opacity:1;"
-         id="path2949" />
-      <path
-         d="m 42.027729,131.89381 v -1.34196 h -0.296334 v -0.1397 h 0.778934 v 0.1397 h -0.296334 v 1.34196 z"
-         style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:2.11667px;font-family:Quarca;-inkscape-font-specification:'Quarca';stroke-width:0.264583;fill:#dddddd;fill-opacity:1;"
-         id="path2951" />
-    </g>
-    <text
-       xml:space="preserve"
-       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:3.52777px;line-height:1.25;font-family:Quarca;-inkscape-font-specification:Quarca;letter-spacing:0px;word-spacing:0px;fill:#dddddd;fill-opacity:1;stroke:none;stroke-width:0.264583;"
-       x="50.732933"
-       y="126.65083"
-       id="text5443-7-5-4-2-0-8"><tspan
-         sodipodi:role="line"
-         id="tspan5441-1-6-3-4-5-0"
-         x="50.732933"
-         y="126.65083"
-         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:2.82223px;font-family:Quarca;-inkscape-font-specification:Quarca;stroke-width:0.264583;fill:#dddddd;fill-opacity:1;">ENABLED</tspan></text>
-    <path
-       id="rect6948-0-8-7"
-       style="fill:#101015;fill-opacity:1;stroke:#999999;stroke-width:0.175204;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
-       d="m 52.696414,67.40994 h 7.762297 v 5.116464 h -7.762297 z" />
-    <path
-       d="m 52.696414,88.576607 h 7.762297 v 5.116464 h -7.762297 z"
-       style="fill:#101015;fill-opacity:1;stroke:#999999;stroke-width:0.175204;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
-       id="rect6948-0-8-7-9" />
-    <path
-       d="m 52.696414,109.74327 h 7.762297 v 5.11647 h -7.762297 z"
-       style="fill:#101015;fill-opacity:1;stroke:#999999;stroke-width:0.175204;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
-       id="rect6948-0-8-7-2" />
   </g>
 </svg>

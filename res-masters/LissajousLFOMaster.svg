@@ -1,6 +1,4 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<!-- Created with Inkscape (http://www.inkscape.org/) -->
-
 <svg
    xmlns:dc="http://purl.org/dc/elements/1.1/"
    xmlns:cc="http://creativecommons.org/ns#"
@@ -15,23 +13,29 @@
    viewBox="0 0 67.468751 100.54167"
    version="1.1"
    id="svg11003"
-   inkscape:version="0.92.2 (5c3e80d, 2017-08-06)"
+   inkscape:version="1.0 (4035a4fb49, 2020-05-01)"
    sodipodi:docname="LissajousLFOMaster.svg">
   <defs
      id="defs10997">
+    <rect
+       x="108.96506"
+       y="138.36297"
+       width="21.431251"
+       height="3.9687501"
+       id="rect10461" />
     <linearGradient
        inkscape:collect="always"
        id="linearGradient4682">
       <stop
-         style="stop-color:#202022;stop-opacity:1;"
+         style="stop-color:#0c1622;stop-opacity:1"
          offset="0"
          id="stop3387" />
       <stop
-         style="stop-color:#202025;stop-opacity:1;"
+         style="stop-color:#161625;stop-opacity:1"
          offset=".3"
          id="stop3388" />
       <stop
-         style="stop-color:#08003e;stop-opacity:1;"
+         style="stop-color:#081f35;stop-opacity:1"
          offset="1"
          id="stop3389" />
     </linearGradient>
@@ -53,9 +57,9 @@
      borderopacity="1.0"
      inkscape:pageopacity="0.0"
      inkscape:pageshadow="2"
-     inkscape:zoom="5.6568542"
+     inkscape:zoom="2"
      inkscape:cx="135.9768"
-     inkscape:cy="236.8157"
+     inkscape:cy="216.8157"
      inkscape:document-units="px"
      inkscape:current-layer="layer1"
      showgrid="false"
@@ -63,12 +67,13 @@
      fit-margin-left="0"
      fit-margin-right="0"
      fit-margin-bottom="0"
-     inkscape:window-width="3840"
-     inkscape:window-height="2115"
-     inkscape:window-x="-13"
-     inkscape:window-y="-13"
+     inkscape:window-width="1920"
+     inkscape:window-height="1058"
+     inkscape:window-x="-6"
+     inkscape:window-y="-6"
      inkscape:window-maximized="1"
-     units="px" />
+     units="px"
+     inkscape:document-rotation="0" />
   <metadata
      id="metadata11000">
     <rdf:RDF>
@@ -77,7 +82,7 @@
         <dc:format>image/svg+xml</dc:format>
         <dc:type
            rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
-        <dc:title></dc:title>
+        <dc:title />
       </cc:Work>
     </rdf:RDF>
   </metadata>
@@ -96,18 +101,13 @@
        inkscape:export-ydpi="150.22649" />
     <text
        xml:space="preserve"
-       style="font-style:normal;font-weight:normal;font-size:3.52777767px;line-height:1.25;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.26458332"
+       style="font-style:normal;font-weight:normal;font-size:3.52778px;line-height:1.25;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.264583"
        x="25.318932"
        y="64.822968"
-       id="text5097"><tspan
-         sodipodi:role="line"
-         id="tspan5095"
-         x="25.318932"
-         y="68.041466"
-         style="stroke-width:0.26458332" /></text>
+       id="text5097" />
     <text
        xml:space="preserve"
-       style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:3.52777767px;line-height:1.25;font-family:Homenaje;-inkscape-font-specification:'Homenaje Bold';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-feature-settings:normal;text-align:center;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;text-anchor:middle;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.26458332"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:3.52778px;line-height:1.25;font-family:Quarca;-inkscape-font-specification:Quarca;font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-feature-settings:normal;text-align:center;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;text-anchor:middle;fill:#dddddd;fill-opacity:1;stroke:none;stroke-width:0.264583;"
        x="69.740593"
        y="54.099419"
        id="text136"><tspan
@@ -115,44 +115,44 @@
          id="tspan134"
          x="69.740593"
          y="54.099419"
-         style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:3.88055563px;font-family:Homenaje;-inkscape-font-specification:'Homenaje Bold';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-feature-settings:normal;text-align:center;writing-mode:lr-tb;text-anchor:middle;stroke-width:0.26458332">LISSAJOUS LFO</tspan></text>
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:3.88056px;font-family:Quarca;-inkscape-font-specification:Quarca;font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-feature-settings:normal;text-align:center;writing-mode:lr-tb;text-anchor:middle;stroke-width:0.264583;fill:#dddddd;fill-opacity:1;">LISSAJOUS LFO</tspan></text>
     <text
        xml:space="preserve"
-       style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:3.52777767px;line-height:89.99999762%;font-family:Homenaje;-inkscape-font-specification:'Homenaje Bold';text-align:start;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;text-anchor:start;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.26458332"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:3.52778px;line-height:90%;font-family:Quarca;-inkscape-font-specification:Quarca;text-align:start;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;text-anchor:start;fill:#dddddd;fill-opacity:1;stroke:none;stroke-width:0.264583;"
        x="37.544731"
        y="120.76817"
        id="text295"><tspan
          sodipodi:role="line"
          x="37.544731"
          y="120.76817"
-         style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;line-height:89.99999762%;font-family:Homenaje;-inkscape-font-specification:'Homenaje Bold';text-align:center;writing-mode:lr-tb;text-anchor:middle;stroke-width:0.26458332"
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;line-height:90%;font-family:Quarca;-inkscape-font-specification:Quarca;text-align:center;writing-mode:lr-tb;text-anchor:middle;stroke-width:0.264583;fill:#dddddd;fill-opacity:1;"
          id="tspan213"
          rotate="0 0"
          dy="0">L</tspan><tspan
          sodipodi:role="line"
          x="37.544731"
          y="123.94318"
-         style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;line-height:89.99999762%;font-family:Homenaje;-inkscape-font-specification:'Homenaje Bold';text-align:center;writing-mode:lr-tb;text-anchor:middle;stroke-width:0.26458332"
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;line-height:90%;font-family:Quarca;-inkscape-font-specification:Quarca;text-align:center;writing-mode:lr-tb;text-anchor:middle;stroke-width:0.264583;fill:#dddddd;fill-opacity:1;"
          id="tspan221"
          rotate="0 0">F</tspan><tspan
          sodipodi:role="line"
          x="37.544731"
          y="127.11817"
-         style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;line-height:89.99999762%;font-family:Homenaje;-inkscape-font-specification:'Homenaje Bold';text-align:center;writing-mode:lr-tb;text-anchor:middle;stroke-width:0.26458332"
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;line-height:90%;font-family:Quarca;-inkscape-font-specification:Quarca;text-align:center;writing-mode:lr-tb;text-anchor:middle;stroke-width:0.264583;fill:#dddddd;fill-opacity:1;"
          rotate="0 0 0"
          id="tspan236"><tspan
            rotate="0 0"
            id="tspan238"
-           style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;line-height:89.99999762%;font-family:Homenaje;-inkscape-font-specification:'Homenaje Bold';text-align:center;writing-mode:lr-tb;text-anchor:middle;stroke-width:0.26458332">O</tspan></tspan><tspan
+           style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;line-height:90%;font-family:Quarca;-inkscape-font-specification:Quarca;text-align:center;writing-mode:lr-tb;text-anchor:middle;stroke-width:0.264583;fill:#dddddd;fill-opacity:1;">O</tspan></tspan><tspan
          sodipodi:role="line"
          x="37.544731"
          y="130.29318"
-         style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;line-height:89.99999762%;font-family:Homenaje;-inkscape-font-specification:'Homenaje Bold';text-align:center;writing-mode:lr-tb;text-anchor:middle;stroke-width:0.26458332"
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;line-height:90%;font-family:Quarca;-inkscape-font-specification:Quarca;text-align:center;writing-mode:lr-tb;text-anchor:middle;stroke-width:0.264583;fill:#dddddd;fill-opacity:1;"
          id="tspan225"
          rotate="0 0">2</tspan></text>
     <text
        xml:space="preserve"
-       style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:3.52777767px;line-height:1.25;font-family:Homenaje;-inkscape-font-specification:'Homenaje Bold';text-align:center;letter-spacing:0px;word-spacing:0px;text-anchor:middle;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.26458332"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:3.52778px;line-height:1.25;font-family:Quarca;-inkscape-font-specification:Quarca;text-align:center;letter-spacing:0px;word-spacing:0px;text-anchor:middle;fill:#dddddd;fill-opacity:1;stroke:none;stroke-width:0.264583;"
        x="43.718151"
        y="94.03804"
        id="text299"><tspan
@@ -160,10 +160,10 @@
          id="tspan297"
          x="43.718151"
          y="94.03804"
-         style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-family:Homenaje;-inkscape-font-specification:'Homenaje Bold';stroke-width:0.26458332">AMP</tspan></text>
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-family:Quarca;-inkscape-font-specification:Quarca;stroke-width:0.264583;fill:#dddddd;fill-opacity:1;">AMP</tspan></text>
     <text
        xml:space="preserve"
-       style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:3.52777767px;line-height:1.25;font-family:Homenaje;-inkscape-font-specification:'Homenaje Bold';text-align:center;letter-spacing:0px;word-spacing:0px;text-anchor:middle;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.26458332"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:3.52778px;line-height:1.25;font-family:Quarca;-inkscape-font-specification:Quarca;text-align:center;letter-spacing:0px;word-spacing:0px;text-anchor:middle;fill:#dddddd;fill-opacity:1;stroke:none;stroke-width:0.264583;"
        x="51.223885"
        y="94.03788"
        id="text303"><tspan
@@ -171,10 +171,10 @@
          id="tspan301"
          x="51.223885"
          y="94.03788"
-         style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-family:Homenaje;-inkscape-font-specification:'Homenaje Bold';stroke-width:0.26458332">X</tspan></text>
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-family:Quarca;-inkscape-font-specification:Quarca;stroke-width:0.264583;fill:#dddddd;fill-opacity:1;">X</tspan></text>
     <text
        xml:space="preserve"
-       style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:3.52777767px;line-height:1.25;font-family:Homenaje;-inkscape-font-specification:'Homenaje Bold';text-align:center;letter-spacing:0px;word-spacing:0px;text-anchor:middle;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.26458332"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:3.52778px;line-height:1.25;font-family:Quarca;-inkscape-font-specification:Quarca;text-align:center;letter-spacing:0px;word-spacing:0px;text-anchor:middle;fill:#dddddd;fill-opacity:1;stroke:none;stroke-width:0.264583;"
        x="58.949337"
        y="94.03788"
        id="text307"><tspan
@@ -182,10 +182,10 @@
          id="tspan305"
          x="58.949337"
          y="94.03788"
-         style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-family:Homenaje;-inkscape-font-specification:'Homenaje Bold';stroke-width:0.26458332">Y</tspan></text>
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-family:Quarca;-inkscape-font-specification:Quarca;stroke-width:0.264583;fill:#dddddd;fill-opacity:1;">Y</tspan></text>
     <text
        xml:space="preserve"
-       style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:3.52777767px;line-height:1.25;font-family:Homenaje;-inkscape-font-specification:'Homenaje Bold';text-align:center;letter-spacing:0px;word-spacing:0px;text-anchor:middle;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.26458332"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:3.52778px;line-height:1.25;font-family:Quarca;-inkscape-font-specification:Quarca;text-align:center;letter-spacing:0px;word-spacing:0px;text-anchor:middle;fill:#dddddd;fill-opacity:1;stroke:none;stroke-width:0.264583;"
        x="43.718124"
        y="117.65324"
        id="text299-1"><tspan
@@ -193,10 +193,10 @@
          id="tspan297-5"
          x="43.718124"
          y="117.65324"
-         style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-family:Homenaje;-inkscape-font-specification:'Homenaje Bold';stroke-width:0.26458332">AMP</tspan></text>
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-family:Quarca;-inkscape-font-specification:Quarca;stroke-width:0.264583;fill:#dddddd;fill-opacity:1;">AMP</tspan></text>
     <text
        xml:space="preserve"
-       style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:3.52777767px;line-height:1.25;font-family:Homenaje;-inkscape-font-specification:'Homenaje Bold';text-align:center;letter-spacing:0px;word-spacing:0px;text-anchor:middle;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.26458332"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:3.52778px;line-height:1.25;font-family:Quarca;-inkscape-font-specification:Quarca;text-align:center;letter-spacing:0px;word-spacing:0px;text-anchor:middle;fill:#dddddd;fill-opacity:1;stroke:none;stroke-width:0.264583;"
        x="51.223469"
        y="117.65334"
        id="text303-4"><tspan
@@ -204,10 +204,10 @@
          id="tspan301-5"
          x="51.223469"
          y="117.65334"
-         style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-family:Homenaje;-inkscape-font-specification:'Homenaje Bold';stroke-width:0.26458332">X</tspan></text>
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-family:Quarca;-inkscape-font-specification:Quarca;stroke-width:0.264583;fill:#dddddd;fill-opacity:1;">X</tspan></text>
     <text
        xml:space="preserve"
-       style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:3.52777767px;line-height:1.25;font-family:Homenaje;-inkscape-font-specification:'Homenaje Bold';text-align:center;letter-spacing:0px;word-spacing:0px;text-anchor:middle;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.26458332"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:3.52778px;line-height:1.25;font-family:Quarca;-inkscape-font-specification:Quarca;text-align:center;letter-spacing:0px;word-spacing:0px;text-anchor:middle;fill:#dddddd;fill-opacity:1;stroke:none;stroke-width:0.264583;"
        x="58.949055"
        y="117.65324"
        id="text307-1"><tspan
@@ -215,10 +215,17 @@
          id="tspan305-6"
          x="58.949055"
          y="117.65324"
-         style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-family:Homenaje;-inkscape-font-specification:'Homenaje Bold';stroke-width:0.26458332">Y</tspan></text>
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-family:Quarca;-inkscape-font-specification:Quarca;stroke-width:0.264583;fill:#dddddd;fill-opacity:1;">Y</tspan></text>
+    <rect
+       y="138.15381"
+       x="41.099476"
+       height="8.2020063"
+       width="59.531174"
+       id="rect22843"
+       style="opacity:0.981;fill:#0e365d;fill-opacity:1;stroke:#000000;stroke-width:0.26466;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1" />
     <text
        xml:space="preserve"
-       style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:3.52777767px;line-height:1.25;font-family:Homenaje;-inkscape-font-specification:'Homenaje Bold';text-align:center;letter-spacing:0px;word-spacing:0px;text-anchor:middle;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.26458332"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:3.52778px;line-height:1.25;font-family:Quarca;-inkscape-font-specification:Quarca;text-align:center;letter-spacing:0px;word-spacing:0px;text-anchor:middle;fill:#dddddd;fill-opacity:1;stroke:none;stroke-width:0.264583;"
        x="43.311768"
        y="140.5636"
        id="text365"><tspan
@@ -226,10 +233,10 @@
          id="tspan363"
          x="43.311768"
          y="140.5636"
-         style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:2.11666656px;font-family:Homenaje;-inkscape-font-specification:'Homenaje Bold';stroke-width:0.26458332">Xs</tspan></text>
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:2.11667px;font-family:Quarca;-inkscape-font-specification:Quarca;stroke-width:0.264583;fill:#dddddd;fill-opacity:1;">Xs</tspan></text>
     <text
        xml:space="preserve"
-       style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:3.52777767px;line-height:1.25;font-family:Homenaje;-inkscape-font-specification:'Homenaje Bold';text-align:center;letter-spacing:0px;word-spacing:0px;text-anchor:middle;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.26458332"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:3.52778px;line-height:1.25;font-family:Quarca;-inkscape-font-specification:Quarca;text-align:center;letter-spacing:0px;word-spacing:0px;text-anchor:middle;fill:#dddddd;fill-opacity:1;stroke:none;stroke-width:0.264583;"
        x="50.936909"
        y="140.56339"
        id="text369"><tspan
@@ -237,21 +244,16 @@
          id="tspan367"
          x="50.936909"
          y="140.56339"
-         style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:2.11666656px;font-family:Homenaje;-inkscape-font-specification:'Homenaje Bold';stroke-width:0.26458332">Ys</tspan></text>
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:2.11667px;font-family:Quarca;-inkscape-font-specification:Quarca;stroke-width:0.264583;fill:#dddddd;fill-opacity:1;">Ys</tspan></text>
     <text
        xml:space="preserve"
-       style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:3.52777767px;line-height:1.25;font-family:Consolas;-inkscape-font-specification:'Consolas Bold';text-align:center;letter-spacing:0px;word-spacing:0px;text-anchor:middle;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.26458332"
+       style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:3.52778px;line-height:1.25;font-family:Consolas;-inkscape-font-specification:'Consolas Bold';text-align:center;letter-spacing:0px;word-spacing:0px;text-anchor:middle;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.264583"
        x="66.102577"
        y="146.53029"
-       id="text373"><tspan
-         sodipodi:role="line"
-         id="tspan371"
-         x="66.102577"
-         y="149.59126"
-         style="font-size:2.11666656px;stroke-width:0.26458332" /></text>
+       id="text373" />
     <text
        xml:space="preserve"
-       style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:3.52777767px;line-height:1.25;font-family:Homenaje;-inkscape-font-specification:'Homenaje Bold';text-align:center;letter-spacing:0px;word-spacing:0px;text-anchor:middle;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.26458332"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:3.52778px;line-height:1.25;font-family:Quarca;-inkscape-font-specification:Quarca;text-align:center;letter-spacing:0px;word-spacing:0px;text-anchor:middle;fill:#dddddd;fill-opacity:1;stroke:none;stroke-width:0.264583;"
        x="73.999748"
        y="140.3651"
        id="text377"><tspan
@@ -259,49 +261,50 @@
          id="tspan375"
          x="73.999748"
          y="140.3651"
-         style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:2.11666656px;font-family:Homenaje;-inkscape-font-specification:'Homenaje Bold';stroke-width:0.26458332">/Y</tspan></text>
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:2.11667px;font-family:Quarca;-inkscape-font-specification:Quarca;stroke-width:0.264583;fill:#dddddd;fill-opacity:1;">/Y</tspan></text>
     <flowRoot
        xml:space="preserve"
        id="flowRoot250"
-       style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:13.33333302px;line-height:1.25;font-family:Consolas;-inkscape-font-specification:'Consolas Bold';text-align:center;letter-spacing:0px;word-spacing:0px;text-anchor:middle;fill:#000000;fill-opacity:1;stroke:none"><flowRegion
+       style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:13.3333px;line-height:1.25;font-family:Consolas;-inkscape-font-specification:'Consolas Bold';text-align:center;letter-spacing:0px;word-spacing:0px;text-anchor:middle;fill:#000000;fill-opacity:1;stroke:none"><flowRegion
          id="flowRegion252"><rect
            id="rect254"
            width="3.1819806"
            height="16.970562"
            x="78.1353"
            y="118.90082" /></flowRegion><flowPara
-         id="flowPara256" /></flowRoot>    <text
+         id="flowPara256" /></flowRoot>
+    <text
        xml:space="preserve"
-       style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:3.52777767px;line-height:89.99999762%;font-family:Homenaje;-inkscape-font-specification:'Homenaje Bold';text-align:start;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;text-anchor:start;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.26458332"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:3.52778px;line-height:90%;font-family:Quarca;-inkscape-font-specification:Quarca;text-align:start;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;text-anchor:start;fill:#dddddd;fill-opacity:1;stroke:none;stroke-width:0.264583;"
        x="37.544731"
        y="97.396828"
        id="text295-5"><tspan
          sodipodi:role="line"
          x="37.544731"
          y="97.396828"
-         style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;line-height:89.99999762%;font-family:Homenaje;-inkscape-font-specification:'Homenaje Bold';text-align:center;writing-mode:lr-tb;text-anchor:middle;stroke-width:0.26458332"
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;line-height:90%;font-family:Quarca;-inkscape-font-specification:Quarca;text-align:center;writing-mode:lr-tb;text-anchor:middle;stroke-width:0.264583;fill:#dddddd;fill-opacity:1;"
          id="tspan213-9"
          rotate="0 0"
          dy="0">L</tspan><tspan
          sodipodi:role="line"
          x="37.544731"
          y="100.57183"
-         style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;line-height:89.99999762%;font-family:Homenaje;-inkscape-font-specification:'Homenaje Bold';text-align:center;writing-mode:lr-tb;text-anchor:middle;stroke-width:0.26458332"
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;line-height:90%;font-family:Quarca;-inkscape-font-specification:Quarca;text-align:center;writing-mode:lr-tb;text-anchor:middle;stroke-width:0.264583;fill:#dddddd;fill-opacity:1;"
          id="tspan221-3"
          rotate="0 0">F</tspan><tspan
          sodipodi:role="line"
          x="37.544731"
          y="103.74683"
-         style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;line-height:89.99999762%;font-family:Homenaje;-inkscape-font-specification:'Homenaje Bold';text-align:center;writing-mode:lr-tb;text-anchor:middle;stroke-width:0.26458332"
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;line-height:90%;font-family:Quarca;-inkscape-font-specification:Quarca;text-align:center;writing-mode:lr-tb;text-anchor:middle;stroke-width:0.264583;fill:#dddddd;fill-opacity:1;"
          rotate="0 0 0"
          id="tspan236-5"><tspan
            rotate="0 0"
            id="tspan238-0"
-           style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;line-height:89.99999762%;font-family:Homenaje;-inkscape-font-specification:'Homenaje Bold';text-align:center;writing-mode:lr-tb;text-anchor:middle;stroke-width:0.26458332">O</tspan></tspan><tspan
+           style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;line-height:90%;font-family:Quarca;-inkscape-font-specification:Quarca;text-align:center;writing-mode:lr-tb;text-anchor:middle;stroke-width:0.264583;fill:#dddddd;fill-opacity:1;">O</tspan></tspan><tspan
          sodipodi:role="line"
          x="37.544731"
          y="106.92183"
-         style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;line-height:89.99999762%;font-family:Homenaje;-inkscape-font-specification:'Homenaje Bold';text-align:center;writing-mode:lr-tb;text-anchor:middle;stroke-width:0.26458332"
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;line-height:90%;font-family:Quarca;-inkscape-font-specification:Quarca;text-align:center;writing-mode:lr-tb;text-anchor:middle;stroke-width:0.264583;fill:#dddddd;fill-opacity:1;"
          id="tspan225-7"
          rotate="0 0">1</tspan></text>
     <path
@@ -328,7 +331,7 @@
        inkscape:connector-curvature="0"
        id="path5491"
        d="M 35.239857,90.705039 H 102.70861"
-       style="clip-rule:nonzero;fill:none;stroke:#ffffff;stroke-width:0.3021355;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:10;stroke-dasharray:none;stroke-opacity:0.25098039" />
+       style="clip-rule:nonzero;fill:none;stroke:#ffffff;stroke-width:0.3021355;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:10;stroke-dasharray:none;stroke-opacity:0.25098039;" />
     <path
        inkscape:connector-curvature="0"
        id="path5305"
@@ -361,31 +364,31 @@
        style="clip-rule:nonzero;fill:none;stroke:#ffffff;stroke-width:0.28738788;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:10;stroke-dasharray:none;stroke-opacity:0.25098039" />
     <text
        xml:space="preserve"
-       style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:3.52777767px;line-height:89.99999762%;font-family:Homenaje;-inkscape-font-specification:'Homenaje Bold';text-align:start;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;text-anchor:start;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.26458332"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:3.52778px;line-height:90%;font-family:Quarca;-inkscape-font-specification:Quarca;text-align:start;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;text-anchor:start;fill:#dddddd;fill-opacity:1;stroke:none;stroke-width:0.264583;"
        x="37.672478"
        y="140.08278"
        id="text295-57"><tspan
          sodipodi:role="line"
          x="37.672478"
          y="140.08278"
-         style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;line-height:89.99999762%;font-family:Homenaje;-inkscape-font-specification:'Homenaje Bold';text-align:center;writing-mode:lr-tb;text-anchor:middle;stroke-width:0.26458332"
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;line-height:90%;font-family:Quarca;-inkscape-font-specification:Quarca;text-align:center;writing-mode:lr-tb;text-anchor:middle;stroke-width:0.264583;fill:#dddddd;fill-opacity:1;"
          id="tspan225-78"
          rotate="0 0">O</tspan><tspan
          sodipodi:role="line"
          x="37.672478"
          y="143.25778"
-         style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;line-height:89.99999762%;font-family:Homenaje;-inkscape-font-specification:'Homenaje Bold';text-align:center;writing-mode:lr-tb;text-anchor:middle;stroke-width:0.26458332"
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;line-height:90%;font-family:Quarca;-inkscape-font-specification:Quarca;text-align:center;writing-mode:lr-tb;text-anchor:middle;stroke-width:0.264583;fill:#dddddd;fill-opacity:1;"
          rotate="0 0 0"
          id="tspan1284">U</tspan><tspan
          sodipodi:role="line"
          x="37.672478"
          y="146.43279"
-         style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;line-height:89.99999762%;font-family:Homenaje;-inkscape-font-specification:'Homenaje Bold';text-align:center;writing-mode:lr-tb;text-anchor:middle;stroke-width:0.26458332"
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;line-height:90%;font-family:Quarca;-inkscape-font-specification:Quarca;text-align:center;writing-mode:lr-tb;text-anchor:middle;stroke-width:0.264583;fill:#dddddd;fill-opacity:1;"
          rotate="0 0 0 0"
          id="tspan1286">T</tspan></text>
     <text
        xml:space="preserve"
-       style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:3.52777767px;line-height:1.25;font-family:Homenaje;-inkscape-font-specification:'Homenaje Bold';text-align:center;letter-spacing:0px;word-spacing:0px;text-anchor:middle;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.26458332"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:3.52778px;line-height:1.25;font-family:Quarca;-inkscape-font-specification:Quarca;text-align:center;letter-spacing:0px;word-spacing:0px;text-anchor:middle;fill:#dddddd;fill-opacity:1;stroke:none;stroke-width:0.264583;"
        x="58.616261"
        y="140.56354"
        id="text1470"><tspan
@@ -393,10 +396,10 @@
          id="tspan1468"
          x="58.616261"
          y="140.56354"
-         style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:2.11666656px;font-family:Homenaje;-inkscape-font-specification:'Homenaje Bold';stroke-width:0.26458332">Xs+Ys</tspan></text>
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:2.11667px;font-family:Quarca;-inkscape-font-specification:Quarca;stroke-width:0.264583;fill:#dddddd;fill-opacity:1;">Xs+Ys</tspan></text>
     <text
        xml:space="preserve"
-       style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:3.52777767px;line-height:1.25;font-family:Homenaje;-inkscape-font-specification:'Homenaje Bold';text-align:center;letter-spacing:0px;word-spacing:0px;text-anchor:middle;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.26458332"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:3.52778px;line-height:1.25;font-family:Quarca;-inkscape-font-specification:Quarca;text-align:center;letter-spacing:0px;word-spacing:0px;text-anchor:middle;fill:#dddddd;fill-opacity:1;stroke:none;stroke-width:0.264583;"
        x="66.452919"
        y="140.3651"
        id="text1474"><tspan
@@ -404,10 +407,10 @@
          id="tspan1472"
          x="66.452919"
          y="140.3651"
-         style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:2.11666656px;font-family:Homenaje;-inkscape-font-specification:'Homenaje Bold';stroke-width:0.26458332">/X</tspan></text>
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:2.11667px;font-family:Quarca;-inkscape-font-specification:Quarca;stroke-width:0.264583;fill:#dddddd;fill-opacity:1;">/X</tspan></text>
     <text
        xml:space="preserve"
-       style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:3.52777767px;line-height:1.25;font-family:Consolas;-inkscape-font-specification:'Consolas Bold';text-align:start;letter-spacing:0px;word-spacing:0px;text-anchor:start;fill:#00a3f2;fill-opacity:1;stroke:none;stroke-width:0.26458332"
+       style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:3.52778px;line-height:1.25;font-family:Consolas;-inkscape-font-specification:'Consolas Bold';text-align:start;letter-spacing:0px;word-spacing:0px;text-anchor:start;fill:#00a3f2;fill-opacity:1;stroke:none;stroke-width:0.264583"
        x="54.531986"
        y="149.94821"
        id="text3885-7"><tspan
@@ -415,7 +418,7 @@
          id="tspan3883-0"
          x="54.531986"
          y="149.94821"
-         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-family:'Bradley Gratis';-inkscape-font-specification:'Bradley Gratis';text-align:start;text-anchor:start;fill:#00a3f2;fill-opacity:1;stroke-width:0.26458332">FROZEN WASTELAND</tspan></text>
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-family:'Bradley Gratis';-inkscape-font-specification:'Bradley Gratis';text-align:start;text-anchor:start;fill:#00a3f2;fill-opacity:1;stroke-width:0.264583">FROZEN WASTELAND</tspan></text>
     <path
        inkscape:connector-curvature="0"
        id="path4779-4"
@@ -428,7 +431,7 @@
        style="clip-rule:nonzero;fill:none;stroke:#ffffff;stroke-width:0.28858611;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:10;stroke-dasharray:none;stroke-opacity:0.25098039" />
     <text
        xml:space="preserve"
-       style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:3.52777767px;line-height:1.25;font-family:Homenaje;-inkscape-font-specification:'Homenaje Bold';text-align:center;letter-spacing:0px;word-spacing:0px;text-anchor:middle;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.26458332"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:3.52778px;line-height:1.25;font-family:Quarca;-inkscape-font-specification:Quarca;text-align:center;letter-spacing:0px;word-spacing:0px;text-anchor:middle;fill:#dddddd;fill-opacity:1;stroke:none;stroke-width:0.264583;"
        x="64.055763"
        y="94.038055"
        id="text303-1"><tspan
@@ -436,10 +439,10 @@
          id="tspan301-2"
          x="64.055763"
          y="94.038055"
-         style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-family:Homenaje;-inkscape-font-specification:'Homenaje Bold';stroke-width:0.26458332">X</tspan></text>
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-family:Quarca;-inkscape-font-specification:Quarca;stroke-width:0.264583;fill:#dddddd;fill-opacity:1;">X</tspan></text>
     <text
        xml:space="preserve"
-       style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:3.52777767px;line-height:1.25;font-family:Homenaje;-inkscape-font-specification:'Homenaje Bold';text-align:center;letter-spacing:0px;word-spacing:0px;text-anchor:middle;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.26458332"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:3.52778px;line-height:1.25;font-family:Quarca;-inkscape-font-specification:Quarca;text-align:center;letter-spacing:0px;word-spacing:0px;text-anchor:middle;fill:#dddddd;fill-opacity:1;stroke:none;stroke-width:0.264583;"
        x="74.242218"
        y="94.038055"
        id="text303-2"><tspan
@@ -447,10 +450,10 @@
          id="tspan301-22"
          x="74.242218"
          y="94.038055"
-         style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-family:Homenaje;-inkscape-font-specification:'Homenaje Bold';stroke-width:0.26458332">X</tspan></text>
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-family:Quarca;-inkscape-font-specification:Quarca;stroke-width:0.264583;fill:#dddddd;fill-opacity:1;">X</tspan></text>
     <text
        xml:space="preserve"
-       style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:3.52777767px;line-height:1.25;font-family:Homenaje;-inkscape-font-specification:'Homenaje Bold';text-align:center;letter-spacing:0px;word-spacing:0px;text-anchor:middle;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.26458332"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:3.52778px;line-height:1.25;font-family:Quarca;-inkscape-font-specification:Quarca;text-align:center;letter-spacing:0px;word-spacing:0px;text-anchor:middle;fill:#dddddd;fill-opacity:1;stroke:none;stroke-width:0.264583;"
        x="89.588058"
        y="94.038055"
        id="text303-5"><tspan
@@ -458,10 +461,10 @@
          id="tspan301-7"
          x="89.588058"
          y="94.038055"
-         style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-family:Homenaje;-inkscape-font-specification:'Homenaje Bold';stroke-width:0.26458332">X</tspan></text>
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-family:Quarca;-inkscape-font-specification:Quarca;stroke-width:0.264583;fill:#dddddd;fill-opacity:1;">X</tspan></text>
     <text
        xml:space="preserve"
-       style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:3.52777767px;line-height:1.25;font-family:Homenaje;-inkscape-font-specification:'Homenaje Bold';text-align:center;letter-spacing:0px;word-spacing:0px;text-anchor:middle;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.26458332"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:3.52778px;line-height:1.25;font-family:Quarca;-inkscape-font-specification:Quarca;text-align:center;letter-spacing:0px;word-spacing:0px;text-anchor:middle;fill:#dddddd;fill-opacity:1;stroke:none;stroke-width:0.264583;"
        x="97.44593"
        y="94.038055"
        id="text307-6"><tspan
@@ -469,10 +472,10 @@
          id="tspan305-7"
          x="97.44593"
          y="94.038055"
-         style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-family:Homenaje;-inkscape-font-specification:'Homenaje Bold';stroke-width:0.26458332">Y</tspan></text>
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-family:Quarca;-inkscape-font-specification:Quarca;stroke-width:0.264583;fill:#dddddd;fill-opacity:1;">Y</tspan></text>
     <text
        xml:space="preserve"
-       style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:3.52777767px;line-height:1.25;font-family:Homenaje;-inkscape-font-specification:'Homenaje Bold';text-align:center;letter-spacing:0px;word-spacing:0px;text-anchor:middle;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.26458332"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:3.52778px;line-height:1.25;font-family:Quarca;-inkscape-font-specification:Quarca;text-align:center;letter-spacing:0px;word-spacing:0px;text-anchor:middle;fill:#dddddd;fill-opacity:1;stroke:none;stroke-width:0.264583;"
        x="82.100098"
        y="94.038055"
        id="text307-4"><tspan
@@ -480,10 +483,10 @@
          id="tspan305-5"
          x="82.100098"
          y="94.038055"
-         style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-family:Homenaje;-inkscape-font-specification:'Homenaje Bold';stroke-width:0.26458332">Y</tspan></text>
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-family:Quarca;-inkscape-font-specification:Quarca;stroke-width:0.264583;fill:#dddddd;fill-opacity:1;">Y</tspan></text>
     <text
        xml:space="preserve"
-       style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:2.11666656px;line-height:1.25;font-family:Homenaje;-inkscape-font-specification:'Homenaje Bold';text-align:center;letter-spacing:0px;word-spacing:0px;text-anchor:middle;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.26458332"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:2.11667px;line-height:1.25;font-family:Quarca;-inkscape-font-specification:Quarca;text-align:center;letter-spacing:0px;word-spacing:0px;text-anchor:middle;fill:#dddddd;fill-opacity:1;stroke:none;stroke-width:0.264583;"
        x="55.113026"
        y="94.060799"
        id="text303-59"><tspan
@@ -491,10 +494,10 @@
          id="tspan301-73"
          x="55.113026"
          y="94.060799"
-         style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:2.11666656px;font-family:Homenaje;-inkscape-font-specification:'Homenaje Bold';stroke-width:0.26458332">FREQ</tspan></text>
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:2.11667px;font-family:Quarca;-inkscape-font-specification:Quarca;stroke-width:0.264583;fill:#dddddd;fill-opacity:1;">FREQ</tspan></text>
     <text
        xml:space="preserve"
-       style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:2.11666656px;line-height:1.25;font-family:Homenaje;-inkscape-font-specification:'Homenaje Bold';text-align:center;letter-spacing:0px;word-spacing:0px;text-anchor:middle;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.26458332"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:2.11667px;line-height:1.25;font-family:Quarca;-inkscape-font-specification:Quarca;text-align:center;letter-spacing:0px;word-spacing:0px;text-anchor:middle;fill:#dddddd;fill-opacity:1;stroke:none;stroke-width:0.264583;"
        x="67.427803"
        y="94.01429"
        id="text303-59-5"><tspan
@@ -502,10 +505,10 @@
          id="tspan301-73-9"
          x="67.427803"
          y="94.01429"
-         style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:2.11666656px;font-family:Homenaje;-inkscape-font-specification:'Homenaje Bold';stroke-width:0.26458332">PHASE</tspan></text>
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:2.11667px;font-family:Quarca;-inkscape-font-specification:Quarca;stroke-width:0.264583;fill:#dddddd;fill-opacity:1;">PHASE</tspan></text>
     <text
        xml:space="preserve"
-       style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:2.11666656px;line-height:1.25;font-family:Homenaje;-inkscape-font-specification:'Homenaje Bold';text-align:center;letter-spacing:0px;word-spacing:0px;text-anchor:middle;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.26458332"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:2.11667px;line-height:1.25;font-family:Quarca;-inkscape-font-specification:Quarca;text-align:center;letter-spacing:0px;word-spacing:0px;text-anchor:middle;fill:#dddddd;fill-opacity:1;stroke:none;stroke-width:0.264583;"
        x="78.185966"
        y="94.01429"
        id="text303-59-1"><tspan
@@ -513,10 +516,10 @@
          id="tspan301-73-6"
          x="78.185966"
          y="94.01429"
-         style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:2.11666656px;font-family:Homenaje;-inkscape-font-specification:'Homenaje Bold';stroke-width:0.26458332">SHAPE</tspan></text>
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:2.11667px;font-family:Quarca;-inkscape-font-specification:Quarca;stroke-width:0.264583;fill:#dddddd;fill-opacity:1;">SHAPE</tspan></text>
     <text
        xml:space="preserve"
-       style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:2.11666656px;line-height:1.25;font-family:Homenaje;-inkscape-font-specification:'Homenaje Bold';text-align:center;letter-spacing:0px;word-spacing:0px;text-anchor:middle;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.26458332"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:2.11667px;line-height:1.25;font-family:Quarca;-inkscape-font-specification:Quarca;text-align:center;letter-spacing:0px;word-spacing:0px;text-anchor:middle;fill:#dddddd;fill-opacity:1;stroke:none;stroke-width:0.264583;"
        x="93.585556"
        y="94.01429"
        id="text303-59-7"><tspan
@@ -524,10 +527,10 @@
          id="tspan301-73-4"
          x="93.585556"
          y="94.01429"
-         style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:2.11666656px;font-family:Homenaje;-inkscape-font-specification:'Homenaje Bold';stroke-width:0.26458332">SKEW</tspan></text>
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:2.11667px;font-family:Quarca;-inkscape-font-specification:Quarca;stroke-width:0.264583;fill:#dddddd;fill-opacity:1;">SKEW</tspan></text>
     <text
        xml:space="preserve"
-       style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:2.11666656px;line-height:1.25;font-family:Homenaje;-inkscape-font-specification:'Homenaje Bold';text-align:center;letter-spacing:0px;word-spacing:0px;text-anchor:middle;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.26458332"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:2.11667px;line-height:1.25;font-family:Quarca;-inkscape-font-specification:Quarca;text-align:center;letter-spacing:0px;word-spacing:0px;text-anchor:middle;fill:#dddddd;fill-opacity:1;stroke:none;stroke-width:0.264583;"
        x="55.11253"
        y="117.62421"
        id="text303-59-59"><tspan
@@ -535,10 +538,10 @@
          id="tspan301-73-97"
          x="55.11253"
          y="117.62421"
-         style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:2.11666656px;font-family:Homenaje;-inkscape-font-specification:'Homenaje Bold';stroke-width:0.26458332">FREQ</tspan></text>
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:2.11667px;font-family:Quarca;-inkscape-font-specification:Quarca;stroke-width:0.264583;fill:#dddddd;fill-opacity:1;">FREQ</tspan></text>
     <text
        xml:space="preserve"
-       style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:3.52777767px;line-height:1.25;font-family:Homenaje;-inkscape-font-specification:'Homenaje Bold';text-align:center;letter-spacing:0px;word-spacing:0px;text-anchor:middle;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.26458332"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:3.52778px;line-height:1.25;font-family:Quarca;-inkscape-font-specification:Quarca;text-align:center;letter-spacing:0px;word-spacing:0px;text-anchor:middle;fill:#dddddd;fill-opacity:1;stroke:none;stroke-width:0.264583;"
        x="64.055763"
        y="117.65321"
        id="text303-1-0"><tspan
@@ -546,10 +549,10 @@
          id="tspan301-2-7"
          x="64.055763"
          y="117.65321"
-         style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-family:Homenaje;-inkscape-font-specification:'Homenaje Bold';stroke-width:0.26458332">X</tspan></text>
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-family:Quarca;-inkscape-font-specification:Quarca;stroke-width:0.264583;fill:#dddddd;fill-opacity:1;">X</tspan></text>
     <text
        xml:space="preserve"
-       style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:3.52777767px;line-height:1.25;font-family:Homenaje;-inkscape-font-specification:'Homenaje Bold';text-align:center;letter-spacing:0px;word-spacing:0px;text-anchor:middle;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.26458332"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:3.52778px;line-height:1.25;font-family:Quarca;-inkscape-font-specification:Quarca;text-align:center;letter-spacing:0px;word-spacing:0px;text-anchor:middle;fill:#dddddd;fill-opacity:1;stroke:none;stroke-width:0.264583;"
        x="74.242218"
        y="117.65321"
        id="text303-2-8"><tspan
@@ -557,10 +560,10 @@
          id="tspan301-22-1"
          x="74.242218"
          y="117.65321"
-         style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-family:Homenaje;-inkscape-font-specification:'Homenaje Bold';stroke-width:0.26458332">X</tspan></text>
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-family:Quarca;-inkscape-font-specification:Quarca;stroke-width:0.264583;fill:#dddddd;fill-opacity:1;">X</tspan></text>
     <text
        xml:space="preserve"
-       style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:3.52777767px;line-height:1.25;font-family:Homenaje;-inkscape-font-specification:'Homenaje Bold';text-align:center;letter-spacing:0px;word-spacing:0px;text-anchor:middle;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.26458332"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:3.52778px;line-height:1.25;font-family:Quarca;-inkscape-font-specification:Quarca;text-align:center;letter-spacing:0px;word-spacing:0px;text-anchor:middle;fill:#dddddd;fill-opacity:1;stroke:none;stroke-width:0.264583;"
        x="89.588058"
        y="117.65321"
        id="text303-5-8"><tspan
@@ -568,10 +571,10 @@
          id="tspan301-7-8"
          x="89.588058"
          y="117.65321"
-         style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-family:Homenaje;-inkscape-font-specification:'Homenaje Bold';stroke-width:0.26458332">X</tspan></text>
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-family:Quarca;-inkscape-font-specification:Quarca;stroke-width:0.264583;fill:#dddddd;fill-opacity:1;">X</tspan></text>
     <text
        xml:space="preserve"
-       style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:3.52777767px;line-height:1.25;font-family:Homenaje;-inkscape-font-specification:'Homenaje Bold';text-align:center;letter-spacing:0px;word-spacing:0px;text-anchor:middle;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.26458332"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:3.52778px;line-height:1.25;font-family:Quarca;-inkscape-font-specification:Quarca;text-align:center;letter-spacing:0px;word-spacing:0px;text-anchor:middle;fill:#dddddd;fill-opacity:1;stroke:none;stroke-width:0.264583;"
        x="97.44593"
        y="117.65321"
        id="text307-6-3"><tspan
@@ -579,10 +582,10 @@
          id="tspan305-7-8"
          x="97.44593"
          y="117.65321"
-         style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-family:Homenaje;-inkscape-font-specification:'Homenaje Bold';stroke-width:0.26458332">Y</tspan></text>
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-family:Quarca;-inkscape-font-specification:Quarca;stroke-width:0.264583;fill:#dddddd;fill-opacity:1;">Y</tspan></text>
     <text
        xml:space="preserve"
-       style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:3.52777767px;line-height:1.25;font-family:Homenaje;-inkscape-font-specification:'Homenaje Bold';text-align:center;letter-spacing:0px;word-spacing:0px;text-anchor:middle;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.26458332"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:3.52778px;line-height:1.25;font-family:Quarca;-inkscape-font-specification:Quarca;text-align:center;letter-spacing:0px;word-spacing:0px;text-anchor:middle;fill:#dddddd;fill-opacity:1;stroke:none;stroke-width:0.264583;"
        x="82.100098"
        y="117.65321"
        id="text307-4-3"><tspan
@@ -590,10 +593,10 @@
          id="tspan305-5-2"
          x="82.100098"
          y="117.65321"
-         style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-family:Homenaje;-inkscape-font-specification:'Homenaje Bold';stroke-width:0.26458332">Y</tspan></text>
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-family:Quarca;-inkscape-font-specification:Quarca;stroke-width:0.264583;fill:#dddddd;fill-opacity:1;">Y</tspan></text>
     <text
        xml:space="preserve"
-       style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:2.11666656px;line-height:1.25;font-family:Homenaje;-inkscape-font-specification:'Homenaje Bold';text-align:center;letter-spacing:0px;word-spacing:0px;text-anchor:middle;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.26458332"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:2.11667px;line-height:1.25;font-family:Quarca;-inkscape-font-specification:Quarca;text-align:center;letter-spacing:0px;word-spacing:0px;text-anchor:middle;fill:#dddddd;fill-opacity:1;stroke:none;stroke-width:0.264583;"
        x="67.427803"
        y="117.62946"
        id="text303-59-5-8"><tspan
@@ -601,10 +604,10 @@
          id="tspan301-73-9-4"
          x="67.427803"
          y="117.62946"
-         style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:2.11666656px;font-family:Homenaje;-inkscape-font-specification:'Homenaje Bold';stroke-width:0.26458332">PHASE</tspan></text>
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:2.11667px;font-family:Quarca;-inkscape-font-specification:Quarca;stroke-width:0.264583;fill:#dddddd;fill-opacity:1;">PHASE</tspan></text>
     <text
        xml:space="preserve"
-       style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:2.11666656px;line-height:1.25;font-family:Homenaje;-inkscape-font-specification:'Homenaje Bold';text-align:center;letter-spacing:0px;word-spacing:0px;text-anchor:middle;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.26458332"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:2.11667px;line-height:1.25;font-family:Quarca;-inkscape-font-specification:Quarca;text-align:center;letter-spacing:0px;word-spacing:0px;text-anchor:middle;fill:#dddddd;fill-opacity:1;stroke:none;stroke-width:0.264583;"
        x="78.185966"
        y="117.62946"
        id="text303-59-1-6"><tspan
@@ -612,10 +615,10 @@
          id="tspan301-73-6-5"
          x="78.185966"
          y="117.62946"
-         style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:2.11666656px;font-family:Homenaje;-inkscape-font-specification:'Homenaje Bold';stroke-width:0.26458332">SHAPE</tspan></text>
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:2.11667px;font-family:Quarca;-inkscape-font-specification:Quarca;stroke-width:0.264583;fill:#dddddd;fill-opacity:1;">SHAPE</tspan></text>
     <text
        xml:space="preserve"
-       style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:2.11666656px;line-height:1.25;font-family:Homenaje;-inkscape-font-specification:'Homenaje Bold';text-align:center;letter-spacing:0px;word-spacing:0px;text-anchor:middle;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.26458332"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:2.11667px;line-height:1.25;font-family:Quarca;-inkscape-font-specification:Quarca;text-align:center;letter-spacing:0px;word-spacing:0px;text-anchor:middle;fill:#dddddd;fill-opacity:1;stroke:none;stroke-width:0.264583;"
        x="93.585556"
        y="117.62946"
        id="text303-59-7-8"><tspan
@@ -623,10 +626,10 @@
          id="tspan301-73-4-7"
          x="93.585556"
          y="117.62946"
-         style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:2.11666656px;font-family:Homenaje;-inkscape-font-specification:'Homenaje Bold';stroke-width:0.26458332">SKEW</tspan></text>
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:2.11667px;font-family:Quarca;-inkscape-font-specification:Quarca;stroke-width:0.264583;fill:#dddddd;fill-opacity:1;">SKEW</tspan></text>
     <text
        xml:space="preserve"
-       style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:3.52777767px;line-height:1.25;font-family:Homenaje;-inkscape-font-specification:'Homenaje Bold';text-align:center;letter-spacing:0px;word-spacing:0px;text-anchor:middle;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.26458332"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:3.52778px;line-height:1.25;font-family:Quarca;-inkscape-font-specification:Quarca;text-align:center;letter-spacing:0px;word-spacing:0px;text-anchor:middle;fill:#dddddd;fill-opacity:1;stroke:none;stroke-width:0.264583;"
        x="81.539085"
        y="140.58742"
        id="text377-7"><tspan
@@ -634,10 +637,10 @@
          id="tspan375-6"
          x="81.539085"
          y="140.58742"
-         style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:2.11666656px;font-family:Homenaje;-inkscape-font-specification:'Homenaje Bold';stroke-width:0.26458332">*X</tspan></text>
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:2.11667px;font-family:Quarca;-inkscape-font-specification:Quarca;stroke-width:0.264583;fill:#dddddd;fill-opacity:1;">*X</tspan></text>
     <text
        xml:space="preserve"
-       style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:3.52777767px;line-height:1.25;font-family:Homenaje;-inkscape-font-specification:'Homenaje Bold';text-align:center;letter-spacing:0px;word-spacing:0px;text-anchor:middle;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.26458332"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:3.52778px;line-height:1.25;font-family:Quarca;-inkscape-font-specification:Quarca;text-align:center;letter-spacing:0px;word-spacing:0px;text-anchor:middle;fill:#dddddd;fill-opacity:1;stroke:none;stroke-width:0.264583;"
        x="89.085907"
        y="140.58742"
        id="text377-4"><tspan
@@ -645,10 +648,10 @@
          id="tspan375-7"
          x="89.085907"
          y="140.58742"
-         style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:2.11666656px;font-family:Homenaje;-inkscape-font-specification:'Homenaje Bold';stroke-width:0.26458332">*Y</tspan></text>
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:2.11667px;font-family:Quarca;-inkscape-font-specification:Quarca;stroke-width:0.264583;fill:#dddddd;fill-opacity:1;">*Y</tspan></text>
     <text
        xml:space="preserve"
-       style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:3.52777767px;line-height:1.25;font-family:Homenaje;-inkscape-font-specification:'Homenaje Bold';text-align:center;letter-spacing:0px;word-spacing:0px;text-anchor:middle;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.26458332"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:3.52778px;line-height:1.25;font-family:Quarca;-inkscape-font-specification:Quarca;text-align:center;letter-spacing:0px;word-spacing:0px;text-anchor:middle;fill:#dddddd;fill-opacity:1;stroke:none;stroke-width:0.264583;"
        x="96.875427"
        y="140.56364"
        id="text377-6"><tspan
@@ -656,7 +659,7 @@
          id="tspan375-0"
          x="96.875427"
          y="140.56364"
-         style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:2.11666656px;font-family:Homenaje;-inkscape-font-specification:'Homenaje Bold';stroke-width:0.26458332">Xs*Ys</tspan></text>
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:2.11667px;font-family:Quarca;-inkscape-font-specification:Quarca;stroke-width:0.264583;fill:#dddddd;fill-opacity:1;">Xs*Ys</tspan></text>
     <g
        id="g346"
        transform="matrix(0.12402883,0,0,0.12402883,74.974324,96.688036)"
@@ -889,5 +892,9 @@
            style="fill:none;stroke:#ffffff;stroke-width:1.06534851;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1" />
       </g>
     </g>
+    <text
+       xml:space="preserve"
+       id="text10459"
+       style="fill:black;fill-opacity:1;stroke:none;font-family:Arial;font-style:normal;font-weight:bold;font-size:3.52777786px;line-height:1.25;letter-spacing:0px;word-spacing:0px;text-align:center;-inkscape-font-specification:'Arial Bold';font-stretch:normal;font-variant:normal;white-space:pre;shape-inside:url(#rect10461);" />
   </g>
 </svg>

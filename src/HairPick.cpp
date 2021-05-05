@@ -111,6 +111,17 @@ struct HairPick : Module {
 	MultiTapDelayLine<FloatFrame, NUM_TAPS+1> delayLine;
 	FloatFrame lastFeedback = {0.0f,0.0f};
 
+	//percentages
+	float clockDivPercentage = 0;
+	float sizePercentage = 0;
+	float patternTypePercentage = 0;
+	float numberTapsPercentage = 0;
+	float edgeLevelPercentage = 0;
+	float tentLevelPercentage = 0;
+	float tentTapPercentage = 0;
+	float feedbackAmountPercentage = 0;
+	float feedbackTypePercentage = 0;
+
 	int muteTap(int tapIndex)
     {
         int tapNumber = 0;
@@ -172,11 +183,14 @@ struct HairPick : Module {
 
 		combPattern = (int)clamp(params[PATTERN_TYPE_PARAM].getValue() + (inputs[PATTERN_TYPE_CV_INPUT].getVoltage() * 1.5f),0.0f,15.0);
 		feedbackType = (int)clamp(params[FEEDBACK_TYPE_PARAM].getValue() + (inputs[FEEDBACK_TYPE_CV_INPUT].getVoltage() / 10.0f),0.0f,3.0);
+		patternTypePercentage = combPattern / 15.0;
+		feedbackTypePercentage = feedbackType / 3.0;
 
-		int tapCount = (int)clamp(params[NUMBER_TAPS_PARAM].getValue() + (inputs[NUMBER_TAPS_CV_INPUT].getVoltage() * 6.4f),1.0f,64.0);
+		int tapCount = (int)clamp(params[NUMBER_TAPS_PARAM].getValue() + (inputs[NUMBER_TAPS_CV_INPUT].getVoltage() * 6.4f),1.0f,64.0);		
 		if(tapCount !=lastTapCount) {
 			lastTapCount = tapCount;
 			tapCountSqrt = sqrt((float)tapCount);
+			numberTapsPercentage = tapCount / 64.0;
 
 			//Initialize muting - set all active first
 			for(int tapNumber = 0;tapNumber<NUM_TAPS;tapNumber++) {
@@ -195,13 +209,16 @@ struct HairPick : Module {
 
 		tentTap = (int)clamp(params[TENT_TAP_PARAM].getValue() + (inputs[TENT_TAP_CV_INPUT].getVoltage() * 6.3f),1.0f,63.0f);
 
-
+		edgeLevelPercentage = edgeLevel;
+		tentLevelPercentage = tentLevel;
+		tentTapPercentage = tentTap / 63.0;
 
 		float divisionf = params[CLOCK_DIV_PARAM].getValue();
 		if(inputs[CLOCK_DIVISION_CV_INPUT].isConnected()) {
 			divisionf +=(inputs[CLOCK_DIVISION_CV_INPUT].getVoltage() * (DIVISIONS / 10.0));
 		}
 		divisionf = clamp(divisionf,0.0f,20.0f);
+		clockDivPercentage = divisionf / 20.0;
 		division = (DIVISIONS-1) - int(divisionf); //TODO: Reverse Division Order
 
 		timeElapsed+= 1.0 / args.sampleRate;
@@ -217,8 +234,10 @@ struct HairPick : Module {
 				duration = timeElapsed;				
 			}	
 			baseDelay = clamp(duration / divisions[division],0.001f,10.0f);		
+			sizePercentage = 0;
 		} else {
-			baseDelay = clamp(params[SIZE_PARAM].getValue(), 0.001f, 10.0f);
+			baseDelay = clamp(params[SIZE_PARAM].getValue() + inputs[SIZE_CV_INPUT].getVoltage(), 0.001f, 10.0f);
+			sizePercentage = baseDelay / 10.0;
 			duration = 0.0f;
 			firstClockReceived = false;		
 			secondClockReceived = false;	
@@ -230,6 +249,7 @@ struct HairPick : Module {
 		
 		FloatFrame dryFrame;
 		float feedbackAmount = clamp(params[FEEDBACK_AMOUNT_PARAM].getValue() + (inputs[FEEDBACK_CV_INPUT].getVoltage() / 10.0f), 0.0f, 1.0f);
+		feedbackAmountPercentage = feedbackAmount;
 		float in = 0.0f;				
 		for(int channel = 0;channel < CHANNELS;channel++) {	
 			if(channel == 0) {
@@ -439,20 +459,55 @@ struct HairPickWidget : ModuleWidget {
 			addChild(display);
 		}
 
-		addParam(createParam<RoundLargeFWSnapKnob>(Vec(45, 33), module, HairPick::CLOCK_DIV_PARAM));
-		addParam(createParam<RoundLargeFWKnob>(Vec(157, 33), module, HairPick::SIZE_PARAM));
-		//addParam(createParam<RoundLargeBlackKnob>(Vec(257, 40), module, HairPick::GRID_PARAM, 0.001f, 10.0f, 0.350f));
+		ParamWidget* clockDivParam = createParam<RoundLargeFWSnapKnob>(Vec(45, 33), module, HairPick::CLOCK_DIV_PARAM);
+		if (module) {
+			dynamic_cast<RoundLargeFWSnapKnob*>(clockDivParam)->percentage = &module->clockDivPercentage;
+		}
+		addParam(clockDivParam);							
+		ParamWidget* sizeParam = createParam<RoundLargeFWKnob>(Vec(157, 33), module, HairPick::SIZE_PARAM);
+		if (module) {
+			dynamic_cast<RoundLargeFWKnob*>(sizeParam)->percentage = &module->sizePercentage;
+		}
+		addParam(sizeParam);							
 
-		addParam(createParam<RoundLargeFWSnapKnob>(Vec(17, 115), module, HairPick::PATTERN_TYPE_PARAM));
-		addParam(createParam<RoundLargeFWSnapKnob>(Vec(157, 115), module, HairPick::NUMBER_TAPS_PARAM));
+		ParamWidget* patternTypeParam = createParam<RoundLargeFWSnapKnob>(Vec(17, 115), module, HairPick::PATTERN_TYPE_PARAM);
+		if (module) {
+			dynamic_cast<RoundLargeFWSnapKnob*>(patternTypeParam)->percentage = &module->patternTypePercentage;
+		}
+		addParam(patternTypeParam);							
+		ParamWidget* numberTapsParam = createParam<RoundLargeFWSnapKnob>(Vec(157, 115), module, HairPick::NUMBER_TAPS_PARAM);
+		if (module) {
+			dynamic_cast<RoundLargeFWSnapKnob*>(numberTapsParam)->percentage = &module->numberTapsPercentage;
+		}
+		addParam(numberTapsParam);							
 
-		addParam(createParam<RoundLargeFWKnob>(Vec(17, 200), module, HairPick::EDGE_LEVEL_PARAM));
-		addParam(createParam<RoundLargeFWKnob>(Vec(87, 200), module, HairPick::TENT_LEVEL_PARAM));
-		addParam(createParam<RoundLargeFWSnapKnob>(Vec(157, 200), module, HairPick::TENT_TAP_PARAM));
+		ParamWidget* edgeLevelParam = createParam<RoundLargeFWKnob>(Vec(17, 200), module, HairPick::EDGE_LEVEL_PARAM);
+		if (module) {
+			dynamic_cast<RoundLargeFWKnob*>(edgeLevelParam)->percentage = &module->edgeLevelPercentage;
+		}
+		addParam(edgeLevelParam);							
+		ParamWidget* tentLevelParam = createParam<RoundLargeFWKnob>(Vec(87, 200), module, HairPick::TENT_LEVEL_PARAM);
+		if (module) {
+			dynamic_cast<RoundLargeFWKnob*>(tentLevelParam)->percentage = &module->tentLevelPercentage;
+		}
+		addParam(tentLevelParam);							
+		ParamWidget* tentTapParam = createParam<RoundLargeFWSnapKnob>(Vec(157, 200), module, HairPick::TENT_TAP_PARAM);
+		if (module) {
+			dynamic_cast<RoundLargeFWSnapKnob*>(tentTapParam)->percentage = &module->tentTapPercentage;
+		}
+		addParam(tentTapParam);							
 
 
-		addParam(createParam<RoundLargeFWSnapKnob>(Vec(17, 283), module, HairPick::FEEDBACK_TYPE_PARAM));
-		addParam(createParam<RoundLargeFWKnob>(Vec(157, 283), module, HairPick::FEEDBACK_AMOUNT_PARAM));
+		ParamWidget* feedbackTypeParam = createParam<RoundLargeFWSnapKnob>(Vec(17, 283), module, HairPick::FEEDBACK_TYPE_PARAM);
+		if (module) {
+			dynamic_cast<RoundLargeFWSnapKnob*>(feedbackTypeParam)->percentage = &module->feedbackTypePercentage;
+		}
+		addParam(feedbackTypeParam);							
+		ParamWidget* feedbackAmountParam = createParam<RoundLargeFWKnob>(Vec(157, 283), module, HairPick::FEEDBACK_AMOUNT_PARAM);
+		if (module) {
+			dynamic_cast<RoundLargeFWKnob*>(feedbackAmountParam)->percentage = &module->feedbackAmountPercentage;
+		}
+		addParam(feedbackAmountParam);							
 
 
 	//	addChild(createLight<MediumLight<BlueLight>>(Vec(474, 189), module, HairPick::PING_PONG_LIGHT));

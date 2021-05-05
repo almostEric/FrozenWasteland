@@ -169,6 +169,11 @@ struct BPMLFOPhaseExpander : Module {
 	float lastWaveSlope = -1;
 	float lastSkew = -1;
 	
+	//percentages
+	float phaseDivisionPercentage = 0;
+	float waveShapePercentage = 0;
+	
+
 
 	BPMLFOPhaseExpander() {
 		config(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS, NUM_LIGHTS);
@@ -258,6 +263,7 @@ void BPMLFOPhaseExpander::process(const ProcessArgs &args) {
 	lights[FORCE_INTEGER_LIGHT].value = forceInteger;
 
 	phaseDivision = params[PHASE_DIVISION_PARAM].getValue() + (inputs[PHASE_DIVISION_INPUT].getVoltage() * params[PHASE_DIVISION_CV_ATTENUVERTER_PARAM].getValue());
+	phaseDivisionPercentage = (phaseDivision - 3.0) / 9.0;
 	if(forceInteger) {
 		phaseDivision = std::floor(phaseDivision);
 	}
@@ -358,15 +364,16 @@ struct BPMLFOPhaseExpanderWidget : ModuleWidget {
 		addChild(phaseDisplay);
 		
 
-		addChild(createWidget<ScrewSilver>(Vec(RACK_GRID_WIDTH - 12, 0)));
-		//addChild(createWidget<ScrewSilver>(Vec(box.size.x - 2 * RACK_GRID_WIDTH + 12, 0)));
-		addChild(createWidget<ScrewSilver>(Vec(RACK_GRID_WIDTH - 12, RACK_GRID_HEIGHT - RACK_GRID_WIDTH)));
-		//addChild(createWidget<ScrewSilver>(Vec(box.size.x - 2 * RACK_GRID_WIDTH + 12, RACK_GRID_HEIGHT - RACK_GRID_WIDTH)));
+		// addChild(createWidget<ScrewSilver>(Vec(RACK_GRID_WIDTH - 12, 0)));
+		// addChild(createWidget<ScrewSilver>(Vec(RACK_GRID_WIDTH - 12, RACK_GRID_HEIGHT - RACK_GRID_WIDTH)));
 
 		
-		addParam(createParam<RoundSmallFWSnapKnob>(Vec(4, 36), module, BPMLFOPhaseExpander::PHASE_DIVISION_PARAM));
+		ParamWidget* phaseDivisionParam = createParam<RoundSmallFWKnob>(Vec(4, 36), module, BPMLFOPhaseExpander::PHASE_DIVISION_PARAM);
+		if (module) {
+			dynamic_cast<RoundSmallFWKnob*>(phaseDivisionParam)->percentage = &module->phaseDivisionPercentage;
+		}
+		addParam(phaseDivisionParam);							
 		addParam(createParam<RoundReallySmallFWKnob>(Vec(33, 61), module, BPMLFOPhaseExpander::PHASE_DIVISION_CV_ATTENUVERTER_PARAM));
-		//addParam(createParam<RoundSmallFWSnapKnob>(Vec(67, 52), module, BPMLFOPhaseExpander::WAVESHAPE_PARAM));
 
 		addParam(createParam<LEDButton>(Vec(7, 72), module, BPMLFOPhaseExpander::FORCE_INTEGER_PARAM));
 

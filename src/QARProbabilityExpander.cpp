@@ -61,6 +61,9 @@ struct QARProbabilityExpander : Module {
 	float sceneData[NBR_SCENES][59] = {{0}};
 	int sceneChangeMessage = 0;
 
+	//percentages
+	float stepProbabilityPercentage[MAX_STEPS] = {0};
+
 
 	QARProbabilityExpander() {
 		config(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS, NUM_LIGHTS);
@@ -250,14 +253,19 @@ struct QARProbabilityExpander : Module {
                 if(trackProbabilitySelected[i]) {
                     messagesToMother[TRACK_COUNT * 3 + i] = stepsOrDivs ? 2 : 1;
     				for (int j = 0; j < MAX_STEPS; j++) {
-						messagesToMother[TRACK_LEVEL_PARAM_COUNT + i * MAX_STEPS + j] = clamp(params[PROBABILITY_1_PARAM+j].getValue() + (inputs[PROBABILITY_1_INPUT + j].isConnected() ? inputs[PROBABILITY_1_INPUT + j].getVoltage() / 10 * params[PROBABILITY_ATTEN_1_PARAM + j].getValue() : 0.0f),0.0,1.0f);
+						float probability = clamp(params[PROBABILITY_1_PARAM+j].getValue() + (inputs[PROBABILITY_1_INPUT + j].isConnected() ? inputs[PROBABILITY_1_INPUT + j].getVoltage() / 10 * params[PROBABILITY_ATTEN_1_PARAM + j].getValue() : 0.0f),0.0,1.0f);
+						messagesToMother[TRACK_LEVEL_PARAM_COUNT + i * MAX_STEPS + j] = probability;
+						stepProbabilityPercentage[j] = probability;
 						messagesToMother[TRACK_LEVEL_PARAM_COUNT + (MAX_STEPS * TRACK_COUNT) + i * MAX_STEPS + j] = probabilityGroupMode[j];
 					} 					 
 				} 
 			}			
 			
-			leftExpander.module->rightExpander.messageFlipRequested = true;
-		
+			leftExpander.module->rightExpander.messageFlipRequested = true;		
+		} else {
+			for (int j = 0; j < MAX_STEPS; j++) {
+				stepProbabilityPercentage[j] = 0;
+			} 	
 		}		
 		
 	}
@@ -298,9 +306,22 @@ struct QARProbabilityExpanderWidget : ModuleWidget {
 
 
          for(int i=0; i<MAX_STEPS / 3;i++) {
-		    addParam(createParam<RoundSmallFWKnob>(Vec(10, 30 + i*46), module, QARProbabilityExpander::PROBABILITY_1_PARAM + i));
-		    addParam(createParam<RoundSmallFWKnob>(Vec(72, 30 + i*46), module, QARProbabilityExpander::PROBABILITY_1_PARAM + i + (MAX_STEPS / 3)));
-		    addParam(createParam<RoundSmallFWKnob>(Vec(134, 30 + i*46), module, QARProbabilityExpander::PROBABILITY_1_PARAM + i + (MAX_STEPS * 2 / 3)));
+			ParamWidget* stepCol1Param = createParam<RoundSmallFWKnob>(Vec(10, 30 + i*46), module, QARProbabilityExpander::PROBABILITY_1_PARAM + i);
+			if (module) {
+				dynamic_cast<RoundSmallFWKnob*>(stepCol1Param)->percentage = &module->stepProbabilityPercentage[i];
+			}
+			addParam(stepCol1Param);							
+			ParamWidget* stepCol2Param = createParam<RoundSmallFWKnob>(Vec(72, 30 + i*46), module, QARProbabilityExpander::PROBABILITY_1_PARAM + i + (MAX_STEPS / 3));
+			if (module) {
+				dynamic_cast<RoundSmallFWKnob*>(stepCol2Param)->percentage = &module->stepProbabilityPercentage[i + (MAX_STEPS / 3)];
+			}
+			addParam(stepCol2Param);							
+			ParamWidget* stepCol3Param = createParam<RoundSmallFWKnob>(Vec(134, 30 + i*46), module, QARProbabilityExpander::PROBABILITY_1_PARAM + i + (MAX_STEPS * 2 / 3));
+			if (module) {
+				dynamic_cast<RoundSmallFWKnob*>(stepCol3Param)->percentage = &module->stepProbabilityPercentage[i + (MAX_STEPS * 2 / 3)];
+			}
+			addParam(stepCol3Param);							
+
 
 		    addParam(createParam<RoundReallySmallFWKnob>(Vec(36, 50 + i*46), module, QARProbabilityExpander::PROBABILITY_ATTEN_1_PARAM + i));
 		    addParam(createParam<RoundReallySmallFWKnob>(Vec(98, 50 + i*46), module, QARProbabilityExpander::PROBABILITY_ATTEN_1_PARAM + i + (MAX_STEPS / 3)));

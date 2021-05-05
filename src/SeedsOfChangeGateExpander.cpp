@@ -50,6 +50,10 @@ struct SeedsOfChangeGateExpander : Module {
 
 	bool gaussianMode = false;
 
+	//percentages
+	float probabilityPercentage[NBOUT] = {0};
+
+
 	SeedsOfChangeGateExpander() {
 		// Configure the module
 		config(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS, NUM_LIGHTS);
@@ -135,9 +139,10 @@ struct SeedsOfChangeGateExpander : Module {
             init_genrand((unsigned long)(latest_seed));
         } 
 
-		if (clockTrigger.process(clockInput)) {
-			for (int i=0; i<NBOUT; i++) {
-				float prob = clamp(params[GATE_PROBABILITY_1_PARAM + i].value + (inputs[GATE_PROBABILITY_1_INPUT + i].active ? inputs[GATE_PROBABILITY_1_INPUT + i].value / 10.0f * params[GATE_PROBABILITY_1_CV_ATTENUVERTER + i].value : 0.0),0.0f,1.0f);
+		for (int i=0; i<NBOUT; i++) {
+			float prob = clamp(params[GATE_PROBABILITY_1_PARAM + i].value + (inputs[GATE_PROBABILITY_1_INPUT + i].active ? inputs[GATE_PROBABILITY_1_INPUT + i].value / 10.0f * params[GATE_PROBABILITY_1_CV_ATTENUVERTER + i].value : 0.0),0.0f,1.0f);
+			probabilityPercentage[i] = prob;
+			if (clockTrigger.process(clockInput)) {
 				outbuffer[i] = genrand_real() < prob ? 10.0 : 0;
 				if(outbuffer[i]) {
 					gatePulse[i].trigger();
@@ -291,7 +296,11 @@ struct SeedsOfChangeGateExpanderWidget : ModuleWidget {
 
 
 		for (int i=0; i<NBOUT; i++) {
-			addParam(createParam<RoundReallySmallFWKnob>(Vec(4, 44 + i*26.5), module, SeedsOfChangeGateExpander::GATE_PROBABILITY_1_PARAM + i));
+			ParamWidget* probabilityParam = createParam<RoundReallySmallFWKnob>(Vec(4, 44 + i*26.5), module, SeedsOfChangeGateExpander::GATE_PROBABILITY_1_PARAM + i);
+			if (module) {
+				dynamic_cast<RoundReallySmallFWKnob*>(probabilityParam)->percentage = &module->probabilityPercentage[i];
+			}
+			addParam(probabilityParam);							
 			addParam(createParam<RoundExtremelySmallFWKnob>(Vec(42, 45 + i*26.5), module, SeedsOfChangeGateExpander::GATE_PROBABILITY_1_CV_ATTENUVERTER + i));
 			addInput(createInput<FWPortInReallySmall>(Vec(28, 47 + i*26.5), module, SeedsOfChangeGateExpander::GATE_PROBABILITY_1_INPUT + i));				
 			addParam(createParam<LEDButton>(Vec(59, 45 + i*26.5), module, SeedsOfChangeGateExpander::GATE_MODE_PARAM+i));

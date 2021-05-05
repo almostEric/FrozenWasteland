@@ -256,6 +256,15 @@ struct QuadAlgorithmicRhythm : Module {
 
 	bool dirty[TRACK_COUNT] = {true};
 
+	//percentages
+	float stepsPercentage[TRACK_COUNT] = {0};
+	float divisionsPercentage[TRACK_COUNT] = {0};
+	float offsetPercentage[TRACK_COUNT] = {0};
+	float padPercentage[TRACK_COUNT] = {0};
+	float accentDivisionsPercentage[TRACK_COUNT] = {0};
+	float accentRotatePercentage[TRACK_COUNT] = {0};
+	float metaStepCountPercentage = 0;
+
 	
 	ChristoffelWords christoffelWords;
 	std::string currentChristoffelword[TRACK_COUNT] = {"unknown"};
@@ -620,21 +629,32 @@ struct QuadAlgorithmicRhythm : Module {
 	}
 
 	void toggleManualBeat(int trackNumber, int8_t stepNumber,bool accent) {
-
-		stepNumber -= lastOffsetSetting[trackNumber];
-		if(stepNumber < 0)
-			stepNumber += stepsCount[trackNumber];
-
-		uint8_t index = stepNumber >> 2;
-		uint8_t bitPosition = stepNumber & 0x0F;
-		
-		if(accent) {
-			manualAccentMatrix[trackNumber][index]  ^= 1UL << bitPosition;
-		} else {
-			manualBeatMatrix[trackNumber][index]  ^= 1UL << bitPosition;
+		for(uint8_t i=0;i<stepsCount[i];i++) {
+			fprintf(stderr, "------- track:%i step:%i  beat:%u  accent:%u\n", trackNumber, i, getManualBeat(trackNumber,i),getManualAccent(trackNumber,i));
 		}
 
-		// fprintf(stderr, "track:%i step:%u index:%u bit:%u  value:%u   accent:%u\n", trackNumber, stepNumber, index,bitPosition,manualBeatMatrix[trackNumber][index],manualAccentMatrix[trackNumber][index]);
+		if(accent) {
+			stepNumber -= lastAccentRotationSetting[trackNumber];
+			stepNumber -= lastOffsetSetting[trackNumber];
+			if(stepNumber < 0)
+				stepNumber += beatCount[trackNumber];
+			if(getManualBeat(trackNumber,stepNumber)) { // Only toggle if there is actualy a beat
+				uint8_t index = stepNumber >> 2;
+				uint8_t bitPosition = stepNumber & 0x0F;
+				manualAccentMatrix[trackNumber][index]  ^= 1UL << bitPosition;
+			fprintf(stderr, "track:%i step:%u index:%u bit:%u  accent:%u\n", trackNumber, stepNumber, index,bitPosition,manualAccentMatrix[trackNumber][index]);
+			}
+		} else {
+			stepNumber -= lastOffsetSetting[trackNumber];
+			if(stepNumber < 0)
+				stepNumber += stepsCount[trackNumber];
+
+			uint8_t index = stepNumber >> 2;
+			uint8_t bitPosition = stepNumber & 0x0F;
+			manualBeatMatrix[trackNumber][index]  ^= 1UL << bitPosition;
+		fprintf(stderr, "track:%i step:%u index:%u bit:%u  value:%u \n", trackNumber, stepNumber, index,bitPosition,manualBeatMatrix[trackNumber][index]);
+		}
+
 		dirty[trackNumber] = true;
 	}
 
@@ -861,6 +881,7 @@ struct QuadAlgorithmicRhythm : Module {
 			metaStepCount += inputs[META_STEP_INPUT].getVoltage() * 36.0;
 		}		
 		metaStepCount = clamp(metaStepCount,1.0f,360.0f);
+		metaStepCountPercentage = metaStepCount / 360.0;
 
 
 
@@ -958,30 +979,35 @@ struct QuadAlgorithmicRhythm : Module {
         
 			float stepsCountf = std::floor(params[(trackNumber * 8) + STEPS_1_PARAM].getValue());			
 			if(inputs[trackNumber * 8].isConnected()) {
-				stepsCountf += inputs[trackNumber * 8 + STEPS_1_INPUT].getVoltage() * 1.8;
+				stepsCountf += inputs[trackNumber * 8 + STEPS_1_INPUT].getVoltage() * 7.3;
 			}
 			stepsCountf = clamp(stepsCountf,1.0f,float(MAX_STEPS));
 			if(algorithmMatrix[trackNumber] == BOOLEAN_LOGIC_ALGO) { // Boolean Tracks can't exceed length of the tracks they are based (-1 and -2)
 				stepsCountf = std::min(stepsCountf,(float)std::min(stepsCount[trackNumber-1],stepsCount[trackNumber-2]));
 			}
+			stepsPercentage[trackNumber] = stepsCountf / MAX_STEPS;
 
 			float divisionf = std::floor(params[(trackNumber * 8) + DIVISIONS_1_PARAM].getValue());
 			if(inputs[(trackNumber * 8) + DIVISIONS_1_INPUT].isConnected()) {
-				divisionf += inputs[(trackNumber * 8) + DIVISIONS_1_INPUT].getVoltage() * 1.7;
+				divisionf += inputs[(trackNumber * 8) + DIVISIONS_1_INPUT].getVoltage() * 7.3;
 			}		
 			divisionf = clamp(divisionf,0.0f,stepsCountf);
+			divisionsPercentage[trackNumber] = divisionf / MAX_STEPS;
 
 			float offsetf = std::floor(params[(trackNumber * 8) + OFFSET_1_PARAM].getValue());
 			if(inputs[(trackNumber * 8) + OFFSET_1_INPUT].isConnected()) {
-				offsetf += inputs[(trackNumber * 8) + OFFSET_1_INPUT].getVoltage() * 1.7;
+				offsetf += inputs[(trackNumber * 8) + OFFSET_1_INPUT].getVoltage() * 7.2;
 			}	
 			offsetf = clamp(offsetf,0.0f,MAX_STEPS-1.0f);
+			offsetPercentage[trackNumber] = offsetf / (MAX_STEPS-1.0);
 
 			float padf = std::floor(params[trackNumber * 8 + PAD_1_PARAM].getValue());
 			if(inputs[(trackNumber * 8) + PAD_1_INPUT].isConnected()) {
-				padf += inputs[trackNumber * 8 + PAD_1_INPUT].getVoltage() * 1.7;
+				padf += inputs[trackNumber * 8 + PAD_1_INPUT].getVoltage() * 7.2;
 			}
 			padf = clamp(padf,0.0f,stepsCountf -1);
+			padPercentage[trackNumber] = padf / (MAX_STEPS-1.0);
+
 			// Reclamp
 			divisionf = clamp(divisionf,0.0f,stepsCountf-padf);
 
@@ -991,11 +1017,14 @@ struct QuadAlgorithmicRhythm : Module {
 			if(inputs[(trackNumber * 8) + ACCENTS_1_INPUT].isConnected()) {
 				accentDivisionf += inputs[(trackNumber * 8) + ACCENTS_1_INPUT].getVoltage() * MAX_STEPS / 10.0;
 			}
+			accentDivisionsPercentage[trackNumber] = accentDivisionf / MAX_STEPS;
 
 			float accentRotationf = std::floor(params[(trackNumber * 8) + ACCENT_ROTATE_1_PARAM].getValue());
 			if(inputs[(trackNumber * 8) + ACCENT_ROTATE_1_INPUT].isConnected()) {
 				accentRotationf += inputs[(trackNumber * 8) + ACCENT_ROTATE_1_INPUT].getVoltage() * MAX_STEPS / 10.0;
 			}
+			accentRotatePercentage[trackNumber] = accentRotationf / MAX_STEPS;
+
 			// if(divisionf > 0) {
 			// 	accentRotationf = clamp(accentRotationf,0.0f,divisionf-1);			
 			// } else {
@@ -1436,7 +1465,7 @@ struct QuadAlgorithmicRhythm : Module {
 						} else if(accentAlgorithmMatrix[trackNumber] == MANUAL_MODE_ALGO) {
 							int accentCount = 0;
 							for (int manualAccentIndex = 0; manualAccentIndex < beatCount[trackNumber];manualAccentIndex++) {
-								bool isAccent = getManualAccent(trackNumber,beatLocation[trackNumber][manualAccentIndex]);
+								bool isAccent = getManualAccent(trackNumber,beatLocation[trackNumber][(manualAccentIndex + offset) % beatCount[trackNumber]]);
 								if(isAccent) {
 									accentMatrix[trackNumber][beatLocation[trackNumber][(manualAccentIndex + accentRotation) % beatCount[trackNumber]]] = isAccent;
 									accentCount++;
@@ -1849,6 +1878,8 @@ struct QuadAlgorithmicRhythm : Module {
 	json_t *dataToJson() override {
 		json_t *rootJ = json_object();
 		
+		json_object_set_new(rootJ, "manualRun", json_integer((bool) manualRun));
+
         for(int i=0;i<TRACK_COUNT;i++) {
 			std::string buf = "algorithm-" + std::to_string(i) ;
             json_object_set_new(rootJ, buf.c_str(), json_integer((int) algorithmMatrix[i]));
@@ -1890,6 +1921,9 @@ struct QuadAlgorithmicRhythm : Module {
 	}
 
 	void dataFromJson(json_t *rootJ) override {
+		json_t *mrJ = json_object_get(rootJ, "manualRun");
+		if (mrJ)
+			manualRun = json_integer_value(mrJ);
 
         for(int i=0;i<TRACK_COUNT;i++) {
 			std::string buf = "algorithm-" + std::to_string(i) ;
@@ -2396,19 +2430,43 @@ struct QuadAlgorithmicRhythmWidget : ModuleWidget {
 		for(int track=0;track<TRACK_COUNT;track++) {
 			addParam(createParam<LEDButton>(Vec(296+(track*82), 27), module, QuadAlgorithmicRhythm::ALGORITHM_1_PARAM+(track*8)));
 			addChild(createLight<LargeLight<RedGreenBlueLight>>(Vec(297.5+(track*82), 28.5), module, QuadAlgorithmicRhythm::ALGORITHM_1_LIGHT+(track*3)));
-			addParam(createParam<RoundReallySmallFWSnapKnob>(Vec(316+(track*82), 63), module, QuadAlgorithmicRhythm::STEPS_1_PARAM+(track*8)));
-			addParam(createParam<RoundReallySmallFWSnapKnob>(Vec(316+(track*82), 88), module, QuadAlgorithmicRhythm::DIVISIONS_1_PARAM+(track*8)));
-			addParam(createParam<RoundReallySmallFWSnapKnob>(Vec(316+(track*82), 113), module, QuadAlgorithmicRhythm::OFFSET_1_PARAM+(track*8)));
-			addParam(createParam<RoundReallySmallFWSnapKnob>(Vec(316+(track*82), 138), module, QuadAlgorithmicRhythm::PAD_1_PARAM+(track*8)));
+			ParamWidget* stepsParam = createParam<RoundReallySmallFWSnapKnob>(Vec(316+(track*82), 63), module, QuadAlgorithmicRhythm::STEPS_1_PARAM+(track*8));		
+			if (module) {
+				dynamic_cast<RoundReallySmallFWSnapKnob*>(stepsParam)->percentage = &module->stepsPercentage[track];
+			}
+			addParam(stepsParam);							
+			ParamWidget* divisionsParam = createParam<RoundReallySmallFWSnapKnob>(Vec(316+(track*82), 88), module, QuadAlgorithmicRhythm::DIVISIONS_1_PARAM+(track*8));
+			if (module) {
+				dynamic_cast<RoundReallySmallFWSnapKnob*>(divisionsParam)->percentage = &module->divisionsPercentage[track];
+			}
+			addParam(divisionsParam);							
+			ParamWidget* offsetParam = createParam<RoundReallySmallFWSnapKnob>(Vec(316+(track*82), 113), module, QuadAlgorithmicRhythm::OFFSET_1_PARAM+(track*8));		
+			if (module) {
+				dynamic_cast<RoundReallySmallFWSnapKnob*>(offsetParam)->percentage = &module->offsetPercentage[track];
+			}
+			addParam(offsetParam);							
+			ParamWidget* padParam = createParam<RoundReallySmallFWSnapKnob>(Vec(316+(track*82), 138), module, QuadAlgorithmicRhythm::PAD_1_PARAM+(track*8));		
+			if (module) {
+				dynamic_cast<RoundReallySmallFWSnapKnob*>(padParam)->percentage = &module->padPercentage[track];
+			}
+			addParam(padParam);							
 
 			addParam(createParam<LEDButton>(Vec(296+(track*82), 169), module, QuadAlgorithmicRhythm::ACCENT_ALGORITHM_1_PARAM+track));
 			addChild(createLight<LargeLight<RedGreenBlueLight>>(Vec(297.5+(track*82), 170.5), module, QuadAlgorithmicRhythm::ACCENT_ALGORITHM_1_LIGHT+track*3));
 
-			addParam(createParam<RoundReallySmallFWSnapKnob>(Vec(316+(track*82), 203), module, QuadAlgorithmicRhythm::ACCENTS_1_PARAM+(track*8)));
-			addParam(createParam<RoundReallySmallFWSnapKnob>(Vec(316+(track*82), 228), module, QuadAlgorithmicRhythm::ACCENT_ROTATE_1_PARAM+(track*8)));
+			ParamWidget* accentDivisionsParam = createParam<RoundReallySmallFWSnapKnob>(Vec(316+(track*82), 203), module, QuadAlgorithmicRhythm::ACCENTS_1_PARAM+(track*8));
+			if (module) {
+				dynamic_cast<RoundReallySmallFWSnapKnob*>(accentDivisionsParam)->percentage = &module->accentDivisionsPercentage[track];
+			}
+			addParam(accentDivisionsParam);							
+			ParamWidget* accentRotateParam = createParam<RoundReallySmallFWSnapKnob>(Vec(316+(track*82), 228), module, QuadAlgorithmicRhythm::ACCENT_ROTATE_1_PARAM+(track*8));
+			if (module) {
+				dynamic_cast<RoundReallySmallFWSnapKnob*>(accentRotateParam)->percentage = &module->accentRotatePercentage[track];
+			}
+			addParam(accentRotateParam);							
 
-			addParam(createParam<LEDButton>(Vec(318+(track*82), 253), module, QuadAlgorithmicRhythm::TRACK_1_INDEPENDENT_PARAM+(track*8)));
-			addChild(createLight<LargeLight<RedGreenBlueLight>>(Vec(319.5+(track*82), 254.5), module, QuadAlgorithmicRhythm::TRACK_INDEPENDENT_1_LIGHT+(track*3)));
+			addParam(createParam<LEDButton>(Vec(317+(track*82), 253), module, QuadAlgorithmicRhythm::TRACK_1_INDEPENDENT_PARAM+(track*8)));
+			addChild(createLight<LargeLight<RedGreenBlueLight>>(Vec(318.5+(track*82), 254.5), module, QuadAlgorithmicRhythm::TRACK_INDEPENDENT_1_LIGHT+(track*3)));
 
 			addInput(createInput<FWPortInSmall>(Vec(296+(track*82), 46), module, QuadAlgorithmicRhythm::ALGORITHM_1_INPUT+(track*8)));
 			addInput(createInput<FWPortInSmall>(Vec(341+(track*82), 65), module, QuadAlgorithmicRhythm::STEPS_1_INPUT+(track*8)));
@@ -2451,9 +2509,11 @@ struct QuadAlgorithmicRhythmWidget : ModuleWidget {
 		addInput(createInput<FWPortInSmall>(Vec(157, 340), module, QuadAlgorithmicRhythm::MUTE_INPUT));
 
 
-
-
-		addParam(createParam<RoundSmallFWSnapKnob>(Vec(190, 334), module, QuadAlgorithmicRhythm::META_STEP_PARAM));
+		ParamWidget* metaStepParam = createParam<RoundSmallFWSnapKnob>(Vec(190, 334), module, QuadAlgorithmicRhythm::META_STEP_PARAM);
+		if (module) {
+			dynamic_cast<RoundSmallFWSnapKnob*>(metaStepParam)->percentage = &module->metaStepCountPercentage;
+		}
+		addParam(metaStepParam);							
 		addInput(createInput<FWPortInSmall>(Vec(220, 338), module, QuadAlgorithmicRhythm::META_STEP_INPUT));
 
 

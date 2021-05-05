@@ -167,6 +167,25 @@ struct LissajousLFO : Module {
 	float x2 = 0.0;
 	float y2 = 0.0;
 
+	//percentages
+
+	float amplitude1Percentage = 0;
+	float amplitude2Percentage = 0;
+	float freqX1Percentage = 0;
+	float freqY1Percentage = 0;
+	float freqX2Percentage = 0;
+	float freqY2Percentage = 0;
+	float phaseX1Percentage = 0;
+	float phaseX2Percentage = 0;
+	float waveShapeX1Percentage = 0;
+	float waveShapeY1Percentage = 0;
+	float waveShapeX2Percentage = 0;
+	float waveShapeY2Percentage = 0;
+	float skewX1Percentage = 0;
+	float skewY1Percentage = 0;
+	float skewX2Percentage = 0;
+	float skewY2Percentage = 0;
+
 	LissajousLFO() {
 		config(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS, NUM_LIGHTS);		
 		configParam(AMPLITUDE1_PARAM, 0.0, 5.0, 2.5,"Amplitude 1","%",0,25);
@@ -219,36 +238,64 @@ void LissajousLFO::process(const ProcessArgs &args) {
 	float initialPhase;
 
 	float amplitude1 = clamp(params[AMPLITUDE1_PARAM].getValue() + (inputs[AMPLITUDE1_INPUT].getVoltage() * params[AMPLITUDE1_CV_ATTENUVERTER_PARAM].getValue() / 2.0f),0.0f,5.0f);
+	amplitude1Percentage = amplitude1 / 5.0;
 	float amplitude2 = clamp(params[AMPLITUDE2_PARAM].getValue() + (inputs[AMPLITUDE2_INPUT].getVoltage() * params[AMPLITUDE2_CV_ATTENUVERTER_PARAM].getValue() / 2.0f),0.0f,5.0f);
+	amplitude2Percentage = amplitude2 / 5.0;
 
 	// Implement 4 oscillators
-	oscillatorX1.setPitch(params[FREQX1_PARAM].getValue() + (inputs[FREQX1_INPUT].getVoltage() * params[FREQX1_CV_ATTENUVERTER_PARAM].getValue()));
+	float freqX1 = clamp(params[FREQX1_PARAM].getValue() + (inputs[FREQX1_INPUT].getVoltage() * params[FREQX1_CV_ATTENUVERTER_PARAM].getValue()),-8.0f,3.0f);
+	freqX1Percentage = (freqX1 + 8.0) / 11.0;
+	oscillatorX1.setPitch(freqX1);
 	initialPhase = params[PHASEX1_PARAM].getValue() + (inputs[PHASEX1_INPUT].getVoltage() * params[PHASEX1_CV_ATTENUVERTER_PARAM].getValue() / 10.0);
 	if (initialPhase >= 1.0)
 		initialPhase -= 1.0;
 	else if (initialPhase < 0)
 		initialPhase += 1.0;
+	phaseX1Percentage = initialPhase;
 	oscillatorX1.setBasePhase(initialPhase);
-	oscillatorX1.waveSlope = clamp(params[WAVESHAPEX1_PARAM].getValue() + (inputs[WAVESHAPEX1_INPUT].getVoltage() * params[WAVESHAPEX1_CV_ATTENUVERTER_PARAM].getValue() / 10.0),0.0f,1.0f);
-	oscillatorX1.skew = clamp(params[SKEWX1_PARAM].getValue() + (inputs[SKEWX1_INPUT].getVoltage() * params[SKEWX1_CV_ATTENUVERTER_PARAM].getValue() / 10.0 ),0.0f,1.0f);
+	float waveShapeX1 =clamp(params[WAVESHAPEX1_PARAM].getValue() + (inputs[WAVESHAPEX1_INPUT].getVoltage() * params[WAVESHAPEX1_CV_ATTENUVERTER_PARAM].getValue() / 10.0),0.0f,1.0f);
+	waveShapeX1Percentage = waveShapeX1;
+	oscillatorX1.waveSlope = waveShapeX1;
+	float skewX1 = clamp(params[SKEWX1_PARAM].getValue() + (inputs[SKEWX1_INPUT].getVoltage() * params[SKEWX1_CV_ATTENUVERTER_PARAM].getValue() / 10.0 ),0.0f,1.0f);
+	skewX1Percentage = skewX1;
+	oscillatorX1.skew = skewX1;
 	
-	oscillatorY1.setPitch(params[FREQY1_PARAM].getValue() + (inputs[FREQY1_INPUT].getVoltage() * params[FREQY1_CV_ATTENUVERTER_PARAM].getValue()));
-	oscillatorY1.waveSlope = clamp(params[WAVESHAPEY1_PARAM].getValue() + (inputs[WAVESHAPEY1_INPUT].getVoltage() * params[WAVESHAPEY1_CV_ATTENUVERTER_PARAM].getValue() / 10.0),0.0f,1.0f);
-	oscillatorY1.skew = clamp(params[SKEWY1_PARAM].getValue() + (inputs[SKEWY1_INPUT].getVoltage() * params[SKEWY1_CV_ATTENUVERTER_PARAM].getValue() / 10.0),0.0f,1.0f);
+	float freqY1 = clamp(params[FREQY1_PARAM].getValue() + (inputs[FREQY1_INPUT].getVoltage() * params[FREQY1_CV_ATTENUVERTER_PARAM].getValue()),-8.0f,3.0f);
+	freqY1Percentage = (freqY1 + 8.0) / 11.0;
+	oscillatorY1.setPitch(freqY1);
+	float waveShapeY1 =clamp(params[WAVESHAPEY1_PARAM].getValue() + (inputs[WAVESHAPEY1_INPUT].getVoltage() * params[WAVESHAPEY1_CV_ATTENUVERTER_PARAM].getValue() / 10.0),0.0f,1.0f);
+	waveShapeY1Percentage = waveShapeY1;
+	oscillatorY1.waveSlope = waveShapeY1;
+	float skewY1 = clamp(params[SKEWY1_PARAM].getValue() + (inputs[SKEWY1_INPUT].getVoltage() * params[SKEWY1_CV_ATTENUVERTER_PARAM].getValue() / 10.0 ),0.0f,1.0f);
+	skewY1Percentage = skewY1;
+	oscillatorY1.skew = skewY1;
 	
-	oscillatorX2.setPitch(params[FREQX2_PARAM].getValue() + (inputs[FREQX2_INPUT].getVoltage() * params[FREQX2_CV_ATTENUVERTER_PARAM].getValue()));
+	float freqX2 = clamp(params[FREQX2_PARAM].getValue() + (inputs[FREQX2_INPUT].getVoltage() * params[FREQX2_CV_ATTENUVERTER_PARAM].getValue()),-8.0f,3.0f);
+	freqX2Percentage = (freqX2 + 8.0) / 11.0;
+	oscillatorX2.setPitch(freqX2);
 	initialPhase = params[PHASEX2_PARAM].getValue() + (inputs[PHASEX2_INPUT].getVoltage() * params[PHASEX2_CV_ATTENUVERTER_PARAM].getValue() / 10.0);
 	if (initialPhase >= 1.0)
 		initialPhase -= 1.0;
 	else if (initialPhase < 0)
 		initialPhase += 1.0;
+	phaseX2Percentage = initialPhase;
 	oscillatorX2.setBasePhase(initialPhase);
-	oscillatorX2.waveSlope = clamp(params[WAVESHAPEX2_PARAM].getValue() + (inputs[WAVESHAPEX2_INPUT].getVoltage() * params[WAVESHAPEX2_CV_ATTENUVERTER_PARAM].getValue() / 10.0),0.0f,1.0f);
-	oscillatorX2.skew = clamp(params[SKEWX2_PARAM].getValue() + (inputs[SKEWX2_INPUT].getVoltage() * params[SKEWX2_CV_ATTENUVERTER_PARAM].getValue() / 10.0),0.0f,1.0f);
+	float waveShapeX2 =clamp(params[WAVESHAPEX2_PARAM].getValue() + (inputs[WAVESHAPEX2_INPUT].getVoltage() * params[WAVESHAPEX2_CV_ATTENUVERTER_PARAM].getValue() / 10.0),0.0f,1.0f);
+	waveShapeX2Percentage = waveShapeX2;
+	oscillatorX2.waveSlope = waveShapeX2;
+	float skewX2 = clamp(params[SKEWX2_PARAM].getValue() + (inputs[SKEWX2_INPUT].getVoltage() * params[SKEWX2_CV_ATTENUVERTER_PARAM].getValue() / 10.0 ),0.0f,1.0f);
+	skewX2Percentage = skewX2;
+	oscillatorX2.skew = skewX2;
 	
-	oscillatorY2.setPitch(params[FREQY2_PARAM].getValue() + (inputs[FREQY2_INPUT].getVoltage() * params[FREQY2_CV_ATTENUVERTER_PARAM].getValue()));
-	oscillatorY2.waveSlope = clamp(params[WAVESHAPEY2_PARAM].getValue() + (inputs[WAVESHAPEY2_INPUT].getVoltage() * params[WAVESHAPEY2_CV_ATTENUVERTER_PARAM].getValue() / 10.0),0.0f,1.0f);
-	oscillatorY2.skew = clamp(params[SKEWY2_PARAM].getValue() + (inputs[SKEWY2_INPUT].getVoltage() * params[SKEWY2_CV_ATTENUVERTER_PARAM].getValue() / 10.0),0.0f,1.0f);
+	float freqY2 = clamp(params[FREQY2_PARAM].getValue() + (inputs[FREQY2_INPUT].getVoltage() * params[FREQY2_CV_ATTENUVERTER_PARAM].getValue()),-8.0f,3.0f);
+	freqY2Percentage = (freqY2 + 8.0) / 11.0;
+	oscillatorY2.setPitch(freqY2);
+	float waveShapeY2 =clamp(params[WAVESHAPEY2_PARAM].getValue() + (inputs[WAVESHAPEY2_INPUT].getVoltage() * params[WAVESHAPEY2_CV_ATTENUVERTER_PARAM].getValue() / 10.0),0.0f,1.0f);
+	waveShapeY2Percentage = waveShapeY2;
+	oscillatorY2.waveSlope = waveShapeY2;
+	float skewY2 = clamp(params[SKEWY2_PARAM].getValue() + (inputs[SKEWY2_INPUT].getVoltage() * params[SKEWY2_CV_ATTENUVERTER_PARAM].getValue() / 10.0 ),0.0f,1.0f);
+	skewY2Percentage = skewY2;
+	oscillatorY2.skew = skewY2;
 
 
 	oscillatorX1.step(1.0 / args.sampleRate);
@@ -419,14 +466,46 @@ struct LissajousLFOWidget : ModuleWidget {
 			addChild(display);
 		}
 
-		addParam(createParam<RoundSmallFWKnob>(Vec(20, 167), module, LissajousLFO::AMPLITUDE1_PARAM));
-		addParam(createParam<RoundSmallFWKnob>(Vec(49, 167), module, LissajousLFO::FREQX1_PARAM));
-		addParam(createParam<RoundSmallFWKnob>(Vec(78, 167), module, LissajousLFO::FREQY1_PARAM));
-		addParam(createParam<RoundSmallFWKnob>(Vec(107, 167), module, LissajousLFO::PHASEX1_PARAM));
-		addParam(createParam<RoundSmallFWKnob>(Vec(136, 167), module, LissajousLFO::WAVESHAPEX1_PARAM));
-		addParam(createParam<RoundSmallFWKnob>(Vec(165, 167), module, LissajousLFO::WAVESHAPEY1_PARAM));
-		addParam(createParam<RoundSmallFWKnob>(Vec(194, 167), module, LissajousLFO::SKEWX1_PARAM));
-		addParam(createParam<RoundSmallFWKnob>(Vec(223, 167), module, LissajousLFO::SKEWY1_PARAM));
+		ParamWidget* amplitude1Param = createParam<RoundSmallFWKnob>(Vec(20, 167), module, LissajousLFO::AMPLITUDE1_PARAM);
+		if (module) {
+			dynamic_cast<RoundSmallFWKnob*>(amplitude1Param)->percentage = &module->amplitude1Percentage;
+		}
+		addParam(amplitude1Param);							
+		ParamWidget* freqX1Param = createParam<RoundSmallFWKnob>(Vec(49, 167), module, LissajousLFO::FREQX1_PARAM);
+		if (module) {
+			dynamic_cast<RoundSmallFWKnob*>(freqX1Param)->percentage = &module->freqX1Percentage;
+		}
+		addParam(freqX1Param);							
+		ParamWidget* freqY1Param = createParam<RoundSmallFWKnob>(Vec(78, 167), module, LissajousLFO::FREQY1_PARAM);
+		if (module) {
+			dynamic_cast<RoundSmallFWKnob*>(freqY1Param)->percentage = &module->freqY1Percentage;
+		}
+		addParam(freqY1Param);							
+		ParamWidget* phaseX1Param = createParam<RoundSmallFWKnob>(Vec(107, 167), module, LissajousLFO::PHASEX1_PARAM);
+		if (module) {
+			dynamic_cast<RoundSmallFWKnob*>(phaseX1Param)->percentage = &module->phaseX1Percentage;
+		}
+		addParam(phaseX1Param);							
+		ParamWidget* waveshapeX1Param = createParam<RoundSmallFWKnob>(Vec(136, 167), module, LissajousLFO::WAVESHAPEX1_PARAM);
+		if (module) {
+			dynamic_cast<RoundSmallFWKnob*>(waveshapeX1Param)->percentage = &module->waveShapeX1Percentage;
+		}
+		addParam(waveshapeX1Param);							
+		ParamWidget* waveShapeY1Param = createParam<RoundSmallFWKnob>(Vec(165, 167), module, LissajousLFO::WAVESHAPEY1_PARAM);
+		if (module) {
+			dynamic_cast<RoundSmallFWKnob*>(waveShapeY1Param)->percentage = &module->waveShapeY1Percentage;
+		}
+		addParam(waveShapeY1Param);							
+		ParamWidget* skewX1Param = createParam<RoundSmallFWKnob>(Vec(194, 167), module, LissajousLFO::SKEWX1_PARAM);
+		if (module) {
+			dynamic_cast<RoundSmallFWKnob*>(skewX1Param)->percentage = &module->skewX1Percentage;
+		}
+		addParam(skewX1Param);							
+		ParamWidget* skewY1Param = createParam<RoundSmallFWKnob>(Vec(223, 167), module, LissajousLFO::SKEWY1_PARAM);
+		if (module) {
+			dynamic_cast<RoundSmallFWKnob*>(skewY1Param)->percentage = &module->skewY1Percentage;
+		}
+		addParam(skewY1Param);							
 
 		addParam(createParam<RoundReallySmallFWKnob>(Vec(22, 216), module, LissajousLFO::AMPLITUDE1_CV_ATTENUVERTER_PARAM));
 		addParam(createParam<RoundReallySmallFWKnob>(Vec(51, 216), module, LissajousLFO::FREQX1_CV_ATTENUVERTER_PARAM));
@@ -438,14 +517,46 @@ struct LissajousLFOWidget : ModuleWidget {
 		addParam(createParam<RoundReallySmallFWKnob>(Vec(225, 216), module, LissajousLFO::SKEWY1_CV_ATTENUVERTER_PARAM));
 
 
-		addParam(createParam<RoundSmallFWKnob>(Vec(20, 256), module, LissajousLFO::AMPLITUDE2_PARAM));
-		addParam(createParam<RoundSmallFWKnob>(Vec(49, 256), module, LissajousLFO::FREQX2_PARAM));
-		addParam(createParam<RoundSmallFWKnob>(Vec(78, 256), module, LissajousLFO::FREQY2_PARAM));
-		addParam(createParam<RoundSmallFWKnob>(Vec(107, 256), module, LissajousLFO::PHASEX2_PARAM));
-		addParam(createParam<RoundSmallFWKnob>(Vec(136, 256), module, LissajousLFO::WAVESHAPEX2_PARAM));
-		addParam(createParam<RoundSmallFWKnob>(Vec(165, 256), module, LissajousLFO::WAVESHAPEY2_PARAM));
-		addParam(createParam<RoundSmallFWKnob>(Vec(194, 256), module, LissajousLFO::SKEWX2_PARAM));
-		addParam(createParam<RoundSmallFWKnob>(Vec(223, 256), module, LissajousLFO::SKEWY2_PARAM));
+		ParamWidget* amplitude2Param = createParam<RoundSmallFWKnob>(Vec(20, 256), module, LissajousLFO::AMPLITUDE2_PARAM);
+		if (module) {
+			dynamic_cast<RoundSmallFWKnob*>(amplitude2Param)->percentage = &module->amplitude2Percentage;
+		}
+		addParam(amplitude2Param);							
+		ParamWidget* freqX2Param = createParam<RoundSmallFWKnob>(Vec(49, 256), module, LissajousLFO::FREQX2_PARAM);
+		if (module) {
+			dynamic_cast<RoundSmallFWKnob*>(freqX2Param)->percentage = &module->freqX2Percentage;
+		}
+		addParam(freqX2Param);							
+		ParamWidget* freqY2Param = createParam<RoundSmallFWKnob>(Vec(78, 256), module, LissajousLFO::FREQY2_PARAM);
+		if (module) {
+			dynamic_cast<RoundSmallFWKnob*>(freqY2Param)->percentage = &module->freqY2Percentage;
+		}
+		addParam(freqY2Param);							
+		ParamWidget* phaseX2Param = createParam<RoundSmallFWKnob>(Vec(107, 256), module, LissajousLFO::PHASEX2_PARAM);
+		if (module) {
+			dynamic_cast<RoundSmallFWKnob*>(phaseX2Param)->percentage = &module->phaseX2Percentage;
+		}
+		addParam(phaseX2Param);							
+		ParamWidget* waveshapeX2Param = createParam<RoundSmallFWKnob>(Vec(136, 256), module, LissajousLFO::WAVESHAPEX2_PARAM);
+		if (module) {
+			dynamic_cast<RoundSmallFWKnob*>(waveshapeX2Param)->percentage = &module->waveShapeX2Percentage;
+		}
+		addParam(waveshapeX2Param);							
+		ParamWidget* waveshapeY2Param = createParam<RoundSmallFWKnob>(Vec(165, 256), module, LissajousLFO::WAVESHAPEY2_PARAM);
+		if (module) {
+			dynamic_cast<RoundSmallFWKnob*>(waveshapeY2Param)->percentage = &module->waveShapeY2Percentage;
+		}
+		addParam(waveshapeY2Param);							
+		ParamWidget* skewX2Param = createParam<RoundSmallFWKnob>(Vec(194, 256), module, LissajousLFO::SKEWX2_PARAM);
+		if (module) {
+			dynamic_cast<RoundSmallFWKnob*>(skewX2Param)->percentage = &module->skewX2Percentage;
+		}
+		addParam(skewX2Param);							
+		ParamWidget* skewY2Param = createParam<RoundSmallFWKnob>(Vec(223, 256), module, LissajousLFO::SKEWY2_PARAM);
+		if (module) {
+			dynamic_cast<RoundSmallFWKnob*>(skewY2Param)->percentage = &module->skewY2Percentage;
+		}
+		addParam(skewY2Param);							
 
 		addParam(createParam<RoundReallySmallFWKnob>(Vec(22, 305), module, LissajousLFO::AMPLITUDE2_CV_ATTENUVERTER_PARAM));
 		addParam(createParam<RoundReallySmallFWKnob>(Vec(51, 305), module, LissajousLFO::FREQX2_CV_ATTENUVERTER_PARAM));

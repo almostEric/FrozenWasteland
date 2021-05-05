@@ -1,6 +1,4 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<!-- Created with Inkscape (http://www.inkscape.org/) -->
-
 <svg
    xmlns:dc="http://purl.org/dc/elements/1.1/"
    xmlns:cc="http://creativecommons.org/ns#"
@@ -10,67 +8,68 @@
    xmlns:xlink="http://www.w3.org/1999/xlink"
    xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
    xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
-   width="120"
-   height="380"
-   viewBox="0 0 31.750001 100.54167"
-   version="1.1"
+   sodipodi:docname="BPMLFO2Master.svg"
+   inkscape:version="1.0 (4035a4fb49, 2020-05-01)"
    id="svg11003"
-   inkscape:version="0.92.2 (5c3e80d, 2017-08-06)"
-   sodipodi:docname="BPMLFO2Master.svg">
+   version="1.1"
+   viewBox="0 0 31.750001 100.54167"
+   height="380"
+   width="120">
   <defs
      id="defs10997">
     <linearGradient
-       inkscape:collect="always"
-       id="linearGradient3391">
+       id="linearGradient3391"
+       inkscape:collect="always">
       <stop
-         style="stop-color:#202022;stop-opacity:1;"
+         id="stop3387"
          offset="0"
-         id="stop3387" />
+         style="stop-color:#0c1622;stop-opacity:1" />
       <stop
-         style="stop-color:#202025;stop-opacity:1;"
+         id="stop3388"
          offset=".3"
-         id="stop3388" />
+         style="stop-color:#161625;stop-opacity:1" />
       <stop
-         style="stop-color:#08003e;stop-opacity:1;"
+         id="stop3389"
          offset="1"
-         id="stop3389" />
+         style="stop-color:#081f35;stop-opacity:1" />
     </linearGradient>
     <linearGradient
-       inkscape:collect="always"
-       xlink:href="#linearGradient3391"
-       id="linearGradient3393"
-       x1="35.219627"
-       y1="150.85843"
-       x2="35.219627"
-       y2="50.462322"
+       gradientTransform="matrix(0.8017296,0,0,1.0014499,6.9830088,-0.08643399)"
        gradientUnits="userSpaceOnUse"
-       gradientTransform="matrix(0.8017296,0,0,1.0014499,6.9830088,-0.08643399)" />
+       y2="50.462322"
+       x2="35.219627"
+       y1="150.85843"
+       x1="35.219627"
+       id="linearGradient3393"
+       xlink:href="#linearGradient3391"
+       inkscape:collect="always" />
   </defs>
   <sodipodi:namedview
-     id="base"
-     pagecolor="#ffffff"
-     bordercolor="#666666"
-     borderopacity="1.0"
-     inkscape:pageopacity="0.0"
-     inkscape:pageshadow="2"
-     inkscape:zoom="7.9999999"
-     inkscape:cx="-0.056389525"
-     inkscape:cy="274.5719"
-     inkscape:document-units="px"
-     inkscape:current-layer="layer1"
-     showgrid="false"
-     fit-margin-top="0"
-     fit-margin-left="0"
-     fit-margin-right="0"
-     fit-margin-bottom="0"
-     inkscape:window-width="3840"
-     inkscape:window-height="2115"
-     inkscape:window-x="-13"
-     inkscape:window-y="-13"
-     inkscape:window-maximized="1"
-     units="px"
+     inkscape:document-rotation="0"
+     inkscape:measure-end="0,0"
      inkscape:measure-start="115.25,330.25"
-     inkscape:measure-end="0,0" />
+     units="px"
+     inkscape:window-maximized="1"
+     inkscape:window-y="-6"
+     inkscape:window-x="-6"
+     inkscape:window-height="1058"
+     inkscape:window-width="1920"
+     fit-margin-bottom="0"
+     fit-margin-right="0"
+     fit-margin-left="0"
+     fit-margin-top="0"
+     showgrid="false"
+     inkscape:current-layer="layer1"
+     inkscape:document-units="px"
+     inkscape:cy="194.5719"
+     inkscape:cx="-0.056389525"
+     inkscape:zoom="2"
+     inkscape:pageshadow="2"
+     inkscape:pageopacity="0.0"
+     borderopacity="1.0"
+     bordercolor="#666666"
+     pagecolor="#ffffff"
+     id="base" />
   <metadata
      id="metadata11000">
     <rdf:RDF>
@@ -84,399 +83,406 @@
     </rdf:RDF>
   </metadata>
   <g
-     inkscape:label="Layer 1"
-     inkscape:groupmode="layer"
+     transform="translate(-35.146312,-50.389004)"
      id="layer1"
-     transform="translate(-35.146312,-50.389004)">
+     inkscape:groupmode="layer"
+     inkscape:label="Layer 1">
     <path
-       inkscape:connector-curvature="0"
-       id="path33493"
-       d="M 35.219628,50.449053 H 66.969629 V 150.99072 H 35.219628 Z m 0,0"
-       style="fill:url(#linearGradient3393);fill-opacity:1;fill-rule:nonzero;stroke:none;stroke-width:0.247329"
-       inkscape:export-filename="/home/vortico/pics/tmp/LFOs.png"
+       inkscape:export-ydpi="150.22649"
        inkscape:export-xdpi="150.22649"
-       inkscape:export-ydpi="150.22649" />
-    <text
-       xml:space="preserve"
-       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:3.52777767px;line-height:1.25;font-family:Homenaje;-inkscape-font-specification:Homenaje;letter-spacing:0px;word-spacing:0px;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.26458332"
-       x="47.111122"
-       y="132.1255"
-       id="text4978"><tspan
-         sodipodi:role="line"
-         id="tspan4976"
-         x="47.111122"
-         y="132.1255"
-         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:2.82222223px;font-family:Homenaje;-inkscape-font-specification:Homenaje;stroke-width:0.26458332">RESET</tspan></text>
-    <text
-       xml:space="preserve"
-       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:3.52777767px;line-height:1.25;font-family:Homenaje;-inkscape-font-specification:Homenaje;letter-spacing:0px;word-spacing:0px;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.26458332"
-       x="36.347874"
-       y="132.1255"
-       id="text4982"><tspan
-         sodipodi:role="line"
-         id="tspan4980"
-         x="36.347874"
-         y="132.1255"
-         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:2.82222223px;font-family:Homenaje;-inkscape-font-specification:Homenaje;stroke-width:0.26458332">CLOCK</tspan></text>
-    <text
-       xml:space="preserve"
-       style="font-style:normal;font-weight:normal;font-size:3.52777767px;line-height:1.25;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.26458332"
-       x="25.318932"
-       y="64.822968"
-       id="text5097"><tspan
-         sodipodi:role="line"
-         id="tspan5095"
-         x="25.318932"
-         y="68.041466"
-         style="stroke-width:0.26458332" /></text>
-    <text
-       xml:space="preserve"
-       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:3.52777767px;line-height:1.25;font-family:Homenaje;-inkscape-font-specification:Homenaje;letter-spacing:0px;word-spacing:0px;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.26458332"
-       x="54.257675"
-       y="58.128029"
-       id="text5443"><tspan
-         sodipodi:role="line"
-         id="tspan5441"
-         x="54.257675"
-         y="58.128029"
-         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:2.82222223px;font-family:Homenaje;-inkscape-font-specification:Homenaje;stroke-width:0.26458332">DIVISION</tspan></text>
-    <text
-       xml:space="preserve"
-       style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:3.52777767px;line-height:1.25;font-family:Consolas;-inkscape-font-specification:'Consolas Bold';text-align:start;letter-spacing:0px;word-spacing:0px;text-anchor:start;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.26458332"
-       x="44.388031"
-       y="54.283669"
-       id="text3885"><tspan
-         sodipodi:role="line"
-         id="tspan3883"
-         x="44.388031"
-         y="54.283669"
-         style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:3.88055563px;font-family:Homenaje;-inkscape-font-specification:'Homenaje Bold';text-align:start;text-anchor:start;stroke-width:0.26458332">BPM LFO 2</tspan></text>
-    <text
-       xml:space="preserve"
-       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:3.52777767px;line-height:1.25;font-family:Homenaje;-inkscape-font-specification:Homenaje;letter-spacing:0px;word-spacing:0px;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.26458332"
-       x="57.429874"
-       y="132.1255"
-       id="text4978-4"><tspan
-         sodipodi:role="line"
-         id="tspan4976-4"
-         x="57.429874"
-         y="132.1255"
-         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:2.82222223px;font-family:Homenaje;-inkscape-font-specification:Homenaje;stroke-width:0.26458332">HOLD</tspan></text>
-    <text
-       xml:space="preserve"
-       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:3.52777767px;line-height:1.25;font-family:Homenaje;-inkscape-font-specification:Homenaje;letter-spacing:0px;word-spacing:0px;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.26458332"
-       x="60.14838"
-       y="127.27646"
-       id="text5443-0"><tspan
-         sodipodi:role="line"
-         id="tspan5441-5"
-         x="60.14838"
-         y="127.27646"
-         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:2.11666656px;font-family:Homenaje;-inkscape-font-specification:Homenaje;stroke-width:0.26458332">MOM.</tspan></text>
-    <text
-       xml:space="preserve"
-       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:3.52777767px;line-height:1.25;font-family:Homenaje;-inkscape-font-specification:Homenaje;letter-spacing:0px;word-spacing:0px;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.26458332"
-       x="60.456287"
-       y="118.78961"
-       id="text5443-0-4"><tspan
-         sodipodi:role="line"
-         id="tspan5441-5-0"
-         x="60.456287"
-         y="118.78961"
-         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:2.11666656px;font-family:Homenaje;-inkscape-font-specification:Homenaje;stroke-width:0.26458332">GATE</tspan></text>
-    <flowRoot
-       xml:space="preserve"
-       id="flowRoot1527"
-       style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:13.33333302px;line-height:1.25;font-family:Consolas;-inkscape-font-specification:'Consolas Bold';text-align:center;letter-spacing:0px;word-spacing:0px;text-anchor:middle;fill:#ffffff;fill-opacity:1;stroke:none"
-       transform="matrix(0.26458333,0,0,0.26458333,34.617145,50.389004)"><flowRegion
-         id="flowRegion1529"><rect
-           id="rect1531"
-           width="106.25"
-           height="39.75"
-           x="-39"
-           y="44" /></flowRegion><flowPara
-         id="flowPara1533" /></flowRoot>    <text
-       xml:space="preserve"
-       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:3.52777767px;line-height:1.25;font-family:Homenaje;-inkscape-font-specification:Homenaje;letter-spacing:0px;word-spacing:0px;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.26458332"
-       x="37.440777"
-       y="127.27604"
-       id="text5443-0-6"><tspan
-         sodipodi:role="line"
-         id="tspan5441-5-5"
-         x="37.440777"
-         y="127.27604"
-         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:2.11666656px;font-family:Homenaje;-inkscape-font-specification:Homenaje;stroke-width:0.26458332">BI</tspan></text>
-    <text
-       xml:space="preserve"
-       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:3.52777767px;line-height:1.25;font-family:Homenaje;-inkscape-font-specification:Homenaje;letter-spacing:0px;word-spacing:0px;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.26458332"
-       x="37.171963"
-       y="118.78955"
-       id="text5443-0-4-9"><tspan
-         sodipodi:role="line"
-         id="tspan5441-5-0-0"
-         x="37.171963"
-         y="118.78955"
-         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:2.11666656px;font-family:Homenaje;-inkscape-font-specification:Homenaje;stroke-width:0.26458332">UNI</tspan></text>
-    <text
-       xml:space="preserve"
-       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:3.52777767px;line-height:1.25;font-family:Homenaje;-inkscape-font-specification:Homenaje;letter-spacing:0px;word-spacing:0px;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.26458332"
-       x="51.925129"
-       y="118.88408"
-       id="text5443-0-4-7"><tspan
-         sodipodi:role="line"
-         id="tspan5441-5-0-02"
-         x="51.925129"
-         y="118.88408"
-         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:2.11666656px;font-family:Homenaje;-inkscape-font-specification:Homenaje;stroke-width:0.26458332">PAUSE</tspan></text>
-    <text
-       xml:space="preserve"
-       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:3.52777767px;line-height:1.25;font-family:Homenaje;-inkscape-font-specification:Homenaje;letter-spacing:0px;word-spacing:0px;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.26458332"
-       x="52.50713"
-       y="127.38276"
-       id="text5443-0-4-0"><tspan
-         sodipodi:role="line"
-         id="tspan5441-5-0-3"
-         x="52.50713"
-         y="127.38276"
-         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:2.11666656px;font-family:Homenaje;-inkscape-font-specification:Homenaje;stroke-width:0.26458332">FREE</tspan></text>
-    <text
-       xml:space="preserve"
-       style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:2.77782488px;line-height:1.25;font-family:Consolas;-inkscape-font-specification:'Consolas Bold';text-align:start;letter-spacing:0px;word-spacing:0px;text-anchor:start;fill:#00a3f2;fill-opacity:1;stroke:none;stroke-width:0.20833686"
-       x="40.940037"
-       y="150.01408"
-       id="text3885-7"><tspan
-         sodipodi:role="line"
-         id="tspan3883-0"
-         x="40.940037"
-         y="150.01408"
-         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-family:'Bradley Gratis';-inkscape-font-specification:'Bradley Gratis';text-align:start;text-anchor:start;stroke-width:0.20833686">FROZEN WASTELAND</tspan></text>
-    <rect
-       style="fill:#141414;fill-opacity:1;stroke-width:0.2232967"
-       id="rect4735-3"
-       width="14.816668"
-       height="14.816668"
-       x="43.61298"
-       y="75.789001" />
-    <text
-       xml:space="preserve"
-       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:3.52777767px;line-height:1.25;font-family:Homenaje;-inkscape-font-specification:Homenaje;letter-spacing:0px;word-spacing:0px;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.26458332"
-       x="47.429329"
-       y="95.28228"
-       id="text5443-7"><tspan
-         sodipodi:role="line"
-         id="tspan5441-1"
-         x="47.429329"
-         y="95.28228"
-         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:2.82222223px;font-family:Homenaje;-inkscape-font-specification:Homenaje;stroke-width:0.26458332">SKEW</tspan></text>
-    <text
-       xml:space="preserve"
-       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:3.5277338px;line-height:1.25;font-family:Homenaje;-inkscape-font-specification:Homenaje;letter-spacing:0px;word-spacing:0px;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.26458004"
-       x="37.142086"
-       y="140.855"
-       id="text4978-4-9"
-       transform="scale(0.9999876,1.0000124)"><tspan
-         sodipodi:role="line"
-         id="tspan4976-4-4"
-         x="37.142086"
-         y="140.855"
-         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:2.82218719px;font-family:Homenaje;-inkscape-font-specification:Homenaje;stroke-width:0.26458004">OUT</tspan></text>
-    <flowRoot
-       xml:space="preserve"
-       id="flowRoot5761"
-       style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:13.33333302px;line-height:1.25;font-family:Consolas;-inkscape-font-specification:'Consolas Bold';text-align:center;letter-spacing:0px;word-spacing:0px;text-anchor:middle;fill:#ffffff;fill-opacity:1;stroke:none"><flowRegion
-         id="flowRegion5763"><rect
-           id="rect5765"
-           width="190.75"
-           height="78.25"
-           x="-29"
-           y="210" /></flowRegion><flowPara
-         id="flowPara5767" /></flowRoot>    <flowRoot
-       xml:space="preserve"
-       id="flowRoot5769"
-       style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:13.33333302px;line-height:1.25;font-family:Consolas;-inkscape-font-specification:'Consolas Bold';text-align:center;letter-spacing:0px;word-spacing:0px;text-anchor:middle;fill:#ffffff;fill-opacity:1;stroke:none"><flowRegion
-         id="flowRegion5771"><rect
-           id="rect5773"
-           width="254.75"
-           height="79.75"
-           x="-44.75"
-           y="215.5" /></flowRegion><flowPara
-         id="flowPara5775" /></flowRoot>    <path
-       style="fill:none;stroke:#ffffff;stroke-width:0.13229167;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
-       d="m 45.680036,127.08766 0.529167,-0.95911 0.578776,0.89297"
-       id="path870"
-       inkscape:connector-curvature="0"
-       sodipodi:nodetypes="ccc" />
-    <path
-       style="fill:none;stroke:#ffffff;stroke-width:0.13229167;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
-       d="m 45.200479,118.62674 h 0.760677 v -1.02526 h 0.628385 v 1.0418 h 0.396875"
-       id="path872"
+       inkscape:export-filename="/home/vortico/pics/tmp/LFOs.png"
+       style="fill:url(#linearGradient3393);fill-opacity:1;fill-rule:nonzero;stroke:none;stroke-width:0.247329"
+       d="M 35.219628,50.449053 H 66.969629 V 150.99072 H 35.219628 Z m 0,0"
+       id="path33493"
        inkscape:connector-curvature="0" />
     <text
-       xml:space="preserve"
-       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:3.52777767px;line-height:1.25;font-family:Homenaje;-inkscape-font-specification:Homenaje;letter-spacing:0px;word-spacing:0px;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.26458332"
-       x="58.752789"
-       y="95.282272"
-       id="text5443-7-3"><tspan
-         sodipodi:role="line"
-         id="tspan5441-1-9"
-         x="58.752789"
-         y="95.282272"
-         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:2.82222223px;font-family:Homenaje;-inkscape-font-specification:Homenaje;stroke-width:0.26458332">PHASE</tspan></text>
+       id="text4978"
+       y="132.1255"
+       x="47.111122"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:3.52778px;line-height:1.25;font-family:Quarca;-inkscape-font-specification:Quarca;letter-spacing:0px;word-spacing:0px;fill:#dddddd;fill-opacity:1;stroke:none;stroke-width:0.264583;"
+       xml:space="preserve"><tspan
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:2.82222px;font-family:Quarca;-inkscape-font-specification:Quarca;stroke-width:0.264583;fill:#dddddd;fill-opacity:1;"
+         y="132.1255"
+         x="47.111122"
+         id="tspan4976"
+         sodipodi:role="line">RESET</tspan></text>
     <text
-       xml:space="preserve"
-       style="font-style:normal;font-weight:normal;font-size:3.52777767px;line-height:1.25;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.26458332"
-       x="55.390114"
+       id="text4982"
+       y="132.1255"
+       x="36.347874"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:3.52778px;line-height:1.25;font-family:Quarca;-inkscape-font-specification:Quarca;letter-spacing:0px;word-spacing:0px;fill:#dddddd;fill-opacity:1;stroke:none;stroke-width:0.264583;"
+       xml:space="preserve"><tspan
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:2.82222px;font-family:Quarca;-inkscape-font-specification:Quarca;stroke-width:0.264583;fill:#dddddd;fill-opacity:1;"
+         y="132.1255"
+         x="36.347874"
+         id="tspan4980"
+         sodipodi:role="line">CLOCK</tspan></text>
+    <text
+       id="text5097"
+       y="64.822968"
+       x="25.318932"
+       style="font-style:normal;font-weight:normal;font-size:3.52778px;line-height:1.25;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.264583"
+       xml:space="preserve" />
+    <text
+       id="text5443"
+       y="58.128029"
+       x="54.257675"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:3.52778px;line-height:1.25;font-family:Quarca;-inkscape-font-specification:Quarca;letter-spacing:0px;word-spacing:0px;fill:#dddddd;fill-opacity:1;stroke:none;stroke-width:0.264583;"
+       xml:space="preserve"><tspan
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:2.82222px;font-family:Quarca;-inkscape-font-specification:Quarca;stroke-width:0.264583;fill:#dddddd;fill-opacity:1;"
+         y="58.128029"
+         x="54.257675"
+         id="tspan5441"
+         sodipodi:role="line">DIVISION</tspan></text>
+    <text
+       id="text3885"
+       y="54.283669"
+       x="43.088398"
+       style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:3.52778px;line-height:1.25;font-family:Consolas;-inkscape-font-specification:'Consolas Bold';text-align:start;letter-spacing:0px;word-spacing:0px;text-anchor:start;fill:#dddddd;fill-opacity:1;stroke:none;stroke-width:0.264583;"
+       xml:space="preserve"><tspan
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:3.88056px;font-family:Quarca;-inkscape-font-specification:Quarca;text-align:start;text-anchor:start;stroke-width:0.264583;fill:#dddddd;fill-opacity:1;"
+         y="54.283669"
+         x="43.088398"
+         id="tspan3883"
+         sodipodi:role="line">BPM LFO 2</tspan></text>
+    <text
+       id="text4978-4"
+       y="132.1255"
+       x="57.429874"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:3.52778px;line-height:1.25;font-family:Quarca;-inkscape-font-specification:Quarca;letter-spacing:0px;word-spacing:0px;fill:#dddddd;fill-opacity:1;stroke:none;stroke-width:0.264583;"
+       xml:space="preserve"><tspan
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:2.82222px;font-family:Quarca;-inkscape-font-specification:Quarca;stroke-width:0.264583;fill:#dddddd;fill-opacity:1;"
+         y="132.1255"
+         x="57.429874"
+         id="tspan4976-4"
+         sodipodi:role="line">HOLD</tspan></text>
+    <text
+       id="text5443-0"
+       y="127.27646"
+       x="60.139912"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:3.52778px;line-height:1.25;font-family:Quarca;-inkscape-font-specification:Quarca;letter-spacing:0px;word-spacing:0px;fill:#dddddd;fill-opacity:1;stroke:none;stroke-width:0.264583"
+       xml:space="preserve"><tspan
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:2.11667px;font-family:Quarca;-inkscape-font-specification:Quarca;fill:#dddddd;fill-opacity:1;stroke-width:0.264583"
+         y="127.27646"
+         x="60.139912"
+         id="tspan5441-5"
+         sodipodi:role="line">MOM.</tspan></text>
+    <text
+       id="text5443-0-4"
+       y="118.78961"
+       x="60.14838"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:3.52778px;line-height:1.25;font-family:Quarca;-inkscape-font-specification:Quarca;letter-spacing:0px;word-spacing:0px;fill:#dddddd;fill-opacity:1;stroke:none;stroke-width:0.264583"
+       xml:space="preserve"><tspan
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:2.11667px;font-family:Quarca;-inkscape-font-specification:Quarca;fill:#dddddd;fill-opacity:1;stroke-width:0.264583"
+         y="118.78961"
+         x="60.14838"
+         id="tspan5441-5-0"
+         sodipodi:role="line">GATE</tspan></text>
+    <flowRoot
+       transform="matrix(0.26458333,0,0,0.26458333,34.617145,50.389004)"
+       style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:13.3333px;line-height:1.25;font-family:Consolas;-inkscape-font-specification:'Consolas Bold';text-align:center;letter-spacing:0px;word-spacing:0px;text-anchor:middle;fill:#ffffff;fill-opacity:1;stroke:none"
+       id="flowRoot1527"
+       xml:space="preserve"><flowRegion
+         id="flowRegion1529"><rect
+           y="44"
+           x="-39"
+           height="39.75"
+           width="106.25"
+           id="rect1531" /></flowRegion><flowPara
+         id="flowPara1533" /></flowRoot>
+    <text
+       id="text5443-0-6"
+       y="127.27604"
+       x="37.440777"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:3.52778px;line-height:1.25;font-family:Quarca;-inkscape-font-specification:Quarca;letter-spacing:0px;word-spacing:0px;fill:#dddddd;fill-opacity:1;stroke:none;stroke-width:0.264583;"
+       xml:space="preserve"><tspan
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:2.11667px;font-family:Quarca;-inkscape-font-specification:Quarca;stroke-width:0.264583;fill:#dddddd;fill-opacity:1;"
+         y="127.27604"
+         x="37.440777"
+         id="tspan5441-5-5"
+         sodipodi:role="line">BI</tspan></text>
+    <text
+       id="text5443-0-4-9"
+       y="118.78955"
+       x="36.993103"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:3.52778px;line-height:1.25;font-family:Quarca;-inkscape-font-specification:Quarca;letter-spacing:0px;word-spacing:0px;fill:#dddddd;fill-opacity:1;stroke:none;stroke-width:0.264583"
+       xml:space="preserve"><tspan
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:2.11667px;font-family:Quarca;-inkscape-font-specification:Quarca;fill:#dddddd;fill-opacity:1;stroke-width:0.264583"
+         y="118.78955"
+         x="36.993103"
+         id="tspan5441-5-0-0"
+         sodipodi:role="line">UNI</tspan></text>
+    <text
+       id="text5443-0-4-7"
+       y="118.88408"
+       x="51.408661"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:3.52778px;line-height:1.25;font-family:Quarca;-inkscape-font-specification:Quarca;letter-spacing:0px;word-spacing:0px;fill:#dddddd;fill-opacity:1;stroke:none;stroke-width:0.264583"
+       xml:space="preserve"><tspan
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:2.11667px;font-family:Quarca;-inkscape-font-specification:Quarca;fill:#dddddd;fill-opacity:1;stroke-width:0.264583"
+         y="118.88408"
+         x="51.408661"
+         id="tspan5441-5-0-02"
+         sodipodi:role="line">PAUSE</tspan></text>
+    <text
+       id="text5443-0-4-0"
+       y="127.38276"
+       x="52.202412"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:3.52778px;line-height:1.25;font-family:Quarca;-inkscape-font-specification:Quarca;letter-spacing:0px;word-spacing:0px;fill:#dddddd;fill-opacity:1;stroke:none;stroke-width:0.264583"
+       xml:space="preserve"><tspan
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:2.11667px;font-family:Quarca;-inkscape-font-specification:Quarca;fill:#dddddd;fill-opacity:1;stroke-width:0.264583"
+         y="127.38276"
+         x="52.202412"
+         id="tspan5441-5-0-3"
+         sodipodi:role="line">FREE</tspan></text>
+    <text
+       id="text3885-7"
+       y="150.01408"
+       x="40.940037"
+       style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:2.77782px;line-height:1.25;font-family:Consolas;-inkscape-font-specification:'Consolas Bold';text-align:start;letter-spacing:0px;word-spacing:0px;text-anchor:start;fill:#00a3f2;fill-opacity:1;stroke:none;stroke-width:0.208337"
+       xml:space="preserve"><tspan
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-family:'Bradley Gratis';-inkscape-font-specification:'Bradley Gratis';text-align:start;text-anchor:start;stroke-width:0.208337"
+         y="150.01408"
+         x="40.940037"
+         id="tspan3883-0"
+         sodipodi:role="line">FROZEN WASTELAND</tspan></text>
+    <rect
+       y="75.789001"
+       x="43.61298"
+       height="14.816668"
+       width="14.816668"
+       id="rect4735-3"
+       style="fill:#141414;fill-opacity:1;stroke-width:0.2232967" />
+    <text
+       id="text5443-7"
+       y="95.28228"
+       x="47.429329"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:3.52778px;line-height:1.25;font-family:Quarca;-inkscape-font-specification:Quarca;letter-spacing:0px;word-spacing:0px;fill:#dddddd;fill-opacity:1;stroke:none;stroke-width:0.264583;"
+       xml:space="preserve"><tspan
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:2.82222px;font-family:Quarca;-inkscape-font-specification:Quarca;stroke-width:0.264583;fill:#dddddd;fill-opacity:1;"
+         y="95.28228"
+         x="47.429329"
+         id="tspan5441-1"
+         sodipodi:role="line">SKEW</tspan></text>
+    <rect
+       style="opacity:0.981;fill:#0e365d;fill-opacity:1;stroke:#000000;stroke-width:0.27305001;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       id="rect22843"
+       width="29.360188"
+       height="8.7226877"
+       x="36.349064"
+       y="138.16446" />
+    <text
+       transform="scale(0.9999876,1.0000124)"
+       id="text4978-4-9"
+       y="140.855"
+       x="37.142086"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:3.52773px;line-height:1.25;font-family:Quarca;-inkscape-font-specification:Quarca;letter-spacing:0px;word-spacing:0px;fill:#dddddd;fill-opacity:1;stroke:none;stroke-width:0.26458;"
+       xml:space="preserve"><tspan
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:2.82219px;font-family:Quarca;-inkscape-font-specification:Quarca;stroke-width:0.26458;fill:#dddddd;fill-opacity:1;"
+         y="140.855"
+         x="37.142086"
+         id="tspan4976-4-4"
+         sodipodi:role="line">OUT</tspan></text>
+    <flowRoot
+       style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:13.3333px;line-height:1.25;font-family:Consolas;-inkscape-font-specification:'Consolas Bold';text-align:center;letter-spacing:0px;word-spacing:0px;text-anchor:middle;fill:#ffffff;fill-opacity:1;stroke:none"
+       id="flowRoot5761"
+       xml:space="preserve"><flowRegion
+         id="flowRegion5763"><rect
+           y="210"
+           x="-29"
+           height="78.25"
+           width="190.75"
+           id="rect5765" /></flowRegion><flowPara
+         id="flowPara5767" /></flowRoot>
+    <flowRoot
+       style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:13.3333px;line-height:1.25;font-family:Consolas;-inkscape-font-specification:'Consolas Bold';text-align:center;letter-spacing:0px;word-spacing:0px;text-anchor:middle;fill:#ffffff;fill-opacity:1;stroke:none"
+       id="flowRoot5769"
+       xml:space="preserve"><flowRegion
+         id="flowRegion5771"><rect
+           y="215.5"
+           x="-44.75"
+           height="79.75"
+           width="254.75"
+           id="rect5773" /></flowRegion><flowPara
+         id="flowPara5775" /></flowRoot>
+    <path
+       sodipodi:nodetypes="ccc"
+       inkscape:connector-curvature="0"
+       id="path870"
+       d="m 45.680036,127.08766 0.529167,-0.95911 0.578776,0.89297"
+       style="fill:none;stroke:#ffffff;stroke-width:0.13229167;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1" />
+    <path
+       inkscape:connector-curvature="0"
+       id="path872"
+       d="m 45.200479,118.62674 h 0.760677 v -1.02526 h 0.628385 v 1.0418 h 0.396875"
+       style="fill:none;stroke:#ffffff;stroke-width:0.13229167;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1" />
+    <text
+       id="text5443-7-3"
+       y="95.282272"
+       x="58.752789"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:3.52778px;line-height:1.25;font-family:Quarca;-inkscape-font-specification:Quarca;letter-spacing:0px;word-spacing:0px;fill:#dddddd;fill-opacity:1;stroke:none;stroke-width:0.264583;"
+       xml:space="preserve"><tspan
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:2.82222px;font-family:Quarca;-inkscape-font-specification:Quarca;stroke-width:0.264583;fill:#dddddd;fill-opacity:1;"
+         y="95.282272"
+         x="58.752789"
+         id="tspan5441-1-9"
+         sodipodi:role="line">PHASE</tspan></text>
+    <text
+       id="text5443-0-4-9-8"
        y="100.11585"
-       id="text5443-0-4-9-8"><tspan
-         sodipodi:role="line"
-         id="tspan5441-5-0-0-4"
-         x="55.390114"
+       x="55.390114"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:3.52778px;line-height:1.25;font-family:Quarca;-inkscape-font-specification:'Quarca weight=255';letter-spacing:0px;word-spacing:0px;fill:#dddddd;fill-opacity:1;stroke:none;stroke-width:0.264583;"
+       xml:space="preserve"><tspan
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:2.11667px;font-family:Quarca;-inkscape-font-specification:Quarca;stroke-width:0.264583;fill:#dddddd;fill-opacity:1;"
          y="100.11585"
-         style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:2.11666656px;font-family:Homenaje;-inkscape-font-specification:'Homenaje Bold';stroke-width:0.26458332">90°</tspan></text>
+         x="55.390114"
+         id="tspan5441-5-0-0-4"
+         sodipodi:role="line">90°</tspan></text>
     <g
        id="g1445">
       <rect
-         y="58.855671"
-         x="36.204647"
-         height="4.7625003"
-         width="9.5927334"
+         style="fill:#999999;fill-opacity:1;stroke-width:0.10052509"
          id="rect6948-0"
-         style="fill:#999999;fill-opacity:1;stroke-width:0.10052509" />
+         width="9.5927334"
+         height="4.7625003"
+         x="36.204647"
+         y="58.855671" />
       <rect
-         y="59.120251"
-         x="36.520828"
-         height="4.2333336"
-         width="8.9958334"
+         style="fill:#323232;fill-opacity:1;stroke-width:0.09300231"
          id="rect4735-6"
-         style="fill:#323232;fill-opacity:1;stroke-width:0.09300231" />
+         width="8.9958334"
+         height="4.2333336"
+         x="36.520828"
+         y="59.120251" />
     </g>
     <text
-       xml:space="preserve"
-       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:3.52777767px;line-height:1.25;font-family:Homenaje;-inkscape-font-specification:Homenaje;letter-spacing:0px;word-spacing:0px;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.26458332"
-       x="36.581413"
+       id="text5443-7-7"
        y="95.348419"
-       id="text5443-7-7"><tspan
-         sodipodi:role="line"
-         id="tspan5441-1-1"
-         x="36.581413"
+       x="36.581413"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:3.52778px;line-height:1.25;font-family:Quarca;-inkscape-font-specification:Quarca;letter-spacing:0px;word-spacing:0px;fill:#dddddd;fill-opacity:1;stroke:none;stroke-width:0.264583;"
+       xml:space="preserve"><tspan
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:2.82222px;font-family:Quarca;-inkscape-font-specification:Quarca;stroke-width:0.264583;fill:#dddddd;fill-opacity:1;"
          y="95.348419"
-         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:2.82222223px;font-family:Homenaje;-inkscape-font-specification:Homenaje;stroke-width:0.26458332">SLOPE</tspan></text>
+         x="36.581413"
+         id="tspan5441-1-1"
+         sodipodi:role="line">SLOPE</tspan></text>
     <text
-       xml:space="preserve"
-       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:3.52777767px;line-height:1.25;font-family:Homenaje;-inkscape-font-specification:Homenaje;letter-spacing:0px;word-spacing:0px;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.26458332"
-       x="36.556004"
+       id="text5443-7-7-1"
        y="58.159737"
-       id="text5443-7-7-1"><tspan
-         sodipodi:role="line"
-         id="tspan5441-1-1-1"
-         x="36.556004"
+       x="36.556004"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:3.52778px;line-height:1.25;font-family:Quarca;-inkscape-font-specification:Quarca;letter-spacing:0px;word-spacing:0px;fill:#dddddd;fill-opacity:1;stroke:none;stroke-width:0.264583;"
+       xml:space="preserve"><tspan
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:2.82222px;font-family:Quarca;-inkscape-font-specification:Quarca;stroke-width:0.264583;fill:#dddddd;fill-opacity:1;"
          y="58.159737"
-         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:2.82222223px;font-family:Homenaje;-inkscape-font-specification:Homenaje;stroke-width:0.26458332">MULTIPLY</tspan></text>
+         x="36.556004"
+         id="tspan5441-1-1-1"
+         sodipodi:role="line">MULTIPLY</tspan></text>
     <text
-       xml:space="preserve"
-       style="font-style:normal;font-weight:normal;font-size:3.52777791px;line-height:1.25;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.26458332"
-       x="49.422787"
+       id="text5443-7-7-1-0"
        y="62.008278"
-       id="text5443-7-7-1-0"><tspan
-         sodipodi:role="line"
-         id="tspan5441-1-1-1-6"
-         x="49.422787"
+       x="49.422787"
+       style="font-style:normal;font-weight:normal;font-size:3.52778px;line-height:1.25;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.264583"
+       xml:space="preserve"><tspan
+         style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:3.52778px;font-family:Calibri;-inkscape-font-specification:'Calibri Bold';stroke-width:0.264583"
          y="62.008278"
-         style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:3.52777791px;font-family:Calibri;-inkscape-font-specification:'Calibri Bold';stroke-width:0.26458332">:</tspan></text>
+         x="49.422787"
+         id="tspan5441-1-1-1-6"
+         sodipodi:role="line">:</tspan></text>
     <g
-       id="g346"
+       style="stroke:#ffffff;stroke-width:1.06662023;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
        transform="matrix(0.12402883,0,0,0.12402883,40.975365,97.501149)"
-       style="stroke:#ffffff;stroke-width:1.06662023;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1">
+       id="g346">
       <!-- <text font-size="6pt" letter-spacing="2px" transform="translate(6.5 40)">SIN</text> -->
       <g
-         id="g344"
+         style="stroke:#ffffff;stroke-width:1.06662023;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
          transform="translate(9,33.5)"
-         style="stroke:#ffffff;stroke-width:1.06662023;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1">
+         id="g344">
         <!-- <rect width="12" height="8" fill="none" stroke-width="1" stroke="#0f0" /> -->
         <path
-           style="fill:none;stroke:#ffffff;stroke-width:1.06662023;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
-           inkscape:connector-curvature="0"
+           d="M 0,4 A 3,4.5 0 0 1 6,4"
            id="path340"
-           d="M 0,4 A 3,4.5 0 0 1 6,4" />
-        <path
-           style="fill:none;stroke:#ffffff;stroke-width:1.06662023;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
            inkscape:connector-curvature="0"
+           style="fill:none;stroke:#ffffff;stroke-width:1.06662023;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1" />
+        <path
+           d="m 6,4 a 3,4.5 0 0 0 6,0"
            id="path342"
-           d="m 6,4 a 3,4.5 0 0 0 6,0" />
+           inkscape:connector-curvature="0"
+           style="fill:none;stroke:#ffffff;stroke-width:1.06662023;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1" />
       </g>
     </g>
     <flowRoot
-       xml:space="preserve"
+       style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:13.3333px;line-height:1.25;font-family:Consolas;-inkscape-font-specification:'Consolas Bold';text-align:center;letter-spacing:0px;word-spacing:0px;text-anchor:middle;fill:#000000;fill-opacity:1;stroke:none"
        id="flowRoot3926"
-       style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:13.33333302px;line-height:1.25;font-family:Consolas;-inkscape-font-specification:'Consolas Bold';text-align:center;letter-spacing:0px;word-spacing:0px;text-anchor:middle;fill:#000000;fill-opacity:1;stroke:none"><flowRegion
+       xml:space="preserve"><flowRegion
          id="flowRegion3928"><rect
-           id="rect3930"
-           width="162"
-           height="47.25"
+           y="280.75"
            x="-10.25"
-           y="280.75" /></flowRegion><flowPara
-         id="flowPara3932" /></flowRoot>    <flowRoot
-       xml:space="preserve"
+           height="47.25"
+           width="162"
+           id="rect3930" /></flowRegion><flowPara
+         id="flowPara3932" /></flowRoot>
+    <flowRoot
+       style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:13.3333px;line-height:1.25;font-family:Consolas;-inkscape-font-specification:'Consolas Bold';text-align:center;letter-spacing:0px;word-spacing:0px;text-anchor:middle;fill:#000000;fill-opacity:1;stroke:none"
        id="flowRoot3934"
-       style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:13.33333302px;line-height:1.25;font-family:Consolas;-inkscape-font-specification:'Consolas Bold';text-align:center;letter-spacing:0px;word-spacing:0px;text-anchor:middle;fill:#000000;fill-opacity:1;stroke:none"><flowRegion
+       xml:space="preserve"><flowRegion
          id="flowRegion3936"><rect
-           id="rect3938"
-           width="214.75"
-           height="70.25"
+           y="272.25"
            x="-16.5"
-           y="272.25" /></flowRegion><flowPara
-         id="flowPara3940" /></flowRoot>    <g
+           height="70.25"
+           width="214.75"
+           id="rect3938" /></flowRegion><flowPara
+         id="flowPara3940" /></flowRoot>
+    <g
        id="g1449">
       <rect
-         y="58.855671"
-         x="53.865585"
-         height="4.7625003"
-         width="9.5250006"
+         style="fill:#999999;fill-opacity:1;stroke-width:0.10016956"
          id="rect6948-0-2"
-         style="fill:#999999;fill-opacity:1;stroke-width:0.10016956" />
+         width="9.5250006"
+         height="4.7625003"
+         x="53.865585"
+         y="58.855671" />
       <rect
-         y="59.120251"
-         x="54.115623"
-         height="4.2333336"
-         width="8.9958334"
+         style="fill:#323232;fill-opacity:1;stroke-width:0.09300231"
          id="rect4735-6-8"
-         style="fill:#323232;fill-opacity:1;stroke-width:0.09300231" />
+         width="8.9958334"
+         height="4.2333336"
+         x="54.115623"
+         y="59.120251" />
     </g>
     <text
-       xml:space="preserve"
-       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:3.52773356px;line-height:1.25;font-family:Homenaje;-inkscape-font-specification:Homenaje;letter-spacing:0px;word-spacing:0px;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.26458004"
-       x="59.933224"
-       y="140.85501"
+       transform="scale(0.9999876,1.0000124)"
        id="text4978-4-9-8"
-       transform="scale(0.9999876,1.0000124)"><tspan
-         sodipodi:role="line"
-         id="tspan4976-4-4-5"
+       y="140.85501"
+       x="59.933224"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:3.52773px;line-height:1.25;font-family:Quarca;-inkscape-font-specification:Quarca;letter-spacing:0px;word-spacing:0px;fill:#dddddd;fill-opacity:1;stroke:none;stroke-width:0.26458;"
+       xml:space="preserve"><tspan
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:2.82219px;font-family:Quarca;-inkscape-font-specification:Quarca;stroke-width:0.26458;fill:#dddddd;fill-opacity:1;"
+         y="140.85501"
          x="59.933224"
-         y="140.85501"
-         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:2.82218695px;font-family:Homenaje;-inkscape-font-specification:Homenaje;stroke-width:0.26458004">+180°</tspan></text>
+         id="tspan4976-4-4-5"
+         sodipodi:role="line">+180°</tspan></text>
     <text
-       xml:space="preserve"
-       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:3.52773356px;line-height:1.25;font-family:Homenaje;-inkscape-font-specification:Homenaje;letter-spacing:0px;word-spacing:0px;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.26458004"
-       x="52.260212"
-       y="140.85501"
+       transform="scale(0.9999876,1.0000124)"
        id="text4978-4-9-3"
-       transform="scale(0.9999876,1.0000124)"><tspan
-         sodipodi:role="line"
-         id="tspan4976-4-4-2"
-         x="52.260212"
-         y="140.85501"
-         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:2.82218695px;font-family:Homenaje;-inkscape-font-specification:Homenaje;stroke-width:0.26458004">+90°</tspan></text>
-    <text
-       xml:space="preserve"
-       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:3.52773356px;line-height:1.25;font-family:Homenaje;-inkscape-font-specification:Homenaje;letter-spacing:0px;word-spacing:0px;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.26458004"
-       x="44.322613"
        y="140.85501"
-       id="text4978-4-9-81"
-       transform="scale(0.9999876,1.0000124)"><tspan
-         sodipodi:role="line"
-         id="tspan4976-4-4-1"
-         x="44.322613"
+       x="52.260212"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:3.52773px;line-height:1.25;font-family:Quarca;-inkscape-font-specification:Quarca;letter-spacing:0px;word-spacing:0px;fill:#dddddd;fill-opacity:1;stroke:none;stroke-width:0.26458;"
+       xml:space="preserve"><tspan
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:2.82219px;font-family:Quarca;-inkscape-font-specification:Quarca;stroke-width:0.26458;fill:#dddddd;fill-opacity:1;"
          y="140.85501"
-         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:2.82218695px;font-family:Homenaje;-inkscape-font-specification:Homenaje;stroke-width:0.26458004">+45°</tspan></text>
+         x="52.260212"
+         id="tspan4976-4-4-2"
+         sodipodi:role="line">+90°</tspan></text>
+    <text
+       transform="scale(0.9999876,1.0000124)"
+       id="text4978-4-9-81"
+       y="140.85501"
+       x="44.322613"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:3.52773px;line-height:1.25;font-family:Quarca;-inkscape-font-specification:Quarca;letter-spacing:0px;word-spacing:0px;fill:#dddddd;fill-opacity:1;stroke:none;stroke-width:0.26458;"
+       xml:space="preserve"><tspan
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:2.82219px;font-family:Quarca;-inkscape-font-specification:Quarca;stroke-width:0.26458;fill:#dddddd;fill-opacity:1;"
+         y="140.85501"
+         x="44.322613"
+         id="tspan4976-4-4-1"
+         sodipodi:role="line">+45°</tspan></text>
   </g>
 </svg>

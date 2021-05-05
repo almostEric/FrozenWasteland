@@ -113,6 +113,19 @@ struct ManicCompression : Module {
 	Biquad* lpFilterBank[6]; // 3 filters 2 for stereo inputs, one for sidechain x 2 to increase slope
 	Biquad* hpFilterBank[6]; // 3 filters 2 for stereo inputs, one for sidechain x 2 to increase slope
 
+	//percentages
+	float thresholdPercentage = 0;
+	float ratioPercentage = 0;
+	float kneePercentage = 0;
+	float rmsWindowPercentage = 0;
+	float attackPercentage = 0;
+	float releasePercentage = 0;
+	float attackCurvePercentage = 0;
+	float releaseCurvePercentage = 0;
+	float inGainPercentage = 0;
+	float makeupGainPercentage = 0;
+	float mixPercentage = 0;
+
 	ManicCompression() {
 		config(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS, NUM_LIGHTS);
 
@@ -389,24 +402,35 @@ void ManicCompression::process(const ProcessArgs &args) {
 
 
 	float paramRatio = clamp(params[RATIO_PARAM].getValue() + (inputs[RATIO_CV_INPUT].getVoltage() * 0.1 * params[RATIO_CV_ATTENUVERTER_PARAM].getValue()),0.0f,1.0f);
+	ratioPercentage = paramRatio;
 	ratio = pow(20.0,paramRatio);
 	threshold = clamp(params[THRESHOLD_PARAM].getValue() + (inputs[THRESHOLD_CV_INPUT].getVoltage() * 3.0 * params[THRESHOLD_CV_ATTENUVERTER_PARAM].getValue()),-50.0f,0.0f);
+	thresholdPercentage = (threshold + 50.0) / 50.0;
 	float paramAttack = clamp(params[ATTACK_PARAM].getValue() + (inputs[ATTACK_CV_INPUT].getVoltage() * 10.0 * params[ATTACK_CV_ATTENUVERTER_PARAM].getValue()),0.0f,1.0f);
+	attackPercentage = paramAttack;
 	double attack = pow(13.4975,paramAttack) * 8.0 - 7.98;
 	float paramRelease = clamp(params[RELEASE_PARAM].getValue() + (inputs[RELEASE_CV_INPUT].getVoltage() * 500.0 * params[RELEASE_CV_ATTENUVERTER_PARAM].getValue()),0.0f,1.0f);
+	releasePercentage = paramRelease;
 	double release = pow(629.0,paramRelease) * 8.0 + 32.0;
 
 	double rmsWindow = clamp(params[RMS_WINDOW_PARAM].getValue() + (inputs[RMS_WINDOW_INPUT].getVoltage() * 500.0 * params[RMS_WINDOW_CV_ATTENUVERTER_PARAM].getValue()),0.02f,50.0f);
+	rmsWindowPercentage = rmsWindow / 50.0;
 
 	double attackCurve = clamp(params[ATTACK_CURVE_PARAM].getValue() + (inputs[ATTACK_CV_INPUT].getVoltage() * 0.1 * params[ATTACK_CURVE_CV_ATTENUVERTER_PARAM].getValue()),-1.0f,1.0f);
+	attackCurvePercentage = attackCurve;
 	double releaseCurve = clamp(params[RELEASE_CURVE_PARAM].getValue() + (inputs[RELEASE_CV_INPUT].getVoltage() * 0.1 * params[RELEASE_CV_ATTENUVERTER_PARAM].getValue()),-1.0f,1.0f);
+	releaseCurvePercentage = releaseCurve;
 
 	knee = clamp(params[KNEE_PARAM].getValue() + (inputs[KNEE_CV_INPUT].getVoltage() * params[KNEE_CV_ATTENUVERTER_PARAM].getValue()),0.0f,10.0f);
+	kneePercentage = knee / 10.0;
 
 	double inputGain = clamp(params[IN_GAIN_PARAM].getValue() + (inputs[IN_GAIN_INPUT].getVoltage() * 3.0 * params[IN_GAIN_CV_ATTENUVERTER_PARAM].getValue()), 0.0f,30.0f);
+	inGainPercentage = inputGain / 30.0;
 	inputGain = chunkware_simple::dB2lin(inputGain);
 	double makeupGain = clamp(params[MAKEUP_GAIN_PARAM].getValue() + (inputs[MAKEUP_GAIN_INPUT].getVoltage() * 3.0 * params[MAKEUP_GAIN_CV_ATTENUVERTER_PARAM].getValue()), 0.0f,30.0f);
+	makeupGainPercentage = makeupGain / 30.0;
 	double mix = clamp(params[MIX_PARAM].getValue() + (inputs[MIX_CV_INPUT].getVoltage() * 0.1 * params[MIX_CV_ATTENUVERTER_PARAM].getValue()),0.0f,1.0f);
+	mixPercentage = mix;
 
 
 	double inputL = inputs[SOURCE_L_INPUT].getVoltage();
@@ -636,12 +660,20 @@ struct ManicCompressionWidget : ModuleWidget {
 		}
 
 
-		addParam(createParam<RoundSmallFWKnob>(Vec(15, 140), module, ManicCompression::THRESHOLD_PARAM));
+		ParamWidget* thresholdParam = createParam<RoundSmallFWKnob>(Vec(15, 140), module, ManicCompression::THRESHOLD_PARAM);
+		if (module) {
+			dynamic_cast<RoundSmallFWKnob*>(thresholdParam)->percentage = &module->thresholdPercentage;
+		}
+		addParam(thresholdParam);							
 		addParam(createParam<RoundReallySmallFWKnob>(Vec(40, 158), module, ManicCompression::THRESHOLD_CV_ATTENUVERTER_PARAM));
 		addInput(createInput<FWPortInReallySmall>(Vec(44, 143), module, ManicCompression::THRESHOLD_CV_INPUT));
 
 
-		addParam(createParam<RoundSmallFWKnob>(Vec(75, 140), module, ManicCompression::RATIO_PARAM));
+		ParamWidget* ratioParam = createParam<RoundSmallFWKnob>(Vec(75, 140), module, ManicCompression::RATIO_PARAM);
+		if (module) {
+			dynamic_cast<RoundSmallFWKnob*>(ratioParam)->percentage = &module->ratioPercentage;
+		}
+		addParam(ratioParam);							
 		addParam(createParam<RoundReallySmallFWKnob>(Vec(100, 158), module, ManicCompression::RATIO_CV_ATTENUVERTER_PARAM));
 		addInput(createInput<FWPortInReallySmall>(Vec(104, 143), module, ManicCompression::RATIO_CV_INPUT));
 
@@ -659,42 +691,80 @@ struct ManicCompressionWidget : ModuleWidget {
 		addInput(createInput<FWPortInReallySmall>(Vec(81, 250), module, ManicCompression::HP_FILTER_MODE_INPUT));
 
 
-		addParam(createParam<RoundSmallFWKnob>(Vec(30, 195), module, ManicCompression::RMS_WINDOW_PARAM));
+		ParamWidget* rmsWindowParam = createParam<RoundSmallFWKnob>(Vec(30, 195), module, ManicCompression::RMS_WINDOW_PARAM);
+		if (module) {
+			dynamic_cast<RoundSmallFWKnob*>(rmsWindowParam)->percentage = &module->rmsWindowPercentage;
+		}
+		addParam(rmsWindowParam);							
 		addParam(createParam<RoundReallySmallFWKnob>(Vec(55, 213), module, ManicCompression::RMS_WINDOW_CV_ATTENUVERTER_PARAM));
 		addInput(createInput<FWPortInReallySmall>(Vec(59, 198), module, ManicCompression::RMS_WINDOW_INPUT));
 
-		addParam(createParam<RoundSmallFWKnob>(Vec(82, 195), module, ManicCompression::KNEE_PARAM));
+		ParamWidget* kneeParam = createParam<RoundSmallFWKnob>(Vec(82, 195), module, ManicCompression::KNEE_PARAM);
+		if (module) {
+			dynamic_cast<RoundSmallFWKnob*>(kneeParam)->percentage = &module->kneePercentage;
+		}
+		addParam(kneeParam);							
 		addParam(createParam<RoundReallySmallFWKnob>(Vec(107, 213), module, ManicCompression::KNEE_CV_ATTENUVERTER_PARAM));
 		addInput(createInput<FWPortInReallySmall>(Vec(111, 198), module, ManicCompression::KNEE_CV_INPUT));
 
 
-		addParam(createParam<RoundSmallFWKnob>(Vec(135, 140), module, ManicCompression::ATTACK_PARAM));
+		ParamWidget* attackParam = createParam<RoundSmallFWKnob>(Vec(135, 140), module, ManicCompression::ATTACK_PARAM);
+		if (module) {
+			dynamic_cast<RoundSmallFWKnob*>(attackParam)->percentage = &module->attackPercentage;
+		}
+		addParam(attackParam);							
 		addParam(createParam<RoundReallySmallFWKnob>(Vec(160, 158), module, ManicCompression::ATTACK_CV_ATTENUVERTER_PARAM));
 		addInput(createInput<FWPortInReallySmall>(Vec(164, 143), module, ManicCompression::ATTACK_CV_INPUT));
 
-		addParam(createParam<RoundSmallFWKnob>(Vec(195, 140), module, ManicCompression::RELEASE_PARAM));
+		ParamWidget* releaseParam = createParam<RoundSmallFWKnob>(Vec(195, 140), module, ManicCompression::RELEASE_PARAM);
+		if (module) {
+			dynamic_cast<RoundSmallFWKnob*>(releaseParam)->percentage = &module->releasePercentage;
+		}
+		addParam(releaseParam);							
 		addParam(createParam<RoundReallySmallFWKnob>(Vec(220, 158), module, ManicCompression::RELEASE_CV_ATTENUVERTER_PARAM));
 		addInput(createInput<FWPortInReallySmall>(Vec(224, 143), module, ManicCompression::RELEASE_CV_INPUT));
 
 
-		addParam(createParam<RoundSmallFWKnob>(Vec(135, 200), module, ManicCompression::ATTACK_CURVE_PARAM));
+		ParamWidget* attackCurveParam = createParam<RoundSmallFWKnob>(Vec(135, 200), module, ManicCompression::ATTACK_CURVE_PARAM);
+		if (module) {
+			dynamic_cast<RoundSmallFWKnob*>(attackCurveParam)->percentage = &module->attackCurvePercentage;
+			dynamic_cast<RoundSmallFWKnob*>(attackCurveParam)->biDirectional = true;
+		}
+		addParam(attackCurveParam);							
 		addParam(createParam<RoundReallySmallFWKnob>(Vec(160, 213), module, ManicCompression::ATTACK_CURVE_CV_ATTENUVERTER_PARAM));
 		addInput(createInput<FWPortInReallySmall>(Vec(164, 198), module, ManicCompression::ATTACK_CURVE_CV_INPUT));
 
-		addParam(createParam<RoundSmallFWKnob>(Vec(195, 200), module, ManicCompression::RELEASE_CURVE_PARAM));
+		ParamWidget* releaseCurveParam = createParam<RoundSmallFWKnob>(Vec(195, 200), module, ManicCompression::RELEASE_CURVE_PARAM);
+		if (module) {
+			dynamic_cast<RoundSmallFWKnob*>(releaseCurveParam)->percentage = &module->releaseCurvePercentage;
+			dynamic_cast<RoundSmallFWKnob*>(releaseCurveParam)->biDirectional = true;
+		}
+		addParam(releaseCurveParam);							
 		addParam(createParam<RoundReallySmallFWKnob>(Vec(220, 213), module, ManicCompression::RELEASE_CURVE_CV_ATTENUVERTER_PARAM));
 		addInput(createInput<FWPortInReallySmall>(Vec(224, 198), module, ManicCompression::RELEASE_CURVE_CV_INPUT));
 
 
-		addParam(createParam<RoundSmallFWKnob>(Vec(15, 280), module, ManicCompression::IN_GAIN_PARAM));
+		ParamWidget* inGainParam = createParam<RoundSmallFWKnob>(Vec(15, 280), module, ManicCompression::IN_GAIN_PARAM);
+		if (module) {
+			dynamic_cast<RoundSmallFWKnob*>(inGainParam)->percentage = &module->inGainPercentage;
+		}
+		addParam(inGainParam);							
 		addParam(createParam<RoundReallySmallFWKnob>(Vec(40, 298), module, ManicCompression::IN_GAIN_CV_ATTENUVERTER_PARAM));
 		addInput(createInput<FWPortInReallySmall>(Vec(44, 283), module, ManicCompression::IN_GAIN_INPUT));
 
-		addParam(createParam<RoundSmallFWKnob>(Vec(75, 280), module, ManicCompression::MAKEUP_GAIN_PARAM));
+		ParamWidget* makeupGainParam = createParam<RoundSmallFWKnob>(Vec(75, 280), module, ManicCompression::MAKEUP_GAIN_PARAM);
+		if (module) {
+			dynamic_cast<RoundSmallFWKnob*>(makeupGainParam)->percentage = &module->makeupGainPercentage;
+		}
+		addParam(makeupGainParam);							
 		addParam(createParam<RoundReallySmallFWKnob>(Vec(100, 298), module, ManicCompression::MAKEUP_GAIN_CV_ATTENUVERTER_PARAM));
 		addInput(createInput<FWPortInReallySmall>(Vec(104, 283), module, ManicCompression::MAKEUP_GAIN_INPUT));
 
-		addParam(createParam<RoundSmallFWKnob>(Vec(135, 280), module, ManicCompression::MIX_PARAM));
+		ParamWidget* mixParam = createParam<RoundSmallFWKnob>(Vec(135, 280), module, ManicCompression::MIX_PARAM);
+		if (module) {
+			dynamic_cast<RoundSmallFWKnob*>(mixParam)->percentage = &module->mixPercentage;
+		}
+		addParam(mixParam);							
 		addParam(createParam<RoundReallySmallFWKnob>(Vec(160, 298), module, ManicCompression::MIX_CV_ATTENUVERTER_PARAM));
 		addInput(createInput<FWPortInReallySmall>(Vec(164, 283), module, ManicCompression::MIX_CV_INPUT));
 

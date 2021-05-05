@@ -76,6 +76,11 @@ struct QARWarpedSpaceExpander : Module {
 	dsp::SchmittTrigger trackWarpTrigger[TRACK_COUNT],wsEnableTrigger;
 	bool trackWarpSelected[TRACK_COUNT],wsEnabled = true;
 
+	//percentages
+	float warpAmountPercentage = 0;
+	float warpPositionPercentage = 0;
+	float warpLengthPercentage = 0;
+
 	
 	QARWarpedSpaceExpander() {
 		config(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS, NUM_LIGHTS);
@@ -235,8 +240,11 @@ struct QARWarpedSpaceExpander : Module {
 
 
             warpAmount = clamp(params[WARP_AMOUNT_PARAM].getValue() + (inputs[WARP_AMOUNT_INPUT].isConnected() ? inputs[WARP_AMOUNT_INPUT].getVoltage() * 0.6f * params[WARP_AMOUNT_CV_ATTENUVETER_PARAM].getValue() : 0.0f),1.0,6.0);
+			warpAmountPercentage = (warpAmount - 1.0) / 5.0;
             warpPosition = clamp(params[WARP_POSITION_PARAM].getValue() + (inputs[WARP_POSITION_INPUT].isConnected() ? inputs[WARP_POSITION_INPUT].getVoltage() / (MAX_STEPS / 10.0) * params[WARP_POSITION_CV_ATTENUVETER_PARAM].getValue() : 0.0f),0.0f,MAX_STEPS-1.0);
+			warpPositionPercentage = warpPosition / (MAX_STEPS -1.0);
             warpLength = clamp(params[WARP_LENGTH_PARAM].getValue() + (inputs[WARP_LENGTH_INPUT].isConnected() ? inputs[WARP_LENGTH_INPUT].getVoltage() / (MAX_STEPS / 10.0) * params[WARP_LENGTH_CV_ATTENUVETER_PARAM].getValue() : 0.0f),0.0f,MAX_STEPS-1.0);
+			warpLengthPercentage = warpLength / (MAX_STEPS -1.0);
             for (int i = 0; i < TRACK_COUNT; i++) {
                 if(trackWarpSelected[i] && wsEnabled) {
                     messagesToMother[TRACK_COUNT * 9 + i] = 1;
@@ -248,6 +256,10 @@ struct QARWarpedSpaceExpander : Module {
 					
 			leftExpander.module->rightExpander.messageFlipRequested = true;
 		
+		} else {
+			warpAmountPercentage = 0;
+			warpPositionPercentage = 0;
+			warpLengthPercentage = 0;			
 		}		
 		
 	}
@@ -362,15 +374,27 @@ struct QARWarpedSpaceExpanderWidget : ModuleWidget {
 		}
 
 
-        addParam(createParam<RoundFWKnob>(Vec(12, 59), module, QARWarpedSpaceExpander::WARP_AMOUNT_PARAM));
+		ParamWidget* warpAmountParam = createParam<RoundFWKnob>(Vec(12, 59), module, QARWarpedSpaceExpander::WARP_AMOUNT_PARAM);
+		if (module) {
+			dynamic_cast<RoundFWKnob*>(warpAmountParam)->percentage = &module->warpAmountPercentage;
+		}
+		addParam(warpAmountParam);							
         addInput(createInput<FWPortInSmall>(Vec(47, 64), module, QARWarpedSpaceExpander::WARP_AMOUNT_INPUT));
         addParam(createParam<RoundSmallFWKnob>(Vec(44, 87), module, QARWarpedSpaceExpander::WARP_AMOUNT_CV_ATTENUVETER_PARAM));
 
-        addParam(createParam<RoundFWSnapKnob>(Vec(12, 139), module, QARWarpedSpaceExpander::WARP_POSITION_PARAM));
+		ParamWidget* warpPositionParam = createParam<RoundFWSnapKnob>(Vec(12, 139), module, QARWarpedSpaceExpander::WARP_POSITION_PARAM);
+		if (module) {
+			dynamic_cast<RoundFWSnapKnob*>(warpPositionParam)->percentage = &module->warpPositionPercentage;
+		}
+		addParam(warpPositionParam);							
         addInput(createInput<FWPortInSmall>(Vec(47, 144), module, QARWarpedSpaceExpander::WARP_POSITION_INPUT));
         addParam(createParam<RoundSmallFWKnob>(Vec(44, 167), module, QARWarpedSpaceExpander::WARP_POSITION_CV_ATTENUVETER_PARAM));
 
-        addParam(createParam<RoundFWSnapKnob>(Vec(12, 219), module, QARWarpedSpaceExpander::WARP_LENGTH_PARAM));
+		ParamWidget* warpLengthParam = createParam<RoundFWSnapKnob>(Vec(12, 219), module, QARWarpedSpaceExpander::WARP_LENGTH_PARAM);
+		if (module) {
+			dynamic_cast<RoundFWSnapKnob*>(warpLengthParam)->percentage = &module->warpLengthPercentage;
+		}
+		addParam(warpLengthParam);							
         addInput(createInput<FWPortInSmall>(Vec(47, 224), module, QARWarpedSpaceExpander::WARP_LENGTH_INPUT));
         addParam(createParam<RoundSmallFWKnob>(Vec(44, 247), module, QARWarpedSpaceExpander::WARP_LENGTH_CV_ATTENUVETER_PARAM));
 

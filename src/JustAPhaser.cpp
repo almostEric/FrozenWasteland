@@ -80,7 +80,8 @@ struct JustAPhaser : Module {
 		RESONANCE_INPUT,
 		STEREO_PHASE_INPUT,
 		EXTERNAL_MOD_INPUT_L,		
-		EXTERNAL_MOD_INPUT_R,		
+		EXTERNAL_MOD_INPUT_R,	
+		MIX_CV_INPUT,	
 		NUM_INPUTS
 	};
 	enum OutputIds {
@@ -178,7 +179,15 @@ struct JustAPhaser : Module {
 
 	dsp::SchmittTrigger freqModTypeTrigger,filterModeTrigger,waveShapeTrigger,numStagesTrigger;
 
-    
+    //percenatages
+	float frequencyPercentage = 0;
+	float stereoPhasePercentage = 0;
+	float depthPercentage = 0;
+	float feedbackAmountPercentage = 0;
+	float centerFrequencyPercentage = 0;
+	float frequencySpanPercentage = 0;
+	float resonancePercentage = 0;
+	float mixPercentage = 0;
 
 
 	JustAPhaser() {
@@ -278,14 +287,19 @@ struct JustAPhaser : Module {
 		lights[FREQUENCY_MOD_TYPE_ALT_LOG_LIGHT].value = frequencyModType == ALTERNATING_LOGARITHMIC_FREQ_MOD;
 		lights[FREQUENCY_MOD_TYPE_ALT_CONSTANT_LIGHT].value = frequencyModType == ALTERNATING_CONSTANT_FREQ_MOD;
 
-		directInput[0] = inputs[IN_L_IN].getVoltage()/5.0 + (feedbackIn[0] * params[FEEDBACK_AMOUNT_PARAM].getValue());
+		float feedbackAmount = clamp(params[FEEDBACK_AMOUNT_PARAM].getValue() + (inputs[FEEDBACK_INPUT].getVoltage() / 10.0 ),-1.0f,1.0f);
+		feedbackAmountPercentage = feedbackAmount;
+
+		directInput[0] = inputs[IN_L_IN].getVoltage()/5.0 + (feedbackIn[0] * feedbackAmount);
 		if(inputs[IN_R_IN].active) {
-			directInput[1] = inputs[IN_R_IN].getVoltage()/5.0 + (feedbackIn[1] * params[FEEDBACK_AMOUNT_PARAM].getValue());
+			directInput[1] = inputs[IN_R_IN].getVoltage()/5.0 + (feedbackIn[1] * feedbackAmount);
 		} else {
-			directInput[1] = inputs[IN_L_IN].getVoltage()/5.0 + (feedbackIn[1] * params[FEEDBACK_AMOUNT_PARAM].getValue());
+			directInput[1] = inputs[IN_L_IN].getVoltage()/5.0 + (feedbackIn[1] * feedbackAmount);
 		}
 
-		lfo.setPitch(params[FREQUENCY_PARAM].getValue() + (inputs[FREQUENCY_INPUT].getVoltage() ));
+		float lfoFrequency = clamp(params[FREQUENCY_PARAM].getValue() + (inputs[FREQUENCY_INPUT].getVoltage()),-8.0f,3.0f); 
+		frequencyPercentage = (lfoFrequency + 8.0) / 11.0;
+		lfo.setPitch(lfoFrequency);
 		lfo.step(1.0/sampleRate);
 
 		if(filterMode != lastFilterMode) {
@@ -298,8 +312,9 @@ struct JustAPhaser : Module {
 			lastResonance = -1.0; // force resonance to get reset as well
 		}
 
-		float resonance = params[RESONANCE_PARAM].getValue();
+		float resonance = clamp(params[RESONANCE_PARAM].getValue() + (inputs[RESONANCE_INPUT].getVoltage() / 2.0),0.5f,5.0f);
 		if(resonance != lastResonance) {
+			resonancePercentage = resonance / 5.0;
 			for(int i=0; i<numberOfStages; i++) {
 				for(int c=0;c<MAX_CHANNELS;c++) {
 					pFilter[i][c]->setQ(resonance);
@@ -308,13 +323,16 @@ struct JustAPhaser : Module {
 			lastResonance = resonance;
 		}
 
-		float centerFrequency = params[CENTER_FREQUENCY_PARAM].getValue() + (inputs[CENTER_FREQUENCY_INPUT].getVoltage());
+		float centerFrequency = clamp(params[CENTER_FREQUENCY_PARAM].getValue() + (inputs[CENTER_FREQUENCY_INPUT].getVoltage()),4.0f,14.0f);
+		centerFrequencyPercentage = (centerFrequency - 4.0)/ 10.0;
 		float frequencySpan = clamp(params[FREQUENCY_SPAN_PARAM].getValue() + (inputs[FREQUENCY_SPAN_INPUT].getVoltage() / 10.0),0.0f,1.0f);
-		
+		frequencySpanPercentage = frequencySpan;
 
-		float modValue = params[DEPTH_PARAM].getValue();
+		float modValue = clamp(params[DEPTH_PARAM].getValue() + inputs[DEPTH_INPUT].getVoltage() / 10.0,0.0f,1.0f);
+		depthPercentage = modValue;
 
-		float steroPhase = params[STEREO_PHASE_PARAM].getValue();
+		float steroPhase = clamp(params[STEREO_PHASE_PARAM].getValue() + (inputs[STEREO_PHASE_INPUT].getVoltage() / 10.0),0.0f,1.0f);
+		stereoPhasePercentage = steroPhase;
 		for(int c=0;c<MAX_CHANNELS;c++) {
 			float lfoValue = 0.0;
 			if (inputs[EXTERNAL_MOD_INPUT_L+c].active) {
@@ -346,7 +364,8 @@ struct JustAPhaser : Module {
 			};
 		}
 
-		float mix = params[MIX_PARAM].getValue();
+		float mix = clamp(params[MIX_PARAM].getValue() + (inputs[MIX_CV_INPUT].getVoltage() / 10.0),0.0f,1.0f);
+		mixPercentage = mix;
 		
 		for(int c=0; c<MAX_CHANNELS;c++) {
 			float phaseOut = directInput[c];
@@ -382,15 +401,48 @@ struct JustAPhaserWidget : ModuleWidget {
 		addChild(createLight<SmallLight<BlueLight>>(Vec(85, 35), module, JustAPhaser::STAGES_12_LIGHT));
 
 		
-		addParam(createParam<RoundSmallFWKnob>(Vec(10, 92), module, JustAPhaser::FREQUENCY_PARAM));
-		addParam(createParam<RoundSmallFWKnob>(Vec(10, 132), module, JustAPhaser::STEREO_PHASE_PARAM));
-		addParam(createParam<RoundSmallFWKnob>(Vec(10, 172), module, JustAPhaser::DEPTH_PARAM));
-		addParam(createParam<RoundSmallFWKnob>(Vec(10, 212), module, JustAPhaser::FEEDBACK_AMOUNT_PARAM));
-		addParam(createParam<RoundSmallFWKnob>(Vec(10, 252), module, JustAPhaser::CENTER_FREQUENCY_PARAM));
-		addParam(createParam<RoundSmallFWKnob>(Vec(100, 252), module, JustAPhaser::FREQUENCY_SPAN_PARAM));
-		addParam(createParam<RoundSmallFWKnob>(Vec(10, 292), module, JustAPhaser::RESONANCE_PARAM));
+		ParamWidget* frequencyParam = createParam<RoundSmallFWKnob>(Vec(10, 92), module, JustAPhaser::FREQUENCY_PARAM);
+		if (module) {
+			dynamic_cast<RoundSmallFWKnob*>(frequencyParam)->percentage = &module->frequencyPercentage;
+		}
+		addParam(frequencyParam);							
+		ParamWidget* stereoPhaseParam = createParam<RoundSmallFWKnob>(Vec(10, 132), module, JustAPhaser::STEREO_PHASE_PARAM);
+		if (module) {
+			dynamic_cast<RoundSmallFWKnob*>(stereoPhaseParam)->percentage = &module->stereoPhasePercentage;
+		}
+		addParam(stereoPhaseParam);							
+		ParamWidget* depthParam = createParam<RoundSmallFWKnob>(Vec(10, 172), module, JustAPhaser::DEPTH_PARAM);
+		if (module) {
+			dynamic_cast<RoundSmallFWKnob*>(depthParam)->percentage = &module->depthPercentage;
+		}
+		addParam(depthParam);							
+		ParamWidget* feedbackAmountParam = createParam<RoundSmallFWKnob>(Vec(10, 212), module, JustAPhaser::FEEDBACK_AMOUNT_PARAM);
+		if (module) {
+			dynamic_cast<RoundSmallFWKnob*>(feedbackAmountParam)->percentage = &module->feedbackAmountPercentage;
+			dynamic_cast<RoundSmallFWKnob*>(feedbackAmountParam)->biDirectional = true;
+		}
+		addParam(feedbackAmountParam);							
+		ParamWidget* centerFrequencyParam = createParam<RoundSmallFWKnob>(Vec(10, 252), module, JustAPhaser::CENTER_FREQUENCY_PARAM);
+		if (module) {
+			dynamic_cast<RoundSmallFWKnob*>(centerFrequencyParam)->percentage = &module->centerFrequencyPercentage;
+		}
+		addParam(centerFrequencyParam);							
+		ParamWidget* frequencySpanParam = createParam<RoundSmallFWKnob>(Vec(100, 252), module, JustAPhaser::FREQUENCY_SPAN_PARAM);
+		if (module) {
+			dynamic_cast<RoundSmallFWKnob*>(frequencySpanParam)->percentage = &module->frequencySpanPercentage;
+		}
+		addParam(frequencySpanParam);							
+		ParamWidget* resonanceParam = createParam<RoundSmallFWKnob>(Vec(10, 292), module, JustAPhaser::RESONANCE_PARAM);
+		if (module) {
+			dynamic_cast<RoundSmallFWKnob*>(resonanceParam)->percentage = &module->resonancePercentage;
+		}
+		addParam(resonanceParam);							
 
-		addParam(createParam<RoundSmallFWKnob>(Vec(64, 338), module, JustAPhaser::MIX_PARAM));
+		ParamWidget* mixParam = createParam<RoundSmallFWKnob>(Vec(53, 338), module, JustAPhaser::MIX_PARAM);
+		if (module) {
+			dynamic_cast<RoundSmallFWKnob*>(mixParam)->percentage = &module->mixPercentage;
+		}
+		addParam(mixParam);							
 
 
 		addParam(createParam<TL1105>(Vec(100, 294), module, JustAPhaser::FILTER_MODE_PARAM));
@@ -427,11 +479,13 @@ struct JustAPhaserWidget : ModuleWidget {
 		addOutput(createOutput<FWPortOutSmall>(Vec(65, 214), module, JustAPhaser::FB_OUT_L_OUTPUT));
 		addOutput(createOutput<FWPortOutSmall>(Vec(85, 214), module, JustAPhaser::FB_OUT_R_OUTPUT));
 
-		addInput(createInput<FWPortInSmall>(Vec(12, 340), module, JustAPhaser::IN_L_IN));
-		addInput(createInput<FWPortInSmall>(Vec(32, 340), module, JustAPhaser::IN_R_IN));
+		addInput(createInput<FWPortInSmall>(Vec(82, 340), module, JustAPhaser::MIX_CV_INPUT));
 
-		addOutput(createOutput<FWPortOutSmall>(Vec(102, 340), module, JustAPhaser::OUT_L_OUTPUT));
-		addOutput(createOutput<FWPortOutSmall>(Vec(122, 340), module, JustAPhaser::OUT_R_OUTPUT));
+		addInput(createInput<FWPortInSmall>(Vec(8, 340), module, JustAPhaser::IN_L_IN));
+		addInput(createInput<FWPortInSmall>(Vec(28, 340), module, JustAPhaser::IN_R_IN));
+
+		addOutput(createOutput<FWPortOutSmall>(Vec(106, 340), module, JustAPhaser::OUT_L_OUTPUT));
+		addOutput(createOutput<FWPortOutSmall>(Vec(126, 340), module, JustAPhaser::OUT_R_OUTPUT));
 
 		addChild(createWidget<ScrewSilver>(Vec(RACK_GRID_WIDTH - 12, 0)));
 		addChild(createWidget<ScrewSilver>(Vec(box.size.x - 2 * RACK_GRID_WIDTH + 12, 0)));

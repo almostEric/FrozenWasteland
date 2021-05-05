@@ -49,6 +49,9 @@ struct PNOctaveProbabilityExpander : Module {
 
 	
 	dsp::SchmittTrigger noteActiveTrigger[NBR_NOTES];
+
+	//probabilities
+	float octaveProbabilityPercentage[NBR_OCTAVES] = {0};
 	
 	PNOctaveProbabilityExpander() {
 		config(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS, NUM_LIGHTS);
@@ -101,6 +104,7 @@ struct PNOctaveProbabilityExpander : Module {
         float tempWeightTotal = 0;
         for(int i=0;i<NBR_OCTAVES;i++) {
             octaveProbability[i] = clamp(params[OCTAVE_PROBABILITY_PARAM+i].getValue() + (inputs[OCTAVE_PROBABILITY_INPUT+i].getVoltage() * params[OCTAVE_PROBABILITY_CV_ATTENUVERTER_PARAM+i].getValue() / 10.0),0.0f,1.0f);
+			octaveProbabilityPercentage[i] = octaveProbability[i];
             tempWeightTotal += octaveProbability[i];
         }
         weightTotal = tempWeightTotal;
@@ -267,7 +271,11 @@ struct PNOctaveProbabilityExpanderWidget : ModuleWidget {
 
 
         for(int i=0;i<NBR_OCTAVES;i++) {
-    		addParam(createParam<RoundSmallFWKnob>(Vec(125,35 + i*30), module, PNOctaveProbabilityExpander::OCTAVE_PROBABILITY_PARAM+i));			
+			ParamWidget* octaveProbabilityParam = createParam<RoundSmallFWKnob>(Vec(125,35 + i*30), module, PNOctaveProbabilityExpander::OCTAVE_PROBABILITY_PARAM+i);
+			if (module) {
+				dynamic_cast<RoundSmallFWKnob*>(octaveProbabilityParam)->percentage = &module->octaveProbabilityPercentage[i];
+			}
+			addParam(octaveProbabilityParam);							
             addInput(createInput<FWPortInSmall>(Vec(155, 40 + i*30), module, PNOctaveProbabilityExpander::OCTAVE_PROBABILITY_INPUT + i));
             addParam(createParam<RoundReallySmallFWKnob>(Vec(177,38+i*30), module, PNOctaveProbabilityExpander::OCTAVE_PROBABILITY_CV_ATTENUVERTER_PARAM+i));			
 

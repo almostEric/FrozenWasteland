@@ -44,14 +44,17 @@ struct DamianLillard : Module {
 		NUM_LIGHTS
 	};
 	float freq[FREQUENCIES] = {0};
+	float freqPercentages[FREQUENCIES] = {0};
 	float lastFreq[FREQUENCIES] = {0};
 	float output[BANDS] = {0};
 
     StateVariableFilterState<T> filterStates[numFilters];
     StateVariableFilterParams<T> filterParams[numFilters];
 
-
 	int bandOffset = 0;
+
+	//percentages 
+	float fcPercentage[FREQUENCIES] = {0};
 
 	DamianLillard() {
 		config(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS, NUM_LIGHTS);
@@ -102,6 +105,8 @@ struct DamianLillard : Module {
 		for (int i=0; i<FREQUENCIES;i++) {
 			float cutoffExp = params[FREQ_1_CUTOFF_PARAM+i].getValue() + inputs[FREQ_1_CUTOFF_INPUT+i].getVoltage() * params[FREQ_1_CV_ATTENUVERTER_PARAM+i].getValue() / 10.0f; //I'm reducing range of CV to make it more useful
 			cutoffExp = clamp(cutoffExp, 0.0f, 1.0f);
+			ParamQuantity *pq = paramQuantities[FREQ_1_CUTOFF_PARAM+i];
+			fcPercentage[i] = (cutoffExp - pq->minValue) / (pq->maxValue - pq->minValue);
 			freq[i] = minCutoff * powf(maxCutoff / minCutoff, cutoffExp);
 
 			//Prevent band overlap
@@ -195,9 +200,24 @@ struct DamianLillardWidget : ModuleWidget {
 			addChild(offsetDisplay);
 		}
 
-		addParam(createParam<RoundFWKnob>(Vec(18, 84), module, DamianLillard::FREQ_1_CUTOFF_PARAM));
-		addParam(createParam<RoundFWKnob>(Vec(69, 84), module, DamianLillard::FREQ_2_CUTOFF_PARAM));
-		addParam(createParam<RoundFWKnob>(Vec(120, 84), module, DamianLillard::FREQ_3_CUTOFF_PARAM));
+		ParamWidget* fc1Param = createParam<RoundFWKnob>(Vec(18, 84), module, DamianLillard::FREQ_1_CUTOFF_PARAM);
+		if (module) {
+			dynamic_cast<RoundFWKnob*>(fc1Param)->percentage = &module->fcPercentage[0];
+		}
+		addParam(fc1Param);							
+
+		ParamWidget* fc2Param = createParam<RoundFWKnob>(Vec(69, 84), module, DamianLillard::FREQ_2_CUTOFF_PARAM);
+		if (module) {
+			dynamic_cast<RoundFWKnob*>(fc2Param)->percentage = &module->fcPercentage[1];
+		}
+		addParam(fc2Param);							
+
+		ParamWidget* fc3Param = createParam<RoundFWKnob>(Vec(120, 84), module, DamianLillard::FREQ_3_CUTOFF_PARAM);
+		if (module) {
+			dynamic_cast<RoundFWKnob*>(fc3Param)->percentage = &module->fcPercentage[2];
+		}
+		addParam(fc3Param);							
+
 		addParam(createParam<RoundSmallFWKnob>(Vec(21, 146), module, DamianLillard::FREQ_1_CV_ATTENUVERTER_PARAM));
 		addParam(createParam<RoundSmallFWKnob>(Vec(72, 146), module, DamianLillard::FREQ_2_CV_ATTENUVERTER_PARAM));
 		addParam(createParam<RoundSmallFWKnob>(Vec(123, 146), module, DamianLillard::FREQ_3_CV_ATTENUVERTER_PARAM));

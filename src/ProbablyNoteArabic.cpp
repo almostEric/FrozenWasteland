@@ -474,16 +474,28 @@ struct ProbablyNoteArabic : Module {
 	float triggerDelay[TRIGGER_DELAY_SAMPLES] = {0};
 	int triggerDelayIndex = 0;
 
+	//percentages
+	float spreadPercentage = 0;
+	float slantPercentage = 0;
+	float distributionPercentage = 0;
+	float nonRepeatPercentage = 0;
+	float octavePercentage = 0;
+	float familyPercentage = 0;
+	float maqamPercentage = 0;
+	float currentJinsPercentage = 0;
+	float tonicPercentage = 0;
+	float pitchRandomnessPercentage = 0;
+
     
 
 	ProbablyNoteArabic() {
 		// Configure the module
 		config(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS, NUM_LIGHTS);
-		configParam(ProbablyNoteArabic::SPREAD_PARAM, 0.0, 4.0, 0.0,"Spread");
+		configParam(ProbablyNoteArabic::SPREAD_PARAM, 0.0, 9.0, 0.0,"Spread", " Notes");
         configParam(ProbablyNoteArabic::SPREAD_CV_ATTENUVERTER_PARAM, -1.0, 1.0, 0.0,"Spread CV Attenuation" ,"%",0,100);
-		configParam(ProbablyNoteArabic::SLANT_PARAM, -1.0, 1.0, 0.0,"Slant");
+		configParam(ProbablyNoteArabic::SLANT_PARAM, -1.0, 1.0, 0.0,"Slant","%",0,100);
         configParam(ProbablyNoteArabic::SLANT_CV_ATTENUVERTER_PARAM, -1.0, 1.0, 0.0,"Slant CV Attenuation" ,"%",0,100);
-		configParam(ProbablyNoteArabic::FOCUS_PARAM, 0.0, 1.0, 0.0,"Focus");
+		configParam(ProbablyNoteArabic::FOCUS_PARAM, 0.0, 1.0, 0.0,"Focus","%",0,100);
 		configParam(ProbablyNoteArabic::FOCUS_CV_ATTENUVERTER_PARAM, -1.0, 1.0, 0.0,"Focus CV Attenuation");
 		configParam(ProbablyNoteArabic::NON_REPEATABILITY_PARAM, 0.0, 1.0, 0.0,"Non Repeat Probability"," %",0,100);
         configParam(ProbablyNoteArabic::NON_REPEATABILITY_CV_ATTENUVERTER_PARAM, -1.0, 1.0, 0.0,"Non Repeat Probability CV Attenuation","%",0,100);
@@ -749,15 +761,20 @@ struct ProbablyNoteArabic : Module {
 		lights[MAQAM_SCALE_MODE_LIGHT].value = maqamScaleMode;
 
 
-        spread = clamp(params[SPREAD_PARAM].getValue() + (inputs[SPREAD_INPUT].getVoltage() * params[SPREAD_CV_ATTENUVERTER_PARAM].getValue()),0.0f,15.0f);
+        spread = clamp(params[SPREAD_PARAM].getValue() + (inputs[SPREAD_INPUT].getVoltage() * params[SPREAD_CV_ATTENUVERTER_PARAM].getValue()),0.0f,9.0f);
+		spreadPercentage = spread / 9.0f;
 
 		slant = clamp(params[SLANT_PARAM].getValue() + (inputs[SLANT_INPUT].getVoltage() / 10.0f * params[SLANT_CV_ATTENUVERTER_PARAM].getValue()),-1.0f,1.0f);
+		slantPercentage = slant;
 
         focus = clamp(params[FOCUS_PARAM].getValue() + (inputs[FOCUS_INPUT].getVoltage() / 10.0f * params[FOCUS_CV_ATTENUVERTER_PARAM].getValue()),0.0f,1.0f);
+		distributionPercentage = focus;
 
 		nonRepeat = clamp(params[NON_REPEATABILITY_PARAM].getValue() + (inputs[NON_REPEATABILITY_INPUT].getVoltage() / 10.0f * params[NON_REPEATABILITY_CV_ATTENUVERTER_PARAM].getValue()),0.0f,1.0f);
+		nonRepeatPercentage = nonRepeat;
 
 		family = clamp(params[FAMILY_PARAM].getValue() + (inputs[FAMILY_INPUT].getVoltage() * (MAX_FAMILIES-1) / 10.0),0.0,MAX_FAMILIES-1);
+		familyPercentage = family/(MAX_FAMILIES - 1.0f);
 		if(family != lastFamily) {
 
 			rootJins = jins[family]; 
@@ -785,6 +802,7 @@ struct ProbablyNoteArabic : Module {
 		}
 
 		maqamIndex = clamp(params[MAQAM_PARAM].getValue() + (inputs[MAQAM_INPUT].getVoltage() * (MAX_MAQAM-1.0f) / 10.0),0.0f,numberMaqams-1.0f);
+		maqamPercentage = maqamIndex / (numberMaqams -1.0f);
 		if(maqamIndex != lastMaqamIndex || maqamScaleModeChanged || resetMaqamTriggered) {
 			currentMaqam = maqams[family][maqamIndex];
 
@@ -817,6 +835,7 @@ struct ProbablyNoteArabic : Module {
 		}
 
 		//Process Jins Modulations
+		bool jinsSeected = false;
 		if(modulateJinsTrigger.process(params[MODULATE_JINS_PARAM].getValue() + inputs[MODULATE_JINS_TRIGGER_INPUT].getVoltage()) && !maqamScaleMode) {
 			for(int i=0;i<numberActiveAjnas+1;i++) {
 				if(ajnasActive[i]) {						
@@ -837,7 +856,9 @@ struct ProbablyNoteArabic : Module {
 				jinsChanged = jinsIndex != lastJinsIndex;				
 			} while(!jinsChanged);			
 
-			params[CURRENT_JINS_PARAM].setValue(jinsIndex);							
+			//params[CURRENT_JINS_PARAM].setValue(jinsIndex);	
+			currentJinsPercentage = jinsIndex / float(numberActiveAjnas);	
+			jinsSeected = true;					
 		}
 
 				
@@ -845,10 +866,15 @@ struct ProbablyNoteArabic : Module {
 		if(inputs[JINS_SELECT_INPUT].isConnected()) {
 			//jinsIndex = clamp((int)inputs[JINS_SELECT_INPUT].getVoltage(0),0,numberActiveAjnas+1); 
 			jinsIndex = clamp((int)inputs[JINS_SELECT_INPUT].getVoltage(0),0,numberActiveAjnas); 
-			params[CURRENT_JINS_PARAM].setValue(jinsIndex);							
+			currentJinsPercentage = jinsIndex / float(numberActiveAjnas);	
+			jinsSeected = true;					
+			// params[CURRENT_JINS_PARAM].setValue(jinsIndex);							
 		}
 
-		jinsIndex = params[CURRENT_JINS_PARAM].getValue();						
+		if(!jinsSeected) {
+			jinsIndex = params[CURRENT_JINS_PARAM].getValue();	
+			currentJinsPercentage = jinsIndex / float(numberActiveAjnas);	
+		}					
 								
 		//Add code to check if parameter got set to inactive jins
 
@@ -927,10 +953,11 @@ struct ProbablyNoteArabic : Module {
 		}
 
         int tonicIndex = clamp(params[TONIC_PARAM].getValue() + (inputs[TONIC_INPUT].getVoltage() * ((float)numberTonics-1) / 10.0),0.0f,(float)numberTonics-1.0);
+		tonicPercentage = tonicIndex / (numberTonics - 1.0f);
 		tonic = availableTonics[tonicIndex];
 		
         octave = clamp(params[OCTAVE_PARAM].getValue() + (inputs[OCTAVE_INPUT].getVoltage() * 0.4 * params[OCTAVE_CV_ATTENUVERTER_PARAM].getValue()),-4.0f,4.0f);
-
+		octavePercentage = (octave + 4.0f) / 8.0f;
 	
         double noteIn = inputs[NOTE_INPUT].getVoltage();
 		float octaveAdjust = 0.0;
@@ -1072,6 +1099,10 @@ struct ProbablyNoteArabic : Module {
 			outputs[CURRENT_JINS_OUTPUT].setVoltage(jinsIndex);
         }
 
+
+		float randomRange = clamp(params[PITCH_RANDOMNESS_PARAM].getValue() + (inputs[PITCH_RANDOMNESS_INPUT].getVoltage() * params[PITCH_RANDOMNESS_CV_ATTENUVERTER_PARAM].getValue()),0.0,10.0);
+		pitchRandomnessPercentage = randomRange / 10.0;
+
 		if(inputs[TRIGGER_INPUT].active) {
 				// fprintf(stderr, "P(N) A Triggered Input Connected %i \n",triggerDelayIndex);
 
@@ -1116,7 +1147,6 @@ struct ProbablyNoteArabic : Module {
 
 
 				float pitchRandomness = 0;
-				float randomRange = clamp(params[PITCH_RANDOMNESS_PARAM].getValue() + (inputs[PITCH_RANDOMNESS_INPUT].getVoltage() * params[PITCH_RANDOMNESS_CV_ATTENUVERTER_PARAM].getValue()),0.0,10.0);
 				if(pitchRandomGaussian) {
 					bool gaussOk = false; // don't want values that are beyond our mean
 					float gaussian;
@@ -1427,41 +1457,78 @@ struct ProbablyNoteArabicWidget : ModuleWidget {
 		addChild(createWidget<ScrewSilver>(Vec(RACK_GRID_WIDTH - 12, RACK_GRID_HEIGHT - RACK_GRID_WIDTH)));
 		addChild(createWidget<ScrewSilver>(Vec(box.size.x - 2 * RACK_GRID_WIDTH + 12, RACK_GRID_HEIGHT - RACK_GRID_WIDTH)));
 
-        addParam(createParam<RoundSmallFWSnapKnob>(Vec(8,25), module, ProbablyNoteArabic::SPREAD_PARAM));			
+		ParamWidget* spreadParam = createParam<RoundSmallFWSnapKnob>(Vec(8,25), module, ProbablyNoteArabic::SPREAD_PARAM);
+		if (module) {
+			dynamic_cast<RoundSmallFWSnapKnob*>(spreadParam)->percentage = &module->spreadPercentage;
+		}
+		addParam(spreadParam);							
         addParam(createParam<RoundReallySmallFWKnob>(Vec(34,50), module, ProbablyNoteArabic::SPREAD_CV_ATTENUVERTER_PARAM));			
 		addInput(createInput<FWPortInSmall>(Vec(36, 28), module, ProbablyNoteArabic::SPREAD_INPUT));
 
-        addParam(createParam<RoundSmallFWKnob>(Vec(65,25), module, ProbablyNoteArabic::SLANT_PARAM));			
+		ParamWidget* slantParam = createParam<RoundSmallFWKnob>(Vec(65,25), module, ProbablyNoteArabic::SLANT_PARAM);
+		if (module) {
+			dynamic_cast<RoundSmallFWKnob*>(slantParam)->percentage = &module->slantPercentage;
+			dynamic_cast<RoundSmallFWKnob*>(slantParam)->biDirectional = true;
+		}
+		addParam(slantParam);							
         addParam(createParam<RoundReallySmallFWKnob>(Vec(91,49), module, ProbablyNoteArabic::SLANT_CV_ATTENUVERTER_PARAM));			
 		addInput(createInput<FWPortInSmall>(Vec(93, 29), module, ProbablyNoteArabic::SLANT_INPUT));
 
-		addParam(createParam<RoundSmallFWKnob>(Vec(122, 25), module, ProbablyNoteArabic::FOCUS_PARAM));
+		ParamWidget* distributionParam = createParam<RoundSmallFWKnob>(Vec(122, 25), module, ProbablyNoteArabic::FOCUS_PARAM);
+		if (module) {
+			dynamic_cast<RoundSmallFWKnob*>(distributionParam)->percentage = &module->distributionPercentage;
+		}
+		addParam(distributionParam);							
         addParam(createParam<RoundReallySmallFWKnob>(Vec(148,49), module, ProbablyNoteArabic::FOCUS_CV_ATTENUVERTER_PARAM));			
 		addInput(createInput<FWPortInSmall>(Vec(150, 29), module, ProbablyNoteArabic::FOCUS_INPUT));
 
-		addParam(createParam<RoundSmallFWKnob>(Vec(179, 25), module, ProbablyNoteArabic::NON_REPEATABILITY_PARAM));
+		ParamWidget* nonRepeatParam = createParam<RoundSmallFWKnob>(Vec(179, 25), module, ProbablyNoteArabic::NON_REPEATABILITY_PARAM);
+		if (module) {
+			dynamic_cast<RoundSmallFWKnob*>(nonRepeatParam)->percentage = &module->nonRepeatPercentage;
+		}
+		addParam(nonRepeatParam);							
         addParam(createParam<RoundReallySmallFWKnob>(Vec(205,51), module, ProbablyNoteArabic::NON_REPEATABILITY_CV_ATTENUVERTER_PARAM));			
 		addInput(createInput<FWPortInSmall>(Vec(207, 29), module, ProbablyNoteArabic::NON_REPEATABILITY_INPUT));
 
 
-		addParam(createParam<RoundSmallFWSnapKnob>(Vec(243,25), module, ProbablyNoteArabic::OCTAVE_PARAM));			
+		ParamWidget* octaveParam = createParam<RoundSmallFWSnapKnob>(Vec(243,25), module, ProbablyNoteArabic::OCTAVE_PARAM);
+		if (module) {
+			dynamic_cast<RoundSmallFWSnapKnob*>(octaveParam)->percentage = &module->octavePercentage;
+		}
+		addParam(octaveParam);							
         addParam(createParam<RoundReallySmallFWKnob>(Vec(269,49), module, ProbablyNoteArabic::OCTAVE_CV_ATTENUVERTER_PARAM));			
 		addInput(createInput<FWPortInSmall>(Vec(271, 29), module, ProbablyNoteArabic::OCTAVE_INPUT));
 
 
-        addParam(createParam<RoundSmallFWSnapKnob>(Vec(8,86), module, ProbablyNoteArabic::FAMILY_PARAM));			
+		ParamWidget* familyParam = createParam<RoundSmallFWSnapKnob>(Vec(8,86), module, ProbablyNoteArabic::FAMILY_PARAM);
+		if (module) {
+			dynamic_cast<RoundSmallFWSnapKnob*>(familyParam)->percentage = &module->familyPercentage;
+		}
+		addParam(familyParam);							
 		addInput(createInput<FWPortInSmall>(Vec(36, 90), module, ProbablyNoteArabic::FAMILY_INPUT));
 
-        addParam(createParam<RoundSmallFWSnapKnob>(Vec(88,86), module, ProbablyNoteArabic::MAQAM_PARAM));			
+		ParamWidget* maqamParam = createParam<RoundSmallFWSnapKnob>(Vec(88,86), module, ProbablyNoteArabic::MAQAM_PARAM);
+		if (module) {
+			dynamic_cast<RoundSmallFWSnapKnob*>(maqamParam)->percentage = &module->maqamPercentage;
+		}
+		addParam(maqamParam);							
 		addInput(createInput<FWPortInSmall>(Vec(116, 90), module, ProbablyNoteArabic::MAQAM_INPUT));
 		addParam(createParam<TL1105>(Vec(139, 97), module, ProbablyNoteArabic::RESET_MAQAM_PARAM));
 
-        addParam(createParam<RoundSmallFWSnapKnob>(Vec(168,86), module, ProbablyNoteArabic::CURRENT_JINS_PARAM));	
+		ParamWidget* currentJinsParam = createParam<RoundSmallFWSnapKnob>(Vec(168,86), module, ProbablyNoteArabic::CURRENT_JINS_PARAM);
+		if (module) {
+			dynamic_cast<RoundSmallFWSnapKnob*>(currentJinsParam)->percentage = &module->currentJinsPercentage;
+		}
+		addParam(currentJinsParam);							
 		addInput(createInput<FWPortInSmall>(Vec(196, 90), module, ProbablyNoteArabic::JINS_SELECT_INPUT));
 		addParam(createParam<TL1105>(Vec(219, 97), module, ProbablyNoteArabic::RESET_JINS_PARAM));
 
 
-		addParam(createParam<RoundSmallFWSnapKnob>(Vec(243,86), module, ProbablyNoteArabic::TONIC_PARAM));			
+		ParamWidget* tonicParam = createParam<RoundSmallFWSnapKnob>(Vec(243,86), module, ProbablyNoteArabic::TONIC_PARAM);
+		if (module) {
+			dynamic_cast<RoundSmallFWSnapKnob*>(tonicParam)->percentage = &module->tonicPercentage;
+		}
+		addParam(tonicParam);							
 		addInput(createInput<FWPortInSmall>(Vec(271, 90), module, ProbablyNoteArabic::TONIC_INPUT));
 
 		        	
@@ -1492,7 +1559,11 @@ struct ProbablyNoteArabicWidget : ModuleWidget {
 		addParam(createParam<RoundReallySmallFWKnob>(Vec(245,166), module, ProbablyNoteArabic::JINS_WEIGHT_SCALING_PARAM));		
 		addParam(createParam<RoundReallySmallFWKnob>(Vec(285,166), module, ProbablyNoteArabic::NOTE_WEIGHT_SCALING_PARAM));		
 
-		addParam(createParam<RoundSmallFWKnob>(Vec(250,205), module, ProbablyNoteArabic::PITCH_RANDOMNESS_PARAM));			
+		ParamWidget* pitchRandomnessParam = createParam<RoundSmallFWKnob>(Vec(250,205), module, ProbablyNoteArabic::PITCH_RANDOMNESS_PARAM);
+		if (module) {
+			dynamic_cast<RoundSmallFWKnob*>(pitchRandomnessParam)->percentage = &module->pitchRandomnessPercentage;
+		}
+		addParam(pitchRandomnessParam);							
         addParam(createParam<RoundReallySmallFWKnob>(Vec(275,230), module, ProbablyNoteArabic::PITCH_RANDOMNESS_CV_ATTENUVERTER_PARAM));			
 		addInput(createInput<FWPortInSmall>(Vec(278, 209), module, ProbablyNoteArabic::PITCH_RANDOMNESS_INPUT));
 		addParam(createParam<LEDButton>(Vec(252, 237), module, ProbablyNoteArabic::PITCH_RANDOMNESS_GAUSSIAN_PARAM));

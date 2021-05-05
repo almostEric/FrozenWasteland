@@ -40,8 +40,8 @@ struct PortlandWeather : Module {
 		MIX_PARAM,
 		TAP_MUTE_PARAM,
 		TAP_STACKED_PARAM = TAP_MUTE_PARAM+NUM_TAPS,
-		TAP_MIX_PARAM = TAP_STACKED_PARAM+NUM_TAPS,
-		TAP_PAN_PARAM = TAP_MIX_PARAM+NUM_TAPS,
+		TAP_LEVEL_PARAM = TAP_STACKED_PARAM+NUM_TAPS,
+		TAP_PAN_PARAM = TAP_LEVEL_PARAM+NUM_TAPS,
 		TAP_FILTER_TYPE_PARAM = TAP_PAN_PARAM+NUM_TAPS,
 		TAP_FC_PARAM = TAP_FILTER_TYPE_PARAM+NUM_TAPS,
 		TAP_Q_PARAM = TAP_FC_PARAM+NUM_TAPS,
@@ -267,8 +267,29 @@ struct PortlandWeather : Module {
 	bool hasExpanderDetunes = false;
 
 
-	float testDelay = 0.0f;
-	
+	//percentages
+	float clockMultiplyPercentage = 0;
+	float clockDividePercentage = 0;
+	float timePercentage = 0;
+	float grooveTypePercentage = 0;
+	float grooveAmountPercentage = 0;
+	float mixPercentage = 0;
+	float duckingPercentage = 0;
+	float feedbackPercentage = 0;
+	float duckingFBPercentage = 0;
+	float feedbackTonePercentage = 0;
+	float feedbackTapPercentage[CHANNELS] = {0};
+	float feedbackSlipPercentage[CHANNELS] = {0};
+	float feedbackPitchShiftPercentage[CHANNELS] = {0};
+	float feedbackDetunePercentage[CHANNELS] = {0};
+
+	float levelPercentage[NUM_TAPS] = {0};
+	float panPercentage[NUM_TAPS] = {0};
+	float fcPercentage[NUM_TAPS] = {0};
+	float qPercentage[NUM_TAPS] = {0};
+	float pShiftPercentage[NUM_TAPS] = {0};
+	float pDetunePercentage[NUM_TAPS] = {0};
+
 	
 	StateVariableFilterState<T> filterStates[NUM_TAPS][CHANNELS];
     StateVariableFilterParams<T> filterParams[NUM_TAPS];
@@ -314,7 +335,7 @@ struct PortlandWeather : Module {
 
 		configParam(CLOCK_DIV_PARAM, 1, 256, 1,"Clock Division");
 		configParam(CLOCK_MULT_PARAM, 1, 256, 1,"Clock Multiply");
-		configParam(TIME_PARAM, 0.0f, 10.0f, 0.350f,"Time"," ms",0,16000);
+		configParam(TIME_PARAM, 0.0f, 10.0f, 0.350f,"Time"," ms",0,1000);
 		
 
 		configParam(GROOVE_TYPE_PARAM, 0.0f, 15.0f, 0.0f,"Groove Type");
@@ -347,7 +368,7 @@ struct PortlandWeather : Module {
 
 		for (int i = 0; i < NUM_TAPS; i++) {
 			configParam(TAP_MUTE_PARAM + i, 0.0f, 1.0f, 0.0f);		
-			configParam(TAP_MIX_PARAM + i, 0.0f, 1.0f, 0.5f,"Tap " + std::to_string(i+1) + " mix","%",0,100);
+			configParam(TAP_LEVEL_PARAM + i, 0.0f, 1.0f, 0.5f,"Tap " + std::to_string(i+1) + " mix","%",0,100);
 			configParam(TAP_PAN_PARAM + i, -1.0f, 1.0f, 0.0f,"Tap " + std::to_string(i+1) + " pan","%",0,100);
 			configParam(TAP_FILTER_TYPE_PARAM + i, 0, 4, 0,"Tap " + std::to_string(i+1) + " filter type");
 			configParam(TAP_FC_PARAM + i, 0.0f, 1.0f, 0.5f,"Tap " + std::to_string(i+1) + " Fc"," Hz",560,15);
@@ -493,19 +514,23 @@ struct PortlandWeather : Module {
 		}
  
 		tapGroovePattern = (int)clamp(params[GROOVE_TYPE_PARAM].getValue() + (inputs[GROOVE_TYPE_CV_INPUT].isConnected() ?  inputs[GROOVE_TYPE_CV_INPUT].getVoltage() / 10.0f : 0.0f),0.0f,15.0);
+		grooveTypePercentage = tapGroovePattern / 15.0;
 		grooveAmount = clamp(params[GROOVE_AMOUNT_PARAM].getValue() + (inputs[GROOVE_AMOUNT_CV_INPUT].isConnected() ? inputs[GROOVE_AMOUNT_CV_INPUT].getVoltage() / 10.0f : 0.0f),0.0f,1.0f);
+		grooveAmountPercentage = grooveAmount;
 
 		division = params[CLOCK_DIV_PARAM].getValue();
 		if(inputs[CLOCK_DIVISION_CV_INPUT].isConnected()) {
 			division +=(inputs[CLOCK_DIVISION_CV_INPUT].getVoltage() * 25.6);
 		}
 		division = clamp(std::floor(division),1.0f,256.0f);
+		clockDividePercentage = division / 256.0;
 
 		multiplier = params[CLOCK_MULT_PARAM].getValue();
 		if(inputs[CLOCK_MULT_CV_INPUT].isConnected()) {
 			multiplier +=(inputs[CLOCK_MULT_CV_INPUT].getVoltage() * 25.6);
 		}
 		multiplier = clamp(std::floor(multiplier),1.0f,256.0f);
+		clockMultiplyPercentage = multiplier / 256.0;
 
 		bool rightExpanderPresent = (rightExpander.module && (rightExpander.module->model == modelPWTapBreakoutExpander || rightExpander.module->model == modelPWAlgorithmicExpander || rightExpander.module->model == modelPWGridControlExpander));
 		bool algorithmExpanderPresent = false;
@@ -608,6 +633,7 @@ struct PortlandWeather : Module {
 				
 		} else {
 			baseDelay = clamp(params[TIME_PARAM].getValue() + inputs[TIME_CV_INPUT].getVoltage(), 0.001f, 99.0f);	
+			timePercentage = baseDelay / 10.0;
 			duration = 0.0f;
 			firstClockReceived = false;
 			secondClockReceived = false;			
@@ -693,7 +719,7 @@ struct PortlandWeather : Module {
 			feedbackTap[channel] = (int)clamp(params[FEEDBACK_TAP_L_PARAM+channel].getValue() + (inputs[FEEDBACK_TAP_L_INPUT+channel].isConnected() ? (inputs[FEEDBACK_TAP_L_INPUT+channel].getVoltage() / 10.0f) : 0),0.0f,17.0);
 			feedbackSlip[channel] = clamp(params[FEEDBACK_L_SLIP_PARAM+channel].getValue() + (inputs[FEEDBACK_L_SLIP_CV_INPUT+channel].isConnected() ? (inputs[FEEDBACK_L_SLIP_CV_INPUT+channel].getVoltage() / 10.0f) : 0),-0.5f,0.5);
 			float feedbackAmount = clamp(params[FEEDBACK_PARAM].getValue() + (inputs[FEEDBACK_INPUT].isConnected() ? (inputs[FEEDBACK_INPUT].getVoltage() / 10.0f) : 0), 0.0f, 1.0f);
-			
+			feedbackPercentage = feedbackAmount;
 			float in = 0.0f;
 					
 			if(channel == 0) {
@@ -708,6 +734,12 @@ struct PortlandWeather : Module {
 
 			feedbackPitch[channel] = floor(params[FEEDBACK_L_PITCH_SHIFT_PARAM+channel].getValue() + (inputs[FEEDBACK_L_PITCH_SHIFT_CV_INPUT+channel].isConnected() ? (inputs[FEEDBACK_L_PITCH_SHIFT_CV_INPUT+channel].getVoltage()*2.4f) : 0));
 			feedbackDetune[channel] = floor(params[FEEDBACK_L_DETUNE_PARAM+channel].getValue() + (inputs[FEEDBACK_L_DETUNE_CV_INPUT+channel].isConnected() ? (inputs[FEEDBACK_L_DETUNE_CV_INPUT+channel].getVoltage()*10.0f) : 0));		
+
+			feedbackTapPercentage[channel] = feedbackTap[channel] / 17.0;
+			feedbackSlipPercentage[channel] = feedbackSlip[channel] * 2.0;
+			feedbackPitchShiftPercentage[channel] = feedbackPitch[channel] / 24.0;
+			feedbackDetunePercentage[channel] = feedbackDetune[channel] / 100.0;
+
 		}
 		float inLeval = std::max(abs(inFrame.l),abs(inFrame.r));		
 		compressor[2].setSampleRate(double(args.sampleRate));
@@ -746,19 +778,11 @@ struct PortlandWeather : Module {
 			float pitch,detune;
 
 
-			if(!hasExpanderPitches) {
-				pitch = floor(params[TAP_PITCH_SHIFT_PARAM+tap].getValue() + (inputs[TAP_PITCH_SHIFT_CV_INPUT+tap].isConnected() ? (inputs[TAP_PITCH_SHIFT_CV_INPUT+tap].getVoltage()*2.4f) : 0));
-			} else {
-				pitch = expanderPitches[tap] * 24.0f;
-				params[TAP_PITCH_SHIFT_PARAM+tap].setValue(pitch);
-			}
+			pitch = floor((hasExpanderPitches ? expanderPitches[tap] * 24.0f : params[TAP_PITCH_SHIFT_PARAM+tap].getValue()) + (inputs[TAP_PITCH_SHIFT_CV_INPUT+tap].isConnected() ? (inputs[TAP_PITCH_SHIFT_CV_INPUT+tap].getVoltage()*2.4f) : 0));
+			pShiftPercentage[tap] = pitch / 24.0;
 
-			if(!hasExpanderDetunes) {
-				detune = floor(params[TAP_DETUNE_PARAM+tap].getValue() + (inputs[TAP_DETUNE_CV_INPUT+tap].isConnected() ? (inputs[TAP_DETUNE_CV_INPUT+tap].getVoltage()*10.0f) : 0));
-			} else {
-				detune = expanderDetunes[tap] * 99.0f;
-				params[TAP_DETUNE_PARAM+tap].setValue(detune);
-			}
+			detune = floor((hasExpanderDetunes ? expanderDetunes[tap] * 99.0f : params[TAP_DETUNE_PARAM+tap].getValue()) + (inputs[TAP_DETUNE_CV_INPUT+tap].isConnected() ? (inputs[TAP_DETUNE_CV_INPUT+tap].getVoltage()*10.0f) : 0));
+			pDetunePercentage[tap] = detune / 100.0;
 
 			tapPitchShift[tap] = pitch;
 			tapDetune[tap] = detune;
@@ -827,22 +851,11 @@ struct PortlandWeather : Module {
 					}					
 				}
 
-				float cutoffExp;
-				if(!hasExpanderFcs) {
-					cutoffExp = clamp(params[TAP_FC_PARAM+tap].getValue() + inputs[TAP_FC_CV_INPUT+tap].getVoltage() / 10.0f,0.0f,1.0f);
-				} else {
-					cutoffExp = clamp(expanderFcs[tap],0.0f,1.0f);
-					params[TAP_FC_PARAM+tap].setValue(cutoffExp);
-				}
+				float cutoffExp = clamp((hasExpanderFcs ? expanderFcs[tap] : params[TAP_FC_PARAM+tap].getValue()) + inputs[TAP_FC_CV_INPUT+tap].getVoltage() / 10.0f,0.0f,1.0f);
+				fcPercentage[tap] = cutoffExp;
 
-				float tapQ;
-				if(!hasExpanderQs) {
-					tapQ = clamp(params[TAP_Q_PARAM+tap].getValue() + (inputs[TAP_Q_CV_INPUT+tap].getVoltage() / 10.0f),0.01f,1.0f) * 50; 
-				} else {
-					tapQ = clamp(expanderQs[tap],0.01f,1.0f);
-					params[TAP_Q_PARAM+tap].setValue(tapQ);
-					tapQ = tapQ * 50;
-				}
+				float tapQ = clamp((hasExpanderQs ? expanderQs[tap] : params[TAP_Q_PARAM+tap].getValue()) + (inputs[TAP_Q_CV_INPUT+tap].getVoltage() / 10.0f),0.01f,1.0f) * 50; 
+				qPercentage[tap] = tapQ / 50.0;
 
 				float tapFc = minCutoff * powf(maxCutoff / minCutoff, cutoffExp) / sampleRate;
 				if(lastTapFc[tap] != tapFc) {
@@ -860,6 +873,9 @@ struct PortlandWeather : Module {
 						wetTap.r = StateVariableFilter<T>::run(wetTap.r, filterStates[tap][channel], filterParams[tap]);
 					}
 				}
+			} else {
+				fcPercentage[tap] = 0.0;
+				qPercentage[tap] = 0.0;
 			}
 			lastFilterType[tap] = tapFilterType;
 
@@ -879,21 +895,11 @@ struct PortlandWeather : Module {
 			}
 			
 
-			float level;
-			if(!hasExpanderLevels) {
-				level = clamp((params[TAP_MIX_PARAM+tap].getValue() + (inputs[TAP_PAN_CV_INPUT+tap].isConnected() ? (inputs[TAP_PAN_CV_INPUT+tap].getVoltage() / 10.0f) : 0)),0.0f,1.0f);
-			} else {
-				level = clamp(expanderLevels[tap],0.0f,1.0f);
-				params[TAP_MIX_PARAM+tap].setValue(level);
-			}
-
-			float pan;
-			if(!hasExpanderPans) {
-				pan = clamp((params[TAP_PAN_PARAM+tap].getValue() + (inputs[TAP_PAN_CV_INPUT+tap].isConnected() ? (inputs[TAP_PAN_CV_INPUT+tap].getVoltage() / 5.0f) : 0)),-1.0f,1.0f);
-			} else {
-				pan = clamp(expanderPans[tap],-1.0f,1.0f);
-				params[TAP_PAN_PARAM+tap].setValue(pan);
-			}
+			float level = clamp(((hasExpanderLevels ? expanderLevels[tap] : params[TAP_LEVEL_PARAM+tap].getValue()) + (inputs[TAP_PAN_CV_INPUT+tap].isConnected() ? (inputs[TAP_PAN_CV_INPUT+tap].getVoltage() / 10.0f) : 0)),0.0f,1.0f);
+			levelPercentage[tap] = level;
+			 
+			float pan = clamp(((hasExpanderPans ? expanderPans[tap] : params[TAP_PAN_PARAM+tap].getValue()) + (inputs[TAP_PAN_CV_INPUT+tap].isConnected() ? (inputs[TAP_PAN_CV_INPUT+tap].getVoltage() / 5.0f) : 0)),-1.0f,1.0f);
+			panPercentage[tap] = pan;
 			wetTap.l = wetTap.l * muteSmoothing * level * std::max(1.0 - pan,0.0);  
 			wetTap.r = wetTap.r * muteSmoothing * level * std::max(pan+1.0,1.0);   
 
@@ -996,6 +1002,7 @@ struct PortlandWeather : Module {
 
 		//Apply global filtering
 		float color = clamp(params[FEEDBACK_TONE_PARAM].getValue() + inputs[FEEDBACK_TONE_INPUT].getVoltage() / 10.0f, 0.0f, 1.0f);
+		feedbackTonePercentage = color;
 
 		if(color != lastColor) {
 			float lowpassFreq = 10000.0f * powf(10.0f, clamp(2.0f*color, 0.0f, 1.0f));
@@ -1030,6 +1037,7 @@ struct PortlandWeather : Module {
 		}
 
 		float fbDuckAmount = clamp(params[DUCKING_FB_AMOUNT_PARAM].getValue() + inputs[DUCKING_FB_AMOUNT_CV_INPUT].getVoltage() / 10.0f, 0.0f, 1.0f);
+		duckingFBPercentage = fbDuckAmount;
 		double fbdDucking = chunkware_simple::dB2lin(-duckingGainReduction * fbDuckAmount );
 
 		feedbackValue.l *= fbdDucking;
@@ -1045,7 +1053,9 @@ struct PortlandWeather : Module {
 		}
 		
 		float mix = clamp(params[MIX_PARAM].getValue() + inputs[MIX_INPUT].getVoltage() / 10.0f, 0.0f, 1.0f);
-		float duckAmount = clamp(params[DUCKING_AMOUNT_PARAM].getValue() + inputs[DUCKING_AMOUNT_CV_INPUT].getVoltage() / 10.0f, 0.0f, 1.0f);			
+		mixPercentage = mix;
+		float duckAmount = clamp(params[DUCKING_AMOUNT_PARAM].getValue() + inputs[DUCKING_AMOUNT_CV_INPUT].getVoltage() / 10.0f, 0.0f, 1.0f);	
+		duckingPercentage = duckAmount;		
 		double ducking = chunkware_simple::dB2lin(-duckingGainReduction * duckAmount );
 		float phaseL = phaseReverseL ? -1.0 : 1.0;
 		float phaseR = phaseReverseR ? -1.0 : 1.0;
@@ -1085,7 +1095,7 @@ struct PortlandWeather : Module {
 			case LEVELS_AND_PANNING_GROUP :
 				for(int tap = 0; tap < NUM_TAPS;tap++) {
 					rnd = ((float) rand()/RAND_MAX);
-					params[TAP_MIX_PARAM+tap].setValue(rnd);
+					params[TAP_LEVEL_PARAM+tap].setValue(rnd);
 					rnd = ((float) rand()/RAND_MAX) * 2 - 1;
 					params[TAP_PAN_PARAM+tap].setValue(rnd);
 				}
@@ -1122,7 +1132,7 @@ struct PortlandWeather : Module {
 				break;
 			case LEVELS_AND_PANNING_GROUP :
 				for(int tap = 0; tap < NUM_TAPS;tap++) {
-					params[TAP_MIX_PARAM+tap].setValue(0.5f);
+					params[TAP_LEVEL_PARAM+tap].setValue(0.5f);
 					params[TAP_PAN_PARAM+tap].setValue(0.0f);
 				}
 				break;
@@ -1171,23 +1181,6 @@ struct PWStatusDisplay : TransparentWidget {
 		fontText = APP->window->loadFont(asset::plugin(pluginInstance, "res/fonts/DejaVuSansMono.ttf"));
 	}
 
-	void drawProgress(const DrawArgs &args, float phase) 
-	{
-		const float rotate90 = (M_PI) / 2.0;
-		float startArc = 0 - rotate90;
-		float endArc = (phase * M_PI * 2) - rotate90;
-
-		// Draw indicator
-		nvgFillColor(args.vg, nvgRGBA(0xff, 0xff, 0x20, 0xff));
-		{
-			nvgBeginPath(args.vg);
-			nvgArc(args.vg,75.8,170,35,startArc,endArc,NVG_CW);
-			nvgLineTo(args.vg,75.8,170);
-			nvgClosePath(args.vg);
-		}
-		nvgFill(args.vg);
-	}
-
 	void drawDivisionMultiplier(const DrawArgs &args, Vec pos, double dm) {
 		nvgFontSize(args.vg, 20);
 		nvgFontFaceId(args.vg, fontNumbers->handle);
@@ -1221,7 +1214,7 @@ struct PWStatusDisplay : TransparentWidget {
 		nvgTextAlign(args.vg,NVG_ALIGN_LEFT);
 		
 
-		nvgFillColor(args.vg, nvgRGBA(0x00, 0xff, 0x00, 0xff));
+		nvgFillColor(args.vg, nvgRGBA(0x4a, 0xc3, 0x27, 0xff));
 		char text[128];
 		snprintf(text, sizeof(text), "%s", !usingAlgorithm ? module->grooveNames[grooveType] : "Algorithm");
 		nvgText(args.vg, pos.x, pos.y, text, NULL);
@@ -1234,7 +1227,7 @@ struct PWStatusDisplay : TransparentWidget {
 		nvgTextAlign(args.vg,NVG_ALIGN_RIGHT);
 		
 
-		nvgFillColor(args.vg, nvgRGBA(0x00, 0xff, 0x00, 0xff));
+		nvgFillColor(args.vg, nvgRGBA(0x4a, 0xc3, 0x27, 0xff));
 		for(int i=0;i<CHANNELS;i++) {
 			char text[128];
 			snprintf(text, sizeof(text), "%s", module->tapNames[feedbackTaps[i]]);
@@ -1247,7 +1240,7 @@ struct PWStatusDisplay : TransparentWidget {
 		nvgFontFaceId(args.vg, fontText->handle);
 		nvgTextLetterSpacing(args.vg, -2);
 
-		nvgFillColor(args.vg, nvgRGBA(0x00, 0xff, 0x00, 0xff));
+		nvgFillColor(args.vg, nvgRGBA(0x4a, 0xc3, 0x27, 0xff));
 		char text[128];
 		snprintf(text, sizeof(text), "%-2.0f", feedbackPitch[0]);
 		nvgText(args.vg, pos.x , pos.y, text, NULL);
@@ -1260,7 +1253,7 @@ struct PWStatusDisplay : TransparentWidget {
 		nvgFontFaceId(args.vg, fontText->handle);
 		nvgTextLetterSpacing(args.vg, -2);
 
-		nvgFillColor(args.vg, nvgRGBA(0x00, 0xff, 0x00, 0xff));
+		nvgFillColor(args.vg, nvgRGBA(0x4a, 0xc3, 0x27, 0xff));
 		char text[128];
 		snprintf(text, sizeof(text), "%-2.0f", feedbackDetune[0]);
 		nvgText(args.vg, pos.x , pos.y, text, NULL);
@@ -1317,7 +1310,6 @@ struct PWStatusDisplay : TransparentWidget {
 		
 		drawDivisionMultiplier(args, Vec(105,56), module->multiplier);
 		drawDivisionMultiplier(args, Vec(156,56), module->division);
-		//drawDelayTime(args, Vec(82,65), module->testDelay);
 		drawDelayTime(args, Vec(178,130), module->baseDelay);
 		drawGrooveType(args, Vec(88,203), module->tapGroovePattern, module->usingAlgorithm);
 		drawFeedbackTaps(args, Vec(310,174), module->feedbackTap);
@@ -1356,26 +1348,100 @@ struct PortlandWeatherWidget : ModuleWidget {
 			addChild(display);
 		}
 
-		addParam(createParam<RoundLargeFWSnapKnob>(Vec(12, 40), module, PortlandWeather::CLOCK_MULT_PARAM));
-		addParam(createParam<RoundLargeFWSnapKnob>(Vec(170, 40), module, PortlandWeather::CLOCK_DIV_PARAM));
-		addParam(createParam<RoundLargeFWKnob>(Vec(12, 105), module, PortlandWeather::TIME_PARAM));
+		ParamWidget* clockMultiplyParam = createParam<RoundLargeFWSnapKnob>(Vec(12, 40), module, PortlandWeather::CLOCK_MULT_PARAM);
+		if (module) {
+			dynamic_cast<RoundLargeFWSnapKnob*>(clockMultiplyParam)->percentage = &module->clockMultiplyPercentage;
+		}
+		addParam(clockMultiplyParam);							
+
+		ParamWidget* clockDivideParam = createParam<RoundLargeFWSnapKnob>(Vec(170, 40), module, PortlandWeather::CLOCK_DIV_PARAM);
+		if (module) {
+			dynamic_cast<RoundLargeFWSnapKnob*>(clockDivideParam)->percentage = &module->clockDividePercentage;
+		}
+		addParam(clockDivideParam);							
+		ParamWidget* timeParam = createParam<RoundLargeFWKnob>(Vec(12, 105), module, PortlandWeather::TIME_PARAM);
+		if (module) {
+			dynamic_cast<RoundLargeFWKnob*>(timeParam)->percentage = &module->timePercentage;
+		}
+		addParam(timeParam);							
 
 
-		addParam(createParam<RoundLargeFWSnapKnob>(Vec(12, 175), module, PortlandWeather::GROOVE_TYPE_PARAM));
-		addParam(createParam<RoundLargeFWKnob>(Vec(12, 230), module, PortlandWeather::GROOVE_AMOUNT_PARAM));
+		ParamWidget* grooveTypeParam = createParam<RoundLargeFWSnapKnob>(Vec(12, 175), module, PortlandWeather::GROOVE_TYPE_PARAM);
+		if (module) {
+			dynamic_cast<RoundLargeFWSnapKnob*>(grooveTypeParam)->percentage = &module->grooveTypePercentage;
+		}
+		addParam(grooveTypeParam);							
 
-		addParam(createParam<RoundLargeFWKnob>(Vec(217, 55), module, PortlandWeather::FEEDBACK_PARAM));
-		addParam(createParam<RoundLargeFWKnob>(Vec(287, 55), module, PortlandWeather::DUCKING_FB_AMOUNT_PARAM));
-		addParam(createParam<RoundLargeFWKnob>(Vec(349, 55), module, PortlandWeather::FEEDBACK_TONE_PARAM));
+		ParamWidget* grooveAmountParam = createParam<RoundLargeFWKnob>(Vec(12, 230), module, PortlandWeather::GROOVE_AMOUNT_PARAM);
+		if (module) {
+			dynamic_cast<RoundLargeFWKnob*>(grooveAmountParam)->percentage = &module->grooveAmountPercentage;
+		}
+		addParam(grooveAmountParam);							
 
-		addParam(createParam<RoundFWSnapKnob>(Vec(223, 153), module, PortlandWeather::FEEDBACK_TAP_L_PARAM));
-		addParam(createParam<RoundFWSnapKnob>(Vec(358, 153), module, PortlandWeather::FEEDBACK_TAP_R_PARAM));
-		addParam(createParam<RoundFWKnob>(Vec(223, 193), module, PortlandWeather::FEEDBACK_L_SLIP_PARAM));
-		addParam(createParam<RoundFWKnob>(Vec(358, 193), module, PortlandWeather::FEEDBACK_R_SLIP_PARAM));
-		addParam(createParam<RoundFWSnapKnob>(Vec(223, 233), module, PortlandWeather::FEEDBACK_L_PITCH_SHIFT_PARAM));
-		addParam(createParam<RoundFWSnapKnob>(Vec(358, 233), module, PortlandWeather::FEEDBACK_R_PITCH_SHIFT_PARAM));
-		addParam(createParam<RoundFWKnob>(Vec(223, 273), module, PortlandWeather::FEEDBACK_L_DETUNE_PARAM));
-		addParam(createParam<RoundFWKnob>(Vec(358, 273), module, PortlandWeather::FEEDBACK_R_DETUNE_PARAM));
+
+		ParamWidget* feedbackParam = createParam<RoundLargeFWKnob>(Vec(217, 55), module, PortlandWeather::FEEDBACK_PARAM);
+		if (module) {
+			dynamic_cast<RoundLargeFWKnob*>(feedbackParam)->percentage = &module->feedbackPercentage;
+		}
+		addParam(feedbackParam);							
+		ParamWidget* duckingFBParam = createParam<RoundLargeFWKnob>(Vec(287, 55), module, PortlandWeather::DUCKING_FB_AMOUNT_PARAM);
+		if (module) {
+			dynamic_cast<RoundLargeFWKnob*>(duckingFBParam)->percentage = &module->duckingFBPercentage;
+		}
+		addParam(duckingFBParam);							
+		ParamWidget* feedbackToneParam = createParam<RoundLargeFWKnob>(Vec(349, 55), module, PortlandWeather::FEEDBACK_TONE_PARAM);
+		if (module) {
+			dynamic_cast<RoundLargeFWKnob*>(feedbackToneParam)->percentage = &module->feedbackTonePercentage;
+		}
+		addParam(feedbackToneParam);							
+
+
+		ParamWidget* feedbackTapLParam = createParam<RoundFWSnapKnob>(Vec(223, 153), module, PortlandWeather::FEEDBACK_TAP_L_PARAM);
+		if (module) {
+			dynamic_cast<RoundFWSnapKnob*>(feedbackTapLParam)->percentage = &module->feedbackTapPercentage[0];
+		}
+		addParam(feedbackTapLParam);							
+		ParamWidget* feedbackTapRParam = createParam<RoundFWSnapKnob>(Vec(364, 153), module, PortlandWeather::FEEDBACK_TAP_R_PARAM);
+		if (module) {
+			dynamic_cast<RoundFWSnapKnob*>(feedbackTapRParam)->percentage = &module->feedbackTapPercentage[1];
+		}
+		addParam(feedbackTapRParam);							
+		ParamWidget* feedbackSlipLParam = createParam<RoundFWKnob>(Vec(223, 193), module, PortlandWeather::FEEDBACK_L_SLIP_PARAM);
+		if (module) {
+			dynamic_cast<RoundFWKnob*>(feedbackSlipLParam)->percentage = &module->feedbackSlipPercentage[0];
+			dynamic_cast<RoundFWKnob*>(feedbackSlipLParam)->biDirectional = true;
+		}
+		addParam(feedbackSlipLParam);							
+		ParamWidget* feedbackSlipRParam = createParam<RoundFWKnob>(Vec(364, 193), module, PortlandWeather::FEEDBACK_R_SLIP_PARAM);
+		if (module) {
+			dynamic_cast<RoundFWKnob*>(feedbackSlipRParam)->percentage = &module->feedbackSlipPercentage[1];
+			dynamic_cast<RoundFWKnob*>(feedbackSlipRParam)->biDirectional = true;
+		}
+		addParam(feedbackSlipRParam);							
+		ParamWidget* feedbackPitchShiftLParam = createParam<RoundFWSnapKnob>(Vec(223, 233), module, PortlandWeather::FEEDBACK_L_PITCH_SHIFT_PARAM);
+		if (module) {
+			dynamic_cast<RoundFWSnapKnob*>(feedbackPitchShiftLParam)->percentage = &module->feedbackPitchShiftPercentage[0];
+			dynamic_cast<RoundFWSnapKnob*>(feedbackPitchShiftLParam)->biDirectional = true;
+		}
+		addParam(feedbackPitchShiftLParam);							
+		ParamWidget* feedbackPitchShiftRParam = createParam<RoundFWSnapKnob>(Vec(364, 233), module, PortlandWeather::FEEDBACK_R_PITCH_SHIFT_PARAM);
+		if (module) {
+			dynamic_cast<RoundFWSnapKnob*>(feedbackPitchShiftRParam)->percentage = &module->feedbackPitchShiftPercentage[1];
+			dynamic_cast<RoundFWSnapKnob*>(feedbackPitchShiftRParam)->biDirectional = true;
+		}
+		addParam(feedbackPitchShiftRParam);							
+		ParamWidget* feedbackDetuneLParam = createParam<RoundFWKnob>(Vec(223, 273), module, PortlandWeather::FEEDBACK_L_DETUNE_PARAM);
+		if (module) {
+			dynamic_cast<RoundFWKnob*>(feedbackDetuneLParam)->percentage = &module->feedbackDetunePercentage[0];
+			dynamic_cast<RoundFWKnob*>(feedbackDetuneLParam)->biDirectional = true;
+		}
+		addParam(feedbackDetuneLParam);							
+		ParamWidget* feedbackDetuneRParam = createParam<RoundFWKnob>(Vec(364, 273), module, PortlandWeather::FEEDBACK_R_DETUNE_PARAM);
+		if (module) {
+			dynamic_cast<RoundFWKnob*>(feedbackDetuneRParam)->percentage = &module->feedbackDetunePercentage[1];
+			dynamic_cast<RoundFWKnob*>(feedbackDetuneRParam)->biDirectional = true;
+		}
+		addParam(feedbackDetuneRParam);							
 
 		
 		addParam(createParam<LEDButton>(Vec(236,116), module, PortlandWeather::REVERSE_PARAM));
@@ -1407,18 +1473,51 @@ struct PortlandWeatherWidget : ModuleWidget {
 			addChild(createLight<LargeLight<RedLight>>(Vec(437 + 53.5 + 30*i, 58.5), module, PortlandWeather::TAP_MUTED_LIGHT+i));
 			addInput(createInput<FWPortInSmall>(Vec(437 + 52+ 30*i, 77), module, PortlandWeather::TAP_MUTE_CV_INPUT+i));
 
-			addParam( createParam<RoundReallySmallFWKnob>(Vec(437 + 50 + 30*i, 98), module, PortlandWeather::TAP_MIX_PARAM + i));
+			ParamWidget* tapLevelParam = createParam<RoundReallySmallFWKnob>(Vec(437 + 50 + 30*i, 98), module, PortlandWeather::TAP_LEVEL_PARAM + i);
+			if (module) {
+				dynamic_cast<RoundReallySmallFWKnob*>(tapLevelParam)->percentage = &module->levelPercentage[i];
+			}
+			addParam(tapLevelParam);							
 			addInput(createInput<FWPortInSmall>(Vec(437 + 52 + 30*i, 119), module, PortlandWeather::TAP_MIX_CV_INPUT+i));
-			addParam( createParam<RoundReallySmallFWKnob>(Vec(437 + 50 + 30*i, 140), module, PortlandWeather::TAP_PAN_PARAM + i));
+
+			ParamWidget* tapPanParam = createParam<RoundReallySmallFWKnob>(Vec(437 + 50 + 30*i, 140), module, PortlandWeather::TAP_PAN_PARAM + i);
+			if (module) {
+				dynamic_cast<RoundReallySmallFWKnob*>(tapPanParam)->percentage = &module->panPercentage[i];
+				dynamic_cast<RoundReallySmallFWKnob*>(tapPanParam)->biDirectional = true;
+			}
+			addParam(tapPanParam);							
 			addInput(createInput<FWPortInSmall>(Vec(437 + 52 + 30*i, 161), module, PortlandWeather::TAP_PAN_CV_INPUT+i));
+
 			addParam( createParam<RoundReallySmallFWSnapKnob>(Vec(437 + 50 + 30*i, 182), module, PortlandWeather::TAP_FILTER_TYPE_PARAM + i));
-			addParam( createParam<RoundReallySmallFWKnob>(Vec(437 + 50 + 30*i, 213), module, PortlandWeather::TAP_FC_PARAM + i));
+
+			ParamWidget* tapFcCutoffParam = createParam<RoundReallySmallFWKnob>(Vec(437 + 50 + 30*i, 213), module, PortlandWeather::TAP_FC_PARAM + i);
+			if (module) {
+				dynamic_cast<RoundReallySmallFWKnob*>(tapFcCutoffParam)->percentage = &module->fcPercentage[i];
+			}
+			addParam(tapFcCutoffParam);							
 			addInput(createInput<FWPortInSmall>(Vec(437 + 52 + 30*i, 234), module, PortlandWeather::TAP_FC_CV_INPUT+i));
-			addParam( createParam<RoundReallySmallFWKnob>(Vec(437 + 50 + 30*i, 255), module, PortlandWeather::TAP_Q_PARAM + i));
+
+			ParamWidget* tapQParam = createParam<RoundReallySmallFWKnob>(Vec(437 + 50 + 30*i, 255), module, PortlandWeather::TAP_Q_PARAM + i);
+			if (module) {
+				dynamic_cast<RoundReallySmallFWKnob*>(tapQParam)->percentage = &module->qPercentage[i];
+			}
+			addParam(tapQParam);							
 			addInput(createInput<FWPortInSmall>(Vec(437 + 52 + 30*i, 276), module, PortlandWeather::TAP_Q_CV_INPUT+i));
-			addParam( createParam<RoundReallySmallFWSnapKnob>(Vec(437 + 50 + 30*i, 297), module, PortlandWeather::TAP_PITCH_SHIFT_PARAM + i));
+
+			ParamWidget* tapPitchShiftParam = createParam<RoundReallySmallFWSnapKnob>(Vec(437 + 50 + 30*i, 297), module, PortlandWeather::TAP_PITCH_SHIFT_PARAM + i);
+			if (module) {
+				dynamic_cast<RoundReallySmallFWSnapKnob*>(tapPitchShiftParam)->percentage = &module->pShiftPercentage[i];
+				dynamic_cast<RoundReallySmallFWSnapKnob*>(tapPitchShiftParam)->biDirectional = true;
+			}
+			addParam(tapPitchShiftParam);							
 			addInput(createInput<FWPortInSmall>(Vec(437 + 52 + 30*i, 318), module, PortlandWeather::TAP_PITCH_SHIFT_CV_INPUT+i));
-			addParam( createParam<RoundReallySmallFWKnob>(Vec(437 + 50 + 30*i, 339), module, PortlandWeather::TAP_DETUNE_PARAM + i));
+
+			ParamWidget* tapPitchDetuneParam = createParam<RoundReallySmallFWKnob>(Vec(437 + 50 + 30*i, 339), module, PortlandWeather::TAP_DETUNE_PARAM + i);
+			if (module) {
+				dynamic_cast<RoundReallySmallFWKnob*>(tapPitchDetuneParam)->percentage = &module->pDetunePercentage[i];
+				dynamic_cast<RoundReallySmallFWKnob*>(tapPitchDetuneParam)->biDirectional = true;
+			}
+			addParam(tapPitchDetuneParam);							
 			addInput(createInput<FWPortInSmall>(Vec(437 + 52 + 30*i, 360), module, PortlandWeather::TAP_DETUNE_CV_INPUT+i));
 		}
 
@@ -1440,22 +1539,30 @@ struct PortlandWeatherWidget : ModuleWidget {
 		addInput(createInput<FWPortInSmall>(Vec(395, 60), module, PortlandWeather::FEEDBACK_TONE_INPUT));
 
 		addInput(createInput<FWPortInSmall>(Vec(260, 157), module, PortlandWeather::FEEDBACK_TAP_L_INPUT));
-		addInput(createInput<FWPortInSmall>(Vec(395, 157), module, PortlandWeather::FEEDBACK_TAP_R_INPUT));
+		addInput(createInput<FWPortInSmall>(Vec(401, 157), module, PortlandWeather::FEEDBACK_TAP_R_INPUT));
 		addInput(createInput<FWPortInSmall>(Vec(260, 197), module, PortlandWeather::FEEDBACK_L_SLIP_CV_INPUT));
-		addInput(createInput<FWPortInSmall>(Vec(395, 197), module, PortlandWeather::FEEDBACK_R_SLIP_CV_INPUT));
+		addInput(createInput<FWPortInSmall>(Vec(401, 197), module, PortlandWeather::FEEDBACK_R_SLIP_CV_INPUT));
 		addInput(createInput<FWPortInSmall>(Vec(260, 237), module, PortlandWeather::FEEDBACK_L_PITCH_SHIFT_CV_INPUT));
-		addInput(createInput<FWPortInSmall>(Vec(395, 237), module, PortlandWeather::FEEDBACK_R_PITCH_SHIFT_CV_INPUT));
+		addInput(createInput<FWPortInSmall>(Vec(401, 237), module, PortlandWeather::FEEDBACK_R_PITCH_SHIFT_CV_INPUT));
 		addInput(createInput<FWPortInSmall>(Vec(260, 277), module, PortlandWeather::FEEDBACK_L_DETUNE_CV_INPUT));
-		addInput(createInput<FWPortInSmall>(Vec(395, 277), module, PortlandWeather::FEEDBACK_R_DETUNE_CV_INPUT));
+		addInput(createInput<FWPortInSmall>(Vec(401, 277), module, PortlandWeather::FEEDBACK_R_DETUNE_CV_INPUT));
 
 
 		addParam(createParam<CKD6>(Vec(25, 282), module, PortlandWeather::CLEAR_BUFFER_PARAM));
 
 
-		addParam(createParam<RoundLargeFWKnob>(Vec(75, 273), module, PortlandWeather::MIX_PARAM));
+		ParamWidget* mixParam = createParam<RoundLargeFWKnob>(Vec(75, 273), module, PortlandWeather::MIX_PARAM);
+		if (module) {
+			dynamic_cast<RoundLargeFWKnob*>(mixParam)->percentage = &module->mixPercentage;
+		}
+		addParam(mixParam);							
 		addInput(createInput<FWPortInSmall>(Vec(120, 280), module, PortlandWeather::MIX_INPUT));
 
-		addParam(createParam<RoundLargeFWKnob>(Vec(140, 273), module, PortlandWeather::DUCKING_AMOUNT_PARAM));
+		ParamWidget* duckingParam = createParam<RoundLargeFWKnob>(Vec(140, 273), module, PortlandWeather::DUCKING_AMOUNT_PARAM);
+		if (module) {
+			dynamic_cast<RoundLargeFWKnob*>(duckingParam)->percentage = &module->duckingPercentage;
+		}
+		addParam(duckingParam);
 		addInput(createInput<FWPortInSmall>(Vec(185, 280), module, PortlandWeather::DUCKING_AMOUNT_CV_INPUT));
 
 

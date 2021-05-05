@@ -193,6 +193,17 @@ struct ProbablyNoteBP : Module {
 
 	std::string lastPath;
     
+	//percentages
+	float spreadPercentage = 0;
+	float slantPercentage = 0;
+	float distributionPercentage = 0;
+	float nonRepeatPercentage = 0;
+	float scalePercentage = 0;
+	float keyPercentage = 0;
+	float shiftPercentage = 0;
+	float tritavePercentage = 0;
+	float pitchRandomnessPercentage = 0;
+
 
 	ProbablyNoteBP() {
 		// Configure the module
@@ -455,15 +466,20 @@ struct ProbablyNoteBP : Module {
 
 
         spread = clamp(params[SPREAD_PARAM].getValue() + (inputs[SPREAD_INPUT].getVoltage() * params[SPREAD_CV_ATTENUVERTER_PARAM].getValue()),0.0f,7.0f);
+		spreadPercentage = spread / 7.0f;
 
 		slant = clamp(params[SLANT_PARAM].getValue() + (inputs[SLANT_INPUT].getVoltage() / 10.0f * params[SLANT_CV_ATTENUVERTER_PARAM].getValue()),-1.0f,1.0f);
+		slantPercentage = slant;
 
         focus = clamp(params[DISTRIBUTION_PARAM].getValue() + (inputs[DISTRIBUTION_INPUT].getVoltage() / 10.0f * params[DISTRIBUTION_CV_ATTENUVERTER_PARAM].getValue()),0.0f,1.0f);
+		distributionPercentage = focus;
 
         nonRepeat = clamp(params[NON_REPEATABILITY_PARAM].getValue() + (inputs[NON_REPEATABILITY_INPUT].getVoltage() / 10.0f * params[NON_REPEATABILITY_CV_ATTENUVERTER_PARAM].getValue()),0.0f,1.0f);
+		nonRepeatPercentage = nonRepeat;
 
         
         scale = clamp(params[SCALE_PARAM].getValue() + (inputs[SCALE_INPUT].getVoltage() * MAX_SCALES / 10.0 * params[SCALE_CV_ATTENUVERTER_PARAM].getValue()),0.0,9.0f);
+		scalePercentage = scale / 9.0f;
 
 
 
@@ -481,8 +497,10 @@ struct ProbablyNoteBP : Module {
 			key += inputs[KEY_INPUT].getVoltage() * MAX_NOTES / 10.0 * params[KEY_CV_ATTENUVERTER_PARAM].getValue();
 		}
         key = clamp(key,0,12);
+		keyPercentage = key / 12.0;
        
         tritave = clamp(params[TRITAVE_PARAM].getValue() + (inputs[TRITAVE_INPUT].getVoltage() * 0.4 * params[TRITAVE_CV_ATTENUVERTER_PARAM].getValue()),-4.0f,4.0f);
+		tritavePercentage = (tritave + 4.0f) / 8.0f;
 
 		currentPolyphony = inputs[NOTE_INPUT].getChannels();
 
@@ -582,6 +600,7 @@ struct ProbablyNoteBP : Module {
 			weightShift += inputs[SHIFT_INPUT].getVoltage() * 2.2 * params[SHIFT_CV_ATTENUVERTER_PARAM].getValue();
 		}
 		weightShift = clamp(weightShift,-12,12);
+		shiftPercentage = weightShift / 12.0f;
 
 		//Process scales, keys and weights
 		if(scale != lastScale || key != lastKey || weightShift != lastWeightShift || resetTriggered) {
@@ -667,6 +686,9 @@ struct ProbablyNoteBP : Module {
         }
         
 
+		float randomRange = clamp(params[PITCH_RANDOMNESS_PARAM].getValue() + (inputs[PITCH_RANDOMNESS_INPUT].getVoltage() * params[PITCH_RANDOMNESS_CV_ATTENUVERTER_PARAM].getValue()),0.0,10.0);
+		pitchRandomnessPercentage = randomRange / 10.0;
+
 		if( inputs[TRIGGER_INPUT].active ) {
 			bool triggerFired = false;
 
@@ -728,7 +750,6 @@ struct ProbablyNoteBP : Module {
 					double quantitizedNoteCV = (noteTemperment[tempermentIndex][notePosition] / 1200.0) + (key * 146.308 / 1200.0); 
 
 					float pitchRandomness = 0;
-					float randomRange = clamp(params[PITCH_RANDOMNESS_PARAM].getValue() + (inputs[PITCH_RANDOMNESS_INPUT].getVoltage() * params[PITCH_RANDOMNESS_CV_ATTENUVERTER_PARAM].getValue()),0.0,10.0);
 					if(pitchRandomGaussian) {
 						bool gaussOk = false; // don't want values that are beyond our mean
 						float gaussian;
@@ -892,7 +913,8 @@ struct ProbablyNoteBPDisplay : TransparentWidget {
 			nvgFontSize(args.vg, 8);
 			nvgFontFaceId(args.vg, font->handle);
 			nvgTextLetterSpacing(args.vg, -1);
-			nvgFillColor(args.vg, nvgRGBA(0x00, 0x00, 0x00, 0xff));
+			//nvgFillColor(args.vg, nvgRGBA(0x00, 0x00, 0x00, 0xff));
+			nvgFillColor(args.vg, nvgRGBA(0xdf, 0xdf, 0xdf, 0xff));
 
 			char text[128];
 			snprintf(text, sizeof(text), "%s", module->noteNames[actualTarget]);
@@ -945,43 +967,77 @@ struct ProbablyNoteBPWidget : ModuleWidget {
 		addInput(createInput<FWPortInSmall>(Vec(43, 345), module, ProbablyNoteBP::TRIGGER_INPUT));
 		addInput(createInput<FWPortInSmall>(Vec(90, 345), module, ProbablyNoteBP::EXTERNAL_RANDOM_INPUT));
 
-        addParam(createParam<RoundSmallFWSnapKnob>(Vec(10,25), module, ProbablyNoteBP::SPREAD_PARAM));			
+		ParamWidget* spreadParam = createParam<RoundSmallFWSnapKnob>(Vec(10,25), module, ProbablyNoteBP::SPREAD_PARAM);
+		if (module) {
+			dynamic_cast<RoundSmallFWSnapKnob*>(spreadParam)->percentage = &module->spreadPercentage;
+		}
+		addParam(spreadParam);							
         addParam(createParam<RoundReallySmallFWKnob>(Vec(36,51), module, ProbablyNoteBP::SPREAD_CV_ATTENUVERTER_PARAM));			
 		addInput(createInput<FWPortInSmall>(Vec(38, 29), module, ProbablyNoteBP::SPREAD_INPUT));
 
-        addParam(createParam<RoundSmallFWKnob>(Vec(67,25), module, ProbablyNoteBP::SLANT_PARAM));			
+		ParamWidget* slantParam = createParam<RoundSmallFWKnob>(Vec(67,25), module, ProbablyNoteBP::SLANT_PARAM);
+		if (module) {
+			dynamic_cast<RoundSmallFWKnob*>(slantParam)->percentage = &module->slantPercentage;
+			dynamic_cast<RoundSmallFWKnob*>(slantParam)->biDirectional = true;
+		}
+		addParam(slantParam);							
         addParam(createParam<RoundReallySmallFWKnob>(Vec(93,51), module, ProbablyNoteBP::SLANT_CV_ATTENUVERTER_PARAM));			
 		addInput(createInput<FWPortInSmall>(Vec(95, 29), module, ProbablyNoteBP::SLANT_INPUT));
 
-		addParam(createParam<RoundSmallFWKnob>(Vec(124, 25), module, ProbablyNoteBP::DISTRIBUTION_PARAM));
+		ParamWidget* distributionParam = createParam<RoundSmallFWKnob>(Vec(124, 25), module, ProbablyNoteBP::DISTRIBUTION_PARAM);
+		if (module) {
+			dynamic_cast<RoundSmallFWKnob*>(distributionParam)->percentage = &module->distributionPercentage;
+		}
+		addParam(distributionParam);							
         addParam(createParam<RoundReallySmallFWKnob>(Vec(150,51), module, ProbablyNoteBP::DISTRIBUTION_CV_ATTENUVERTER_PARAM));			
 		addInput(createInput<FWPortInSmall>(Vec(152, 29), module, ProbablyNoteBP::DISTRIBUTION_INPUT));
 
-		addParam(createParam<RoundSmallFWKnob>(Vec(181, 25), module, ProbablyNoteBP::NON_REPEATABILITY_PARAM));
+		ParamWidget* nonRepeatParam = createParam<RoundSmallFWKnob>(Vec(181, 25), module, ProbablyNoteBP::NON_REPEATABILITY_PARAM);
+		if (module) {
+			dynamic_cast<RoundSmallFWKnob*>(nonRepeatParam)->percentage = &module->nonRepeatPercentage;
+		}
+		addParam(nonRepeatParam);							
         addParam(createParam<RoundReallySmallFWKnob>(Vec(207,51), module, ProbablyNoteBP::NON_REPEATABILITY_CV_ATTENUVERTER_PARAM));			
 		addInput(createInput<FWPortInSmall>(Vec(209, 29), module, ProbablyNoteBP::NON_REPEATABILITY_INPUT));
 
-        addParam(createParam<RoundSmallFWSnapKnob>(Vec(8,86), module, ProbablyNoteBP::SCALE_PARAM));			
+		ParamWidget* scaleParam = createParam<RoundSmallFWSnapKnob>(Vec(8,86), module, ProbablyNoteBP::SCALE_PARAM);
+		if (module) {
+			dynamic_cast<RoundSmallFWSnapKnob*>(scaleParam)->percentage = &module->scalePercentage;
+		}
+		addParam(scaleParam);							
         addParam(createParam<RoundReallySmallFWKnob>(Vec(34,112), module, ProbablyNoteBP::SCALE_CV_ATTENUVERTER_PARAM));			
 		addInput(createInput<FWPortInSmall>(Vec(36, 90), module, ProbablyNoteBP::SCALE_INPUT));
 
 		addParam(createParam<TL1105>(Vec(15, 115), module, ProbablyNoteBP::RESET_SCALE_PARAM));
 
-        addParam(createParam<RoundSmallFWSnapKnob>(Vec(68,86), module, ProbablyNoteBP::KEY_PARAM));			
+		ParamWidget* keyParam = createParam<RoundSmallFWSnapKnob>(Vec(68,86), module, ProbablyNoteBP::KEY_PARAM);
+		if (module) {
+			dynamic_cast<RoundSmallFWSnapKnob*>(keyParam)->percentage = &module->keyPercentage;
+		}
+		addParam(keyParam);							
         addParam(createParam<RoundReallySmallFWKnob>(Vec(94,112), module, ProbablyNoteBP::KEY_CV_ATTENUVERTER_PARAM));			
 		addInput(createInput<FWPortInSmall>(Vec(96, 90), module, ProbablyNoteBP::KEY_INPUT));
 
 		addParam(createParam<LEDButton>(Vec(70, 113), module, ProbablyNoteBP::KEY_SCALING_PARAM));
 		addChild(createLight<LargeLight<BlueLight>>(Vec(71.5, 114.5), module, ProbablyNoteBP::KEY_LOGARITHMIC_SCALE_LIGHT));
 
-        addParam(createParam<RoundSmallFWSnapKnob>(Vec(133,85), module, ProbablyNoteBP::SHIFT_PARAM));			
+        ParamWidget* shiftParam = createParam<RoundSmallFWSnapKnob>(Vec(133,85), module, ProbablyNoteBP::SHIFT_PARAM);
+		if (module) {
+			dynamic_cast<RoundSmallFWSnapKnob*>(shiftParam)->percentage = &module->shiftPercentage;
+			dynamic_cast<RoundSmallFWSnapKnob*>(shiftParam)->biDirectional = true;
+		}
+		addParam(shiftParam);							
         addParam(createParam<RoundReallySmallFWKnob>(Vec(159,112), module, ProbablyNoteBP::SHIFT_CV_ATTENUVERTER_PARAM));			
 		addInput(createInput<FWPortInSmall>(Vec(161, 90), module, ProbablyNoteBP::SHIFT_INPUT));
 
 		addParam(createParam<LEDButton>(Vec(135, 113), module, ProbablyNoteBP::SHIFT_SCALING_PARAM));
 		addChild(createLight<LargeLight<RedGreenBlueLight>>(Vec(136.5, 114.5), module, ProbablyNoteBP::SHIFT_MODE_LIGHT));
 
-        addParam(createParam<RoundSmallFWSnapKnob>(Vec(188,86), module, ProbablyNoteBP::TRITAVE_PARAM));			
+		ParamWidget* tritaveParam = createParam<RoundSmallFWSnapKnob>(Vec(188,86), module, ProbablyNoteBP::TRITAVE_PARAM);
+		if (module) {
+			dynamic_cast<RoundSmallFWSnapKnob*>(tritaveParam)->percentage = &module->tritavePercentage;
+		}
+		addParam(tritaveParam);							
         addParam(createParam<RoundReallySmallFWKnob>(Vec(214,112), module, ProbablyNoteBP::TRITAVE_CV_ATTENUVERTER_PARAM));			
 		addInput(createInput<FWPortInSmall>(Vec(216, 90), module, ProbablyNoteBP::TRITAVE_INPUT));
 
@@ -1002,7 +1058,11 @@ struct ProbablyNoteBPWidget : ModuleWidget {
 		addInput(createInput<FWPortInSmall>(Vec(192, 181), module, ProbablyNoteBP::TEMPERMENT_INPUT)); 
 
 
-		addParam(createParam<RoundSmallFWKnob>(Vec(188,216), module, ProbablyNoteBP::PITCH_RANDOMNESS_PARAM));			
+		ParamWidget* pitchRandomnessParam = createParam<RoundSmallFWKnob>(Vec(188,216), module, ProbablyNoteBP::PITCH_RANDOMNESS_PARAM);
+		if (module) {
+			dynamic_cast<RoundSmallFWKnob*>(pitchRandomnessParam)->percentage = &module->pitchRandomnessPercentage;
+		}
+		addParam(pitchRandomnessParam);							
         addParam(createParam<RoundReallySmallFWKnob>(Vec(214,242), module, ProbablyNoteBP::PITCH_RANDOMNESS_CV_ATTENUVERTER_PARAM));			
 		addInput(createInput<FWPortInSmall>(Vec(216, 220), module, ProbablyNoteBP::PITCH_RANDOMNESS_INPUT));
 		addParam(createParam<LEDButton>(Vec(191, 250), module, ProbablyNoteBP::PITCH_RANDOMNESS_GAUSSIAN_PARAM));

@@ -170,6 +170,13 @@ struct PWAlgorithmicExpander : Module {
     ChristoffelWords christoffelWords;
     std::string currentChristoffelword = {"unknown"};
 
+    //percentages
+    float stepsPercentage = 0;
+    float divisionsPercentage = 0;
+    float offsetPercentage = 0;
+    float padPercentage = 0;
+    float ratioPercentage = 0;
+
 
 
 	PWAlgorithmicExpander() {
@@ -289,24 +296,28 @@ struct PWAlgorithmicExpander : Module {
             stepsCountf += inputs[STEPS_1_INPUT].getVoltage() * 1.6;
         }
         stepsCountf = clamp(stepsCountf,1.0f,16.0f);
+        stepsPercentage = (stepsCountf - 1.0) / 15.0;
 
         float divisionf = std::floor(params[DIVISIONS_1_PARAM].getValue());
         if(inputs[DIVISIONS_1_INPUT].isConnected()) {
             divisionf += inputs[DIVISIONS_1_INPUT].getVoltage() * 1.5;
         }		
         divisionf = clamp(divisionf,0.0f,stepsCountf);
+        divisionsPercentage = (divisionf-1.0) / 15.0;
 
         float offsetf = std::floor(params[OFFSET_1_PARAM].getValue());
         if(inputs[OFFSET_1_INPUT].isConnected()) {
             offsetf += inputs[OFFSET_1_INPUT].getVoltage() * 1.5;
         }	
         offsetf = clamp(offsetf,0.0f,15.0f);
+        offsetPercentage = offsetf / 15.0;
 
         float padf = std::floor(params[PAD_1_PARAM].getValue());
         if(inputs[PAD_1_INPUT].isConnected()) {
             padf += inputs[PAD_1_INPUT].getVoltage() * 1.5;
         }
         padf = clamp(padf,0.0f,stepsCountf -1);
+        padPercentage = padf / 15.0;
         // Reclamp
         divisionf = clamp(divisionf,0.0f,stepsCountf-padf);
 
@@ -315,6 +326,7 @@ struct PWAlgorithmicExpander : Module {
             t += inputs[RATIO_1_INPUT].getVoltage() / 10.0;
         }	
         t = clamp(t,0.0f,1.0f);
+        ratioPercentage = t;
         extraParameterValue = 1/(1-t);
 
 
@@ -878,10 +890,10 @@ struct PWAlgorithmicExpanderWidget : ModuleWidget {
 
 		setPanel(APP->window->loadSvg(asset::plugin(pluginInstance, "res/PWAlgorithmicExpander.svg")));
 
-		addChild(createWidget<ScrewSilver>(Vec(RACK_GRID_WIDTH - 12, 0)));
-		addChild(createWidget<ScrewSilver>(Vec(box.size.x - 2 * RACK_GRID_WIDTH + 12, 0)));
-		addChild(createWidget<ScrewSilver>(Vec(RACK_GRID_WIDTH - 12, RACK_GRID_HEIGHT - RACK_GRID_WIDTH)));
-		addChild(createWidget<ScrewSilver>(Vec(box.size.x - 2 * RACK_GRID_WIDTH + 12, RACK_GRID_HEIGHT - RACK_GRID_WIDTH)));
+		// addChild(createWidget<ScrewSilver>(Vec(RACK_GRID_WIDTH - 12, 0)));
+		// addChild(createWidget<ScrewSilver>(Vec(box.size.x - 2 * RACK_GRID_WIDTH + 12, 0)));
+		// addChild(createWidget<ScrewSilver>(Vec(RACK_GRID_WIDTH - 12, RACK_GRID_HEIGHT - RACK_GRID_WIDTH)));
+		// addChild(createWidget<ScrewSilver>(Vec(box.size.x - 2 * RACK_GRID_WIDTH + 12, RACK_GRID_HEIGHT - RACK_GRID_WIDTH)));
 
 
 		{
@@ -894,11 +906,31 @@ struct PWAlgorithmicExpanderWidget : ModuleWidget {
 
 
 		addParam(createParam<LEDButton>(Vec(10, 250), module, PWAlgorithmicExpander::ALGORITHM_1_PARAM));
-		addParam(createParam<RoundSmallFWSnapKnob>(Vec(40, 248), module, PWAlgorithmicExpander::STEPS_1_PARAM));
-		addParam(createParam<RoundSmallFWSnapKnob>(Vec(74, 248), module, PWAlgorithmicExpander::DIVISIONS_1_PARAM));
-		addParam(createParam<RoundSmallFWSnapKnob>(Vec(108, 248), module, PWAlgorithmicExpander::OFFSET_1_PARAM));
-		addParam(createParam<RoundSmallFWSnapKnob>(Vec(142, 248), module, PWAlgorithmicExpander::PAD_1_PARAM));
-		addParam(createParam<RoundSmallFWKnob>(Vec(176, 248), module, PWAlgorithmicExpander::RATIO_1_PARAM));
+		ParamWidget* stepsParam = createParam<RoundSmallFWSnapKnob>(Vec(40, 248), module, PWAlgorithmicExpander::STEPS_1_PARAM);
+		if (module) {
+			dynamic_cast<RoundSmallFWSnapKnob*>(stepsParam)->percentage = &module->stepsPercentage;
+		}
+		addParam(stepsParam);							
+		ParamWidget* divisionsParam = createParam<RoundSmallFWSnapKnob>(Vec(74, 248), module, PWAlgorithmicExpander::DIVISIONS_1_PARAM);
+		if (module) {
+			dynamic_cast<RoundSmallFWSnapKnob*>(divisionsParam)->percentage = &module->divisionsPercentage;
+		}
+		addParam(divisionsParam);							
+		ParamWidget* offsetParam = createParam<RoundSmallFWSnapKnob>(Vec(108, 248), module, PWAlgorithmicExpander::OFFSET_1_PARAM);
+		if (module) {
+			dynamic_cast<RoundSmallFWSnapKnob*>(offsetParam)->percentage = &module->offsetPercentage;
+		}
+		addParam(offsetParam);							
+		ParamWidget* padParam = createParam<RoundSmallFWSnapKnob>(Vec(142, 248), module, PWAlgorithmicExpander::PAD_1_PARAM);
+		if (module) {
+			dynamic_cast<RoundSmallFWSnapKnob*>(padParam)->percentage = &module->padPercentage;
+		}
+		addParam(padParam);							
+		ParamWidget* ratioParam = createParam<RoundSmallFWKnob>(Vec(176, 248), module, PWAlgorithmicExpander::RATIO_1_PARAM);
+		if (module) {
+			dynamic_cast<RoundSmallFWKnob*>(ratioParam)->percentage = &module->ratioPercentage;
+		}
+		addParam(ratioParam);							
 
         addInput(createInput<FWPortInSmall>(Vec(11, 276), module, PWAlgorithmicExpander::ALGORITHM_1_INPUT));
 		addInput(createInput<FWPortInSmall>(Vec(42, 276), module, PWAlgorithmicExpander::STEPS_1_INPUT));

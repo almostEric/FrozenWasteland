@@ -132,6 +132,15 @@ struct SeriouslySlowEG : Module {
 
 	bool firstStep = true;
 
+	//percentages
+	float delayTimePercentage = 0;
+	float attackTimePercentage =0;
+	float decayTimePercentage = 0;
+	float releaseTimePercentage = 0;
+	float holdTimePercentage = 0;
+	float sustainLevelPercentage = 0;
+
+
 	
 
 	SeriouslySlowEG() {
@@ -216,14 +225,19 @@ struct SeriouslySlowEG : Module {
 
 
 		delayValue = clamp(params[DELAY_TIME_PARAM].getValue() + (inputs[DELAY_TIME_INPUT].getVoltage() * 10.0),0.0f,100.0f);
+		delayTimePercentage = delayValue / 100.0;
 		double delayTime = delayValue * timeBase(delayTimeBase) * args.sampleRate;
 		attackValue = clamp(params[ATTACK_TIME_PARAM].getValue() + (inputs[ATTACK_TIME_INPUT].getVoltage() * 10.0),0.0f,100.0f);
+		attackTimePercentage = attackValue / 100.0;
 		double attackTime = attackValue * timeBase(attackTimeBase) * args.sampleRate;
 		decayValue = clamp(params[DECAY_TIME_PARAM].getValue() + (inputs[DECAY_TIME_INPUT].getVoltage() * 10.0),0.0f,100.0f);
+		decayTimePercentage = decayValue / 100.0;
 		double decayTime = decayValue * timeBase(decayTimeBase) * args.sampleRate;
 		releaseValue = clamp(params[RELEASE_TIME_PARAM].getValue() + (inputs[DELAY_TIME_INPUT].getVoltage() * 10.0),0.0f,100.0f);
+		releaseTimePercentage = releaseValue / 100.0;
 		double releaseTime = releaseValue * timeBase(releaseTimeBase) * args.sampleRate;
 		holdValue = clamp(params[HOLD_TIME_PARAM].getValue() + (inputs[HOLD_TIME_INPUT].getVoltage() * 10.0),0.0f,100.0f);
+		holdTimePercentage = holdValue / 100.0;
 		double holdTime = holdValue * timeBase(holdTimeBase) * args.sampleRate;
 
 
@@ -244,6 +258,7 @@ struct SeriouslySlowEG : Module {
 		}
 
 		sustainLevel = clamp(params[SUSTAIN_LEVEL_PARAM].getValue() + (inputs[SUSTAIN_LEVEL_INPUT].getVoltage() / 10.0),0.0f,1.0f);
+		sustainLevelPercentage = sustainLevel;
 
 		if (gateTrigger.process(params[TRIGGER_PARAM].getValue() + inputs[TRIGGER_INPUT].getVoltage()))
 		{
@@ -645,11 +660,31 @@ struct SeriouslySlowEGWidget : ModuleWidget {
 			addChild(display);
 		}
 
-		addParam(createParam<RoundFWKnob>(Vec(5, 150), module, SeriouslySlowEG::DELAY_TIME_PARAM));
-		addParam(createParam<RoundFWKnob>(Vec(97, 150), module, SeriouslySlowEG::ATTACK_TIME_PARAM));
-		addParam(createParam<RoundFWKnob>(Vec(172, 150), module, SeriouslySlowEG::DECAY_TIME_PARAM));
-		addParam(createParam<RoundFWKnob>(Vec(247, 150), module, SeriouslySlowEG::RELEASE_TIME_PARAM));
-		addParam(createParam<RoundFWKnob>(Vec(323, 150), module, SeriouslySlowEG::HOLD_TIME_PARAM));
+		ParamWidget* delayTimeParam = createParam<RoundFWKnob>(Vec(5, 150), module, SeriouslySlowEG::DELAY_TIME_PARAM);
+		if (module) {
+			dynamic_cast<RoundFWKnob*>(delayTimeParam)->percentage = &module->delayTimePercentage;
+		}
+		addParam(delayTimeParam);							
+		ParamWidget* attackTimeParam = createParam<RoundFWKnob>(Vec(97, 150), module, SeriouslySlowEG::ATTACK_TIME_PARAM);
+		if (module) {
+			dynamic_cast<RoundFWKnob*>(attackTimeParam)->percentage = &module->attackTimePercentage;
+		}
+		addParam(attackTimeParam);							
+		ParamWidget* decayTimeParam = createParam<RoundFWKnob>(Vec(172, 150), module, SeriouslySlowEG::DECAY_TIME_PARAM);
+		if (module) {
+			dynamic_cast<RoundFWKnob*>(decayTimeParam)->percentage = &module->decayTimePercentage;
+		}
+		addParam(decayTimeParam);							
+		ParamWidget* releaseTimeParam = createParam<RoundFWKnob>(Vec(247, 150), module, SeriouslySlowEG::RELEASE_TIME_PARAM);
+		if (module) {
+			dynamic_cast<RoundFWKnob*>(releaseTimeParam)->percentage = &module->releaseTimePercentage;
+		}
+		addParam(releaseTimeParam);							
+		ParamWidget* holdTimeParam = createParam<RoundFWKnob>(Vec(323, 150), module, SeriouslySlowEG::HOLD_TIME_PARAM);
+		if (module) {
+			dynamic_cast<RoundFWKnob*>(holdTimeParam)->percentage = &module->holdTimePercentage;
+		}
+		addParam(holdTimeParam);							
 
 		addInput(createInput<FWPortInSmall>(Vec(37, 154), module, SeriouslySlowEG::DELAY_TIME_INPUT));
 		addInput(createInput<FWPortInSmall>(Vec(129, 154), module, SeriouslySlowEG::ATTACK_TIME_INPUT));
@@ -658,7 +693,11 @@ struct SeriouslySlowEGWidget : ModuleWidget {
 		addInput(createInput<FWPortInSmall>(Vec(353, 154), module, SeriouslySlowEG::HOLD_TIME_INPUT));
 
 
-		addParam(createParam<RoundFWKnob>(Vec(315, 50), module, SeriouslySlowEG::SUSTAIN_LEVEL_PARAM));
+		ParamWidget* sustainLevelParam = createParam<RoundFWKnob>(Vec(315, 50), module, SeriouslySlowEG::SUSTAIN_LEVEL_PARAM);
+		if (module) {
+			dynamic_cast<RoundFWKnob*>(sustainLevelParam)->percentage = &module->sustainLevelPercentage;
+		}
+		addParam(sustainLevelParam);							
 		addInput(createInput<FWPortInSmall>(Vec(345, 54), module, SeriouslySlowEG::SUSTAIN_LEVEL_INPUT));
 
 		

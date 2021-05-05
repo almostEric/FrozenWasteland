@@ -144,6 +144,10 @@ struct BPMLFO : Module {
 	float sawOutputValue = 0.0;
 	float sqrOutputValue = 0.0;
 
+	//percentages
+	float multiplierPercentage = 0;
+	float divisionPercentage = 0;
+	float phasePercentage = 0;
 	
 
 
@@ -191,12 +195,14 @@ struct BPMLFO : Module {
 			multiplier +=(inputs[MULTIPLIER_INPUT].getVoltage() * params[MULTIPLIER_CV_ATTENUVERTER_PARAM].getValue() * 12.8);
 		}
 		multiplier = clamp(multiplier,1.0f,128.0f);
+		multiplierPercentage = multiplier / 128.0;
 
 		division = params[DIVISION_PARAM].getValue();
 		if(inputs[DIVISION_INPUT].isConnected()) {
 			division +=(inputs[DIVISION_INPUT].getVoltage() * params[DIVISION_CV_ATTENUVERTER_PARAM].getValue() * 12.8);
 		}
 		division = clamp(division,1.0f,128.0f);
+		divisionPercentage = division / 128.0;
 
 		if(duration != 0) {
 			oscillator.setFrequency(1.0 / (duration / multiplier * division));
@@ -218,6 +224,7 @@ struct BPMLFO : Module {
 			initialPhase -= 1.0;
 		else if (initialPhase < 0)
 			initialPhase += 1.0;	
+		phasePercentage = initialPhase;
 		if(phase_quantized) // Limit to 90 degree increments
 			initialPhase = std::round(initialPhase * 4.0f) / 4.0f;
 		
@@ -377,14 +384,26 @@ struct BPMLFOWidget : ModuleWidget {
 		}
 
 
-		addParam(createParam<RoundSmallFWSnapKnob>(Vec(4, 52), module, BPMLFO::MULTIPLIER_PARAM));
+		ParamWidget* multiplierParam = createParam<RoundSmallFWSnapKnob>(Vec(4, 52), module, BPMLFO::MULTIPLIER_PARAM);
+		if (module) {
+			dynamic_cast<RoundSmallFWSnapKnob*>(multiplierParam)->percentage = &module->multiplierPercentage;
+		}
+		addParam(multiplierParam);							
 		addParam(createParam<RoundReallySmallFWKnob>(Vec(29, 74), module, BPMLFO::MULTIPLIER_CV_ATTENUVERTER_PARAM));
 
-		addParam(createParam<RoundSmallFWSnapKnob>(Vec(67, 52), module, BPMLFO::DIVISION_PARAM));
+		ParamWidget* divisionParam = createParam<RoundSmallFWSnapKnob>(Vec(67, 52), module, BPMLFO::DIVISION_PARAM);
+		if (module) {
+			dynamic_cast<RoundSmallFWSnapKnob*>(divisionParam)->percentage = &module->divisionPercentage;
+		}
+		addParam(divisionParam);							
 		addParam(createParam<RoundReallySmallFWKnob>(Vec(92, 74), module, BPMLFO::DIVISION_CV_ATTENUVERTER_PARAM));
 		
 		
-		addParam(createParam<RoundSmallFWKnob>(Vec(47, 171), module, BPMLFO::PHASE_PARAM));
+		ParamWidget* phaseParam = createParam<RoundSmallFWKnob>(Vec(47, 171), module, BPMLFO::PHASE_PARAM);
+		if (module) {
+			dynamic_cast<RoundSmallFWKnob*>(phaseParam)->percentage = &module->phasePercentage;
+		}
+		addParam(phaseParam);							
 		addParam(createParam<RoundReallySmallFWKnob>(Vec(48, 222), module, BPMLFO::PHASE_CV_ATTENUVERTER_PARAM));
 		addParam(createParam<LEDButton>(Vec(31, 192), module, BPMLFO::QUANTIZE_PHASE_PARAM));
 

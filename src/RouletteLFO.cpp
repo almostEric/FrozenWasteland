@@ -71,6 +71,18 @@ struct RouletteLFO : Module {
 	float fixedPhase = 0.0;
 	float generatorPhase = 0.0;
 
+	//percenatages
+	float radiusRatioPercentage = 0;
+	float fixedEccentricityPercentage = 0;
+	float fixedPhasePercentage = 0;
+	float generatorEccentricityPercentage = 0;
+	float generatorPhasePercentage = 0;
+	float distancePercentage = 0;
+	float frequencyPercentage = 0;
+	float xGainPercentage = 0;
+	float yGainPercentage = 0;
+
+
 	RouletteLFO() {
 		config(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS, NUM_LIGHTS);
 		configParam(RADIUS_RATIO_PARAM, 1, 10.0, 2,"Radius Ration");
@@ -102,6 +114,8 @@ struct RouletteLFO : Module {
 
 		float xAmplitude = clamp(params[X_GAIN_PARAM].getValue() + (inputs[X_GAIN_INPUT].getVoltage() / 5.0f * params[X_GAIN_CV_ATTENUVERTER_PARAM].getValue()),0.0f,2.0f);
 		float yAmplitude = clamp(params[Y_GAIN_PARAM].getValue() + (inputs[Y_GAIN_INPUT].getVoltage() / 5.0f * params[Y_GAIN_CV_ATTENUVERTER_PARAM].getValue()),0.0f,2.0f);
+		xGainPercentage = xAmplitude / 2.0;
+		yGainPercentage = yAmplitude / 2.0;
 
 		float fixedInitialPhase = params[FIXED_PHASE_PARAM].getValue();
 		if(inputs[FIXED_PHASE_INPUT].isConnected()) {
@@ -111,6 +125,7 @@ struct RouletteLFO : Module {
 			fixedInitialPhase -= 1.0;
 		else if (fixedInitialPhase < 0)
 			fixedInitialPhase += 1.0;
+		fixedPhasePercentage = fixedInitialPhase;
 
 		float generatorInitialPhase = params[GENERATOR_PHASE_PARAM].getValue();
 		if(inputs[GENERATOR_PHASE_INPUT].isConnected()) {
@@ -120,13 +135,19 @@ struct RouletteLFO : Module {
 			generatorInitialPhase -= 1.0;
 		else if (generatorInitialPhase < 0)
 			generatorInitialPhase += 1.0;
+		generatorPhasePercentage = generatorInitialPhase;
 
 
 		float pitch = fminf(params[FREQUENCY_PARAM].getValue() + inputs[FREQUENCY_INPUT].getVoltage() * params[FREQUENCY_CV_ATTENUVERTER_PARAM].getValue(), 8.0);
+		frequencyPercentage = (pitch + 8.0) / 12.0;
 		float ratio = clamp(params[RADIUS_RATIO_PARAM].getValue() + inputs[RADIUS_RATIO_INPUT].getVoltage() * 2.0f * params[RADIUS_RATIO_CV_ATTENUVERTER_PARAM].getValue(),1.0,20.0);
+		radiusRatioPercentage = ratio / 20.0;
 		float eG = clamp(params[GENERATOR_ECCENTRICITY_PARAM].getValue() + inputs[GENERATOR_ECCENTRICITY_INPUT].getVoltage() * params[GENERATOR_ECCENTRICITY_CV_ATTENUVERTER_PARAM].getValue(),1.0f,10.0f);
+		generatorEccentricityPercentage = (eG - 1.0) / 9.0;
 		float eF = clamp(params[FIXED_ECCENTRICITY_PARAM].getValue() + inputs[FIXED_ECCENTRICITY_INPUT].getVoltage() * params[FIXED_ECCENTRICITY_CV_ATTENUVERTER_PARAM].getValue(),1.0f,10.0f);
+		fixedEccentricityPercentage = (eF - 1.0) / 9.0;
 		float d = clamp(params[DISTANCE_PARAM].getValue() + inputs[DISTANCE_INPUT].getVoltage() * params[DISTANCE_CV_ATTENUVERTER_PARAM].getValue(),0.1,10.0f);
+		distancePercentage = d/10.0;
 
 		displayScaling = fmaxf(eF + eG/2.0 + d*0.5,1.0f);
 
@@ -305,31 +326,67 @@ struct RouletteLFOWidget : ModuleWidget {
 			addChild(display);
 		}
 
-		addParam(createParam<RoundSmallFWKnob>(Vec(10, 167), module, RouletteLFO::RADIUS_RATIO_PARAM));
+		ParamWidget* radiusRatioParam = createParam<RoundSmallFWKnob>(Vec(10, 167), module, RouletteLFO::RADIUS_RATIO_PARAM);
+		if (module) {
+			dynamic_cast<RoundSmallFWKnob*>(radiusRatioParam)->percentage = &module->radiusRatioPercentage;
+		}
+		addParam(radiusRatioParam);							
 		addParam(createParam<RoundReallySmallFWKnob>(Vec(12, 212), module, RouletteLFO::RADIUS_RATIO_CV_ATTENUVERTER_PARAM));
 
-		addParam(createParam<RoundSmallFWKnob>(Vec(48, 167), module, RouletteLFO::FIXED_ECCENTRICITY_PARAM));
+		ParamWidget* fixedEccentricityParam = createParam<RoundSmallFWKnob>(Vec(48, 167), module, RouletteLFO::FIXED_ECCENTRICITY_PARAM);
+		if (module) {
+			dynamic_cast<RoundSmallFWKnob*>(fixedEccentricityParam)->percentage = &module->fixedEccentricityPercentage;
+		}
+		addParam(fixedEccentricityParam);							
 		addParam(createParam<RoundReallySmallFWKnob>(Vec(50, 212), module, RouletteLFO::FIXED_ECCENTRICITY_CV_ATTENUVERTER_PARAM));
-		addParam(createParam<RoundSmallFWKnob>(Vec(48, 247), module, RouletteLFO::FIXED_PHASE_PARAM));
+		ParamWidget* fixedPhaseParam = createParam<RoundSmallFWKnob>(Vec(48, 247), module, RouletteLFO::FIXED_PHASE_PARAM);
+		if (module) {
+			dynamic_cast<RoundSmallFWKnob*>(fixedPhaseParam)->percentage = &module->fixedPhasePercentage;
+		}
+		addParam(fixedPhaseParam);							
 		addParam(createParam<RoundReallySmallFWKnob>(Vec(50, 292), module, RouletteLFO::FIXED_PHASE_CV_ATTENUVERTER_PARAM));
 
 
-		addParam(createParam<RoundSmallFWKnob>(Vec(86, 167), module, RouletteLFO::GENERATOR_ECCENTRICITY_PARAM));
+		ParamWidget* generatorEccentricityParam = createParam<RoundSmallFWKnob>(Vec(86, 167), module, RouletteLFO::GENERATOR_ECCENTRICITY_PARAM);
+		if (module) {
+			dynamic_cast<RoundSmallFWKnob*>(generatorEccentricityParam)->percentage = &module->generatorEccentricityPercentage;
+		}
+		addParam(generatorEccentricityParam);							
 		addParam(createParam<RoundReallySmallFWKnob>(Vec(88, 212), module, RouletteLFO::GENERATOR_ECCENTRICITY_CV_ATTENUVERTER_PARAM));
-		addParam(createParam<RoundSmallFWKnob>(Vec(86, 247), module, RouletteLFO::GENERATOR_PHASE_PARAM));
+		ParamWidget* generatorPhaseParam = createParam<RoundSmallFWKnob>(Vec(86, 247), module, RouletteLFO::GENERATOR_PHASE_PARAM);
+		if (module) {
+			dynamic_cast<RoundSmallFWKnob*>(generatorPhaseParam)->percentage = &module->generatorPhasePercentage;
+		}
+		addParam(generatorPhaseParam);							
 		addParam(createParam<RoundReallySmallFWKnob>(Vec(88, 292), module, RouletteLFO::GENERATOR_PHASE_CV_ATTENUVERTER_PARAM));
 
 
-		addParam(createParam<RoundSmallFWKnob>(Vec(124, 167), module, RouletteLFO::DISTANCE_PARAM));
+		ParamWidget* distanceParam = createParam<RoundSmallFWKnob>(Vec(124, 167), module, RouletteLFO::DISTANCE_PARAM);
+		if (module) {
+			dynamic_cast<RoundSmallFWKnob*>(distanceParam)->percentage = &module->distancePercentage;
+		}
+		addParam(distanceParam);							
 		addParam(createParam<RoundReallySmallFWKnob>(Vec(126, 212), module, RouletteLFO::DISTANCE_CV_ATTENUVERTER_PARAM));
-		addParam(createParam<RoundSmallFWKnob>(Vec(160, 167), module, RouletteLFO::FREQUENCY_PARAM));
+		ParamWidget* frequencyParam = createParam<RoundSmallFWKnob>(Vec(160, 167), module, RouletteLFO::FREQUENCY_PARAM);
+		if (module) {
+			dynamic_cast<RoundSmallFWKnob*>(frequencyParam)->percentage = &module->frequencyPercentage;
+		}
+		addParam(frequencyParam);							
 		addParam(createParam<RoundReallySmallFWKnob>(Vec(162, 212), module, RouletteLFO::FREQUENCY_CV_ATTENUVERTER_PARAM));
 
 
-		addParam(createParam<RoundSmallFWKnob>(Vec(124, 247), module, RouletteLFO::X_GAIN_PARAM));
+		ParamWidget* xGainParam = createParam<RoundSmallFWKnob>(Vec(124, 247), module, RouletteLFO::X_GAIN_PARAM);
+		if (module) {
+			dynamic_cast<RoundSmallFWKnob*>(xGainParam)->percentage = &module->xGainPercentage;
+		}
+		addParam(xGainParam);							
 		addParam(createParam<RoundReallySmallFWKnob>(Vec(126, 292), module, RouletteLFO::X_GAIN_CV_ATTENUVERTER_PARAM));
 
-		addParam(createParam<RoundSmallFWKnob>(Vec(160, 247), module, RouletteLFO::Y_GAIN_PARAM));
+		ParamWidget* yGainParam = createParam<RoundSmallFWKnob>(Vec(160, 247), module, RouletteLFO::Y_GAIN_PARAM);
+		if (module) {
+			dynamic_cast<RoundSmallFWKnob*>(yGainParam)->percentage = &module->yGainPercentage;
+		}
+		addParam(yGainParam);							
 		addParam(createParam<RoundReallySmallFWKnob>(Vec(162, 292), module, RouletteLFO::Y_GAIN_CV_ATTENUVERTER_PARAM));
 
 

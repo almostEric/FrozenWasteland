@@ -64,6 +64,13 @@ struct MrBlueSky : Module {
 	int lastBandOffset = 0;
 	dsp::SchmittTrigger shiftLeftTrigger,shiftRightTrigger,modInvertTrigger;
 
+	//percentages
+	float attackPercentage = 0;
+	float decayPercentage = 0;
+	float carrierQPercentage = 0;
+	float modQPercentage = 0;
+	float bandOffsetPercentage = 0;
+
 	MrBlueSky() {
 		config(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS, NUM_LIGHTS);
 
@@ -130,8 +137,9 @@ void MrBlueSky::process(const ProcessArgs &args) {
 	// Band Offset Processing
 	bandOffset = params[BAND_OFFSET_PARAM].getValue();
 	if(inputs[SHIFT_BAND_OFFSET_INPUT].isConnected()) {
-		bandOffset += inputs[SHIFT_BAND_OFFSET_INPUT].getVoltage() * params[SHIFT_BAND_OFFSET_CV_ATTENUVERTER_PARAM].getValue();
+		bandOffset = clamp(bandOffset + inputs[SHIFT_BAND_OFFSET_INPUT].getVoltage() * params[SHIFT_BAND_OFFSET_CV_ATTENUVERTER_PARAM].getValue(),-BANDS+0.0f,BANDS+0.0f);
 	}
+	bandOffsetPercentage = bandOffset / float(BANDS);
 	if(bandOffset != lastBandOffset) {
 		shiftIndex = 0;
 		lastBandOffset = bandOffset;
@@ -180,11 +188,13 @@ void MrBlueSky::process(const ProcessArgs &args) {
 	float attack = params[ATTACK_PARAM].getValue();
 	float decay = params[DECAY_PARAM].getValue();
 	if(inputs[ATTACK_INPUT].isConnected()) {
-		attack += clamp(inputs[ATTACK_INPUT].getVoltage() * params[ATTACK_CV_ATTENUVERTER_PARAM].getValue() / 20.0f,-0.25f,.25f);
+		attack = clamp(attack + inputs[ATTACK_INPUT].getVoltage() * params[ATTACK_CV_ATTENUVERTER_PARAM].getValue() / 40.0f,0.0f,0.25f);
 	}
+	attackPercentage = attack * 4.0;
 	if(inputs[DECAY_INPUT].isConnected()) {
-		decay += clamp(inputs[DECAY_INPUT].getVoltage() * params[DECAY_CV_ATTENUVERTER_PARAM].getValue() / 20.0f,-0.25f,.25f);
+		decay = clamp(decay + inputs[DECAY_INPUT].getVoltage() * params[DECAY_CV_ATTENUVERTER_PARAM].getValue() / 40.0f,0.0f,0.25f);
 	}
+	decayPercentage = decay * 4.0;
 	float slewAttack = slewMax * powf(slewMin / slewMax, attack);
 	float slewDecay = slewMax * powf(slewMin / slewMax, decay);
 	float out = 0.0;
@@ -194,12 +204,12 @@ void MrBlueSky::process(const ProcessArgs &args) {
 	if(inputs[MOD_Q_PARAM].isConnected()) {
 		currentQ += inputs[MOD_Q_INPUT].getVoltage() * params[MODIFER_Q_CV_ATTENUVERTER_PARAM].getValue();
 	}
-
 	currentQ = clamp(currentQ,1.0f,15.0f);
+	modQPercentage = (currentQ-1.0) / 14.0;
 	if (abs(currentQ - lastModQ) >= qEpsilon ) {
 		for(int i=0; i<2*BANDS; i++) {
 			iFilter[i]->setQ(currentQ);
-			}
+		}
 		lastModQ = currentQ;
 	}
 
@@ -210,10 +220,11 @@ void MrBlueSky::process(const ProcessArgs &args) {
 	}
 
 	currentQ = clamp(currentQ,1.0f,15.0f);
+	carrierQPercentage = (currentQ-1.0) / 14.0;
 	if (abs(currentQ - lastCarrierQ) >= qEpsilon ) {
 		for(int i=0; i<2*BANDS; i++) {
 			cFilter[i]->setQ(currentQ);
-			}
+		}
 		lastCarrierQ = currentQ;
 	}
 
@@ -351,21 +362,42 @@ struct MrBlueSkyWidget : ModuleWidget {
 		}
 
 
-		addParam(createParam<RoundFWKnob>(Vec(156, 50), module, MrBlueSky::ATTACK_PARAM));
-		addParam(createParam<RoundFWKnob>(Vec(216, 50), module, MrBlueSky::DECAY_PARAM));
+		ParamWidget* attackParam = createParam<RoundFWKnob>(Vec(156, 50), module, MrBlueSky::ATTACK_PARAM);
+		if (module) {
+			dynamic_cast<RoundFWKnob*>(attackParam)->percentage = &module->attackPercentage;
+		}
+		addParam(attackParam);							
+		ParamWidget* decayParam = createParam<RoundFWKnob>(Vec(216, 50), module, MrBlueSky::DECAY_PARAM);
+		if (module) {
+			dynamic_cast<RoundFWKnob*>(decayParam)->percentage = &module->decayPercentage;
+		}
+		addParam(decayParam);							
 		addParam(createParam<RoundReallySmallFWKnob>(Vec(190, 75), module, MrBlueSky::ATTACK_CV_ATTENUVERTER_PARAM));
 		addParam(createParam<RoundReallySmallFWKnob>(Vec(250, 75), module, MrBlueSky::DECAY_CV_ATTENUVERTER_PARAM));
 		addInput(createInput<FWPortInSmall>(Vec(190, 52), module, MrBlueSky::ATTACK_INPUT));
 		addInput(createInput<FWPortInSmall>(Vec(250, 52), module, MrBlueSky::DECAY_INPUT));
 
-		addParam(createParam<RoundFWKnob>(Vec(156, 130), module, MrBlueSky::CARRIER_Q_PARAM));
-		addParam(createParam<RoundFWKnob>(Vec(216, 130), module, MrBlueSky::MOD_Q_PARAM));
+		ParamWidget* carrierQParam = createParam<RoundFWKnob>(Vec(156, 130), module, MrBlueSky::CARRIER_Q_PARAM);
+		if (module) {
+			dynamic_cast<RoundFWKnob*>(carrierQParam)->percentage = &module->carrierQPercentage;
+		}
+		addParam(carrierQParam);							
+		ParamWidget* modQParam = createParam<RoundFWKnob>(Vec(216, 130), module, MrBlueSky::MOD_Q_PARAM);
+		if (module) {
+			dynamic_cast<RoundFWKnob*>(modQParam)->percentage = &module->modQPercentage;
+		}
+		addParam(modQParam);							
 		addParam(createParam<RoundReallySmallFWKnob>(Vec(190, 155), module, MrBlueSky::CARRIER_Q_CV_ATTENUVERTER_PARAM));
 		addParam(createParam<RoundReallySmallFWKnob>(Vec(250, 155), module, MrBlueSky::MODIFER_Q_CV_ATTENUVERTER_PARAM));
 		addInput(createInput<FWPortInSmall>(Vec(190, 132), module, MrBlueSky::CARRIER_Q_INPUT));
 		addInput(createInput<FWPortInSmall>(Vec(250, 132), module, MrBlueSky::MOD_Q_INPUT));
 
-		addParam(createParam<RoundFWSnapKnob>(Vec(174, 202), module, MrBlueSky::BAND_OFFSET_PARAM));
+		ParamWidget* bandOffsetParam = createParam<RoundFWSnapKnob>(Vec(174, 202), module, MrBlueSky::BAND_OFFSET_PARAM);
+		if (module) {
+			dynamic_cast<RoundFWSnapKnob*>(bandOffsetParam)->percentage = &module->bandOffsetPercentage;
+			dynamic_cast<RoundFWSnapKnob*>(bandOffsetParam)->biDirectional = true;
+		}
+		addParam(bandOffsetParam);							
 		addParam(createParam<RoundReallySmallFWKnob>(Vec(204, 230), module, MrBlueSky::SHIFT_BAND_OFFSET_CV_ATTENUVERTER_PARAM));
 		addInput(createInput<FWPortInSmall>(Vec(148, 207), module, MrBlueSky::SHIFT_BAND_OFFSET_LEFT_INPUT));
 		addInput(createInput<FWPortInSmall>(Vec(212, 207), module, MrBlueSky::SHIFT_BAND_OFFSET_RIGHT_INPUT));

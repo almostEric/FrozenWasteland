@@ -82,7 +82,10 @@ struct QARIrrationalityExpander : Module {
 	float sceneData[NBR_SCENES][12] = {{0}};
 	int sceneChangeMessage = 0;
 
-
+	//percentages
+	float irStartPosPercentage = 0;
+	float numStepsPercentage = 0;
+	float irRatioPercentage = 0;
 			
 	
 	QARIrrationalityExpander() {
@@ -91,10 +94,10 @@ struct QARIrrationalityExpander : Module {
         configParam(IR_START_POS_PARAM, 1.0f, ACTUAL_MAX_STEPS-2, 0.0,"Start Position");
         configParam(IR_START_POS_CV_ATTENUVETER_PARAM, -1.0, 1.0, 0.0,"Start Position CV Attenuation","%",0,100);
 
-        configParam(IR_NUM_STEPS_PARAM, 2.0, MAX_STEPS-1, 2,"# Steps");
+        configParam(IR_NUM_STEPS_PARAM, 2.0, ACTUAL_MAX_STEPS-1, 2,"# Steps");
         configParam(IR_NUM_STEPS_CV_ATTENUVETER_PARAM, -1.0, 1.0, 0.0,"# Steps CV Attenuation","%",0,100);		
 
-        configParam(IR_RATIO_PARAM, 1.0-NBR_IRRATIONAL_CONSTANTS, MAX_STEPS-2, 1,"Ratio");
+        configParam(IR_RATIO_PARAM, 1.0-NBR_IRRATIONAL_CONSTANTS, ACTUAL_MAX_STEPS-2, 1,"Ratio");
         configParam(IR_RATIO_CV_ATTENUVETER_PARAM, -1.0, 1.0, 0.0,"Ratio CV Attenuation","%",0,100);		
         
 		leftExpander.producerMessage = leftMessages[0];
@@ -255,9 +258,11 @@ struct QARIrrationalityExpander : Module {
  
 
             irPos = clamp(params[IR_START_POS_PARAM].getValue() + std::floor(inputs[IR_START_POS_INPUT].isConnected() ? inputs[IR_START_POS_INPUT].getVoltage() * 0.6f * params[IR_START_POS_CV_ATTENUVETER_PARAM].getValue() : 0.0f),1.0,ACTUAL_MAX_STEPS-2.0);
+			irStartPosPercentage = (irPos - 1) / (ACTUAL_MAX_STEPS-3.0);
             irNbrSteps = clamp(params[IR_NUM_STEPS_PARAM].getValue() + std::floor(inputs[IR_NUM_STEPS_INPUT].isConnected() ? inputs[IR_NUM_STEPS_INPUT].getVoltage() / 1.8 * params[IR_NUM_STEPS_CV_ATTENUVETER_PARAM].getValue() : 0.0f),2.0f,ACTUAL_MAX_STEPS-1.0);
+			numStepsPercentage = (irNbrSteps - 2) / (ACTUAL_MAX_STEPS-2.0);
             irRatio = clamp(params[IR_RATIO_PARAM].getValue() + std::floor(inputs[IR_RATIO_INPUT].isConnected() ? inputs[IR_RATIO_INPUT].getVoltage() / 1.8 * params[IR_RATIO_CV_ATTENUVETER_PARAM].getValue() : 0.0f),1.0f-NBR_IRRATIONAL_CONSTANTS,ACTUAL_MAX_STEPS-2.0);
-			//float ratio = std::min(irRatio/irNbrSteps,1.0f);
+			irRatioPercentage = (irRatio + 6.0) / (ACTUAL_MAX_STEPS + 4.0);
 			int index = std::abs(irRatio);
 			computedRatio = (irRatio < 1) ? irrationalRatios[index] : irRatio;
 
@@ -406,15 +411,27 @@ struct QARIrrationalityExpanderWidget : ModuleWidget {
 		}
 
 
-        addParam(createParam<RoundFWSnapKnob>(Vec(12, 59), module, QARIrrationalityExpander::IR_START_POS_PARAM));
+		ParamWidget* irStartPosParam = createParam<RoundFWSnapKnob>(Vec(12, 59), module, QARIrrationalityExpander::IR_START_POS_PARAM);
+		if (module) {
+			dynamic_cast<RoundFWSnapKnob*>(irStartPosParam)->percentage = &module->irStartPosPercentage;
+		}
+		addParam(irStartPosParam);							
         addInput(createInput<FWPortInSmall>(Vec(47, 64), module, QARIrrationalityExpander::IR_START_POS_INPUT));
         addParam(createParam<RoundSmallFWKnob>(Vec(44, 87), module, QARIrrationalityExpander::IR_START_POS_CV_ATTENUVETER_PARAM));
 
-        addParam(createParam<RoundFWSnapKnob>(Vec(12, 139), module, QARIrrationalityExpander::IR_NUM_STEPS_PARAM));
+		ParamWidget* numStepsParam = createParam<RoundFWSnapKnob>(Vec(12, 139), module, QARIrrationalityExpander::IR_NUM_STEPS_PARAM);
+		if (module) {
+			dynamic_cast<RoundFWSnapKnob*>(numStepsParam)->percentage = &module->numStepsPercentage;
+		}
+		addParam(numStepsParam);							
         addInput(createInput<FWPortInSmall>(Vec(47, 144), module, QARIrrationalityExpander::IR_NUM_STEPS_INPUT));
         addParam(createParam<RoundSmallFWKnob>(Vec(44, 167), module, QARIrrationalityExpander::IR_NUM_STEPS_CV_ATTENUVETER_PARAM));
 
-        addParam(createParam<RoundFWSnapKnob>(Vec(12, 219), module, QARIrrationalityExpander::IR_RATIO_PARAM));
+		ParamWidget* irRatioParam = createParam<RoundFWSnapKnob>(Vec(12, 219), module, QARIrrationalityExpander::IR_RATIO_PARAM);
+		if (module) {
+			dynamic_cast<RoundFWSnapKnob*>(irRatioParam)->percentage = &module->irRatioPercentage;
+		}
+		addParam(irRatioParam);							
         addInput(createInput<FWPortInSmall>(Vec(47, 224), module, QARIrrationalityExpander::IR_RATIO_INPUT));
         addParam(createParam<RoundSmallFWKnob>(Vec(44, 247), module, QARIrrationalityExpander::IR_RATIO_CV_ATTENUVETER_PARAM));
 

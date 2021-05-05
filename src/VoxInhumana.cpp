@@ -143,6 +143,15 @@ struct VoxInhumana : Module {
 		}				
 	};
 
+	//percentages
+	float vowel1Percentage = 0;
+	float vowel2Percentage = 0;
+	float vowelBalancePercentage = 0;
+	float voiceTypePercentage = 0;
+	float fcMainPercentage = 0;
+	float fcCutoffPercentage[BANDS] = {0};
+	float ampPercentage[BANDS] = {0};
+
 	VoxInhumana() {
 		config(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS, NUM_LIGHTS);
 
@@ -205,10 +214,15 @@ struct VoxInhumana : Module {
 		
 
 		vowel1 = (int)clamp(params[VOWEL_1_PARAM].getValue() + (inputs[VOWEL_1_CV_IN].getVoltage() * params[VOWEL_1_ATTENUVERTER_PARAM].getValue()),0.0f,4.0f);
+		vowel1Percentage = vowel1 / 4.0;
 		vowel2 = (int)clamp(params[VOWEL_2_PARAM].getValue() + (inputs[VOWEL_2_CV_IN].getVoltage() * params[VOWEL_2_ATTENUVERTER_PARAM].getValue()),0.0f,4.0f);
+		vowel2Percentage = vowel2 / 4.0;
 		vowelBalance = clamp(params[VOWEL_BALANCE_PARAM].getValue() + (inputs[VOWEL_BALANCE_CV_IN].getVoltage() * params[VOWEL_BALANCE_ATTENUVERTER_PARAM].getValue() /10.0f),0.0f,1.0f);
+		vowelBalancePercentage = (vowelBalance * 2.0) - 1.0;
 		voiceType = (int)clamp(params[VOICE_TYPE_PARAM].getValue() + (inputs[VOICE_TYPE_CV_IN].getVoltage() * params[VOICE_TYPE_ATTENUVERTER_PARAM].getValue()),0.0f,4.0f);
+		voiceTypePercentage = voiceType / 4.0;
 		fcShift = clamp(params[FC_MAIN_CUTOFF_PARAM].getValue() + (inputs[FC_MAIN_CV_IN].getVoltage() * params[FC_MAIN_ATTENUVERTER_PARAM].getValue()/10.0f) ,0.0f,2.0f);
+		fcMainPercentage = fcShift / 2.0;
 
 		lights[VOWEL_1_LIGHT].value = 1.0-vowelBalance;
 		lights[VOWEL_2_LIGHT].value = vowelBalance;
@@ -230,6 +244,7 @@ struct VoxInhumana : Module {
 		for (int i=0; i<BANDS;i++) {
 			float cutoffExp = params[FREQ_1_CUTOFF_PARAM+i].getValue() + inputs[FREQ_1_CUTOFF_INPUT+i].getVoltage() * params[FREQ_1_CV_ATTENUVERTER_PARAM+i].getValue(); 
 			cutoffExp = clamp(cutoffExp, -1.0f, 1.0f);
+			fcCutoffPercentage[i] = cutoffExp;
 			freq[i] = lerp(formantParameters[voiceType][vowel1][i][0],formantParameters[voiceType][vowel2][i][0],vowelBalance); 
 			//Apply individual formant CV
 			freq[i] = freq[i] + (freq[i] / 2 * cutoffExp); //Formant CV can alter formant by +/- 50%
@@ -265,7 +280,8 @@ struct VoxInhumana : Module {
 			} 
 
 			float attenuation = powf(10,peak[i] / 20.0f);
-			float manualAttenuation = params[AMP_1_PARAM+i].getValue() + inputs[AMP_1_INPUT+i].getVoltage() * params[AMP_1_CV_ATTENUVERTER_PARAM+i].getValue(); 
+			float manualAttenuation = clamp(params[AMP_1_PARAM+i].getValue() + inputs[AMP_1_INPUT+i].getVoltage() * params[AMP_1_CV_ATTENUVERTER_PARAM+i].getValue(),0.0f,2.0f); 
+			ampPercentage[i] = manualAttenuation / 2.0;
 			attenuation = clamp(attenuation * manualAttenuation, 0.0f, 1.0f);
 			out += lastFilterOut * attenuation * 5.0f;
 		}
@@ -342,11 +358,32 @@ struct VoxInhumanaWidget : ModuleWidget {
 		}
 
 
-		addParam(createParam<RoundFWSnapKnob>(Vec(10, 30), module, VoxInhumana::VOWEL_1_PARAM));
-		addParam(createParam<RoundFWSnapKnob>(Vec(140, 30), module, VoxInhumana::VOWEL_2_PARAM));
-		addParam(createParam<RoundFWKnob>(Vec(89, 30), module, VoxInhumana::VOWEL_BALANCE_PARAM));
-		addParam(createParam<RoundFWSnapKnob>(Vec(7, 103), module, VoxInhumana::VOICE_TYPE_PARAM));
-		addParam(createParam<RoundFWKnob>(Vec(140, 103), module, VoxInhumana::FC_MAIN_CUTOFF_PARAM));
+		ParamWidget* vowel1Param = createParam<RoundFWSnapKnob>(Vec(10, 30), module, VoxInhumana::VOWEL_1_PARAM);
+		if (module) {
+			dynamic_cast<RoundFWSnapKnob*>(vowel1Param)->percentage = &module->vowel1Percentage;
+		}
+		addParam(vowel1Param);							
+		ParamWidget* vowel2Param = createParam<RoundFWSnapKnob>(Vec(140, 30), module, VoxInhumana::VOWEL_2_PARAM);
+		if (module) {
+			dynamic_cast<RoundFWSnapKnob*>(vowel2Param)->percentage = &module->vowel2Percentage;
+		}
+		addParam(vowel2Param);							
+		ParamWidget* vowelBalanceParam = createParam<RoundFWKnob>(Vec(89, 30), module, VoxInhumana::VOWEL_BALANCE_PARAM);
+		if (module) {
+			dynamic_cast<RoundFWKnob*>(vowelBalanceParam)->percentage = &module->vowelBalancePercentage;
+			dynamic_cast<RoundFWKnob*>(vowelBalanceParam)->biDirectional = true;
+		}
+		addParam(vowelBalanceParam);							
+		ParamWidget* voiceTypeParam = createParam<RoundFWSnapKnob>(Vec(7, 103), module, VoxInhumana::VOICE_TYPE_PARAM);
+		if (module) {
+			dynamic_cast<RoundFWSnapKnob*>(voiceTypeParam)->percentage = &module->voiceTypePercentage;
+		}
+		addParam(voiceTypeParam);							
+		ParamWidget* fcCutoffParam = createParam<RoundFWKnob>(Vec(140, 103), module, VoxInhumana::FC_MAIN_CUTOFF_PARAM);
+		if (module) {
+			dynamic_cast<RoundFWKnob*>(fcCutoffParam)->percentage = &module->fcMainPercentage;
+		}
+		addParam(fcCutoffParam);							
 
 		addParam(createParam<RoundSmallFWKnob>(Vec(40, 62), module, VoxInhumana::VOWEL_1_ATTENUVERTER_PARAM));
 		addParam(createParam<RoundSmallFWKnob>(Vec(170, 62), module, VoxInhumana::VOWEL_2_ATTENUVERTER_PARAM));
@@ -355,21 +392,66 @@ struct VoxInhumanaWidget : ModuleWidget {
 		addParam(createParam<RoundSmallFWKnob>(Vec(169, 125), module, VoxInhumana::FC_MAIN_ATTENUVERTER_PARAM));
 			
 
-		addParam(createParam<RoundFWKnob>(Vec(15, 160), module, VoxInhumana::FREQ_1_CUTOFF_PARAM));
-		addParam(createParam<RoundFWKnob>(Vec(15, 195), module, VoxInhumana::FREQ_2_CUTOFF_PARAM));
-		addParam(createParam<RoundFWKnob>(Vec(15, 230), module, VoxInhumana::FREQ_3_CUTOFF_PARAM));
-		addParam(createParam<RoundFWKnob>(Vec(15, 265), module, VoxInhumana::FREQ_4_CUTOFF_PARAM));
-		addParam(createParam<RoundFWKnob>(Vec(15, 300), module, VoxInhumana::FREQ_5_CUTOFF_PARAM));
+		ParamWidget* freq1CutoffParam = createParam<RoundFWKnob>(Vec(15, 160), module, VoxInhumana::FREQ_1_CUTOFF_PARAM);
+		if (module) {
+			dynamic_cast<RoundFWKnob*>(freq1CutoffParam)->percentage = &module->fcCutoffPercentage[0];
+			dynamic_cast<RoundFWKnob*>(freq1CutoffParam)->biDirectional = true;
+		}
+		addParam(freq1CutoffParam);							
+		ParamWidget* freq2CutoffParam = createParam<RoundFWKnob>(Vec(15, 195), module, VoxInhumana::FREQ_2_CUTOFF_PARAM);
+		if (module) {
+			dynamic_cast<RoundFWKnob*>(freq2CutoffParam)->percentage = &module->fcCutoffPercentage[1];
+			dynamic_cast<RoundFWKnob*>(freq2CutoffParam)->biDirectional = true;
+		}
+		addParam(freq2CutoffParam);							
+		ParamWidget* freq3CutoffParam = createParam<RoundFWKnob>(Vec(15, 230), module, VoxInhumana::FREQ_3_CUTOFF_PARAM);
+		if (module) {
+			dynamic_cast<RoundFWKnob*>(freq3CutoffParam)->percentage = &module->fcCutoffPercentage[2];
+			dynamic_cast<RoundFWKnob*>(freq3CutoffParam)->biDirectional = true;
+		}
+		addParam(freq3CutoffParam);							
+		ParamWidget* freq4CutoffParam = createParam<RoundFWKnob>(Vec(15, 265), module, VoxInhumana::FREQ_4_CUTOFF_PARAM);
+		if (module) {
+			dynamic_cast<RoundFWKnob*>(freq4CutoffParam)->percentage = &module->fcCutoffPercentage[3];
+			dynamic_cast<RoundFWKnob*>(freq4CutoffParam)->biDirectional = true;
+		}
+		addParam(freq4CutoffParam);							
+		ParamWidget* freq5CutoffParam = createParam<RoundFWKnob>(Vec(15, 300), module, VoxInhumana::FREQ_5_CUTOFF_PARAM);
+		if (module) {
+			dynamic_cast<RoundFWKnob*>(freq5CutoffParam)->percentage = &module->fcCutoffPercentage[4];
+			dynamic_cast<RoundFWKnob*>(freq5CutoffParam)->biDirectional = true;
+		}
+		addParam(freq5CutoffParam);							
 		addParam(createParam<RoundSmallFWKnob>(Vec(80, 162), module, VoxInhumana::FREQ_1_CV_ATTENUVERTER_PARAM));
 		addParam(createParam<RoundSmallFWKnob>(Vec(80, 197), module, VoxInhumana::FREQ_2_CV_ATTENUVERTER_PARAM));
 		addParam(createParam<RoundSmallFWKnob>(Vec(80, 232), module, VoxInhumana::FREQ_3_CV_ATTENUVERTER_PARAM));
 		addParam(createParam<RoundSmallFWKnob>(Vec(80, 267), module, VoxInhumana::FREQ_4_CV_ATTENUVERTER_PARAM));
 		addParam(createParam<RoundSmallFWKnob>(Vec(80, 302), module, VoxInhumana::FREQ_5_CV_ATTENUVERTER_PARAM));
-		addParam(createParam<RoundFWKnob>(Vec(110, 160), module, VoxInhumana::AMP_1_PARAM));
-		addParam(createParam<RoundFWKnob>(Vec(110, 195), module, VoxInhumana::AMP_2_PARAM));
-		addParam(createParam<RoundFWKnob>(Vec(110, 230), module, VoxInhumana::AMP_3_PARAM));
-		addParam(createParam<RoundFWKnob>(Vec(110, 265), module, VoxInhumana::AMP_4_PARAM));
-		addParam(createParam<RoundFWKnob>(Vec(110, 300), module, VoxInhumana::AMP_5_PARAM));
+		ParamWidget* amp1Param = createParam<RoundFWKnob>(Vec(110, 160), module, VoxInhumana::AMP_1_PARAM);
+		if (module) {
+			dynamic_cast<RoundFWKnob*>(amp1Param)->percentage = &module->ampPercentage[0];
+		}
+		addParam(amp1Param);							
+		ParamWidget* amp2Param = createParam<RoundFWKnob>(Vec(110, 195), module, VoxInhumana::AMP_2_PARAM);
+		if (module) {
+			dynamic_cast<RoundFWKnob*>(amp2Param)->percentage = &module->ampPercentage[1];
+		}
+		addParam(amp2Param);							
+		ParamWidget* amp3Param = createParam<RoundFWKnob>(Vec(110, 230), module, VoxInhumana::AMP_3_PARAM);
+		if (module) {
+			dynamic_cast<RoundFWKnob*>(amp3Param)->percentage = &module->ampPercentage[2];
+		}
+		addParam(amp3Param);							
+		ParamWidget* amp4Param = createParam<RoundFWKnob>(Vec(110, 265), module, VoxInhumana::AMP_4_PARAM);
+		if (module) {
+			dynamic_cast<RoundFWKnob*>(amp4Param)->percentage = &module->ampPercentage[3];
+		}
+		addParam(amp4Param);							
+		ParamWidget* amp5Param = createParam<RoundFWKnob>(Vec(110, 300), module, VoxInhumana::AMP_5_PARAM);
+		if (module) {
+			dynamic_cast<RoundFWKnob*>(amp5Param)->percentage = &module->ampPercentage[4];
+		}
+		addParam(amp5Param);							
 		addParam(createParam<RoundSmallFWKnob>(Vec(175, 162), module, VoxInhumana::AMP_1_CV_ATTENUVERTER_PARAM));
 		addParam(createParam<RoundSmallFWKnob>(Vec(175, 197), module, VoxInhumana::AMP_2_CV_ATTENUVERTER_PARAM));
 		addParam(createParam<RoundSmallFWKnob>(Vec(175, 232), module, VoxInhumana::AMP_3_CV_ATTENUVERTER_PARAM));
@@ -394,9 +476,9 @@ struct VoxInhumanaWidget : ModuleWidget {
 		addInput(createInput<PJ301MPort>(Vec(145, 267), module, VoxInhumana::AMP_4_INPUT));
 		addInput(createInput<PJ301MPort>(Vec(145, 302), module, VoxInhumana::AMP_5_INPUT));
 
-		addInput(createInput<PJ301MPort>(Vec(56, 338), module, VoxInhumana::SIGNAL_IN));
+		addInput(createInput<PJ301MPort>(Vec(16, 343), module, VoxInhumana::SIGNAL_IN));
 
-		addOutput(createOutput<PJ301MPort>(Vec(130, 338), module, VoxInhumana::VOX_OUTPUT));
+		addOutput(createOutput<PJ301MPort>(Vec(170, 343), module, VoxInhumana::VOX_OUTPUT));
 
 		addChild(createLight<LargeLight<GreenLight>>(Vec(72, 37), module, VoxInhumana::VOWEL_1_LIGHT));
 		addChild(createLight<LargeLight<GreenLight>>(Vec(120, 37), module, VoxInhumana::VOWEL_2_LIGHT));

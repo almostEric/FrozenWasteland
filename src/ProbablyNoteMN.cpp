@@ -26,7 +26,7 @@
 #define NUM_SHIFT_MODES 3
 #define TRIGGER_DELAY_SAMPLES 5
 
-#define NBR_ALGORITHMS 3
+#define NBR_ALGORITHMS 4
 #define NBR_SCALE_MAPPING 4
 
 //GOLOMB RULER
@@ -124,6 +124,7 @@ struct ProbablyNoteMN : Module {
 		QUANTIZE_OCTAVE_PARAM,
 		QUANTIZE_MOS_RATIO_PARAM,
 		SET_ROOT_NOTE_PARAM,
+		TRIGGER_MODE_PARAM,
 		NUM_PARAMS
 	};
 
@@ -183,8 +184,9 @@ struct ProbablyNoteMN : Module {
 		SPREAD_MODE_LIGHT = PITCH_RANDOMNESS_GAUSSIAN_LIGHT + 3,
 		EDO_TEMPERING_LIGHT = SPREAD_MODE_LIGHT + 3,
 		QUANTIZE_OCTAVE_SIZE_LIGHT = EDO_TEMPERING_LIGHT + 3,
-		QUANTIZE_MOS_RATIO_LIGHT = QUANTIZE_OCTAVE_SIZE_LIGHT + 3,		
-		NUM_LIGHTS = QUANTIZE_MOS_RATIO_LIGHT + 3
+		QUANTIZE_MOS_RATIO_LIGHT = QUANTIZE_OCTAVE_SIZE_LIGHT + 3,
+		TRIGGER_POLYPHONIC_LIGHT = QUANTIZE_MOS_RATIO_LIGHT + 3,
+		NUM_LIGHTS = TRIGGER_POLYPHONIC_LIGHT + 3
 	};
 	enum PitchTypes {
 		RATIO_PITCH_TYPE,
@@ -192,6 +194,7 @@ struct ProbablyNoteMN : Module {
 		MOS_PITCH_TYPE,
 	};
 	enum Algorithms {
+		NO_REDUCTION_ALGO,
 		EUCLIDEAN_ALGO,
 		GOLUMB_RULER_ALGO,
 		PERFECT_BALANCE_ALGO,
@@ -204,7 +207,7 @@ struct ProbablyNoteMN : Module {
 	};
 
 
-	const char* algorithms[NBR_ALGORITHMS] = {"Euclidean","Golumb Ruler","Perfect Balance"};
+	const char* algorithms[NBR_ALGORITHMS] = {"","Euclidean","Golumb Ruler","Perfect Balance"};
 	const char* scaleMappings[NBR_ALGORITHMS] = {"Spread","Repeat","Nearest Neighbor"};
 
 // “”
@@ -601,6 +604,39 @@ struct ProbablyNoteMN : Module {
 	int currentPolyphony = 1;
 
 	int paramChangeCounter = 0;
+
+	//percentages
+	float spreadPercentage = 0;
+	float slantPercentage = 0;
+	float distributionPercentage = 0;
+	float nonRepeatPercentage = 0;
+	float keyPercentage = 0;
+	float dissonancePercentage = 0;
+	float shiftPercentage = 0;
+	float octavePercentage = 0;
+	float pitchRandomnessPercentage = 0;
+
+	float octaveSizePercentage = 0;
+
+	float mosLargeStepsPercentage = 0;
+	float mosSmallStepsPercentage = 0;
+	float mosRatioPercentage = 0;
+	float mosLevelsPercentage = 0;
+
+	float edoPercentage = 0;
+	float edoStepsPercentage = 0;
+	float edoWrapsPercentage = 0;
+
+	float edoTemperingThresholdPercentage = 0;
+	float edoTemperingStrengthPercentage = 0;
+
+	float factorsPercentage[MAX_FACTORS] = {0};
+	float factorsNumeratorPercentage[MAX_FACTORS] = {0};
+	float factorsDivisorPercentage[MAX_FACTORS] = {0};
+	
+
+	float numberOfNotesPercentage = 0;
+	float scalePercentage = 0;
 
 	
 	ProbablyNoteMN() {
@@ -1025,6 +1061,9 @@ struct ProbablyNoteMN : Module {
 		}
 		
 		switch(noteReductionAlgorithm) {
+			case NO_REDUCTION_ALGO :
+				HardLimitAlgo(totalSize,scaleSize);
+				break;
 			case EUCLIDEAN_ALGO :
 				EuclideanAlgo(totalSize,scaleSize);
 				break;
@@ -1037,6 +1076,14 @@ struct ProbablyNoteMN : Module {
 		}
 	}
 
+	void HardLimitAlgo(uint64_t totalSize, uint64_t scaleSize) {
+		for(uint64_t noLimitStepIndex = 0; noLimitStepIndex < totalSize; noLimitStepIndex++)
+		{
+			pitchIncluded[noLimitStepIndex] = 1;	
+		}
+		noteReductionPatternName = std::to_string(totalSize);
+	}
+
 	void EuclideanAlgo(uint64_t totalSize, uint64_t scaleSize) {
 		uint64_t bucket = totalSize - 1;                    
 		for(uint64_t euclideanStepIndex = 0; euclideanStepIndex < totalSize; euclideanStepIndex++)
@@ -1047,7 +1094,7 @@ struct ProbablyNoteMN : Module {
 				pitchIncluded[euclideanStepIndex] = 1;	
 			}                        
 		}
-		noteReductionPatternName = std::to_string(scaleSize) + " of " + std::to_string(totalSize);
+		noteReductionPatternName = std::to_string(totalSize) + " to " + std::to_string(scaleSize);
 	}
 
 	void GolumbRulerAlgo(uint64_t totalSize, uint64_t scaleSize) {
@@ -1056,7 +1103,7 @@ struct ProbablyNoteMN : Module {
 			rulerToUse -=1;
 		}
 
-		noteReductionPatternName = rulerNames[rulerToUse] + " of " + std::to_string(totalSize); 
+		noteReductionPatternName = std::to_string(totalSize) + " to " + rulerNames[rulerToUse]; 
 		
 		//Multiply beats so that low division beats fill out entire pattern
 		float spaceMultiplier = (totalSize / (rulerLengths[rulerToUse] + 1));
@@ -1091,7 +1138,7 @@ struct ProbablyNoteMN : Module {
 		
 		//Multiply beats so that low division beats fill out entire pattern
 		float spaceMultiplier = (totalSize / (pbPatternLengths[pbPatternToUse]));
-		noteReductionPatternName =pbPatternNames[pbPatternToUse] + " of " + std::to_string(totalSize); 
+		noteReductionPatternName =std::to_string(totalSize) + " to " + pbPatternNames[pbPatternToUse]; 
 
 		for (int pbIndex = 0; pbIndex < pbPatternOrders[pbPatternToUse];pbIndex++)
 		{
@@ -1109,11 +1156,12 @@ struct ProbablyNoteMN : Module {
 		json_object_set_new(rootJ, "noteReductionAlgorithm", json_integer((int) noteReductionAlgorithm));
 		json_object_set_new(rootJ, "scaleMappingMode", json_integer((int) scaleMappingMode));
 		json_object_set_new(rootJ, "useScaleWeighting", json_integer((bool) useScaleWeighting));
-		json_object_set_new(rootJ, "spreadMode", json_boolean(spreadMode));
-		json_object_set_new(rootJ, "octaveWrapAround", json_integer((int) octaveWrapAround));
+		json_object_set_new(rootJ, "edoTempering", json_boolean(edoTempering));
 		json_object_set_new(rootJ, "quantizeMosRatio", json_boolean(quantizeMosRatio));
 		json_object_set_new(rootJ, "quantizeOctaveSize", json_boolean(quantizeOctaveSize));
 		json_object_set_new(rootJ, "octaveScaleMapping", json_integer((bool) octaveScaleMapping));
+		json_object_set_new(rootJ, "spreadMode", json_boolean(spreadMode));
+		json_object_set_new(rootJ, "octaveWrapAround", json_integer((int) octaveWrapAround));
 		json_object_set_new(rootJ, "shiftMode", json_integer((int) shiftMode));
 		json_object_set_new(rootJ, "keyLogarithmic", json_integer((int) keyLogarithmic));
 		json_object_set_new(rootJ, "pitchRandomGaussian", json_integer((int) pitchRandomGaussian));
@@ -1132,6 +1180,26 @@ struct ProbablyNoteMN : Module {
 		if (ctTd)
 			triggerDelayEnabled = json_integer_value(ctTd);
 
+		json_t *sumMosR = json_object_get(rootJ, "quantizeMosRatio");
+		if (sumMosR) {
+			quantizeMosRatio = json_boolean_value(sumMosR);			
+		}
+
+		json_t *sumEdoT = json_object_get(rootJ, "edoTempering");
+		if (sumEdoT) {
+			edoTempering = json_boolean_value(sumEdoT);			
+		}
+
+		json_t *sumQos = json_object_get(rootJ, "quantizeOctaveSize");
+		if (sumQos) {
+			quantizeOctaveSize = json_boolean_value(sumQos);			
+		}
+
+		json_t *sumOS = json_object_get(rootJ, "octaveScaleMapping");
+		if (sumOS) {
+			octaveScaleMapping = json_integer_value(sumOS);			
+		}
+
 		json_t *ctNra = json_object_get(rootJ, "noteReductionAlgorithm");
 		if (ctNra)
 			noteReductionAlgorithm = json_integer_value(ctNra);
@@ -1147,21 +1215,6 @@ struct ProbablyNoteMN : Module {
 		json_t *sumSpM = json_object_get(rootJ, "spreadMode");
 		if (sumSpM) {
 			spreadMode = json_boolean_value(sumSpM);			
-		}
-
-		json_t *sumMosR = json_object_get(rootJ, "quantizeMosRatio");
-		if (sumMosR) {
-			quantizeMosRatio = json_boolean_value(sumMosR);			
-		}
-
-		json_t *sumQos = json_object_get(rootJ, "quantizeOctaveSize");
-		if (sumQos) {
-			quantizeOctaveSize = json_boolean_value(sumQos);			
-		}
-
-		json_t *sumOS = json_object_get(rootJ, "octaveScaleMapping");
-		if (sumOS) {
-			octaveScaleMapping = json_integer_value(sumOS);			
 		}
 
 		json_t *sumO = json_object_get(rootJ, "octaveWrapAround");
@@ -1290,6 +1343,11 @@ struct ProbablyNoteMN : Module {
 			noteReductionAlgorithm = (noteReductionAlgorithm + 1) % NBR_ALGORITHMS;
 		}		
 		switch (noteReductionAlgorithm) {
+			case NO_REDUCTION_ALGO :
+				lights[NOTE_REDUCTION_ALGORITHM_LIGHT].value = 0;
+				lights[NOTE_REDUCTION_ALGORITHM_LIGHT + 1].value = 0;
+				lights[NOTE_REDUCTION_ALGORITHM_LIGHT + 2].value = 0;
+				break;
 			case EUCLIDEAN_ALGO :
 				lights[NOTE_REDUCTION_ALGORITHM_LIGHT].value = 1;
 				lights[NOTE_REDUCTION_ALGORITHM_LIGHT + 1].value = 1;
@@ -1395,23 +1453,32 @@ struct ProbablyNoteMN : Module {
 
 
         spread = clamp(params[SPREAD_PARAM].getValue() + (inputs[SPREAD_INPUT].getVoltage() / 10.0f * params[SPREAD_CV_ATTENUVERTER_PARAM].getValue()),0.0f,1.0f);
-		
+		spreadPercentage = spread;
+
 		slant = clamp(params[SLANT_PARAM].getValue() + (inputs[SLANT_INPUT].getVoltage() / 10.0f * params[SLANT_CV_ATTENUVERTER_PARAM].getValue()),-1.0f,1.0f);
+		slantPercentage = slant;
 
         focus = clamp(params[DISTRIBUTION_PARAM].getValue() + (inputs[DISTRIBUTION_INPUT].getVoltage() / 10.0f * params[DISTRIBUTION_CV_ATTENUVERTER_PARAM].getValue()),0.0f,1.0f);
+		distributionPercentage = focus;
 
 		nonRepeat = clamp(params[NON_REPEATABILITY_PARAM].getValue() + (inputs[NON_REPEATABILITY_INPUT].getVoltage() / 10.0f * params[NON_REPEATABILITY_CV_ATTENUVERTER_PARAM].getValue()),0.0f,1.0f);
+		nonRepeatPercentage = nonRepeat;
 
         dissonanceProbability = clamp(params[DISSONANCE_PARAM].getValue() + (inputs[DISSONANCE_INPUT].getVoltage() / 10.0f * params[DISSONANCE_CV_ATTENUVERTER_PARAM].getValue()),-1.0f,1.0f);
+		dissonancePercentage = dissonanceProbability;
 
 		randomRange = clamp(params[PITCH_RANDOMNESS_PARAM].getValue() + (inputs[PITCH_RANDOMNESS_INPUT].getVoltage() * params[PITCH_RANDOMNESS_CV_ATTENUVERTER_PARAM].getValue()),0.0,10.0);
-
+		pitchRandomnessPercentage = randomRange / 10.0;
         
 		scaleSize = clamp(params[NUMBER_OF_NOTES_PARAM].getValue() + (inputs[NUMBER_OF_NOTES_INPUT].getVoltage() * 11.5f * params[NUMBER_OF_NOTES_CV_ATTENUVERTER_PARAM].getValue()),1.0f,115.0);
+		numberOfNotesPercentage = (scaleSize - 1.0) / 114.0;
 
         scale = clamp(params[SCALE_PARAM].getValue() + (inputs[SCALE_INPUT].getVoltage() * MAX_SCALES / 10.0 * params[SCALE_CV_ATTENUVERTER_PARAM].getValue()),0.0,MAX_SCALES-1.0f);
+		scalePercentage = scale/(MAX_SCALES-1.0);
 
         octaveSize = clamp(params[OCTAVE_SIZE_PARAM].getValue() + (inputs[OCTAVE_SIZE_INPUT].getVoltage() * 2.0 / 10.0 * params[OCTAVE_SIZE_CV_ATTENUVERTER_PARAM].getValue()),2.0f,5.0f);
+		octaveSizePercentage = (octaveSize - 2.0) / 3.0;
+
 		if(quantizeOctaveSize) {
 			octaveSize = std::round(octaveSize * 4.0) / 4.0;
 		}
@@ -1420,27 +1487,42 @@ struct ProbablyNoteMN : Module {
 		bool scaleChange = false;
 		if(paramChangeCounter == 0) {
 			mosLargeSteps = clamp(params[MOS_LARGE_STEPS_PARAM].getValue() + (inputs[MOS_LARGE_STEPS_INPUT].getVoltage() * 2.0 * params[MOS_LARGE_STEPS_CV_ATTENUVERTER_PARAM].getValue()),0.0f,20.0f);
+			mosLargeStepsPercentage = mosLargeSteps / 20.0;
+
 			mosSmallSteps = clamp(params[MOS_SMALL_STEPS_PARAM].getValue() + (inputs[MOS_SMALL_STEPS_INPUT].getVoltage() * 2.0 * params[MOS_SMALL_STEPS_CV_ATTENUVERTER_PARAM].getValue()),0.0f,20.0f);
+			mosSmallStepsPercentage = mosSmallSteps / 20.0;
+
 			mosRatio = clamp(params[MOS_RATIO_PARAM].getValue() + (inputs[MOS_RATIO_INPUT].getVoltage() * 0.5 * params[MOS_RATIO_CV_ATTENUVERTER_PARAM].getValue()),1.0f,5.0f);
+			mosRatioPercentage = (mosRatio - 1.0) / 4.0;
+
 			if(quantizeMosRatio) {
 				mosRatio = std::round(mosRatio * 4.0) / 4.0;
 			}
 			mosLevels = clamp(params[MOS_LEVELS_PARAM].getValue() + (inputs[MOS_LEVELS_INPUT].getVoltage() * 0.3 * params[MOS_LEVELS_CV_ATTENUVERTER_PARAM].getValue()),1.0f,3.0f);
+			mosLevelsPercentage = (mosLevels - 1.0) / 2.0;
 
 			equalDivisions = clamp(params[EQUAL_DIVISION_PARAM].getValue() + (inputs[EQUAL_DIVISION_INPUT].getVoltage() * 20.0 * params[EQUAL_DIVISION_CV_ATTENUVERTER_PARAM].getValue()),0.0f,300.0f);
+			edoPercentage = equalDivisions / 300.0;
 			equalDivisionSteps = clamp(params[EDO_STEPS_PARAM].getValue() + (inputs[EDO_STEPS_INPUT].getVoltage() * 20.0 * params[EDO_STEPS_CV_ATTENUVERTER_PARAM].getValue()),1.0,equalDivisions);
+			edoStepsPercentage = equalDivisionSteps / 100.0;
 			equalDivisionWraps = clamp(params[EDO_WRAPS_PARAM].getValue() + (inputs[EDO_WRAPS_INPUT].getVoltage() * 20.0 * params[EDO_WRAPS_CV_ATTENUVERTER_PARAM].getValue()),1.0,equalDivisionSteps);
+			edoWrapsPercentage = equalDivisionWraps / 100.0;
 
 			edoTemperingThreshold = clamp(params[EDO_TEMPERING_THRESHOLD_PARAM].getValue() + (inputs[EDO_TEMPERING_THRESHOLD_INPUT].getVoltage() / 10.0 * params[EDO_TEMPERING_THRESHOLD_CV_ATTENUVERTER_PARAM].getValue()),0.0f,1.0f);
+			edoTemperingThresholdPercentage = edoTemperingThreshold;
 			edoTemperingStrength = clamp(params[EDO_TEMPERING_STRENGTH_PARAM].getValue() + (inputs[EDO_TEMPERING_STRENGTH_INPUT].getVoltage() / 10.0 * params[EDO_TEMPERING_STRENGTH_CV_ATTENUVERTER_PARAM].getValue()),0.0f,1.0f);
+			edoTemperingStrengthPercentage = edoTemperingStrength;
 
 
 			for(int i=0;i<MAX_FACTORS;i++) {
 				int factorIndex = clamp((int) (params[FACTOR_1_PARAM+ i].getValue() + (inputs[FACTOR_1_INPUT + i].getVoltage() * MAX_PRIME_NUMBERS / 10.0 * params[FACTOR_1_CV_ATTENUVERTER_PARAM+i].getValue())),0,MAX_PRIME_NUMBERS-1);
+				factorsPercentage[i] = (factorIndex-i) / (MAX_PRIME_NUMBERS-MAX_FACTORS-1.0);
 				factors[i] = primeNumbers[factorIndex];
 				factorNames[i] = primeNumberNames[factorIndex];
 				stepsN[i] = clamp(params[FACTOR_NUMERATOR_1_STEP_PARAM+ i].getValue() + (inputs[FACTOR_NUMERATOR_STEP_1_INPUT + i].getVoltage() * 1.0f * params[FACTOR_NUMERATOR_1_STEP_CV_ATTENUVERTER_PARAM+i].getValue()),0.0f,10.0f);
+				factorsNumeratorPercentage[i] = stepsN[i] / 10.0;
 				stepsD[i] = clamp(params[FACTOR_DENOMINATOR_1_STEP_PARAM+ i].getValue() + (inputs[FACTOR_DENOMINATOR_STEP_1_INPUT + i].getVoltage() * 0.5f * params[FACTOR_DENOMINATOR_1_STEP_CV_ATTENUVERTER_PARAM+i].getValue()),0.0f,5.0f);
+				factorsDivisorPercentage[i] = stepsD[i] / 5.0;
 				scaleChange = scaleChange || (factors[i] != lastFactors[i]) || (stepsN[i] != lastNSteps[i]) || (stepsD[i] != lastDSteps[i]);
 				lastFactors[i] = factors[i];
 				lastNSteps[i] = stepsN[i];
@@ -1593,7 +1675,8 @@ struct ProbablyNoteMN : Module {
 		} else {
 			key += inputs[KEY_INPUT].getVoltage() * MAX_NOTES / 10.0 * params[KEY_CV_ATTENUVERTER_PARAM].getValue();
 		}
-        key = clamp(key,0,10);
+        key = clamp(key,0,11);
+		keyPercentage = key / 11.0;
 		if(key != lastKey) {
 			modulationRoot = 0.0;
 			microtonalKey = 0;
@@ -1601,6 +1684,7 @@ struct ProbablyNoteMN : Module {
 		}
        
         octave = clamp(params[OCTAVE_PARAM].getValue() + (inputs[OCTAVE_INPUT].getVoltage() * 0.4 * params[OCTAVE_CV_ATTENUVERTER_PARAM].getValue()),-4.0f,4.0f);
+		octavePercentage = (octave + 4.0f) / 8.0f;
 
 		currentPolyphony = inputs[NOTE_INPUT].getChannels();
 
@@ -1972,7 +2056,7 @@ struct ProbablyNoteMNDisplay : TransparentWidget {
         }
 
 		if(module->edoTempering) {
-			nvgStrokeColor(args.vg, nvgRGBA(0x4a, 0x23, 0xc7, 0x7f));
+			nvgStrokeColor(args.vg, nvgRGBA(0x4a, 0x23, 0xc7, 0x4f));
 			for(uint64_t i=0;i<module->temperingPitches.size();i++) {
 				float pitch = module->temperingPitches[i].pitch;
 				nvgBeginPath(args.vg);
@@ -1987,19 +2071,6 @@ struct ProbablyNoteMNDisplay : TransparentWidget {
 
 	}
 
-
-	void drawAlgorithm(const DrawArgs &args, Vec pos, int algorithn) {
-		nvgFontSize(args.vg, 9);
-		nvgFontFaceId(args.vg, font->handle);
-		nvgTextLetterSpacing(args.vg, -1);
-		nvgTextAlign(args.vg,NVG_ALIGN_LEFT);
-
-
-		char text[128];
-		nvgFillColor(args.vg, nvgRGBA(0x4a, 0xc3, 0x27, 0xff));
-		snprintf(text, sizeof(text), "%s", module->algorithms[algorithn]);
-		nvgText(args.vg, pos.x, pos.y, text, NULL);
-	}
 
     void drawOctaveSize(const DrawArgs &args, Vec pos, float octaveSize) {
 		nvgFontSize(args.vg, 9);
@@ -2083,13 +2154,30 @@ struct ProbablyNoteMNDisplay : TransparentWidget {
 		}
 	}
 
+	void drawAlgorithm(const DrawArgs &args, Vec pos, int algorithn) {
+		if(algorithn != module->NO_REDUCTION_ALGO) {
+			nvgFontSize(args.vg, 9);
+			nvgFontFaceId(args.vg, font->handle);
+			nvgTextLetterSpacing(args.vg, -1);
+			nvgTextAlign(args.vg,NVG_ALIGN_LEFT);
+
+
+			char text[128];
+			nvgFillColor(args.vg, nvgRGBA(0x4a, 0xc3, 0x27, 0xff));
+			snprintf(text, sizeof(text), "%s", module->algorithms[algorithn]);
+			nvgText(args.vg, pos.x, pos.y, text, NULL);
+		}
+	}
+
+
     void drawNoteReduction(const DrawArgs &args, Vec pos) {
 		nvgFontSize(args.vg, 9);
 		nvgFontFaceId(args.vg, font->handle);
 		nvgTextLetterSpacing(args.vg, -1);
-			//fprintf(stderr, "a: %llu s: %llu  \n", module->actualScaleSize, module->nbrPitches);
+		nvgTextAlign(args.vg,NVG_ALIGN_LEFT);
+			// fprintf(stderr, "a: %llu s: %llu  \n", module->scaleSize, module->nbrPitches);
 		char text[128];
-		if(module->actualScaleSize < module->nbrPitches) 
+		if(module->scaleSize <= module->nbrPitches) 
 			nvgFillColor(args.vg, nvgRGBA(0x4a, 0xc3, 0x27, 0xff));
 		else
 			nvgFillColor(args.vg, nvgRGB(0xff, 0xff, 0x00));
@@ -2172,19 +2260,19 @@ struct ProbablyNoteMNDisplay : TransparentWidget {
 		if (!module)
 			return; 
 
-		drawPitchGrid(args, Vec(496,226),module->pitchGridDisplayMode);
-        drawPitchInfo(args,Vec(496,226));
+		drawPitchGrid(args, Vec(495.5,226.5),module->pitchGridDisplayMode);
+        drawPitchInfo(args,Vec(495.5,226.5));
 		drawKey(args, Vec(474,82), module->key, module->modulationRoot);
 		drawModulationRoot(args, Vec(488,332), module->microtonalKey);
 		drawOctaveSize(args, Vec(440,108),module->octaveSize);
 		drawMomentsOfSymmetry(args, Vec(256,55));
 		drawEqualDivisions(args, Vec(274,144));
 		drawFactors(args, Vec(35,30));
-		drawTempering(args, Vec(331,199));
-		drawAlgorithm(args, Vec(344,250), module->noteReductionAlgorithm);
-		drawNoteReduction(args, Vec(274,250));
-		drawScaleMapping(args, Vec(273,313.5),module->scaleMappingMode);
-		drawScale(args, Vec(343,303.5),module->scaleMappingMode);
+		drawTempering(args, Vec(331,204));
+		drawAlgorithm(args, Vec(344,260), module->noteReductionAlgorithm);
+		drawNoteReduction(args, Vec(274,260));
+		drawScaleMapping(args, Vec(273,318.5),module->scaleMappingMode);
+		drawScale(args, Vec(343,318.5),module->scaleMappingMode);
 	}
 };
 
@@ -2214,9 +2302,17 @@ struct ProbablyNoteMNWidget : ModuleWidget {
 		addInput(createInput<FWPortInSmall>(Vec(472, 345), module, ProbablyNoteMN::SET_ROOT_NOTE_INPUT));
 		addInput(createInput<FWPortInSmall>(Vec(502, 345), module, ProbablyNoteMN::EXTERNAL_RANDOM_INPUT));
 
+
+		addParam(createParam<LEDButton>(Vec(455, 359), module, ProbablyNoteMN::TRIGGER_MODE_PARAM));
+		addChild(createLight<LargeLight<BlueLight>>(Vec(456.5, 360.5), module, ProbablyNoteMN::TRIGGER_POLYPHONIC_LIGHT));
+
 		addParam(createParam<TL1105>(Vec(486, 360), module, ProbablyNoteMN::SET_ROOT_NOTE_PARAM));
 
-        addParam(createParam<RoundSmallFWKnob>(Vec(418,25), module, ProbablyNoteMN::SPREAD_PARAM));			
+		ParamWidget* spreadParam = createParam<RoundSmallFWKnob>(Vec(418,25), module, ProbablyNoteMN::SPREAD_PARAM);
+		if (module) {
+			dynamic_cast<RoundSmallFWKnob*>(spreadParam)->percentage = &module->spreadPercentage;
+		}
+		addParam(spreadParam);							
         addParam(createParam<RoundReallySmallFWKnob>(Vec(444,51), module, ProbablyNoteMN::SPREAD_CV_ATTENUVERTER_PARAM));			
 		addInput(createInput<FWPortInSmall>(Vec(446, 29), module, ProbablyNoteMN::SPREAD_INPUT));
 
@@ -2224,32 +2320,58 @@ struct ProbablyNoteMNWidget : ModuleWidget {
 		addChild(createLight<LargeLight<BlueLight>>(Vec(424.5, 53.5), module, ProbablyNoteMN::SPREAD_MODE_LIGHT));
 
 
-        addParam(createParam<RoundSmallFWKnob>(Vec(475,25), module, ProbablyNoteMN::SLANT_PARAM));			
+		ParamWidget* slantParam = createParam<RoundSmallFWKnob>(Vec(475,25), module, ProbablyNoteMN::SLANT_PARAM);
+		if (module) {
+			dynamic_cast<RoundSmallFWKnob*>(slantParam)->percentage = &module->slantPercentage;
+			dynamic_cast<RoundSmallFWKnob*>(slantParam)->biDirectional = true;
+		}
+		addParam(slantParam);							
         addParam(createParam<RoundReallySmallFWKnob>(Vec(501,51), module, ProbablyNoteMN::SLANT_CV_ATTENUVERTER_PARAM));			
 		addInput(createInput<FWPortInSmall>(Vec(503, 29), module, ProbablyNoteMN::SLANT_INPUT));
 
-		addParam(createParam<RoundSmallFWKnob>(Vec(532, 25), module, ProbablyNoteMN::DISTRIBUTION_PARAM));
+		ParamWidget* distributionParam = createParam<RoundSmallFWKnob>(Vec(532, 25), module, ProbablyNoteMN::DISTRIBUTION_PARAM);
+		if (module) {
+			dynamic_cast<RoundSmallFWKnob*>(distributionParam)->percentage = &module->distributionPercentage;
+		}
+		addParam(distributionParam);							
         addParam(createParam<RoundReallySmallFWKnob>(Vec(558,51), module, ProbablyNoteMN::DISTRIBUTION_CV_ATTENUVERTER_PARAM));			
 		addInput(createInput<FWPortInSmall>(Vec(560, 29), module, ProbablyNoteMN::DISTRIBUTION_INPUT));
 
-		addParam(createParam<RoundSmallFWKnob>(Vec(589, 25), module, ProbablyNoteMN::NON_REPEATABILITY_PARAM));
+		ParamWidget* nonRepeatParam = createParam<RoundSmallFWKnob>(Vec(589, 25), module, ProbablyNoteMN::NON_REPEATABILITY_PARAM);
+		if (module) {
+			dynamic_cast<RoundSmallFWKnob*>(nonRepeatParam)->percentage = &module->nonRepeatPercentage;
+		}
+		addParam(nonRepeatParam);							
         addParam(createParam<RoundReallySmallFWKnob>(Vec(615,51), module, ProbablyNoteMN::NON_REPEATABILITY_CV_ATTENUVERTER_PARAM));			
 		addInput(createInput<FWPortInSmall>(Vec(617, 29), module, ProbablyNoteMN::NON_REPEATABILITY_INPUT));
 
 
-        addParam(createParam<RoundSmallFWSnapKnob>(Vec(473,86), module, ProbablyNoteMN::KEY_PARAM));			
+		ParamWidget* keyParam = createParam<RoundSmallFWSnapKnob>(Vec(473,86), module, ProbablyNoteMN::KEY_PARAM);
+		if (module) {
+			dynamic_cast<RoundSmallFWSnapKnob*>(keyParam)->percentage = &module->keyPercentage;
+		}
+		addParam(keyParam);							
         addParam(createParam<RoundReallySmallFWKnob>(Vec(499,112), module, ProbablyNoteMN::KEY_CV_ATTENUVERTER_PARAM));			
 		addInput(createInput<FWPortInSmall>(Vec(501, 90), module, ProbablyNoteMN::KEY_INPUT));
 
 		addParam(createParam<LEDButton>(Vec(478, 113), module, ProbablyNoteMN::KEY_SCALING_PARAM));
 		addChild(createLight<LargeLight<BlueLight>>(Vec(479.5, 114.5), module, ProbablyNoteMN::KEY_LOGARITHMIC_SCALE_LIGHT));
 
-        addParam(createParam<RoundSmallFWKnob>(Vec(533,86), module, ProbablyNoteMN::DISSONANCE_PARAM));			
+		ParamWidget* dissonanceParam = createParam<RoundSmallFWKnob>(Vec(533,86), module, ProbablyNoteMN::DISSONANCE_PARAM);
+		if (module) {
+			dynamic_cast<RoundSmallFWKnob*>(dissonanceParam)->percentage = &module->dissonancePercentage;
+			dynamic_cast<RoundSmallFWKnob*>(dissonanceParam)->biDirectional = true;
+		}
+		addParam(dissonanceParam);							
         addParam(createParam<RoundReallySmallFWKnob>(Vec(559,112), module, ProbablyNoteMN::DISSONANCE_CV_ATTENUVERTER_PARAM));			
 		addInput(createInput<FWPortInSmall>(Vec(561, 90), module, ProbablyNoteMN::DISSONANCE_INPUT));
 
 
-        addParam(createParam<RoundSmallFWSnapKnob>(Vec(593,86), module, ProbablyNoteMN::OCTAVE_PARAM));			
+		ParamWidget* octaveParam = createParam<RoundSmallFWSnapKnob>(Vec(593,86), module, ProbablyNoteMN::OCTAVE_PARAM);
+		if (module) {
+			dynamic_cast<RoundSmallFWSnapKnob*>(octaveParam)->percentage = &module->octavePercentage;
+		}
+		addParam(octaveParam);							
         addParam(createParam<RoundReallySmallFWKnob>(Vec(619,112), module, ProbablyNoteMN::OCTAVE_CV_ATTENUVERTER_PARAM));			
 		addInput(createInput<FWPortInSmall>(Vec(621, 90), module, ProbablyNoteMN::OCTAVE_INPUT));
 
@@ -2257,7 +2379,11 @@ struct ProbablyNoteMNWidget : ModuleWidget {
 		addChild(createLight<LargeLight<BlueLight>>(Vec(620.5, 144.5), module, ProbablyNoteMN::OCTAVE_WRAPAROUND_LIGHT));
 		addInput(createInput<FWPortInSmall>(Vec(597, 144), module, ProbablyNoteMN::OCTAVE_WRAP_INPUT));
 
-		addParam(createParam<RoundSmallFWKnob>(Vec(593,216), module, ProbablyNoteMN::PITCH_RANDOMNESS_PARAM));			
+		ParamWidget* pitchRandomnessParam = createParam<RoundSmallFWKnob>(Vec(593,216), module, ProbablyNoteMN::PITCH_RANDOMNESS_PARAM);
+		if (module) {
+			dynamic_cast<RoundSmallFWKnob*>(pitchRandomnessParam)->percentage = &module->pitchRandomnessPercentage;
+		}
+		addParam(pitchRandomnessParam);							
         addParam(createParam<RoundReallySmallFWKnob>(Vec(619,242), module, ProbablyNoteMN::PITCH_RANDOMNESS_CV_ATTENUVERTER_PARAM));			
 		addInput(createInput<FWPortInSmall>(Vec(621, 220), module, ProbablyNoteMN::PITCH_RANDOMNESS_INPUT));
 		addParam(createParam<LEDButton>(Vec(596, 250), module, ProbablyNoteMN::PITCH_RANDOMNESS_GAUSSIAN_PARAM));
@@ -2269,7 +2395,11 @@ struct ProbablyNoteMNWidget : ModuleWidget {
 
 
 
-        addParam(createParam<RoundSmallFWKnob>(Vec(413,113), module, ProbablyNoteMN::OCTAVE_SIZE_PARAM));			
+		ParamWidget* octaveSizeParam = createParam<RoundSmallFWKnob>(Vec(413,113), module, ProbablyNoteMN::OCTAVE_SIZE_PARAM);
+		if (module) {
+			dynamic_cast<RoundSmallFWKnob*>(octaveSizeParam)->percentage = &module->octaveSizePercentage;
+		}
+		addParam(octaveSizeParam);							
         addParam(createParam<RoundReallySmallFWKnob>(Vec(439,139), module, ProbablyNoteMN::OCTAVE_SIZE_CV_ATTENUVERTER_PARAM));			
 		addInput(createInput<FWPortInSmall>(Vec(441, 117), module, ProbablyNoteMN::OCTAVE_SIZE_INPUT));
 
@@ -2282,92 +2412,148 @@ struct ProbablyNoteMNWidget : ModuleWidget {
 
 //Scale Generation
 //MOS
-        addParam(createParam<RoundReallySmallFWSnapKnob>(Vec(220,58), module, ProbablyNoteMN::MOS_LARGE_STEPS_PARAM));			
-        addParam(createParam<RoundExtremelySmallFWKnob>(Vec(242,78), module, ProbablyNoteMN::MOS_LARGE_STEPS_CV_ATTENUVERTER_PARAM));			
-		addInput(createInput<FWPortInReallySmall>(Vec(244, 62), module, ProbablyNoteMN::MOS_LARGE_STEPS_INPUT));
+		ParamWidget* mosLargeStepsParam = createParam<RoundReallySmallFWSnapKnob>(Vec(220,58), module, ProbablyNoteMN::MOS_LARGE_STEPS_PARAM);
+		if (module) {
+			dynamic_cast<RoundReallySmallFWSnapKnob*>(mosLargeStepsParam)->percentage = &module->mosLargeStepsPercentage;
+		}
+		addParam(mosLargeStepsParam);							
+        addParam(createParam<RoundExtremelySmallFWKnob>(Vec(242,75), module, ProbablyNoteMN::MOS_LARGE_STEPS_CV_ATTENUVERTER_PARAM));			
+		addInput(createInput<FWPortInReallySmall>(Vec(244, 61), module, ProbablyNoteMN::MOS_LARGE_STEPS_INPUT));
 
-        addParam(createParam<RoundReallySmallFWSnapKnob>(Vec(266,58), module, ProbablyNoteMN::MOS_SMALL_STEPS_PARAM));			
-        addParam(createParam<RoundExtremelySmallFWKnob>(Vec(288,78), module, ProbablyNoteMN::MOS_SMALL_STEPS_CV_ATTENUVERTER_PARAM));			
-		addInput(createInput<FWPortInReallySmall>(Vec(290, 62), module, ProbablyNoteMN::MOS_SMALL_STEPS_INPUT));
+		ParamWidget* mosSmallStepsParam = createParam<RoundReallySmallFWSnapKnob>(Vec(266,58), module, ProbablyNoteMN::MOS_SMALL_STEPS_PARAM);
+		if (module) {
+			dynamic_cast<RoundReallySmallFWSnapKnob*>(mosSmallStepsParam)->percentage = &module->mosSmallStepsPercentage;
+		}
+		addParam(mosSmallStepsParam);							
+        addParam(createParam<RoundExtremelySmallFWKnob>(Vec(288,75), module, ProbablyNoteMN::MOS_SMALL_STEPS_CV_ATTENUVERTER_PARAM));			
+		addInput(createInput<FWPortInReallySmall>(Vec(290, 61), module, ProbablyNoteMN::MOS_SMALL_STEPS_INPUT));
 
-        addParam(createParam<RoundReallySmallFWKnob>(Vec(312,58), module, ProbablyNoteMN::MOS_RATIO_PARAM));			
-        addParam(createParam<RoundExtremelySmallFWKnob>(Vec(334,78), module, ProbablyNoteMN::MOS_RATIO_CV_ATTENUVERTER_PARAM));			
-		addInput(createInput<FWPortInReallySmall>(Vec(336, 62), module, ProbablyNoteMN::MOS_RATIO_INPUT));
+		ParamWidget* mosRatioParam = createParam<RoundReallySmallFWKnob>(Vec(312,58), module, ProbablyNoteMN::MOS_RATIO_PARAM);
+		if (module) {
+			dynamic_cast<RoundReallySmallFWKnob*>(mosRatioParam)->percentage = &module->mosRatioPercentage;
+		}
+		addParam(mosRatioParam);							
+        addParam(createParam<RoundExtremelySmallFWKnob>(Vec(334,75), module, ProbablyNoteMN::MOS_RATIO_CV_ATTENUVERTER_PARAM));			
+		addInput(createInput<FWPortInReallySmall>(Vec(336, 61), module, ProbablyNoteMN::MOS_RATIO_INPUT));
 
 		addParam(createParam<LEDButton>(Vec(315, 82), module, ProbablyNoteMN::QUANTIZE_MOS_RATIO_PARAM));
 		addChild(createLight<LargeLight<BlueLight>>(Vec(316.5, 83.5), module, ProbablyNoteMN::QUANTIZE_MOS_RATIO_LIGHT));
 
-        addParam(createParam<RoundReallySmallFWSnapKnob>(Vec(358,58), module, ProbablyNoteMN::MOS_LEVELS_PARAM));			
-        addParam(createParam<RoundExtremelySmallFWKnob>(Vec(380,78), module, ProbablyNoteMN::MOS_LEVELS_CV_ATTENUVERTER_PARAM));			
-		addInput(createInput<FWPortInReallySmall>(Vec(382, 62), module, ProbablyNoteMN::MOS_LEVELS_INPUT));
+		ParamWidget* mosLevelsParam = createParam<RoundReallySmallFWSnapKnob>(Vec(358,58), module, ProbablyNoteMN::MOS_LEVELS_PARAM);
+		if (module) {
+			dynamic_cast<RoundReallySmallFWSnapKnob*>(mosLevelsParam)->percentage = &module->mosLevelsPercentage;
+		}
+		addParam(mosLevelsParam);							
+        addParam(createParam<RoundExtremelySmallFWKnob>(Vec(380,75), module, ProbablyNoteMN::MOS_LEVELS_CV_ATTENUVERTER_PARAM));			
+		addInput(createInput<FWPortInReallySmall>(Vec(382, 61), module, ProbablyNoteMN::MOS_LEVELS_INPUT));
 
 //ED
-        addParam(createParam<RoundReallySmallFWSnapKnob>(Vec(234,150), module, ProbablyNoteMN::EQUAL_DIVISION_PARAM));			
-        addParam(createParam<RoundExtremelySmallFWKnob>(Vec(256,168), module, ProbablyNoteMN::EQUAL_DIVISION_CV_ATTENUVERTER_PARAM));			
+		ParamWidget* edoParam = createParam<RoundReallySmallFWSnapKnob>(Vec(234,150), module, ProbablyNoteMN::EQUAL_DIVISION_PARAM);
+		if (module) {
+			dynamic_cast<RoundReallySmallFWSnapKnob*>(edoParam)->percentage = &module->edoPercentage;
+		}
+		addParam(edoParam);							
+        addParam(createParam<RoundExtremelySmallFWKnob>(Vec(256,167), module, ProbablyNoteMN::EQUAL_DIVISION_CV_ATTENUVERTER_PARAM));			
 		addInput(createInput<FWPortInReallySmall>(Vec(258, 152), module, ProbablyNoteMN::EQUAL_DIVISION_INPUT));
 
-        addParam(createParam<RoundReallySmallFWSnapKnob>(Vec(291,150), module, ProbablyNoteMN::EDO_STEPS_PARAM));			
-        addParam(createParam<RoundExtremelySmallFWKnob>(Vec(313,168), module, ProbablyNoteMN::EDO_STEPS_CV_ATTENUVERTER_PARAM));			
+		ParamWidget* edoStepsParam = createParam<RoundReallySmallFWSnapKnob>(Vec(291,150), module, ProbablyNoteMN::EDO_STEPS_PARAM);
+		if (module) {
+			dynamic_cast<RoundReallySmallFWSnapKnob*>(edoStepsParam)->percentage = &module->edoStepsPercentage;
+		}
+		addParam(edoStepsParam);							
+        addParam(createParam<RoundExtremelySmallFWKnob>(Vec(313,167), module, ProbablyNoteMN::EDO_STEPS_CV_ATTENUVERTER_PARAM));			
 		addInput(createInput<FWPortInReallySmall>(Vec(315, 152), module, ProbablyNoteMN::EDO_STEPS_INPUT));
 
-        addParam(createParam<RoundReallySmallFWSnapKnob>(Vec(348,150), module, ProbablyNoteMN::EDO_WRAPS_PARAM));			
-        addParam(createParam<RoundExtremelySmallFWKnob>(Vec(370,168), module, ProbablyNoteMN::EDO_WRAPS_CV_ATTENUVERTER_PARAM));			
+		ParamWidget* edoWrapsParam = createParam<RoundReallySmallFWSnapKnob>(Vec(348,150), module, ProbablyNoteMN::EDO_WRAPS_PARAM);
+		if (module) {
+			dynamic_cast<RoundReallySmallFWSnapKnob*>(edoWrapsParam)->percentage = &module->edoWrapsPercentage;
+		}
+		addParam(edoWrapsParam);							
+        addParam(createParam<RoundExtremelySmallFWKnob>(Vec(370,167), module, ProbablyNoteMN::EDO_WRAPS_CV_ATTENUVERTER_PARAM));			
 		addInput(createInput<FWPortInReallySmall>(Vec(372, 152), module, ProbablyNoteMN::EDO_WRAPS_INPUT));
 
 //Tempering
 
-		addParam(createParam<LEDButton>(Vec(234, 205), module, ProbablyNoteMN::EDO_TEMPERING_PARAM));
-		addChild(createLight<LargeLight<BlueLight>>(Vec(235.5, 206.5), module, ProbablyNoteMN::EDO_TEMPERING_LIGHT));
-		addInput(createInput<FWPortInReallySmall>(Vec(256, 205), module, ProbablyNoteMN::EDO_TEMPERING_INPUT));
+		addParam(createParam<LEDButton>(Vec(234, 196), module, ProbablyNoteMN::EDO_TEMPERING_PARAM));
+		addChild(createLight<LargeLight<BlueLight>>(Vec(235.5, 195.5), module, ProbablyNoteMN::EDO_TEMPERING_LIGHT));
+		addInput(createInput<FWPortInReallySmall>(Vec(256, 199), module, ProbablyNoteMN::EDO_TEMPERING_INPUT));
 
-        addParam(createParam<RoundReallySmallFWKnob>(Vec(291,205), module, ProbablyNoteMN::EDO_TEMPERING_THRESHOLD_PARAM));			
-        addParam(createParam<RoundExtremelySmallFWKnob>(Vec(313,218), module, ProbablyNoteMN::EDO_TEMPERING_THRESHOLD_CV_ATTENUVERTER_PARAM));			
-		addInput(createInput<FWPortInReallySmall>(Vec(315, 207), module, ProbablyNoteMN::EDO_TEMPERING_THRESHOLD_INPUT));
+        ParamWidget* edoTemperingThresholdParam = createParam<RoundReallySmallFWKnob>(Vec(295,210), module, ProbablyNoteMN::EDO_TEMPERING_THRESHOLD_PARAM);		
+		if (module) {
+			 dynamic_cast<RoundReallySmallFWKnob*>(edoTemperingThresholdParam)->percentage = &module->edoTemperingThresholdPercentage;
+		}
+        addParam(edoTemperingThresholdParam);							
+        addParam(createParam<RoundExtremelySmallFWKnob>(Vec(317,227), module, ProbablyNoteMN::EDO_TEMPERING_THRESHOLD_CV_ATTENUVERTER_PARAM));			
+		addInput(createInput<FWPortInReallySmall>(Vec(319, 213), module, ProbablyNoteMN::EDO_TEMPERING_THRESHOLD_INPUT));
 
-        addParam(createParam<RoundReallySmallFWKnob>(Vec(348,205), module, ProbablyNoteMN::EDO_TEMPERING_STRENGTH_PARAM));			
-        addParam(createParam<RoundExtremelySmallFWKnob>(Vec(370,218), module, ProbablyNoteMN::EDO_TEMPERING_STRENGTH_CV_ATTENUVERTER_PARAM));			
-		addInput(createInput<FWPortInReallySmall>(Vec(372, 207), module, ProbablyNoteMN::EDO_TEMPERING_STRENGTH_INPUT));
+		ParamWidget* edoTemperingStrengthParam = createParam<RoundReallySmallFWKnob>(Vec(354,210), module, ProbablyNoteMN::EDO_TEMPERING_STRENGTH_PARAM);
+		if (module) {
+			dynamic_cast<RoundReallySmallFWKnob*>(edoTemperingStrengthParam)->percentage = &module->edoTemperingStrengthPercentage;
+		}
+		addParam(edoTemperingStrengthParam);							
+        addParam(createParam<RoundExtremelySmallFWKnob>(Vec(376,227), module, ProbablyNoteMN::EDO_TEMPERING_STRENGTH_CV_ATTENUVERTER_PARAM));			
+		addInput(createInput<FWPortInReallySmall>(Vec(378, 213), module, ProbablyNoteMN::EDO_TEMPERING_STRENGTH_INPUT));
 
 
 
 //Prime Factors
         for(int i=0;i<MAX_FACTORS;i++) {	
-            addParam(createParam<RoundReallySmallFWSnapKnob>(Vec(10,i*34.5+33), module, ProbablyNoteMN::FACTOR_1_PARAM+i));
-    		addInput(createInput<FWPortInReallySmall>(Vec(34, i*34.44 + 35), module, ProbablyNoteMN::FACTOR_1_INPUT+i));
+			ParamWidget* factorParam = createParam<RoundReallySmallFWSnapKnob>(Vec(10,i*34.5+33), module, ProbablyNoteMN::FACTOR_1_PARAM+i);
+			if (module) {
+				dynamic_cast<RoundReallySmallFWSnapKnob*>(factorParam)->percentage = &module->factorsPercentage[i];
+			}
+			addParam(factorParam);							
+    		addInput(createInput<FWPortInReallySmall>(Vec(34, i*34.44 + 36), module, ProbablyNoteMN::FACTOR_1_INPUT+i));
             addParam(createParam<RoundExtremelySmallFWKnob>(Vec(50,i*34.5+35), module, ProbablyNoteMN::FACTOR_1_CV_ATTENUVERTER_PARAM+i));
 
-            addParam(createParam<RoundReallySmallFWSnapKnob>(Vec(82,i*34.5+33), module, ProbablyNoteMN::FACTOR_NUMERATOR_1_STEP_PARAM+i));
-    		addInput(createInput<FWPortInReallySmall>(Vec(106, i*34.5 + 35), module, ProbablyNoteMN::FACTOR_NUMERATOR_STEP_1_INPUT+i));
+			ParamWidget* factorNumeratorParam = createParam<RoundReallySmallFWSnapKnob>(Vec(82,i*34.5+33), module, ProbablyNoteMN::FACTOR_NUMERATOR_1_STEP_PARAM+i);
+			if (module) {
+				dynamic_cast<RoundReallySmallFWSnapKnob*>(factorNumeratorParam)->percentage = &module->factorsNumeratorPercentage[i];
+			}
+			addParam(factorNumeratorParam);							
+    		addInput(createInput<FWPortInReallySmall>(Vec(106, i*34.5 + 36), module, ProbablyNoteMN::FACTOR_NUMERATOR_STEP_1_INPUT+i));
             addParam(createParam<RoundExtremelySmallFWKnob>(Vec(122,i*34.5+35), module, ProbablyNoteMN::FACTOR_NUMERATOR_1_STEP_CV_ATTENUVERTER_PARAM+i));
 
-            addParam(createParam<RoundReallySmallFWSnapKnob>(Vec(154,i*34.5+33), module, ProbablyNoteMN::FACTOR_DENOMINATOR_1_STEP_PARAM+i));
-    		addInput(createInput<FWPortInReallySmall>(Vec(178, i*34.44 + 35), module, ProbablyNoteMN::FACTOR_DENOMINATOR_STEP_1_INPUT+i));
+            ParamWidget* factorDivisorParam = createParam<RoundReallySmallFWSnapKnob>(Vec(154,i*34.5+33), module, ProbablyNoteMN::FACTOR_DENOMINATOR_1_STEP_PARAM+i);
+			if (module) {
+				dynamic_cast<RoundReallySmallFWSnapKnob*>(factorDivisorParam)->percentage = &module->factorsDivisorPercentage[i];
+			}
+			addParam(factorDivisorParam);							
+    		addInput(createInput<FWPortInReallySmall>(Vec(178, i*34.44 + 36), module, ProbablyNoteMN::FACTOR_DENOMINATOR_STEP_1_INPUT+i));
             addParam(createParam<RoundExtremelySmallFWKnob>(Vec(194,i*34.5+35), module, ProbablyNoteMN::FACTOR_DENOMINATOR_1_STEP_CV_ATTENUVERTER_PARAM+i));
         }   
 
 
 //Note reduction
-        addParam(createParam<RoundReallySmallFWSnapKnob>(Vec(282,254), module, ProbablyNoteMN::NUMBER_OF_NOTES_PARAM));			
-        addParam(createParam<RoundExtremelySmallFWKnob>(Vec(308,273), module, ProbablyNoteMN::NUMBER_OF_NOTES_CV_ATTENUVERTER_PARAM));			
-		addInput(createInput<FWPortInReallySmall>(Vec(310, 257), module, ProbablyNoteMN::NUMBER_OF_NOTES_INPUT));
+		ParamWidget* numberOfNotesParam = createParam<RoundReallySmallFWSnapKnob>(Vec(282,264), module, ProbablyNoteMN::NUMBER_OF_NOTES_PARAM);
+		if (module) {
+			dynamic_cast<RoundReallySmallFWSnapKnob*>(numberOfNotesParam)->percentage = &module->numberOfNotesPercentage;
+		}
+		addParam(numberOfNotesParam);							
+        addParam(createParam<RoundExtremelySmallFWKnob>(Vec(306,281), module, ProbablyNoteMN::NUMBER_OF_NOTES_CV_ATTENUVERTER_PARAM));			
+		addInput(createInput<FWPortInReallySmall>(Vec(308, 267), module, ProbablyNoteMN::NUMBER_OF_NOTES_INPUT));
 
-		addParam(createParam<LEDButton>(Vec(352, 255), module, ProbablyNoteMN::NOTE_REDUCTION_ALGORITHM_PARAM));
-		addChild(createLight<LargeLight<RedGreenBlueLight>>(Vec(353.5, 256.5), module, ProbablyNoteMN::NOTE_REDUCTION_ALGORITHM_LIGHT));
-		addInput(createInput<FWPortInReallySmall>(Vec(374, 255), module, ProbablyNoteMN::NOTE_REDUCTION_ALGORITHM_INPUT));
+		addParam(createParam<LEDButton>(Vec(352, 265), module, ProbablyNoteMN::NOTE_REDUCTION_ALGORITHM_PARAM));
+		addChild(createLight<LargeLight<RedGreenBlueLight>>(Vec(353.5, 266.5), module, ProbablyNoteMN::NOTE_REDUCTION_ALGORITHM_LIGHT));
+		addInput(createInput<FWPortInReallySmall>(Vec(374, 268), module, ProbablyNoteMN::NOTE_REDUCTION_ALGORITHM_INPUT));
 
 // Map to normal scale
-		addParam(createParam<LEDButton>(Vec(282, 320), module, ProbablyNoteMN::SCALE_MAPPING_PARAM));
-		addChild(createLight<LargeLight<RedGreenBlueLight>>(Vec(283.5, 321.5), module, ProbablyNoteMN::SCALE_MAPPING_LIGHT));
-		addInput(createInput<FWPortInReallySmall>(Vec(306, 320), module, ProbablyNoteMN::SCALE_MAPPING_INPUT));
+		addParam(createParam<LEDButton>(Vec(280, 323), module, ProbablyNoteMN::SCALE_MAPPING_PARAM));
+		addChild(createLight<LargeLight<RedGreenBlueLight>>(Vec(281.5, 324.5), module, ProbablyNoteMN::SCALE_MAPPING_LIGHT));
+		addInput(createInput<FWPortInReallySmall>(Vec(304, 326), module, ProbablyNoteMN::SCALE_MAPPING_INPUT));
 
 
-        addParam(createParam<RoundReallySmallFWSnapKnob>(Vec(354,319), module, ProbablyNoteMN::SCALE_PARAM));			
-        addParam(createParam<RoundExtremelySmallFWKnob>(Vec(378,339), module, ProbablyNoteMN::SCALE_CV_ATTENUVERTER_PARAM));			
-		addInput(createInput<FWPortInReallySmall>(Vec(380, 322), module, ProbablyNoteMN::SCALE_INPUT));
+        ParamWidget* scaleParam = createParam<RoundReallySmallFWSnapKnob>(Vec(354,324), module, ProbablyNoteMN::SCALE_PARAM);
+		if (module) {
+			dynamic_cast<RoundReallySmallFWSnapKnob*>(scaleParam)->percentage = &module->scalePercentage;
+		}
+		addParam(scaleParam);							
+        addParam(createParam<RoundExtremelySmallFWKnob>(Vec(378,341), module, ProbablyNoteMN::SCALE_CV_ATTENUVERTER_PARAM));			
+		addInput(createInput<FWPortInReallySmall>(Vec(380, 327), module, ProbablyNoteMN::SCALE_INPUT));
 
-		addParam(createParam<LEDButton>(Vec(282, 340), module, ProbablyNoteMN::USE_SCALE_WEIGHTING_PARAM));
-		addChild(createLight<LargeLight<RedGreenBlueLight>>(Vec(283.5, 341.5), module, ProbablyNoteMN::SCALE_WEIGHTING_LIGHT));
-		addInput(createInput<FWPortInReallySmall>(Vec(306, 340), module, ProbablyNoteMN::USE_SCALE_WEIGHTING_INPUT));
+		addParam(createParam<LEDButton>(Vec(280, 343), module, ProbablyNoteMN::USE_SCALE_WEIGHTING_PARAM));
+		addChild(createLight<LargeLight<RedGreenBlueLight>>(Vec(281.5, 344.5), module, ProbablyNoteMN::SCALE_WEIGHTING_LIGHT));
+		addInput(createInput<FWPortInReallySmall>(Vec(304, 346), module, ProbablyNoteMN::USE_SCALE_WEIGHTING_INPUT));
 
       
 

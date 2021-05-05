@@ -69,6 +69,12 @@ struct SeedsOfChange : Module {
 
 	bool gaussianMode = false;
 
+	//percentages
+	float seedPercentage = 0;
+	float multiplyPercentage[NBOUT] = {0};
+	float offsetPercentage[NBOUT] = {0};
+	float probabilityPercentage[NBOUT] = {0};
+
 	SeedsOfChange() {
 		// Configure the module
 		config(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS, NUM_LIGHTS);
@@ -149,33 +155,34 @@ struct SeedsOfChange : Module {
 		reseedInput += params[RESEED_PARAM].getValue(); 		
 
 		seed = clamp(inputs[SEED_INPUT].isConnected() ? inputs[SEED_INPUT].getVoltage() * 999.9 : params[SEED_PARAM].getValue(),0,9999);
+		seedPercentage = seed / 9999.0f;
         if (reseedTrigger.process(reseedInput) ) {
 			init_genrand((unsigned long)(seed));
         } 
 		lights[SEED_LOADED_LIGHT].value = seed == latest_seed;
 		lights[SEED_LOADED_LIGHT+1].value = seed != latest_seed;
 
-		if( inputs[CLOCK_INPUT].active ) {
-			if (clockTrigger.process(inputs[CLOCK_INPUT].value) ) {
-				for (int i=0; i<NBOUT; i++) {
-					float mult=params[MULTIPLY_1_PARAM+i].value;
-					float off=params[OFFSET_1_PARAM+i].value;
-					if (inputs[MULTIPLY_1_INPUT + i].active) {
-						mult = mult + (inputs[MULTIPLY_1_INPUT + i].value / 10.0f * params[MULTIPLY_1_CV_ATTENUVERTER + i].value);
-					}
-					mult = clamp(mult,0.0,10.0);
-					if (inputs[OFFSET_1_INPUT + i].active) {
-						off = off + (inputs[OFFSET_1_INPUT + i].value * params[OFFSET_1_CV_ATTENUVERTER + i].value);
-					}
+		for (int i=0; i<NBOUT; i++) {
+			float mult=params[MULTIPLY_1_PARAM+i].value;
+			float off=params[OFFSET_1_PARAM+i].value;
+			if (inputs[MULTIPLY_1_INPUT + i].active) {
+				mult = mult + (inputs[MULTIPLY_1_INPUT + i].value / 10.0f * params[MULTIPLY_1_CV_ATTENUVERTER + i].value);
+			}
+			mult = clamp(mult,0.0,10.0);
+			multiplyPercentage[i] = mult / 10.0;
+			if (inputs[OFFSET_1_INPUT + i].active) {
+				off = clamp(off + (inputs[OFFSET_1_INPUT + i].value * params[OFFSET_1_CV_ATTENUVERTER + i].value),-10.0f,10.0f);
+			}
+			offsetPercentage[i] = off/10.0;
 
+			float prob = clamp(params[GATE_PROBABILITY_1_PARAM + i].value + (inputs[GATE_PROBABILITY_1_INPUT + i].active ? inputs[GATE_PROBABILITY_1_INPUT + i].value / 10.0f * params[GATE_PROBABILITY_1_CV_ATTENUVERTER + i].value : 0.0),0.0f,1.0f);
+			probabilityPercentage[i] = prob;
+
+			if( inputs[CLOCK_INPUT].active ) {
+				if (clockTrigger.process(inputs[CLOCK_INPUT].value) ) {
 					float initialRandomNumber = gaussianMode ? normal_number() : genrand_real();					
 					
 					outbuffer[i] = clamp((float)(initialRandomNumber * mult + off),-10.0f, 10.0f);
-
-					
-
-					float prob = clamp(params[GATE_PROBABILITY_1_PARAM + i].value + (inputs[GATE_PROBABILITY_1_INPUT + i].active ? inputs[GATE_PROBABILITY_1_INPUT + i].value / 10.0f * params[GATE_PROBABILITY_1_CV_ATTENUVERTER + i].value : 0.0),0.0f,1.0f);
-					
 					outbuffer[i+NBOUT] = genrand_real() < prob ? 10.0 : 0;
 					if(outbuffer[i+NBOUT]) {
 						gatePulse[i].trigger();
@@ -362,7 +369,11 @@ struct SeedsOfChangeWidget : ModuleWidget {
 
 
 
-        addParam(createParam<RoundReallySmallFWSnapKnob>(Vec(28,31), module, SeedsOfChange::SEED_PARAM));			
+		ParamWidget* seedParam = createParam<RoundReallySmallFWSnapKnob>(Vec(28,31), module, SeedsOfChange::SEED_PARAM);
+		if (module) {
+			dynamic_cast<RoundReallySmallFWSnapKnob*>(seedParam)->percentage = &module->seedPercentage;
+		}
+		addParam(seedParam);							
 		addInput(createInput<FWPortInSmall>(Vec(4, 33), module, SeedsOfChange::SEED_INPUT));
 		addChild(createLight<LargeLight<GreenRedLight>>(Vec(100, 33), module, SeedsOfChange::SEED_LOADED_LIGHT));
 
@@ -377,15 +388,28 @@ struct SeedsOfChangeWidget : ModuleWidget {
 
 
 		for (int i=0; i<NBOUT; i++) {
-			addParam(createParam<RoundReallySmallFWKnob>(Vec(4,125 + i * 32), module, SeedsOfChange::MULTIPLY_1_PARAM + i));			
+			ParamWidget* multiplyParam = createParam<RoundReallySmallFWKnob>(Vec(4,125 + i * 32), module, SeedsOfChange::MULTIPLY_1_PARAM + i);
+			if (module) {
+				dynamic_cast<RoundReallySmallFWKnob*>(multiplyParam)->percentage = &module->multiplyPercentage[i];
+			}
+			addParam(multiplyParam);							
 			addParam(createParam<RoundExtremelySmallFWKnob>(Vec(27, 140 + i*32), module, SeedsOfChange::MULTIPLY_1_CV_ATTENUVERTER + i));
 			addInput(createInput<FWPortInReallySmall>(Vec(28, 126 + i * 32), module, SeedsOfChange::MULTIPLY_1_INPUT + i));						
-			addParam(createParam<RoundReallySmallFWKnob>(Vec(50,125 + i * 32), module, SeedsOfChange::OFFSET_1_PARAM + i));			
+			ParamWidget* offsetParam = createParam<RoundReallySmallFWKnob>(Vec(50,125 + i * 32), module, SeedsOfChange::OFFSET_1_PARAM + i);
+			if (module) {
+				dynamic_cast<RoundReallySmallFWKnob*>(offsetParam)->percentage = &module->offsetPercentage[i];
+				dynamic_cast<RoundReallySmallFWKnob*>(offsetParam)->biDirectional = true;
+			}
+			addParam(offsetParam);							
 			addParam(createParam<RoundExtremelySmallFWKnob>(Vec(72, 140 + i*32), module, SeedsOfChange::OFFSET_1_CV_ATTENUVERTER + i));
 			addInput(createInput<FWPortInReallySmall>(Vec(73, 126 + i * 32), module, SeedsOfChange::OFFSET_1_INPUT + i));
 			addOutput(createOutput<FWPortInSmall>(Vec(97, 126 + i * 32),  module, SeedsOfChange::CV_1_OUTPUT+i));
 
-			addParam(createParam<RoundReallySmallFWKnob>(Vec(4, 264 + i*24), module, SeedsOfChange::GATE_PROBABILITY_1_PARAM + i));
+			ParamWidget* probabilityParam = createParam<RoundReallySmallFWKnob>(Vec(4, 264 + i*24), module, SeedsOfChange::GATE_PROBABILITY_1_PARAM + i);
+			if (module) {
+				dynamic_cast<RoundReallySmallFWKnob*>(probabilityParam)->percentage = &module->probabilityPercentage[i];
+			}
+			addParam(probabilityParam);							
 			addInput(createInput<FWPortInReallySmall>(Vec(30, 268 + i*24), module, SeedsOfChange::GATE_PROBABILITY_1_INPUT + i));			
 			addParam(createParam<RoundExtremelySmallFWKnob>(Vec(48, 266 + i*24), module, SeedsOfChange::GATE_PROBABILITY_1_CV_ATTENUVERTER + i));
 			addParam(createParam<LEDButton>(Vec(75, 265 + i*24), module, SeedsOfChange::GATE_MODE_PARAM+i));

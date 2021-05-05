@@ -66,6 +66,9 @@ struct QARWellFormedRhythmExpander : Module {
 	float sceneData[NBR_SCENES][12] = {{0}};
 	int sceneChangeMessage = 0;
 
+	//percentages
+	float extraValuePercentage[TRACK_COUNT] = {0};
+
 
     float lerp(float v0, float v1, float t) {
 	  return (1 - t) * v0 + t * v1;
@@ -81,7 +84,17 @@ struct QARWellFormedRhythmExpander : Module {
         configParam(TRACK_2_EXTRA_VALUE_PARAM, 0.0f, 1.0, 0.5,"Track 2 - Ratio");
         configParam(TRACK_3_EXTRA_VALUE_PARAM, 0.0f, 1.0, 0.5,"Track 3 - Ratio");
         configParam(TRACK_4_EXTRA_VALUE_PARAM, 0.0f, 1.0, 0.5,"Track 4 - Ratio");
-        
+
+        configParam(TRACK_1_HIERARCHICAL_PARAM, 0.0f, 1.0, 0.0,"Track 1 - Hierarchical");
+        configParam(TRACK_2_HIERARCHICAL_PARAM, 0.0f, 1.0, 0.0,"Track 2 - Hierarchical");
+        configParam(TRACK_3_HIERARCHICAL_PARAM, 0.0f, 1.0, 0.0,"Track 3 - Hierarchical");
+        configParam(TRACK_4_HIERARCHICAL_PARAM, 0.0f, 1.0, 0.0,"Track 4 - Hierarchical");
+
+        configParam(TRACK_1_COMPLEMENT_PARAM, 0.0f, 1.0, 0.0,"Track 1 - Complimentary");
+        configParam(TRACK_2_COMPLEMENT_PARAM, 0.0f, 1.0, 0.0,"Track 2 - Complimentary");
+        configParam(TRACK_3_COMPLEMENT_PARAM, 0.0f, 1.0, 0.0,"Track 3 - Complimentary");
+        configParam(TRACK_4_COMPLEMENT_PARAM, 0.0f, 1.0, 0.0,"Track 4 - Complimentary");
+
 		leftExpander.producerMessage = leftMessages[0];
 		leftExpander.consumerMessage = leftMessages[1];
 
@@ -153,6 +166,7 @@ struct QARWellFormedRhythmExpander : Module {
 	void process(const ProcessArgs &args) override {
 		for(int i=0; i< TRACK_COUNT; i++) {            
             float t = clamp(params[TRACK_1_EXTRA_VALUE_PARAM+i].getValue() + (inputs[TRACK_1_EXTRA_VALUE_INPUT+i].isConnected() ? inputs[TRACK_1_EXTRA_VALUE_INPUT+i].getVoltage() / 10.0f : 0.0f ),0.0f,0.999f);
+			extraValuePercentage[i] = t;
 			extraParameterValue[i] = 1/(1-t);
 			
 			if (trackHierarchicalTrigger[i].process(params[TRACK_1_HIERARCHICAL_PARAM+i].getValue())) {
@@ -282,7 +296,11 @@ struct QARWellFormedRhythmExpanderWidget : ModuleWidget {
         
 
         for(int i=0;i<TRACK_COUNT; i++) {
-            addParam(createParam<RoundFWKnob>(Vec(12, 59 + i * 72), module, QARWellFormedRhythmExpander::TRACK_1_EXTRA_VALUE_PARAM+i));
+			ParamWidget* extraValueParam = createParam<RoundFWKnob>(Vec(12, 59 + i * 72), module, QARWellFormedRhythmExpander::TRACK_1_EXTRA_VALUE_PARAM+i);
+			if (module) {
+				dynamic_cast<RoundFWKnob*>(extraValueParam)->percentage = &module->extraValuePercentage[i];
+			}
+			addParam(extraValueParam);							
             addInput(createInput<FWPortInSmall>(Vec(49, 64 + i * 72), module, QARWellFormedRhythmExpander::TRACK_1_EXTRA_VALUE_INPUT+i));
 
 			if(i > 0) {

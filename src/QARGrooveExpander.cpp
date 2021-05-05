@@ -86,6 +86,12 @@ struct QARGrooveExpander : Module {
 
     int stepGrooveType[TRACK_COUNT] = {0};
     float grooveAmount[TRACK_COUNT] = {1.0f};
+
+	//percentages
+	float stepSwingPercentage[MAX_STEPS] = {0};
+	float grooveLengthPercentage = 0;
+	float grooveAmountPercentage = 0;
+	float swingRandomnessPercentage = 0;
 	
 	QARGrooveExpander() {
 		config(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS, NUM_LIGHTS);
@@ -291,8 +297,11 @@ struct QARGrooveExpander : Module {
 
 
             grooveLength = clamp(params[GROOVE_LENGTH_PARAM].getValue() + (inputs[GROOVE_LENGTH_INPUT].isConnected() ? inputs[GROOVE_LENGTH_INPUT].getVoltage() * 1.8f * params[GROOVE_LENGTH_CV_PARAM].getValue() : 0.0f),1.0,18.0f);
+			grooveLengthPercentage = (grooveLength - 1) / 17.0;
             float grooveAmount = clamp(params[GROOVE_AMOUNT_PARAM].getValue() + (inputs[GROOVE_AMOUNT_INPUT].isConnected() ? inputs[GROOVE_AMOUNT_INPUT].getVoltage() / 10 * params[GROOVE_AMOUNT_CV_PARAM].getValue() : 0.0f),0.0,1.0f);
+			grooveAmountPercentage = grooveAmount;
             float randomAmount = clamp(params[SWING_RANDOMNESS_PARAM].getValue() + (inputs[SWING_RANDOMNESS_INPUT].isConnected() ? inputs[SWING_RANDOMNESS_INPUT].getVoltage() / 10 * params[SWING_RANDOMNESS_CV_PARAM].getValue() : 0.0f),0.0,1.0f);
+			swingRandomnessPercentage = randomAmount;
             for (int i = 0; i < TRACK_COUNT; i++) {
                 if(trackGrooveSelected[i]) {
                     messagesToMother[TRACK_COUNT * 4 + i] = stepsOrDivs ? 2 : 1;
@@ -303,6 +312,7 @@ struct QARGrooveExpander : Module {
                     
     				for (int j = 0; j < MAX_STEPS; j++) {
                         float initialSwingAmount = clamp(params[STEP_1_SWING_AMOUNT_PARAM+j].getValue() + (inputs[STEP_1_SWING_AMOUNT_INPUT + j].isConnected() ? inputs[STEP_1_SWING_AMOUNT_INPUT + j].getVoltage() / 10 * params[STEP_1_SWING_CV_ATTEN_PARAM + j].getValue() : 0.0f),-0.5,0.5f);
+						stepSwingPercentage[j] = initialSwingAmount * 2.0;
 						messagesToMother[TRACK_LEVEL_PARAM_COUNT + (MAX_STEPS * TRACK_COUNT * 2) + (i * MAX_STEPS) + j] = lerp(0,initialSwingAmount,grooveAmount);
 					} 					 
 				} 
@@ -401,9 +411,24 @@ struct QARGrooveExpanderWidget : ModuleWidget {
 
 
          for(int i=0; i<MAX_STEPS / 3;i++) {
-		    addParam(createParam<RoundSmallFWKnob>(Vec(22, 30 + i*45), module, QARGrooveExpander::STEP_1_SWING_AMOUNT_PARAM + i));
-		    addParam(createParam<RoundSmallFWKnob>(Vec(87, 30 + i*45), module, QARGrooveExpander::STEP_1_SWING_AMOUNT_PARAM + i + (MAX_STEPS / 3)));
-		    addParam(createParam<RoundSmallFWKnob>(Vec(152, 30 + i*45), module, QARGrooveExpander::STEP_1_SWING_AMOUNT_PARAM + i + (MAX_STEPS * 2 / 3)));
+			ParamWidget* stepCol1Param = createParam<RoundSmallFWKnob>(Vec(22, 30 + i*45), module, QARGrooveExpander::STEP_1_SWING_AMOUNT_PARAM + i);
+			if (module) {
+				dynamic_cast<RoundSmallFWKnob*>(stepCol1Param)->percentage = &module->stepSwingPercentage[i];
+				dynamic_cast<RoundSmallFWKnob*>(stepCol1Param)->biDirectional = true;
+			}
+			addParam(stepCol1Param);							
+			ParamWidget* stepCol2Param = createParam<RoundSmallFWKnob>(Vec(87, 30 + i*45), module, QARGrooveExpander::STEP_1_SWING_AMOUNT_PARAM + i + (MAX_STEPS / 3));
+			if (module) {
+				dynamic_cast<RoundSmallFWKnob*>(stepCol2Param)->percentage = &module->stepSwingPercentage[i + (MAX_STEPS / 3)];
+				dynamic_cast<RoundSmallFWKnob*>(stepCol2Param)->biDirectional = true;
+			}
+			addParam(stepCol2Param);							
+			ParamWidget* stepCol3Param = createParam<RoundSmallFWKnob>(Vec(152, 30 + i*45), module, QARGrooveExpander::STEP_1_SWING_AMOUNT_PARAM + i + (MAX_STEPS * 2 / 3));
+			if (module) {
+				dynamic_cast<RoundSmallFWKnob*>(stepCol3Param)->percentage = &module->stepSwingPercentage[i + (MAX_STEPS * 2 / 3)];
+				dynamic_cast<RoundSmallFWKnob*>(stepCol3Param)->biDirectional = true;
+			}
+			addParam(stepCol3Param);							
 
 		    addParam(createParam<RoundReallySmallFWKnob>(Vec(46, 48 + i*45), module, QARGrooveExpander::STEP_1_SWING_CV_ATTEN_PARAM + i));
 		    addParam(createParam<RoundReallySmallFWKnob>(Vec(111, 48 + i*45), module, QARGrooveExpander::STEP_1_SWING_CV_ATTEN_PARAM + i + (MAX_STEPS / 3)));
@@ -425,15 +450,27 @@ struct QARGrooveExpanderWidget : ModuleWidget {
 
         addParam(createParam<LEDButton>(Vec(26, 341), module, QARGrooveExpander::GROOVE_LENGTH_SAME_AS_TRACK_PARAM));
 
-        addParam(createParam<RoundSmallFWSnapKnob>(Vec(42, 326), module, QARGrooveExpander::GROOVE_LENGTH_PARAM));
+		ParamWidget* grooveLengthParam = createParam<RoundSmallFWSnapKnob>(Vec(42, 326), module, QARGrooveExpander::GROOVE_LENGTH_PARAM);
+		if (module) {
+			dynamic_cast<RoundSmallFWSnapKnob*>(grooveLengthParam)->percentage = &module->grooveLengthPercentage;
+		}
+		addParam(grooveLengthParam);							
         addParam(createParam<RoundReallySmallFWKnob>(Vec(69, 342), module, QARGrooveExpander::GROOVE_LENGTH_CV_PARAM));
 
-        addParam(createParam<RoundSmallFWKnob>(Vec(100, 326), module, QARGrooveExpander::GROOVE_AMOUNT_PARAM));
+		ParamWidget* grooveAmountParam = createParam<RoundSmallFWKnob>(Vec(100, 326), module, QARGrooveExpander::GROOVE_AMOUNT_PARAM);
+		if (module) {
+			dynamic_cast<RoundSmallFWKnob*>(grooveAmountParam)->percentage = &module->grooveAmountPercentage;
+		}
+		addParam(grooveAmountParam);							
         addParam(createParam<RoundReallySmallFWKnob>(Vec(127, 342), module, QARGrooveExpander::GROOVE_AMOUNT_CV_PARAM));
 
         addParam(createParam<LEDButton>(Vec(175, 351), module, QARGrooveExpander::RANDOM_DISTRIBUTION_PATTERN_PARAM));
 
-        addParam(createParam<RoundSmallFWKnob>(Vec(167, 326), module, QARGrooveExpander::SWING_RANDOMNESS_PARAM));
+		ParamWidget* swingRandomnessParam = createParam<RoundSmallFWKnob>(Vec(167, 326), module, QARGrooveExpander::SWING_RANDOMNESS_PARAM);
+		if (module) {
+			dynamic_cast<RoundSmallFWKnob*>(swingRandomnessParam)->percentage = &module->swingRandomnessPercentage;
+		}
+		addParam(swingRandomnessParam);							
         addParam(createParam<RoundReallySmallFWKnob>(Vec(194, 342), module, QARGrooveExpander::SWING_RANDOMNESS_CV_PARAM));
 	
 	   

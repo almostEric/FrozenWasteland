@@ -72,6 +72,12 @@ struct TheOneRingModulator : Module {
 
 	dsp::SchmittTrigger dropCompensateTrigger;
 
+	//percentages
+	float forwardBiasPercentage = 0;
+	float linearVoltagePercentage = 0;
+	float slopePercentage = 0;
+	float mixPercentage = 0;
+
 int sampleCount = 0;
 
 	inline float diode_sim(float inVoltage ) {
@@ -159,10 +165,14 @@ void TheOneRingModulator::process(const ProcessArgs &args) {
     float vC  = inputs[ CARRIER_INPUT ].getVoltage();
 
     float wd  = clamp(params[MIX_PARAM].getValue() + (inputs[MIX_INPUT].getVoltage() / 10.0 * params[MIX_ATTENUVERTER_PARAM].getValue()),0.0f,1.0f);
+	mixPercentage = wd;
 
     voltageBias = clamp(params[FORWARD_BIAS_PARAM].getValue() + (inputs[FORWARD_BIAS_CV_INPUT].getVoltage() * params[FORWARD_BIAS_ATTENUVERTER_PARAM].getValue()),0.0,10.0);
+	forwardBiasPercentage = voltageBias / 10.0;
 	voltageLinear = clamp(params[LINEAR_VOLTAGE_PARAM].getValue() + (inputs[LINEAR_VOLTAGE_CV_INPUT].getVoltage() * params[LINEAR_VOLTAGE_ATTENUVERTER_PARAM].getValue()),voltageBias + 0.001f,10.0);
+	linearVoltagePercentage = voltageLinear / 10.0;
     h = clamp(params[SLOPE_PARAM].getValue() + (inputs[SLOPE_CV_INPUT].getVoltage() / 10.0 * params[SLOPE_ATTENUVERTER_PARAM].getValue()),0.1f,1.0f);
+	slopePercentage = (h-0.1)/0.9;
 	//nl = clamp(params[NONLINEARITY_PARAM].getValue() + (inputs[NONLINEARITY_CV_INPUT].getVoltage() / 10.0 * params[NONLINEARITY_ATTENUVERTER_PARAM].getValue()),0.5f,3.0f);
 
 	compensationCoefficient = 10.0 / diode_sim(10.0);
@@ -288,15 +298,31 @@ struct TheOneRingModulatorWidget : ModuleWidget {
 		addChild(createLight<LargeLight<BlueLight>>(Vec(26.5, 265.5), module, TheOneRingModulator::DROP_COMPENSATE_LIGHT));
 
 
-		addParam(createParam<RoundSmallFWKnob>(Vec(13, 190), module, TheOneRingModulator::FORWARD_BIAS_PARAM));
+		ParamWidget* forwardBiasParam = createParam<RoundSmallFWKnob>(Vec(13, 190), module, TheOneRingModulator::FORWARD_BIAS_PARAM);
+		if (module) {
+			dynamic_cast<RoundSmallFWKnob*>(forwardBiasParam)->percentage = &module->forwardBiasPercentage;
+		}
+		addParam(forwardBiasParam);							
 		addParam(createParam<RoundReallySmallFWKnob>(Vec(27, 216), module, TheOneRingModulator::FORWARD_BIAS_ATTENUVERTER_PARAM));
-		addParam(createParam<RoundSmallFWKnob>(Vec(65, 190), module, TheOneRingModulator::LINEAR_VOLTAGE_PARAM));
+		ParamWidget* linearVoltageParam = createParam<RoundSmallFWKnob>(Vec(65, 190), module, TheOneRingModulator::LINEAR_VOLTAGE_PARAM);
+		if (module) {
+			dynamic_cast<RoundSmallFWKnob*>(linearVoltageParam)->percentage = &module->linearVoltagePercentage;
+		}
+		addParam(linearVoltageParam);							
 		addParam(createParam<RoundReallySmallFWKnob>(Vec(78, 216), module, TheOneRingModulator::LINEAR_VOLTAGE_ATTENUVERTER_PARAM));
-		addParam(createParam<RoundSmallFWKnob>(Vec(112, 190), module, TheOneRingModulator::SLOPE_PARAM));
+		ParamWidget* slopeParam = createParam<RoundSmallFWKnob>(Vec(112, 190), module, TheOneRingModulator::SLOPE_PARAM);
+		if (module) {
+			dynamic_cast<RoundSmallFWKnob*>(slopeParam)->percentage = &module->slopePercentage;
+		}
+		addParam(slopeParam);							
 		addParam(createParam<RoundReallySmallFWKnob>(Vec(125, 216), module, TheOneRingModulator::SLOPE_ATTENUVERTER_PARAM));
 		// addParam(createParam<RoundFWKnob>(Vec(110, 270), module, TheOneRingModulator::NONLINEARITY_PARAM));
 		// addParam(createParam<RoundSmallFWKnob>(Vec(113, 302), module, TheOneRingModulator::NONLINEARITY_ATTENUVERTER_PARAM));
-		addParam(createParam<RoundSmallFWKnob>(Vec(95, 264), module, TheOneRingModulator::MIX_PARAM));
+		ParamWidget* mixParam = createParam<RoundSmallFWKnob>(Vec(95, 264), module, TheOneRingModulator::MIX_PARAM);
+		if (module) {
+			dynamic_cast<RoundSmallFWKnob*>(mixParam)->percentage = &module->mixPercentage;
+		}
+		addParam(mixParam);							
 		addParam(createParam<RoundReallySmallFWKnob>(Vec(110, 290), module, TheOneRingModulator::MIX_ATTENUVERTER_PARAM));
 
 		addInput(createInput<FWPortInSmall>(Vec(14, 340), module, TheOneRingModulator::CARRIER_INPUT));

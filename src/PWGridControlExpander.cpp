@@ -57,6 +57,10 @@ struct PWGridControlExpander : Module {
     uint8_t pinXAxisMode = 0;
     uint8_t destination = 1;
 
+    //percentages
+    float rotationPercentage = 0;
+    float pinPosPercentage = 0;
+
 
 	
 	PWGridControlExpander() {
@@ -137,7 +141,9 @@ struct PWGridControlExpander : Module {
 	void process(const ProcessArgs &args) override {
 
         float pinXAxisPos = paramValue(X_AXIS_PIN_POS_PARAM, GRID_X_AXIS_PIN_POS_CV_INPUT, 0, 1);
+        pinPosPercentage = pinXAxisPos;
         float xAxisRotation = paramValue(X_AXIS_ROTATION_PARAM, GRID_X_AXIS_ROTATION_CV_INPUT, -1, 1);
+        rotationPercentage = xAxisRotation;
         if (pinXAxisModeTrigger.process(params[PIN_X_AXIS_MODE_PARAM].getValue())) {
             pinXAxisMode = (pinXAxisMode + 1) % 5;
         }
@@ -327,13 +333,22 @@ struct PWGridControlExpanderWidget : ModuleWidget {
             addInput(createInput<FWPortInSmall>(Vec(8, 34), module, PWGridControlExpander::GRID_X_CV_INPUT));
             addInput(createInput<FWPortInSmall>(Vec(33, 34), module, PWGridControlExpander::GRID_Y_CV_INPUT));
 
-            addParam(createParam<RoundSmallFWKnob>(Vec(5, 69), module, PWGridControlExpander::X_AXIS_ROTATION_PARAM));
+            ParamWidget* xAxisRotationParam = createParam<RoundSmallFWKnob>(Vec(5, 69), module, PWGridControlExpander::X_AXIS_ROTATION_PARAM);
+            if (module) {
+                dynamic_cast<RoundSmallFWKnob*>(xAxisRotationParam)->percentage = &module->rotationPercentage;
+                dynamic_cast<RoundSmallFWKnob*>(xAxisRotationParam)->biDirectional = true;
+            }
+            addParam(xAxisRotationParam);							
             addInput(createInput<FWPortInSmall>(Vec(33, 72), module, PWGridControlExpander::GRID_X_AXIS_ROTATION_CV_INPUT));
 
             addParam(createParam<LEDButton>(Vec(8,110), module, PWGridControlExpander::PIN_X_AXIS_MODE_PARAM));
             addChild(createLight<LargeLight<RedGreenBlueLight>>(Vec(9.5, 111.5), module, PWGridControlExpander::PIN_X_AXIS_MODE_LIGHT));
 
-            addParam(createParam<RoundSmallFWKnob>(Vec(5, 130), module, PWGridControlExpander::X_AXIS_PIN_POS_PARAM));
+            ParamWidget* xAxisPinPosParam = createParam<RoundSmallFWKnob>(Vec(5, 130), module, PWGridControlExpander::X_AXIS_PIN_POS_PARAM);
+            if (module) {
+                dynamic_cast<RoundSmallFWKnob*>(xAxisPinPosParam)->percentage = &module->pinPosPercentage;
+            }
+            addParam(xAxisPinPosParam);							
             addInput(createInput<FWPortInSmall>(Vec(33, 133), module, PWGridControlExpander::GRID_X_AXIS_PIN_POS_CV_INPUT));
 
 

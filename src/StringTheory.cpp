@@ -115,6 +115,19 @@ struct StringTheory : Module {
 
 	float sampleRate;
 
+	//percentages
+	float coarseTimenPercentage = 0;
+	float fineTimePercentage = 0;
+	float sampleTimePercentage = 0;
+	float feedbackPercentage = 0;
+	float feedbackShiftPercentage = 0;
+	float grainCountPercentage = 0;
+	float phaseOffsetPercentage = 0;
+	float spreadPercentage = 0;
+	float colorPercentage = 0;
+	float ringModGrainPercentage = 0;
+	float ringModMixPercentage = 0;
+
 	void changeCompressionMode (uint8_t newMode) {
 		if (newMode == COMPRESSION_HARD) {
 			// reset to hard compression
@@ -166,7 +179,7 @@ struct StringTheory : Module {
 		configParam(GRAIN_COUNT_PARAM, 1.0f, MAX_GRAINS, 1.0f, "Grain Count");
 		configParam(PHASE_OFFSET_PARAM, 0.0f, 1.f, 0.0f, "Phase Offset", "%", 0, 100);
 		configParam(SPREAD_PARAM, 0.0f, 1.f, 0.0f, "Spread", "%", 0, 100);
-		configParam(FEEDBACK_PARAM, 0.f, 1.f, 0.5f, "Feedback", "%", 0, 100);
+		configParam(FEEDBACK_PARAM, -1.0f, 1.f, 0.5f, "Feedback", "%", 0, 100);
 		configParam(FEEDBACK_SHIFT_PARAM, 0.f, MAX_GRAINS, 0.0f, "Feedback Shift");
 		configParam(COLOR_PARAM, 0.f, 1.f, 0.5f, "Color", "%", 0, 100);
 		configParam(PLUCK_PARAM, 0.f, 1.f, 0.0f);
@@ -229,9 +242,11 @@ struct StringTheory : Module {
 		// Compute delay time in seconds - eventually milliseconds
 		float coarseDelay = params[COARSE_TIME_PARAM].getValue() + inputs[COARSE_TIME_INPUT].getVoltage() / 10.f;
 		coarseDelay = clamp(coarseDelay, 0.f, 1.f);
+		coarseTimenPercentage = coarseDelay;
 		coarseDelay = 1e-3 * std::pow(0.5f / 1e-3, coarseDelay);
 
-		float fineDelay = params[FINE_TIME_PARAM].getValue() + inputs[FINE_TIME_INPUT].getVoltage() / 10.f;
+		float fineDelay = clamp(params[FINE_TIME_PARAM].getValue() + inputs[FINE_TIME_INPUT].getVoltage(),0.01f,20.f);
+		fineTimePercentage = fineDelay / 20.0;
 		fineDelay = 1e-3 * fineDelay;
 
 		// Number of delay samples
@@ -240,17 +255,22 @@ struct StringTheory : Module {
 		float pitch = inputs[V_OCT_INPUT].getVoltage();
 		delay = delay / std::pow(2.0f, pitch);
 
-		float index = (delay * sampleRate) + params[SAMPLE_TIME_PARAM].getValue() ; // Maybe get rid of rounding
+		float sampleAdjust = clamp(params[SAMPLE_TIME_PARAM].getValue() + (inputs[SAMPLE_TIME_INPUT].getVoltage() * 20.0),0.0f,200.0f);
+		sampleTimePercentage = sampleAdjust / 200.0;
+
+		float index = (delay * sampleRate) + sampleAdjust; // Maybe get rid of rounding
 
 		float pluckInput = params[PLUCK_PARAM].getValue();
 		if(inputs[PLUCK_INPUT].isConnected()) {
 			pluckInput += inputs[PLUCK_INPUT].getVoltage();
 		} 
+		float phaseOffset = clamp(params[PHASE_OFFSET_PARAM].getValue() + inputs[PHASE_OFFSET_INPUT].getVoltage() / 10.0f,0.0f,1.0f);
+		phaseOffsetPercentage = phaseOffset;
 		if(pluckTrigger.process(pluckInput)) {
 			for(int i=0; i<grainCount;i++) {
 				acceptingInput[i] = true;
 				timeElapsed[i] = 0.0;
-				timeDelay[i] = ((float) i) * index / 2.0 * (params[PHASE_OFFSET_PARAM].getValue() + inputs[PHASE_OFFSET_INPUT].getVoltage() / 10.0f );
+				timeDelay[i] = ((float) i) * index / 2.0 * phaseOffset;
 			}
 		}	
 
@@ -308,9 +328,11 @@ struct StringTheory : Module {
 
 
 		int feedBackShift = clamp(params[FEEDBACK_SHIFT_PARAM].getValue() + inputs[FEEDBACK_SHIFT_INPUT].getVoltage() / 10.0f,0.0,(float)grainCount);
+		feedbackShiftPercentage = feedBackShift / float(MAX_GRAINS);
 		int ringModGrain = clamp(params[RING_MOD_GRAIN_PARAM].getValue() + inputs[RING_MOD_GRAIN_INPUT].getVoltage() / 10.0f,0.0,(float)grainCount);
+		ringModGrainPercentage = ringModGrain / float(MAX_GRAINS);
 		float ringModMix = clamp(params[RING_MOD_MIX_PARAM].getValue() + inputs[RING_MOD_MIX_INPUT].getVoltage() / 10.0f,0.0f,1.0f);
-
+		ringModMixPercentage = ringModMix;
 
 		float ringModIn = 0.0;
 		switch(noiseType) {
@@ -338,15 +360,18 @@ struct StringTheory : Module {
 		}
 
 		float feedback = params[FEEDBACK_PARAM].getValue() + inputs[FEEDBACK_INPUT].getVoltage() / 10.f;
-		feedback = clamp(feedback, 0.f, 1.f);
-	
+		feedback = clamp(feedback, -1.f, 1.f);
+		feedbackPercentage = feedback;
+
+		float spread = clamp(params[SPREAD_PARAM].getValue() + inputs[SPREAD_INPUT].getVoltage() / 10.0f,0.0f,1.0f);
+		spreadPercentage = spread;
 		for(int i=0; i<grainCount;i++) {
 			timeDelay[i] -= 1.0;
 			if(timeDelay[i] > 0)
 				continue;
 
 			timeElapsed[i] += 1.0;
-			if(timeElapsed[i] > index * (1.0 + (float)i / (float)grainCount * (params[SPREAD_PARAM].getValue() + inputs[SPREAD_INPUT].getVoltage() / 10.0f ))) {
+			if(timeElapsed[i] > index * (1.0 + (float)i / (float)grainCount * spread)) {
 				acceptingInput[i] = false;
 			}
 
@@ -411,6 +436,7 @@ struct StringTheory : Module {
 			// Apply color to delay wet output
 			float color = params[COLOR_PARAM].getValue() + inputs[COLOR_INPUT].getVoltage() / 10.f;
 			color = clamp(color, 0.f, 1.f);
+			colorPercentage = color;
 			float colorFreq = std::pow(100.f, 2.f * color - 1.f);
 
 			float lowpassFreq = clamp(20000.f * colorFreq, 20.f, 20000.f);
@@ -449,23 +475,68 @@ struct StringTheoryWidget : ModuleWidget {
 		setModule(module);
 		setPanel(APP->window->loadSvg(asset::plugin(pluginInstance, "res/StringTheory.svg")));
 
-		addChild(createWidget<ScrewSilver>(Vec(RACK_GRID_WIDTH - 12, 0)));
-		addChild(createWidget<ScrewSilver>(Vec(RACK_GRID_WIDTH - 12, RACK_GRID_HEIGHT - RACK_GRID_WIDTH)));
+		// addChild(createWidget<ScrewSilver>(Vec(RACK_GRID_WIDTH - 12, 0)));
+		// addChild(createWidget<ScrewSilver>(Vec(RACK_GRID_WIDTH - 12, RACK_GRID_HEIGHT - RACK_GRID_WIDTH)));
 
-		addParam(createParam<RoundSmallFWKnob>(Vec(5, 40), module, StringTheory::COARSE_TIME_PARAM));
-		addParam(createParam<RoundSmallFWKnob>(Vec(40, 40), module, StringTheory::FINE_TIME_PARAM));
-		addParam(createParam<RoundSmallFWKnob>(Vec(75, 40), module, StringTheory::SAMPLE_TIME_PARAM));
+		ParamWidget* coarseTimeParam = createParam<RoundSmallFWKnob>(Vec(5, 40), module, StringTheory::COARSE_TIME_PARAM);
+		if (module) {
+			dynamic_cast<RoundSmallFWKnob*>(coarseTimeParam)->percentage = &module->coarseTimenPercentage;
+		}
+		addParam(coarseTimeParam);							
+		ParamWidget* fineTimeParam = createParam<RoundSmallFWKnob>(Vec(40, 40), module, StringTheory::FINE_TIME_PARAM);
+		if (module) {
+			dynamic_cast<RoundSmallFWKnob*>(fineTimeParam)->percentage = &module->fineTimePercentage;
+		}
+		addParam(fineTimeParam);							
+		ParamWidget* sampleTimeParam = createParam<RoundSmallFWKnob>(Vec(75, 40), module, StringTheory::SAMPLE_TIME_PARAM);
+		if (module) {
+			dynamic_cast<RoundSmallFWKnob*>(sampleTimeParam)->percentage = &module->sampleTimePercentage;
+		}
+		addParam(sampleTimeParam);							
 
-		addParam(createParam<RoundSmallFWKnob>(Vec(5, 105), module, StringTheory::FEEDBACK_PARAM));
-		addParam(createParam<RoundSmallFWSnapKnob>(Vec(45, 105), module, StringTheory::FEEDBACK_SHIFT_PARAM));
+		ParamWidget* feedbackParam = createParam<RoundSmallFWKnob>(Vec(5, 105), module, StringTheory::FEEDBACK_PARAM);
+		if (module) {
+			dynamic_cast<RoundSmallFWKnob*>(feedbackParam)->percentage = &module->feedbackPercentage;
+			dynamic_cast<RoundSmallFWKnob*>(feedbackParam)->biDirectional = true;
+		}
+		addParam(feedbackParam);							
+		ParamWidget* feedbackShiftParam = createParam<RoundSmallFWSnapKnob>(Vec(45, 105), module, StringTheory::FEEDBACK_SHIFT_PARAM);
+		if (module) {
+			dynamic_cast<RoundSmallFWSnapKnob*>(feedbackShiftParam)->percentage = &module->feedbackShiftPercentage;
+		}
+		addParam(feedbackShiftParam);							
 
-		addParam(createParam<RoundSmallFWSnapKnob>(Vec(5, 165), module, StringTheory::GRAIN_COUNT_PARAM));
-		addParam(createParam<RoundSmallFWKnob>(Vec(40, 165), module, StringTheory::PHASE_OFFSET_PARAM));
-		addParam(createParam<RoundSmallFWKnob>(Vec(75, 165), module, StringTheory::SPREAD_PARAM));
+		ParamWidget* grainCountParam = createParam<RoundSmallFWSnapKnob>(Vec(5, 165), module, StringTheory::GRAIN_COUNT_PARAM);
+		if (module) {
+			dynamic_cast<RoundSmallFWSnapKnob*>(grainCountParam)->percentage = &module->grainCountPercentage;
+		}
+		addParam(grainCountParam);							
+		ParamWidget* phaseOffsetParam = createParam<RoundSmallFWKnob>(Vec(40, 165), module, StringTheory::PHASE_OFFSET_PARAM);
+		if (module) {
+			dynamic_cast<RoundSmallFWKnob*>(phaseOffsetParam)->percentage = &module->phaseOffsetPercentage;
+		}
+		addParam(phaseOffsetParam);							
+		ParamWidget* spreadParam = createParam<RoundSmallFWKnob>(Vec(75, 165), module, StringTheory::SPREAD_PARAM);
+		if (module) {
+			dynamic_cast<RoundSmallFWKnob*>(spreadParam)->percentage = &module->spreadPercentage;
+		}
+		addParam(spreadParam);							
 
-		addParam(createParam<RoundSmallFWKnob>(Vec(5, 222), module, StringTheory::COLOR_PARAM));
-		addParam(createParam<RoundSmallFWSnapKnob>(Vec(40, 222), module, StringTheory::RING_MOD_GRAIN_PARAM));
-		addParam(createParam<RoundSmallFWKnob>(Vec(75, 222), module, StringTheory::RING_MOD_MIX_PARAM));
+		ParamWidget* colorParam = createParam<RoundSmallFWKnob>(Vec(5, 222), module, StringTheory::COLOR_PARAM);
+		if (module) {
+			dynamic_cast<RoundSmallFWKnob*>(colorParam)->percentage = &module->colorPercentage;
+		}
+		addParam(colorParam);							
+		ParamWidget* ringModGrainParam = createParam<RoundSmallFWSnapKnob>(Vec(40, 222), module, StringTheory::RING_MOD_GRAIN_PARAM);
+		if (module) {
+			dynamic_cast<RoundSmallFWSnapKnob*>(ringModGrainParam)->percentage = &module->ringModGrainPercentage;
+		}
+		addParam(ringModGrainParam);							
+		ParamWidget* ringModMixParam = createParam<RoundSmallFWKnob>(Vec(75, 222), module, StringTheory::RING_MOD_MIX_PARAM);
+		if (module) {
+			dynamic_cast<RoundSmallFWKnob*>(ringModMixParam)->percentage = &module->ringModMixPercentage;
+		}
+		addParam(ringModMixParam);							
 
 		addParam(createParam<TL1105>(Vec(30, 307), module, StringTheory::PLUCK_PARAM));
 		addParam(createParam<TL1105>(Vec(10, 278), module, StringTheory::COMPRESSION_MODE_PARAM));
@@ -488,7 +559,7 @@ struct StringTheoryWidget : ModuleWidget {
 		addInput(createInput<FWPortInSmall>(Vec(42, 249), module, StringTheory::RING_MOD_GRAIN_INPUT));
 		addInput(createInput<FWPortInSmall>(Vec(77, 249), module, StringTheory::RING_MOD_MIX_INPUT));
 
-		addInput(createInput<FWPortInSmall>(Vec(7, 305), module, StringTheory::PLUCK_INPUT));
+		addInput(createInput<FWPortInSmall>(Vec(7, 306), module, StringTheory::PLUCK_INPUT));
 		addInput(createInput<FWPortInSmall>(Vec(6, 340), module, StringTheory::V_OCT_INPUT));
 		addInput(createInput<FWPortInSmall>(Vec(32, 340), module, StringTheory::IN_INPUT));
 		addInput(createInput<FWPortInSmall>(Vec(58, 340), module, StringTheory::EXTERNAL_RING_MOD_INPUT));

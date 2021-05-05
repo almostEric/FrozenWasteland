@@ -49,6 +49,11 @@ struct SeedsOfChangeCVExpander : Module {
 
 	bool gaussianMode = false;
 
+	//percentages
+	float multiplyPercentage[NBOUT] = {0};
+	float offsetPercentage[NBOUT] = {0};
+	
+
 	SeedsOfChangeCVExpander() {
 		// Configure the module
 		config(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS, NUM_LIGHTS);
@@ -104,18 +109,20 @@ struct SeedsOfChangeCVExpander : Module {
             init_genrand((unsigned long)(latest_seed));
         } 
 
-		if (clockTrigger.process(clockInput)) {
-			for (int i=0; i<NBOUT; i++) {
-				float mult=params[MULTIPLY_1_PARAM+i].value;
-				float off=params[OFFSET_1_PARAM+i].value;
-				if (inputs[MULTIPLY_1_INPUT + i].active) {
-					mult = mult + (inputs[MULTIPLY_1_INPUT + i].value / 10.0f * params[MULTIPLY_1_CV_ATTENUVERTER + i].value);
-				}
-				mult = clamp(mult,0.0,10.0);
-				if (inputs[OFFSET_1_INPUT + i].active) {
-					off = off + (inputs[OFFSET_1_INPUT + i].value * params[OFFSET_1_CV_ATTENUVERTER + i].value);
-				}
+		for (int i=0; i<NBOUT; i++) {
+			float mult=params[MULTIPLY_1_PARAM+i].value;
+			float off=params[OFFSET_1_PARAM+i].value;
+			if (inputs[MULTIPLY_1_INPUT + i].active) {
+				mult = mult + (inputs[MULTIPLY_1_INPUT + i].value / 10.0f * params[MULTIPLY_1_CV_ATTENUVERTER + i].value);
+			}
+			mult = clamp(mult,0.0,10.0);
+			multiplyPercentage[i] = mult / 10.0;
+			if (inputs[OFFSET_1_INPUT + i].active) {
+				off = clamp(off + (inputs[OFFSET_1_INPUT + i].value * params[OFFSET_1_CV_ATTENUVERTER + i].value),-10.0f,10.0f);
+			}
+			offsetPercentage[i] = off / 10.0f;
 
+			if (clockTrigger.process(clockInput)) {
 				float initialRandomNumber = gaussianMode ? normal_number() : genrand_real();					
 				//outbuffer[i] = clamp((float)(initialRandomNumber * mult + off - mult*.5),-10.0f, 10.0f);
 				outbuffer[i] = clamp((float)(initialRandomNumber * mult + off),-10.0f, 10.0f);			
@@ -253,10 +260,19 @@ struct SeedsOfChangeCVExpanderWidget : ModuleWidget {
 
 
 		for (int i=0; i<NBOUT; i++) {
-			addParam(createParam<RoundReallySmallFWKnob>(Vec(4,28 + i * 28), module, SeedsOfChangeCVExpander::MULTIPLY_1_PARAM + i));			
+			ParamWidget* multiplyParam = createParam<RoundReallySmallFWKnob>(Vec(4,28 + i * 28), module, SeedsOfChangeCVExpander::MULTIPLY_1_PARAM + i);
+			if (module) {
+				dynamic_cast<RoundReallySmallFWKnob*>(multiplyParam)->percentage = &module->multiplyPercentage[i];
+			}
+			addParam(multiplyParam);							
 			addParam(createParam<RoundExtremelySmallFWKnob>(Vec(34,38 + i * 28), module, SeedsOfChangeCVExpander::MULTIPLY_1_CV_ATTENUVERTER + i));			
 			addInput(createInput<FWPortInReallySmall>(Vec(26, 28 + i * 28), module, SeedsOfChangeCVExpander::MULTIPLY_1_INPUT + i));						
-			addParam(createParam<RoundReallySmallFWKnob>(Vec(50,28 + i * 28), module, SeedsOfChangeCVExpander::OFFSET_1_PARAM + i));			
+			ParamWidget* offsetParam = createParam<RoundReallySmallFWKnob>(Vec(50,28 + i * 28), module, SeedsOfChangeCVExpander::OFFSET_1_PARAM + i);
+			if (module) {
+				dynamic_cast<RoundReallySmallFWKnob*>(offsetParam)->percentage = &module->offsetPercentage[i];
+				dynamic_cast<RoundReallySmallFWKnob*>(offsetParam)->biDirectional = true;
+			}
+			addParam(offsetParam);							
 			addParam(createParam<RoundExtremelySmallFWKnob>(Vec(80,38 + i * 28), module, SeedsOfChangeCVExpander::OFFSET_1_CV_ATTENUVERTER + i));			
 			addInput(createInput<FWPortInReallySmall>(Vec(72, 28 + i * 28), module, SeedsOfChangeCVExpander::OFFSET_1_INPUT + i));
 			addOutput(createOutput<FWPortOutSmall>(Vec(97, 29 + i * 28),  module, SeedsOfChangeCVExpander::CV_1_OUTPUT+i));

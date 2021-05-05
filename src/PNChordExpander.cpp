@@ -44,6 +44,11 @@ struct PNChordExpander : Module {
 
 
 	float thirdOffset,fifthOffset,seventhOffset;
+
+	//percentages
+	float dissonance5ProbabilityPercentage = 0;
+	float dissonance7ProbabilityPercentage = 0;
+	float suspensionsProbabilityPercentage = 0;
 	
 	
 	PNChordExpander() {
@@ -100,8 +105,11 @@ struct PNChordExpander : Module {
 
 
 			dissonance5Probability = clamp(params[DISSONANCE5_PROBABILITY_PARAM].getValue() + (inputs[DISSONANCE5_PROBABILITY_INPUT].isConnected() ? inputs[DISSONANCE5_PROBABILITY_INPUT].getVoltage() / 10 * params[DISSONANCE5_PROBABILITY_CV_ATTENUVERTER_PARAM].getValue() : 0.0f),0.0,1.0f);
+			dissonance5ProbabilityPercentage = dissonance5Probability;
 			dissonance7Probability = clamp(params[DISSONANCE7_PROBABILITY_PARAM].getValue() + (inputs[DISSONANCE7_PROBABILITY_INPUT].isConnected() ? inputs[DISSONANCE7_PROBABILITY_INPUT].getVoltage() / 10 * params[DISSONANCE7_PROBABILITY_CV_ATTENUVERTER_PARAM].getValue() : 0.0f),0.0,1.0f);
+			dissonance7ProbabilityPercentage = dissonance7Probability;
 			suspensionProbability = clamp(params[SUSPENSIONS_PROBABILITY_PARAM].getValue() + (inputs[SUSPENSIONS_PROBABILITY_INPUT].isConnected() ? inputs[SUSPENSIONS_PROBABILITY_INPUT].getVoltage() / 10 * params[SUSPENSIONS_PROBABILITY_CV_ATTENUVERTER_PARAM].getValue() : 0.0f),0.0,1.0f);
+			suspensionsProbabilityPercentage = suspensionProbability;
 
 			messagesToMother[0] = dissonance5Probability;
 			messagesToMother[1] = dissonance7Probability;
@@ -123,6 +131,9 @@ struct PNChordExpander : Module {
 			thirdOffset = 2.0f;
 			fifthOffset = 2.0f;
 			seventhOffset = 2.0f;
+			dissonance5ProbabilityPercentage = 0;
+			dissonance7ProbabilityPercentage = 0;
+			suspensionsProbabilityPercentage = 0;
 		}	
 		
 	}
@@ -235,15 +246,27 @@ struct PNChordExpanderWidget : ModuleWidget {
 		//addChild(createWidget<ScrewSilver>(Vec(box.size.x - 2 * RACK_GRID_WIDTH + 12, RACK_GRID_HEIGHT - RACK_GRID_WIDTH)));
 
 
-		addParam(createParam<RoundSmallFWKnob>(Vec(8,75), module, PNChordExpander::DISSONANCE5_PROBABILITY_PARAM));			
+		ParamWidget* dissonance5ProbabilityParam = createParam<RoundSmallFWKnob>(Vec(8,75), module, PNChordExpander::DISSONANCE5_PROBABILITY_PARAM);
+		if (module) {
+			dynamic_cast<RoundSmallFWKnob*>(dissonance5ProbabilityParam)->percentage = &module->dissonance5ProbabilityPercentage;
+		}
+		addParam(dissonance5ProbabilityParam);							
         addParam(createParam<RoundReallySmallFWKnob>(Vec(34,101), module, PNChordExpander::DISSONANCE5_PROBABILITY_CV_ATTENUVERTER_PARAM));			
 		addInput(createInput<FWPortInSmall>(Vec(36, 79), module, PNChordExpander::DISSONANCE5_PROBABILITY_INPUT));
 
-		addParam(createParam<RoundSmallFWKnob>(Vec(8,175), module, PNChordExpander::DISSONANCE7_PROBABILITY_PARAM));			
+		ParamWidget* dissonance7ProbabilityParam = createParam<RoundSmallFWKnob>(Vec(8,175), module, PNChordExpander::DISSONANCE7_PROBABILITY_PARAM);
+		if (module) {
+			dynamic_cast<RoundSmallFWKnob*>(dissonance7ProbabilityParam)->percentage = &module->dissonance7ProbabilityPercentage;
+		}
+		addParam(dissonance7ProbabilityParam);							
         addParam(createParam<RoundReallySmallFWKnob>(Vec(34,201), module, PNChordExpander::DISSONANCE7_PROBABILITY_CV_ATTENUVERTER_PARAM));			
 		addInput(createInput<FWPortInSmall>(Vec(36, 179), module, PNChordExpander::DISSONANCE7_PROBABILITY_INPUT));
 
-		addParam(createParam<RoundSmallFWKnob>(Vec(8,275), module, PNChordExpander::SUSPENSIONS_PROBABILITY_PARAM));			
+		ParamWidget* suspensionsProbabilityParam = createParam<RoundSmallFWKnob>(Vec(8,275), module, PNChordExpander::SUSPENSIONS_PROBABILITY_PARAM);
+		if (module) {
+			dynamic_cast<RoundSmallFWKnob*>(suspensionsProbabilityParam)->percentage = &module->suspensionsProbabilityPercentage;
+		}
+		addParam(suspensionsProbabilityParam);							
         addParam(createParam<RoundReallySmallFWKnob>(Vec(34,301), module, PNChordExpander::SUSPENSIONS_PROBABILITY_CV_ATTENUVERTER_PARAM));			
 		addInput(createInput<FWPortInSmall>(Vec(36, 279), module, PNChordExpander::SUSPENSIONS_PROBABILITY_INPUT));
 
