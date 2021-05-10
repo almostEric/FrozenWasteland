@@ -16,8 +16,8 @@
 
 #define PASSTHROUGH_LEFT_VARIABLE_COUNT 13
 #define PASSTHROUGH_RIGHT_VARIABLE_COUNT 9
-#define STEP_LEVEL_PARAM_COUNT 4
-#define TRACK_LEVEL_PARAM_COUNT TRACK_COUNT * 15
+#define STEP_LEVEL_PARAM_COUNT 5
+#define TRACK_LEVEL_PARAM_COUNT TRACK_COUNT * 17
 #define PASSTHROUGH_OFFSET EXPANDER_MAX_STEPS * TRACK_COUNT * STEP_LEVEL_PARAM_COUNT + TRACK_LEVEL_PARAM_COUNT
 
 using namespace frozenwasteland::dsp;
@@ -66,7 +66,7 @@ struct PWAlgorithmicExpander : Module {
 
 	// Expander
     float leftMessages[2][MAX_STEPS * 15] = {};
-    float rightMessages[2][285] = {};
+	float rightMessages[2][PASSTHROUGH_OFFSET + PASSTHROUGH_LEFT_VARIABLE_COUNT + PASSTHROUGH_RIGHT_VARIABLE_COUNT] = {};
 	
 		
     int algorithmMatrix;
@@ -75,6 +75,8 @@ struct PWAlgorithmicExpander : Module {
 	float probabilityMatrix[MAX_STEPS];
 	float swingMatrix[MAX_STEPS];
 	float beatWarpMatrix[MAX_STEPS];
+	float irrationalRhythmMatrix[MAX_STEPS];
+	double totalIrrationalAdjustment;
 	float probabilityGroupModeMatrix[MAX_STEPS];
 	int probabilityGroupTriggered;
 	int probabilityGroupFirstStep;
@@ -82,6 +84,11 @@ struct PWAlgorithmicExpander : Module {
 	float workingSwingMatrix[MAX_STEPS];
 	float workingBeatWarpMatrix[MAX_STEPS];
     bool probabilityResultMatrix[MAX_STEPS] = {1};
+    float workingIrrationalRhythmMatrix[MAX_STEPS] = {1};
+	float workingConditionalMatrix[MAX_STEPS];
+	int conditionalMatrix[MAX_STEPS];
+	int conditionalCounterMatrix[MAX_STEPS] = {0};
+
 
     std::string trackPatternName = "";
 
@@ -157,6 +164,7 @@ struct PWAlgorithmicExpander : Module {
 	bool running;
 	bool initialized = false;
 	bool QARExpanderDisconnectReset = true;
+    bool expanderDataChanged = false;
 
 	double timeElapsed = 0.0;
 	double duration = 0.0;
@@ -220,6 +228,8 @@ struct PWAlgorithmicExpander : Module {
         running = true;
         for(int j = 0; j < MAX_STEPS; j++) {
             probabilityMatrix[j] = 1.0;
+            conditionalMatrix[j] = 1.0;
+            irrationalRhythmMatrix[j] = 1.0;
             swingMatrix[j] = 0.0;
             beatWarpMatrix[j] = 1.0;
             beatMatrix[j] = false;
@@ -284,13 +294,7 @@ struct PWAlgorithmicExpander : Module {
                 break;
         }		
             
-            
-        //clear out the matrix and levels
-        for(int j=0;j<MAX_STEPS;j++)
-        {
-            beatLocation[j] = 0;
-        }
-
+        
         float stepsCountf = std::floor(params[STEPS_1_PARAM].getValue());			
         if(inputs[STEPS_1_INPUT].isConnected()) {
             stepsCountf += inputs[STEPS_1_INPUT].getVoltage() * 1.6;
@@ -371,6 +375,12 @@ struct PWAlgorithmicExpander : Module {
         }
 
         if(dirty) {
+            //clear out the matrix and levels
+            for(int j=0;j<MAX_STEPS;j++)
+            {
+                beatLocation[j] = 0;
+            }
+
             beatCount = 0;
             if(division > 0) {					
                 int bucket = stepsCount - pad - 1;                    
@@ -454,141 +464,214 @@ struct PWAlgorithmicExpander : Module {
 		//Get Expander Info
         //bool rightExpanderPresent = false;
 		if(rightExpander.module && (rightExpander.module->model == modelQARProbabilityExpander || rightExpander.module->model == modelQARGrooveExpander || 
-                                    rightExpander.module->model == modelQARWarpedSpaceExpander || rightExpander.module->model == modelQARIrrationalityExpander))
+                                    rightExpander.module->model == modelQARWarpedSpaceExpander || rightExpander.module->model == modelQARIrrationalityExpander ||
+                                    rightExpander.module->model == modelQARConditionalExpander))
 		{			
-			QARExpanderDisconnectReset = true;
-            //rightExpanderPresent = true;
 			float *messagesFromExpanders = (float*)rightExpander.consumerMessage;
 
-			//Process Probability Expander Stuff						
-            probabilityGroupFirstStep = -1;
-            for(int j = 0; j < stepsCount; j++) { //reset all probabilities, find first group step
-                workingProbabilityMatrix[j] = 1;					
-            }
-
-            if(messagesFromExpanders[TRACK_COUNT * 3 + 0] > 0) { // 0 is track not selected
-                bool useDivs = messagesFromExpanders[TRACK_COUNT * 2 + 0] == 2; //2 is divs
-                for(int j = 0; j < stepsCount; j++) { // Assign probabilites and swing
-                    int stepIndex = j;
-                    bool stepFound = true;
-                    if(useDivs) { //Use j as a count to the div # we are looking for
-                        if(j < beatCount) {
-                            stepIndex = beatLocation[j];
-                            // fprintf(stderr, "Probability Track:%i step:%i BL:%i \n",i,j,stepIndex);
-                        } else {
-                            stepFound = false;
-                        }               
-                    }
-                    
-                    if(stepFound) {
-                        float probability = messagesFromExpanders[TRACK_LEVEL_PARAM_COUNT + (0 * EXPANDER_MAX_STEPS) + j];
-                        float probabilityMode = messagesFromExpanders[TRACK_LEVEL_PARAM_COUNT + (EXPANDER_MAX_STEPS * TRACK_COUNT) + (0 * EXPANDER_MAX_STEPS) + j];
-                        
-                        workingProbabilityMatrix[stepIndex] = probability;
-                        probabilityGroupModeMatrix[stepIndex] = probabilityMode;
-                        if(probabilityGroupFirstStep < 0 && probabilityGroupModeMatrix[stepIndex] != NONE_PGTM ) {
-                            probabilityGroupFirstStep = stepIndex;
-                        }
-                    } 
-                }
-            }
+            expanderDataChanged = messagesFromExpanders[0] || (!QARExpanderDisconnectReset); //If an expander first gets hooked up get data changes
 			
+			QARExpanderDisconnectReset = true;
 
-			//Process Groove Expander Stuff									
-            for(int j = 0; j < stepsCount; j++) { //reset all probabilities
-                workingSwingMatrix[j] = 0.0;
-            }
-
-            if(messagesFromExpanders[TRACK_COUNT * 4 + 0] > 0) { // 0 is track not selected
-                bool useDivs = messagesFromExpanders[TRACK_COUNT * 3 + 0] == 2; //2 is divs
-                trackSwingUsingDivs = useDivs;
-
-                int grooveLength = (int)(messagesFromExpanders[TRACK_COUNT * 5 + 0]);
-                bool useTrackLength = messagesFromExpanders[TRACK_COUNT * 6 + 0];
-
-                swingRandomness = messagesFromExpanders[TRACK_COUNT * 7 + 0];
-                useGaussianDistribution = messagesFromExpanders[TRACK_COUNT * 8 + 0];
-
-                if(useTrackLength) {
-                    grooveLength = stepsCount;
+			//Process Probability Expander Stuff						
+            if(expanderDataChanged) {
+                probabilityGroupFirstStep = -1;
+                for(int j = 0; j < stepsCount; j++) { //reset all probabilities, find first group step
+                    workingProbabilityMatrix[j] = 1;					
                 }
-                subBeatLength = grooveLength;
-                // if(subBeatIndex >= grooveLength) { //Reset if necessary
-                subBeatIndex = 0;
-                // }
-                
 
-                int workingBeatIndex = 0;
+                if(messagesFromExpanders[TRACK_COUNT * 4 + 0] > 0) { // 0 is track not selected
+                    bool useDivs = messagesFromExpanders[TRACK_COUNT * 4 + 0] == 2; //2 is divs
+                    for(int j = 0; j < stepsCount; j++) { // Assign probabilites and swing
+                        int stepIndex = j;
+                        bool stepFound = true;
+                        if(useDivs) { //Use j as a count to the div # we are looking for
+                            if(j < beatCount) {
+                                stepIndex = beatLocation[j];
+                                // fprintf(stderr, "Probability Track:%i step:%i BL:%i \n",i,j,stepIndex);
+                            } else {
+                                stepFound = false;
+                            }               
+                        }
+                        
+                        if(stepFound) {
+                            float probability = messagesFromExpanders[TRACK_LEVEL_PARAM_COUNT + (0 * EXPANDER_MAX_STEPS) + j];
+                            float probabilityMode = messagesFromExpanders[TRACK_LEVEL_PARAM_COUNT + (EXPANDER_MAX_STEPS * TRACK_COUNT) + (0 * EXPANDER_MAX_STEPS) + j];
+                            
+                            workingProbabilityMatrix[stepIndex] = probability;
+                            probabilityGroupModeMatrix[stepIndex] = probabilityMode;
+                            if(probabilityGroupFirstStep < 0 && probabilityGroupModeMatrix[stepIndex] != NONE_PGTM ) {
+                                probabilityGroupFirstStep = stepIndex;
+                            }
+                        } 
+                    }
+                }
 
-                for(int j = 0; j < stepsCount; j++) { // Assign probabilites and swing
-                    int stepIndex = j;
-                    bool stepFound = true;
-                    if(useDivs) { //Use j as a count to the div # we are looking for
-                        if(j < beatCount) { //hard coding an 8 for test
-                            stepIndex = beatLocation[j];
-                        } else {
-                            stepFound = false;
+
+                // Process Conditional  Expander Stuff	
+                for(int j = 0; j < stepsCount; j++) { //reset all conditiona, find first group step
+                    workingConditionalMatrix[j] = 1;					
+                }
+
+                if(messagesFromExpanders[TRACK_COUNT * 16 + 0] > 0) { // 0 is track not selected
+                    bool useDivs = messagesFromExpanders[TRACK_COUNT * 16 + 0] == 2; //2 is divs
+                    for(int j = 0; j < stepsCount; j++) { // Assign probabilites and swing
+                        int stepIndex = j;
+                        bool stepFound = true;
+                        if(useDivs) { //Use j as a count to the div # we are looking for
+                            if(j < beatCount) {
+                                stepIndex = beatLocation[j];
+                                // fprintf(stderr, "Conditional step:%i BL:%i \n",j,stepIndex);
+                            } else {
+                                stepFound = false;
+                            }
+                        }
+                        
+                        if(stepFound) {
+                            int divideCount = messagesFromExpanders[TRACK_LEVEL_PARAM_COUNT + (EXPANDER_MAX_STEPS * TRACK_COUNT * 4) + (0 * EXPANDER_MAX_STEPS) + j];
+                            // fprintf(stderr, "Conditional Track:%i step:%i DC:%i \n",i,stepIndex,divideCount);
+                            workingConditionalMatrix[stepIndex] = divideCount;
+                        } 
+                    }
+                }
+
+            
+                //Process Groove Expander Stuff									
+                for(int j = 0; j < stepsCount; j++) { //reset all probabilities
+                    workingSwingMatrix[j] = 0.0;
+                }
+
+                if(messagesFromExpanders[TRACK_COUNT * 5 + 0] > 0) { // 0 is track not selected
+                    bool useDivs = messagesFromExpanders[TRACK_COUNT * 5 + 0] == 2; //2 is divs
+                    trackSwingUsingDivs = useDivs;
+
+                    int grooveLength = (int)(messagesFromExpanders[TRACK_COUNT * 6 + 0]);
+                    bool useTrackLength = messagesFromExpanders[TRACK_COUNT * 7 + 0];
+
+                    swingRandomness = messagesFromExpanders[TRACK_COUNT * 8 + 0];
+                    useGaussianDistribution = messagesFromExpanders[TRACK_COUNT * 9 + 0];
+
+                    if(useTrackLength) {
+                        grooveLength = stepsCount;
+                    }
+                    subBeatLength = grooveLength;
+                    // if(subBeatIndex >= grooveLength) { //Reset if necessary
+                    subBeatIndex = 0;
+                    // }
+                    
+
+                    int workingBeatIndex = 0;
+
+                    for(int j = 0; j < stepsCount; j++) { // Assign probabilites and swing
+                        int stepIndex = j;
+                        bool stepFound = true;
+                        if(useDivs) { //Use j as a count to the div # we are looking for
+                            if(j < beatCount) { //hard coding an 8 for test
+                                stepIndex = beatLocation[j];
+                            } else {
+                                stepFound = false;
+                            }
+                        }
+                        
+                        if(stepFound) {
+                            float swing = messagesFromExpanders[TRACK_LEVEL_PARAM_COUNT + (EXPANDER_MAX_STEPS * TRACK_COUNT * 2) + (0 * EXPANDER_MAX_STEPS) + workingBeatIndex];
+                            workingSwingMatrix[stepIndex] = swing;						
+                        } 
+                        workingBeatIndex +=1;
+                        if(workingBeatIndex >= grooveLength) {
+                            workingBeatIndex = 0;
                         }
                     }
+                }
+            
+
+                // Process Warped Space Stuff									
+                for(int j = 0; j < stepsCount; j++) { //reset all warping
+                    workingBeatWarpMatrix[j] = 1.0;
+                }
+
+                if(messagesFromExpanders[TRACK_COUNT * 10 + 0] > 0) { // 0 is track not selected
+                    beatWarping = messagesFromExpanders[TRACK_COUNT * 11 + 0];
+                    beatWarpingPosition = (int)messagesFromExpanders[TRACK_COUNT * 12 + 0];
+                    beatWarpingLength = (int)messagesFromExpanders[TRACK_COUNT * 13 + 0];
                     
-                    if(stepFound) {
-                        float swing = messagesFromExpanders[TRACK_LEVEL_PARAM_COUNT + (EXPANDER_MAX_STEPS * TRACK_COUNT * 2) + (0 * EXPANDER_MAX_STEPS) + workingBeatIndex];
-                        workingSwingMatrix[stepIndex] = swing;						
-                    } 
-                    workingBeatIndex +=1;
-                    if(workingBeatIndex >= grooveLength) {
-                        workingBeatIndex = 0;
+                    float trackWarpedStepCount = (float)(std::min(beatWarpingLength,stepsCount));					
+                    float stepsToSpread = (trackWarpedStepCount / 2.0)-1;
+                    float fraction = 1.0/beatWarping;
+                    for(int j = 0; j < trackWarpedStepCount; j++) {	
+                        int actualBeat = (j + beatWarpingPosition) % stepsCount; 
+                        float fj = (float)j;					 
+                        if(j <= stepsToSpread)
+                            workingBeatWarpMatrix[actualBeat] = (2-fraction)*(stepsToSpread-fj)/stepsToSpread + (fraction*fj/stepsToSpread); 
+                        else							
+                            workingBeatWarpMatrix[actualBeat] = (2-fraction)*(fj-stepsToSpread-1.0)/stepsToSpread + (fraction*(trackWarpedStepCount-fj-1.0)/stepsToSpread); 						
                     }
                 }
-            }
-        
 
-            //Process Warped Space Stuff									
-            for(int j = 0; j < stepsCount; j++) { //reset all warping
-                workingBeatWarpMatrix[j] = 1.0;
-            }
-
-            if(messagesFromExpanders[TRACK_COUNT * 9 + 0] > 0) { // 0 is track not selected
-                beatWarping = messagesFromExpanders[TRACK_COUNT * 10 + 0];
-                beatWarpingPosition = (int)messagesFromExpanders[TRACK_COUNT * 11 + 0];
-                beatWarpingLength = (int)messagesFromExpanders[TRACK_COUNT * 12 + 0];
-                
-                float trackWarpedStepCount = (float)(std::min(beatWarpingLength,stepsCount));					
-                float stepsToSpread = (trackWarpedStepCount / 2.0)-1;
-                float fraction = 1.0/beatWarping;
-                for(int j = 0; j < trackWarpedStepCount; j++) {	
-                    int actualBeat = (j + beatWarpingPosition) % stepsCount; 
-                    float fj = (float)j;					 
-                    if(j <= stepsToSpread)
-                        workingBeatWarpMatrix[actualBeat] = (2-fraction)*(stepsToSpread-fj)/stepsToSpread + (fraction*fj/stepsToSpread); 
-                    else							
-                        workingBeatWarpMatrix[actualBeat] = (2-fraction)*(fj-stepsToSpread-1.0)/stepsToSpread + (fraction*(trackWarpedStepCount-fj-1.0)/stepsToSpread); 						
+                //Process Irrational Rhythms
+                for(int j = 0; j < stepsCount; j++) { //reset all irrationals
+                    workingIrrationalRhythmMatrix[j] = 1.0;
                 }
 
-            }
+                for(int j = 0; j < EXPANDER_MAX_STEPS; j+=3) { // find any irrationals
+                    int irPos = messagesFromExpanders[TRACK_LEVEL_PARAM_COUNT + (EXPANDER_MAX_STEPS * TRACK_COUNT * 3) + (0 * EXPANDER_MAX_STEPS) + j];
+                    if(irPos != 0) {
+                        bool useDivs = irPos < 0;
+                        irPos = std::abs(irPos-1); //Get back to 0 based
+                        int stepIndex = irPos;
+                        bool stepFound = true;
+                        if(useDivs) { //Use j as a count to the div # we are looking for
+                            if(irPos < beatCount) {
+                                stepIndex = beatLocation[irPos];
+                                // fprintf(stderr, "Probability Track:%i step:%i BL:%i \n",i,j,stepIndex);
+                            } else {
+                                stepFound = false;
+                            }
+                        }
+                                        
+                        if(stepFound) {
+                            float irNbrSteps = messagesFromExpanders[TRACK_LEVEL_PARAM_COUNT + (EXPANDER_MAX_STEPS * TRACK_COUNT * 3) + (0 * EXPANDER_MAX_STEPS) + j + 1];
+                            float ratio = messagesFromExpanders[TRACK_LEVEL_PARAM_COUNT + (EXPANDER_MAX_STEPS * TRACK_COUNT * 3) + (0 * EXPANDER_MAX_STEPS) + j + 2];
+                            float actualRatio = std::min(ratio/irNbrSteps,1.0f);
+                            for(int k=0;k<irNbrSteps;k++) {
+                                if(stepIndex+k < 16) {
+                                    workingIrrationalRhythmMatrix[stepIndex+k] *= actualRatio; // allow rhythms to nest
+                                } else {
+                                    break;
+                                }
+                            }
+                        } 
+                    } else {
+                        break; // no more irrational rhythms
+                    }
+                }			
 
+        		//set calculated probability and swing
+                for(int j = 0; j < MAX_STEPS; j++) { 
+                    probabilityMatrix[j] = workingProbabilityMatrix[j];
+                    conditionalMatrix[j] = workingConditionalMatrix[j];
+                    swingMatrix[j] = workingSwingMatrix[j];
+                    beatWarpMatrix[j] = workingBeatWarpMatrix[j];
+                    irrationalRhythmMatrix[j] = workingIrrationalRhythmMatrix[j];                    
+                }
+            }
             rightExpander.module->leftExpander.messageFlipRequested = true;			
 		} else {
 			if(QARExpanderDisconnectReset) { //If QRE gets disconnected, reset warping, probability and swing
                 subBeatIndex = 0;
                 beatWarping = 1.0;
                 for(int j = 0; j < MAX_STEPS; j++) { //reset all probabilities
-                    workingProbabilityMatrix[j] = 1;
-                    workingSwingMatrix[j] = 0;
-                    workingBeatWarpMatrix[j] = 1.0;
+                    probabilityMatrix[j] = 1.0;
+                    conditionalMatrix[j] = 1;
+                    irrationalRhythmMatrix[j] = 1.0;
+                    swingMatrix[j] = 0;
+                    beatWarpMatrix[j] = 1.0;
                     swingRandomness = 0.0f;
                 }
             }
             QARExpanderDisconnectReset = false;
 		}
 
-
-		//set calculated probability and swing
-        for(int j = 0; j < MAX_STEPS; j++) { 
-            probabilityMatrix[j] = workingProbabilityMatrix[j];
-            swingMatrix[j] = workingSwingMatrix[j];
-            beatWarpMatrix[j] = workingBeatWarpMatrix[j];
-        }
 
 		//Calculate clock duration
 		double timeAdvance =1.0 / args.sampleRate;
@@ -690,6 +773,7 @@ struct PWAlgorithmicExpander : Module {
 		}
 
         bool probabilityResult = true;
+        bool conditionalResult = true;
         if(calculateProbabilities) {
             probabilityResult = (float) rand()/RAND_MAX < probabilityMatrix[beatIndex];	
             if(probabilityGroupModeMatrix[beatIndex] != NONE_PGTM) {
@@ -711,9 +795,17 @@ struct PWAlgorithmicExpander : Module {
             } else {
                 calculatedSwingRandomness =  (((double) rand()/RAND_MAX - 0.5f) * swingRandomness);
             }
+
+            conditionalCounterMatrix[beatIndex] -=1;
+            conditionalResult = conditionalCounterMatrix[beatIndex] <= 0;
+            if(conditionalResult) {
+                conditionalCounterMatrix[beatIndex] = conditionalMatrix[beatIndex];
+            }
         }
 
-        return probabilityResult;
+        
+
+        return probabilityResult && conditionalResult;
 	}
 	// For more advanced Module features, read Rack's engine.hpp header file
 	// - onSampleRateChange: event triggered by a change of sample rate
@@ -757,7 +849,9 @@ struct PWAEBeatDisplay : FramebufferWidget {
 	}
 
 
-    void drawArc(const DrawArgs &args, float stepsCount, float stepNumber, float runningTrackWidth, int algorithm, bool isBeat, float beatWarp, float probability, int triggerState, int probabilityGroupMode, float swing, float nextSwing, float swingRandomness, float wfTrackDurationAdjustment, float wfStepDuration) 
+    void drawArc(const DrawArgs &args, float stepsCount, float stepNumber, float runningTrackWidth, int algorithm, bool isBeat, float beatWarp, float probability, 
+                int countsLeft, int divideCount, int triggerState, int probabilityGroupMode, float swing, float nextSwing, float swingRandomness, 
+                float wfTrackDurationAdjustment, float wfStepDuration) 
 	{		
         const float rotate90 = (M_PI) / 2.0;
 
@@ -765,16 +859,19 @@ struct PWAEBeatDisplay : FramebufferWidget {
 
 		//Default Euclidean Colors
 		NVGcolor strokeColor = nvgRGBA(0xef, 0xe0, 0, 0xff);
-		NVGcolor fillColor = nvgRGBA(0xef,0xe0,0,opacity);
+		NVGcolor randomFillColor = nvgRGBA(0xff,0x00,0,0x40);			
+        NVGcolor innerFillColor = nvgRGBA(0xef,0xe0,0,opacity);
+        NVGcolor outerFillColor = nvgRGBA(0xef,0xe0,0,0x30);
         if(algorithm == module->GOLUMB_RULER_ALGO) { 
             strokeColor = nvgRGBA(0, 0xe0, 0xef, 0xff);
-			fillColor = nvgRGBA(0,0xe0,0xef,opacity);
+			innerFillColor = nvgRGBA(0,0xe0,0xef,opacity);
+			outerFillColor = nvgRGBA(0,0xe0,0xef,0x30);
         } else if(algorithm == module->WELL_FORMED_ALGO ) { 
             strokeColor = nvgRGBA(0x10, 0xcf, 0x20, 0xff);
-			fillColor = nvgRGBA(0x10,0x7f,0x20,opacity);        
+			innerFillColor = nvgRGBA(0x10,0x7f,0x20,opacity);        
+			outerFillColor = nvgRGBA(0x10,0x7f,0x20,0x30);        
 		}		
         
-        NVGcolor randomFillColor = nvgRGBA(0xff,0x00,0,0x40);			
         nvgFillColor(args.vg, nvgRGBA(0xff, 0xff, 0x20, (int)opacity));
 
     
@@ -785,6 +882,7 @@ struct PWAEBeatDisplay : FramebufferWidget {
 			baseEndDegree = baseStartDegree;
         }
 
+        
         
 		nvgStrokeColor(args.vg, strokeColor);
 		nvgStrokeWidth(args.vg, 1.0);
@@ -808,7 +906,10 @@ struct PWAEBeatDisplay : FramebufferWidget {
             nvgLineTo(args.vg,x,y);
             nvgArc(args.vg,89,80.5,65.0,endDegree,startDegree,NVG_CCW);
             nvgClosePath(args.vg);		
-            nvgFillColor(args.vg, fillColor);
+			NVGpaint paint = nvgRadialGradient(args.vg,89.0, 80.0, 65.0, 65.0 + (20*probability),
+					outerFillColor, innerFillColor);
+			nvgFillPaint(args.vg, paint);
+            // nvgFillColor(args.vg, fillColor);
             nvgFill(args.vg);
             nvgStroke(args.vg);
 
@@ -826,6 +927,30 @@ struct PWAEBeatDisplay : FramebufferWidget {
                 nvgFill(args.vg);
                 nvgStroke(args.vg);
             }
+
+            //draw conditional status
+			if(divideCount > 1) {
+				nvgBeginPath(args.vg);
+				nvgStrokeWidth(args.vg, 0.5);
+				nvgStrokeColor(args.vg, countsLeft > 1 ? nvgRGBA(0xff, 0x1f, 0, 0xaf) : nvgRGBA(0x1f, 0xff, 0x1f, 0xaf));				
+				nvgFillColor(args.vg, countsLeft > 1 ? nvgRGBA(0xff, 0x1f, 0, 0xaf) : nvgRGBA(0x1f, 0xff, 0x1f, 0xaf));				
+					
+				double cx= ((cos(startDegree) * 85.0 + 89.0) + x) / 2.0;
+            	double cy= ((sin(startDegree) * 85.0 + 80.0) + y) / 2.0;
+				nvgCircle(args.vg,cx,cy,5.0);
+                nvgStroke(args.vg);
+				if(countsLeft <= 1 || countsLeft == divideCount) {
+					nvgFill(args.vg);	
+				} else {
+					nvgBeginPath(args.vg);
+					float dcDegree = (M_PI * 2.0f * (countsLeft-1.0) / (divideCount-1.0)) - rotate90;
+					nvgMoveTo(args.vg,cx,cy);
+					nvgLineTo(args.vg,cx,cy+5.0);                
+					nvgArc(args.vg,cx,cy,5,-rotate90,dcDegree,NVG_CW);
+					nvgLineTo(args.vg,cx,cy);                
+					nvgFill(args.vg);
+				}
+			}
 
             if (triggerState == module->NOT_TRIGGERED_PGTS && probabilityGroupMode != module->NONE_PGTM) {
 				nvgBeginPath(args.vg);
@@ -868,15 +993,21 @@ struct PWAEBeatDisplay : FramebufferWidget {
             int nextStepNumber = (stepNumber + 1) % stepsCount;					
             bool isBeat = module->beatMatrix[stepNumber];
             float probability = module->probabilityMatrix[stepNumber];
+            int countsLeft = module->conditionalCounterMatrix[stepNumber];
+            int divideCount = module->conditionalMatrix[stepNumber];
             float swing = module->swingMatrix[stepNumber];	
             float nextSwing = module->swingMatrix[nextStepNumber];	
             float swingRandomness = module->swingRandomness;
             float beatWarp = module->beatWarpMatrix[stepNumber];
+            float irrationalRhythm = module->irrationalRhythmMatrix[stepNumber];
+            float beatSizeAdjust = beatWarp * irrationalRhythm;
             float wfStepDuration = module->wellFormedStepDurations[stepNumber];
             int triggerState = module->probabilityGroupTriggered;
             int probabilityGroupMode = module->probabilityGroupModeMatrix[stepNumber];
-            drawArc(args, float(stepsCount), float(stepNumber),runningTrackWidth,algorithn,isBeat,beatWarp,probability,triggerState,probabilityGroupMode,swing,nextSwing,swingRandomness,wfTrackDurationAdjustment,wfStepDuration);
-            runningTrackWidth += beatWarp * (algorithn == module->WELL_FORMED_ALGO ? wfStepDuration * wfTrackDurationAdjustment : 1);
+            drawArc(args, float(stepsCount), float(stepNumber),runningTrackWidth,algorithn,isBeat,beatSizeAdjust,probability,
+                            countsLeft,divideCount,triggerState,probabilityGroupMode,
+                            swing,nextSwing,swingRandomness,wfTrackDurationAdjustment, wfStepDuration);
+            runningTrackWidth += beatSizeAdjust * (algorithn == module->WELL_FORMED_ALGO ? wfStepDuration * wfTrackDurationAdjustment : 1);
         }		
 
         drawPatternNameTrack(args, Vec(90 , 184), module->trackPatternName);

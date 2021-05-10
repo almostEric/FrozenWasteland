@@ -2,6 +2,7 @@
 #include "ui/knobs.hpp"
 #include "ui/ports.hpp"
 
+#include <ctime>
 
 //Not sure why this is necessary, but SSLFO is running twice as fast as sample rate says it should
 #define SampleRateCompensation 2
@@ -331,6 +332,8 @@ struct SeriouslySlowEG : Module {
 					}
 
 					if (gateMode ? !gateTrigger.isHigh() : holdComplete) {
+					// std::time_t t = std::time(0);
+					// fprintf(stderr, "Release Started: %s \n", std::ctime(&t));
 						stage = RELEASE_STAGE;
 						stageProgress = 0.0;
 						releaseLevel = envelope;
@@ -348,8 +351,9 @@ struct SeriouslySlowEG : Module {
 
 			case DELAY_STAGE: {
 				stageProgress += 1.0 / delayTime;
-				//fprintf(stderr, "%f %f\n", stageProgress, delayTime);
 				if (stageProgress >= 1.0) {
+					// std::time_t t = std::time(0);
+					// fprintf(stderr, "Attack Started: %s \n", std::ctime(&t));
 					stage = ATTACK_STAGE;
 					stageProgress = 0.0;
 				}
@@ -373,6 +377,8 @@ struct SeriouslySlowEG : Module {
 					}
 				}
 				if (envelope >= 1.0) {
+					// std::time_t t = std::time(0);
+					// fprintf(stderr, "Decay Started: %s \n", std::ctime(&t));
 					stage = DECAY_STAGE;
 					stageProgress = 0.0;
 				}
@@ -398,6 +404,8 @@ struct SeriouslySlowEG : Module {
 				envelope *= 1.0 - sustainLevel;
 				envelope += sustainLevel;
 				if (envelope <= sustainLevel) {
+					// std::time_t t = std::time(0);
+					// fprintf(stderr, "Sustain Started: %s \n", std::ctime(&t));
 					stage = SUSTAIN_STAGE;
 				}
 				break;
@@ -525,9 +533,15 @@ struct SSEGProgressDisplay : TransparentWidget {
 		float endArc = (phase * M_PI * 2) - rotate90;
 
 		if(active) {
-			nvgFillColor(args.vg, nvgRGBA(0x20, 0xff, 0x20, 0xff));
+			// nvgFillColor(args.vg, nvgRGBA(0x20, 0xff, 0x20, 0xff));
+			NVGpaint paint = nvgRadialGradient(args.vg, 49, 62.5, 0, 35,
+					nvgRGBA(0x20, 0xdf, 0x20, 0xff), nvgRGBA(0x20, 0xdf, 0x20, 0x1f));
+			nvgFillPaint(args.vg, paint);
 		} else {
-			nvgFillColor(args.vg, nvgRGBA(0xff, 0xff, 0x20, 0xff));
+			// nvgFillColor(args.vg, nvgRGBA(0xff, 0xff, 0x20, 0xff));
+			NVGpaint paint = nvgRadialGradient(args.vg, 49, 62.5, 0, 35,
+					nvgRGBA(0xff, 0xff, 0x20, 0xff), nvgRGBA(0xff, 0xff, 0x20, 0x1f));
+			nvgFillPaint(args.vg, paint);
 		}
 		nvgBeginPath(args.vg);
 		nvgArc(args.vg,49,62.5,35,startArc,endArc,NVG_CW);
@@ -538,7 +552,10 @@ struct SSEGProgressDisplay : TransparentWidget {
 
 	void drawEGProgress(const DrawArgs &args, int stage, double progress, double holdProgress, float sustainLevel)
 	{
-		nvgFillColor(args.vg, nvgRGBA(0xff, 0xff, 0x20, 0xff));
+		NVGpaint paint = nvgLinearGradient(args.vg,0,0,0,100,nvgRGBA(0xff, 0xff, 0x20, 0xff), nvgRGBA(0xff, 0xff, 0x20, 0x1f));
+        nvgFillPaint(args.vg, paint);
+
+		// nvgFillColor(args.vg, nvgRGBA(0xff, 0xff, 0x20, 0xff));
 		nvgStrokeColor(args.vg, nvgRGBA(0xff, 0xff, 0x20, 0xff));
 		nvgBeginPath(args.vg);
 		nvgMoveTo(args.vg,100,100);

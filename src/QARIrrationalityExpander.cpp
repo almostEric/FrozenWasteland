@@ -9,8 +9,8 @@
 #define NUM_TAPS 16
 #define PASSTHROUGH_LEFT_VARIABLE_COUNT 13
 #define PASSTHROUGH_RIGHT_VARIABLE_COUNT 9
-#define STEP_LEVEL_PARAM_COUNT 4
-#define TRACK_LEVEL_PARAM_COUNT TRACK_COUNT * 15
+#define STEP_LEVEL_PARAM_COUNT 5
+#define TRACK_LEVEL_PARAM_COUNT TRACK_COUNT * 17
 #define PASSTHROUGH_OFFSET MAX_STEPS * TRACK_COUNT * STEP_LEVEL_PARAM_COUNT + TRACK_LEVEL_PARAM_COUNT
 #define NBR_IRRATIONAL_CONSTANTS 7
 
@@ -68,7 +68,9 @@ struct QARIrrationalityExpander : Module {
 	float leftMessages[2][PASSTHROUGH_OFFSET + PASSTHROUGH_LEFT_VARIABLE_COUNT + PASSTHROUGH_RIGHT_VARIABLE_COUNT] = {};
 	float rightMessages[2][PASSTHROUGH_OFFSET + PASSTHROUGH_LEFT_VARIABLE_COUNT + PASSTHROUGH_RIGHT_VARIABLE_COUNT] = {};
 	
-	
+	bool trackDirty[TRACK_COUNT] = {0};
+
+
 	dsp::SchmittTrigger trackIRTrigger[TRACK_COUNT],irEnableTrigger,stepDivTrigger;
 	bool trackIRSelected[TRACK_COUNT],irEnabled = true;
 	bool stepsOrDivs = false;
@@ -77,6 +79,10 @@ struct QARIrrationalityExpander : Module {
 	float irNbrSteps;
 	float irRatio;
 	float computedRatio;
+
+	float lastIrPos = 0;
+	float lastIrNbrSteps = 0;
+	float lastIrRatio = 0;
 
 
 	float sceneData[NBR_SCENES][12] = {{0}};
@@ -87,7 +93,10 @@ struct QARIrrationalityExpander : Module {
 	float numStepsPercentage = 0;
 	float irRatioPercentage = 0;
 			
-	
+			
+	bool isDirty = false;
+	bool QARExpanderDisconnectReset = true;
+
 	QARIrrationalityExpander() {
 		config(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS, NUM_LIGHTS);
 		        
@@ -195,26 +204,31 @@ struct QARIrrationalityExpander : Module {
 	}
 
 	void process(const ProcessArgs &args) override {
+		isDirty = false;
 		for(int i=0; i< TRACK_COUNT; i++) {
 			if (trackIRTrigger[i].process(params[TRACK_1_IR_ENABLED_PARAM+i].getValue())) {
 				trackIRSelected[i] = !trackIRSelected[i];
+				isDirty =true;
 			}
 			lights[TRACK_1_IR_ENABELED_LIGHT+i].value = trackIRSelected[i];
 		}        
 		if (irEnableTrigger.process(params[IR_ON_OFF_PARAM].getValue() + inputs[IR_ON_OFF_INPUT].getVoltage())) {
 			irEnabled = !irEnabled;
+			isDirty =true;
 		}
 		lights[IR_ON_LIGHT].value = irEnabled;
 
 		if (stepDivTrigger.process(params[STEP_OR_DIV_PARAM].getValue())) {
 			stepsOrDivs = !stepsOrDivs;
+			isDirty =true;
 		}
 		lights[USING_DIVS_LIGHT].value = stepsOrDivs;
 
 
 		bool motherPresent = (leftExpander.module && (leftExpander.module->model == modelQuadAlgorithmicRhythm || leftExpander.module->model == modelQARWellFormedRhythmExpander || 
 								leftExpander.module->model == modelQARProbabilityExpander || leftExpander.module->model == modelQARGrooveExpander || 
-								leftExpander.module->model == modelQARWarpedSpaceExpander || leftExpander.module->model == modelQARIrrationalityExpander || 
+								leftExpander.module->model == modelQARWarpedSpaceExpander || leftExpander.module->model == modelQARIrrationalityExpander ||
+								leftExpander.module->model == modelQARConditionalExpander || 
 								leftExpander.module->model == modelPWAlgorithmicExpander));
 		//lights[CONNECTED_LIGHT].value = motherPresent;
 		if (motherPresent) {
@@ -236,7 +250,8 @@ struct QARIrrationalityExpander : Module {
 			//If another expander is present, get its values (we can overwrite them)
 			bool anotherExpanderPresent = (rightExpander.module && (rightExpander.module->model == modelQARWellFormedRhythmExpander || rightExpander.module->model == modelQARGrooveExpander || 
 											rightExpander.module->model == modelQARProbabilityExpander || rightExpander.module->model == modelQARIrrationalityExpander || 
-											rightExpander.module->model == modelQARWarpedSpaceExpander || rightExpander.module->model == modelQuadAlgorithmicRhythm));
+											rightExpander.module->model == modelQARWarpedSpaceExpander || rightExpander.module->model == modelQuadAlgorithmicRhythm ||
+											rightExpander.module->model == modelQARConditionalExpander));
 			if(anotherExpanderPresent)
 			{			
 				float *messagesFromExpander = (float*)rightExpander.consumerMessage;
@@ -245,6 +260,11 @@ struct QARIrrationalityExpander : Module {
                 if(rightExpander.module->model != modelQuadAlgorithmicRhythm) { // Get QRE values							
 					std::copy(messagesFromExpander,messagesFromExpander + PASSTHROUGH_OFFSET,messagesToMother);		
 				}
+				for(int i=0;i<TRACK_COUNT;i++) {
+					trackDirty[i] = messagesFromExpander[i] || (!QARExpanderDisconnectReset);
+				}
+
+				QARExpanderDisconnectReset = true;
 
 				//QAR Pass through left
 				std::copy(messagesFromExpander+PASSTHROUGH_OFFSET,messagesFromExpander+PASSTHROUGH_OFFSET+PASSTHROUGH_LEFT_VARIABLE_COUNT,messagesToMother+PASSTHROUGH_OFFSET);		
@@ -254,15 +274,31 @@ struct QARIrrationalityExpander : Module {
 									messageToExpander+PASSTHROUGH_OFFSET + PASSTHROUGH_LEFT_VARIABLE_COUNT);			
 
 				rightExpander.module->leftExpander.messageFlipRequested = true;
+			} else {
+				std::fill(trackDirty,trackDirty+TRACK_COUNT,0);
+				isDirty = QARExpanderDisconnectReset;
+				QARExpanderDisconnectReset = false;
 			}
  
 
             irPos = clamp(params[IR_START_POS_PARAM].getValue() + std::floor(inputs[IR_START_POS_INPUT].isConnected() ? inputs[IR_START_POS_INPUT].getVoltage() * 0.6f * params[IR_START_POS_CV_ATTENUVETER_PARAM].getValue() : 0.0f),1.0,ACTUAL_MAX_STEPS-2.0);
 			irStartPosPercentage = (irPos - 1) / (ACTUAL_MAX_STEPS-3.0);
+			if(irPos != lastIrPos) {
+				isDirty = true;
+				lastIrPos = irPos;
+			}
             irNbrSteps = clamp(params[IR_NUM_STEPS_PARAM].getValue() + std::floor(inputs[IR_NUM_STEPS_INPUT].isConnected() ? inputs[IR_NUM_STEPS_INPUT].getVoltage() / 1.8 * params[IR_NUM_STEPS_CV_ATTENUVETER_PARAM].getValue() : 0.0f),2.0f,ACTUAL_MAX_STEPS-1.0);
 			numStepsPercentage = (irNbrSteps - 2) / (ACTUAL_MAX_STEPS-2.0);
+			if(irNbrSteps != lastIrNbrSteps) {
+				isDirty = true;
+				lastIrNbrSteps = irNbrSteps;
+			}
             irRatio = clamp(params[IR_RATIO_PARAM].getValue() + std::floor(inputs[IR_RATIO_INPUT].isConnected() ? inputs[IR_RATIO_INPUT].getVoltage() / 1.8 * params[IR_RATIO_CV_ATTENUVETER_PARAM].getValue() : 0.0f),1.0f-NBR_IRRATIONAL_CONSTANTS,ACTUAL_MAX_STEPS-2.0);
 			irRatioPercentage = (irRatio + 6.0) / (ACTUAL_MAX_STEPS + 4.0);
+			if(irRatio != lastIrRatio) {
+				isDirty = true;
+				lastIrRatio = irRatio;
+			}
 			int index = std::abs(irRatio);
 			computedRatio = (irRatio < 1) ? irrationalRatios[index] : irRatio;
 
@@ -282,6 +318,7 @@ struct QARIrrationalityExpander : Module {
 						messagesToMother[TRACK_LEVEL_PARAM_COUNT + (MAX_STEPS * TRACK_COUNT * 3) + (i * MAX_STEPS) + openMessageSlot+2] = computedRatio;	
 					}
 				} 
+				messagesToMother[i] = isDirty || trackDirty[i];
 			}
 					
 			leftExpander.module->rightExpander.messageFlipRequested = true;

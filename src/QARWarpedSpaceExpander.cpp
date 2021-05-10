@@ -9,8 +9,8 @@
 #define NUM_TAPS 16
 #define PASSTHROUGH_LEFT_VARIABLE_COUNT 13
 #define PASSTHROUGH_RIGHT_VARIABLE_COUNT 9
-#define STEP_LEVEL_PARAM_COUNT 4
-#define TRACK_LEVEL_PARAM_COUNT TRACK_COUNT * 15
+#define STEP_LEVEL_PARAM_COUNT 5
+#define TRACK_LEVEL_PARAM_COUNT TRACK_COUNT * 17
 #define PASSTHROUGH_OFFSET EXPANDER_MAX_STEPS * TRACK_COUNT * STEP_LEVEL_PARAM_COUNT + TRACK_LEVEL_PARAM_COUNT
 
 
@@ -61,12 +61,22 @@ struct QARWarpedSpaceExpander : Module {
 	float leftMessages[2][PASSTHROUGH_OFFSET + PASSTHROUGH_LEFT_VARIABLE_COUNT + PASSTHROUGH_RIGHT_VARIABLE_COUNT] = {};
 	float rightMessages[2][PASSTHROUGH_OFFSET + PASSTHROUGH_LEFT_VARIABLE_COUNT + PASSTHROUGH_RIGHT_VARIABLE_COUNT] = {};
 
+	bool trackDirty[TRACK_COUNT] = {0};
+
+
 	float sceneData[NBR_SCENES][11] = {{0}};
 	int sceneChangeMessage = 0;
 
 	float warpAmount = 0;
 	float warpPosition = 0;
 	float warpLength = 0;
+
+	float lastWarpAmount = 0;
+	float lastWarpPosition = 0;
+	float lastWarpLength = 0;
+
+	bool isDirty = false;
+	bool QARExpanderDisconnectReset = true;
 
     float lerp(float v0, float v1, float t) {
 	  return (1 - t) * v0 + t * v1;
@@ -181,20 +191,24 @@ struct QARWarpedSpaceExpander : Module {
 
 
 	void process(const ProcessArgs &args) override {
+		isDirty = false;
 		for(int i=0; i< TRACK_COUNT; i++) {
 			if (trackWarpTrigger[i].process(params[TRACK_1_WARP_ENABLED_PARAM+i].getValue())) {
 				trackWarpSelected[i] = !trackWarpSelected[i];
+				isDirty = true;
 			}
 			lights[TRACK_1_WARP_ENABELED_LIGHT+i].value = trackWarpSelected[i];
 		}        
 		if (wsEnableTrigger.process(params[WS_ON_OFF_PARAM].getValue() + inputs[WS_ON_OFF_INPUT].getVoltage())) {
 			wsEnabled = !wsEnabled;
+			isDirty = true;
 		}
 		lights[WS_ON_LIGHT].value = wsEnabled;
 
 		bool motherPresent = (leftExpander.module && (leftExpander.module->model == modelQuadAlgorithmicRhythm || leftExpander.module->model == modelQARWellFormedRhythmExpander || 
 								leftExpander.module->model == modelQARProbabilityExpander || leftExpander.module->model == modelQARGrooveExpander || 
-								leftExpander.module->model == modelQARWarpedSpaceExpander || leftExpander.module->model == modelQARIrrationalityExpander || 
+								leftExpander.module->model == modelQARWarpedSpaceExpander || leftExpander.module->model == modelQARIrrationalityExpander ||
+								leftExpander.module->model == modelQARConditionalExpander || 
 								leftExpander.module->model == modelPWAlgorithmicExpander));
 		//lights[CONNECTED_LIGHT].value = motherPresent;
 		if (motherPresent) {
@@ -216,17 +230,21 @@ struct QARWarpedSpaceExpander : Module {
 			//If another expander is present, get its values (we can overwrite them)
 			bool anotherExpanderPresent = (rightExpander.module && (rightExpander.module->model == modelQARWellFormedRhythmExpander || rightExpander.module->model == modelQARGrooveExpander || 
 											rightExpander.module->model == modelQARProbabilityExpander || rightExpander.module->model == modelQARIrrationalityExpander || 
-											rightExpander.module->model == modelQARWarpedSpaceExpander || rightExpander.module->model == modelQuadAlgorithmicRhythm));
+											rightExpander.module->model == modelQARWarpedSpaceExpander || rightExpander.module->model == modelQuadAlgorithmicRhythm ||
+											rightExpander.module->model == modelQARConditionalExpander));
 			if(anotherExpanderPresent)
 			{			
 				float *messagesFromExpander = (float*)rightExpander.consumerMessage;
 				float *messageToExpander = (float*)(rightExpander.module->leftExpander.producerMessage);
 
                 if(rightExpander.module->model != modelQuadAlgorithmicRhythm) { // Get QRE values							
-					for(int i = 0; i < PASSTHROUGH_OFFSET; i++) {
-                        messagesToMother[i] = messagesFromExpander[i];
-					}
+					std::copy(messagesFromExpander,messagesFromExpander + PASSTHROUGH_OFFSET,messagesToMother);		
 				}
+				for(int i=0;i<TRACK_COUNT;i++) {
+					trackDirty[i] = messagesFromExpander[i] || (!QARExpanderDisconnectReset);
+				}
+
+				QARExpanderDisconnectReset = true;
 
 				//QAR Pass through left
 				std::copy(messagesFromExpander+PASSTHROUGH_OFFSET,messagesFromExpander+PASSTHROUGH_OFFSET+PASSTHROUGH_LEFT_VARIABLE_COUNT,messagesToMother+PASSTHROUGH_OFFSET);		
@@ -236,22 +254,39 @@ struct QARWarpedSpaceExpander : Module {
 									messageToExpander+PASSTHROUGH_OFFSET + PASSTHROUGH_LEFT_VARIABLE_COUNT);			
 
 				rightExpander.module->leftExpander.messageFlipRequested = true;
+			} else {
+				std::fill(trackDirty,trackDirty+TRACK_COUNT,0);
+				isDirty = QARExpanderDisconnectReset;
+				QARExpanderDisconnectReset = false;
 			}
 
 
             warpAmount = clamp(params[WARP_AMOUNT_PARAM].getValue() + (inputs[WARP_AMOUNT_INPUT].isConnected() ? inputs[WARP_AMOUNT_INPUT].getVoltage() * 0.6f * params[WARP_AMOUNT_CV_ATTENUVETER_PARAM].getValue() : 0.0f),1.0,6.0);
 			warpAmountPercentage = (warpAmount - 1.0) / 5.0;
+			if(warpAmount != lastWarpAmount) {
+				isDirty = true;
+				lastWarpAmount = warpAmount;
+			}
             warpPosition = clamp(params[WARP_POSITION_PARAM].getValue() + (inputs[WARP_POSITION_INPUT].isConnected() ? inputs[WARP_POSITION_INPUT].getVoltage() / (MAX_STEPS / 10.0) * params[WARP_POSITION_CV_ATTENUVETER_PARAM].getValue() : 0.0f),0.0f,MAX_STEPS-1.0);
 			warpPositionPercentage = warpPosition / (MAX_STEPS -1.0);
+			if(warpPosition != lastWarpPosition) {
+				isDirty = true;
+				lastWarpPosition = warpPosition;
+			}
             warpLength = clamp(params[WARP_LENGTH_PARAM].getValue() + (inputs[WARP_LENGTH_INPUT].isConnected() ? inputs[WARP_LENGTH_INPUT].getVoltage() / (MAX_STEPS / 10.0) * params[WARP_LENGTH_CV_ATTENUVETER_PARAM].getValue() : 0.0f),0.0f,MAX_STEPS-1.0);
 			warpLengthPercentage = warpLength / (MAX_STEPS -1.0);
+			if(warpLength != lastWarpLength) {
+				isDirty = true;
+				lastWarpLength = warpLength;
+			}
             for (int i = 0; i < TRACK_COUNT; i++) {
                 if(trackWarpSelected[i] && wsEnabled) {
-                    messagesToMother[TRACK_COUNT * 9 + i] = 1;
-                    messagesToMother[TRACK_COUNT * 10 + i] = warpAmount;                    
-                    messagesToMother[TRACK_COUNT * 11 + i] = warpPosition;                    
-                    messagesToMother[TRACK_COUNT * 12 + i] = warpLength;                    
+                    messagesToMother[TRACK_COUNT * 10 + i] = 1;
+                    messagesToMother[TRACK_COUNT * 11 + i] = warpAmount;                    
+                    messagesToMother[TRACK_COUNT * 12 + i] = warpPosition;                    
+                    messagesToMother[TRACK_COUNT * 13 + i] = warpLength;                    
 				} 
+				messagesToMother[i] = isDirty || trackDirty[i];
 			}
 					
 			leftExpander.module->rightExpander.messageFlipRequested = true;

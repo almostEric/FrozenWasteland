@@ -247,8 +247,8 @@ struct TheGardenerDisplay : TransparentWidget {
 		if (!module)
 			return; 
 
-		drawSteps(args,Vec(44.0,55),(int)(module->reseedSteps));
-		drawSteps(args,Vec(110.0,55),(int)(module->newSeedSteps));
+		drawSteps(args,Vec(44.0,57),(int)(module->reseedSteps));
+		drawSteps(args,Vec(110.0,57),(int)(module->newSeedSteps));
 
 		drawProgress(args,Vec(6.0,58),(float)(module->reseedProgress));
 		drawProgress(args,Vec(72.0,58),(float)(module->newSeedProgress));

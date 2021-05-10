@@ -7,8 +7,8 @@
 #define MAX_STEPS 18
 #define PASSTHROUGH_LEFT_VARIABLE_COUNT 13
 #define PASSTHROUGH_RIGHT_VARIABLE_COUNT 9
-#define STEP_LEVEL_PARAM_COUNT 4
-#define TRACK_LEVEL_PARAM_COUNT TRACK_COUNT * 15
+#define STEP_LEVEL_PARAM_COUNT 5
+#define TRACK_LEVEL_PARAM_COUNT TRACK_COUNT * 17
 #define PASSTHROUGH_OFFSET MAX_STEPS * TRACK_COUNT * STEP_LEVEL_PARAM_COUNT + TRACK_LEVEL_PARAM_COUNT
 
 struct QARProbabilityExpander : Module {
@@ -52,11 +52,15 @@ struct QARProbabilityExpander : Module {
 	float leftMessages[2][PASSTHROUGH_OFFSET + PASSTHROUGH_LEFT_VARIABLE_COUNT + PASSTHROUGH_RIGHT_VARIABLE_COUNT] = {};
 	float rightMessages[2][PASSTHROUGH_OFFSET + PASSTHROUGH_LEFT_VARIABLE_COUNT + PASSTHROUGH_RIGHT_VARIABLE_COUNT] = {};
 
+	bool trackDirty[TRACK_COUNT] = {0};
+
 	
 	dsp::SchmittTrigger stepDivTrigger,trackProbabilityTrigger[TRACK_COUNT],probabiltyGroupModeTrigger[MAX_STEPS];
 	bool stepsOrDivs;
 	bool trackProbabilitySelected[TRACK_COUNT];
 	int probabilityGroupMode[MAX_STEPS] = {0};
+
+	float lastProbability[MAX_STEPS] = {0};
 
 	float sceneData[NBR_SCENES][59] = {{0}};
 	int sceneChangeMessage = 0;
@@ -64,6 +68,8 @@ struct QARProbabilityExpander : Module {
 	//percentages
 	float stepProbabilityPercentage[MAX_STEPS] = {0};
 
+	bool isDirty = false;
+	bool QARExpanderDisconnectReset = true;
 
 	QARProbabilityExpander() {
 		config(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS, NUM_LIGHTS);
@@ -185,20 +191,24 @@ struct QARProbabilityExpander : Module {
 
 
 	void process(const ProcessArgs &args) override {
+		isDirty = false;
 		for(int i=0; i< TRACK_COUNT; i++) {
 			if (trackProbabilityTrigger[i].process(params[TRACK_1_PROBABILITY_ENABLED_PARAM+i].getValue())) {
 				trackProbabilitySelected[i] = !trackProbabilitySelected[i];
+				isDirty = true;
 			}
 			lights[TRACK_1_PROBABILITY_ENABELED_LIGHT+i].value = trackProbabilitySelected[i];
 		}
 	    if (stepDivTrigger.process(params[STEP_OR_DIV_PARAM].getValue())) {
             stepsOrDivs = !stepsOrDivs;
+			isDirty = true;
         }
         lights[USING_DIVS_LIGHT].value = stepsOrDivs;
 
 		for(int i=0; i< MAX_STEPS; i++) {
 			if (probabiltyGroupModeTrigger[i].process(params[PROBABILITY_GROUP_MODE_1_PARAM+i].getValue())) {
 				probabilityGroupMode[i] = (probabilityGroupMode[i] + 1) % 2;
+				isDirty = true;
 			}
 			lights[PROBABILITY_GROUP_MODE_1_LIGHT + i*3].value = probabilityGroupMode[i] == 2;
 			lights[PROBABILITY_GROUP_MODE_1_LIGHT + i*3 + 1].value = 0;
@@ -208,7 +218,8 @@ struct QARProbabilityExpander : Module {
 
 		bool motherPresent = (leftExpander.module && (leftExpander.module->model == modelQuadAlgorithmicRhythm || leftExpander.module->model == modelQARWellFormedRhythmExpander || 
 								leftExpander.module->model == modelQARProbabilityExpander || leftExpander.module->model == modelQARGrooveExpander || 
-								leftExpander.module->model == modelQARWarpedSpaceExpander || leftExpander.module->model == modelQARIrrationalityExpander || 
+								leftExpander.module->model == modelQARWarpedSpaceExpander || leftExpander.module->model == modelQARIrrationalityExpander ||
+								leftExpander.module->model == modelQARConditionalExpander || 
 								leftExpander.module->model == modelPWAlgorithmicExpander));
 		if (motherPresent) {
 			// To Mother
@@ -229,7 +240,8 @@ struct QARProbabilityExpander : Module {
 			//If another expander is present, get its values (we can overwrite them)
 			bool anotherExpanderPresent = (rightExpander.module && (rightExpander.module->model == modelQARWellFormedRhythmExpander || rightExpander.module->model == modelQARGrooveExpander || 
 											rightExpander.module->model == modelQARProbabilityExpander || rightExpander.module->model == modelQARIrrationalityExpander || 
-											rightExpander.module->model == modelQARWarpedSpaceExpander || rightExpander.module->model == modelQuadAlgorithmicRhythm));
+											rightExpander.module->model == modelQARWarpedSpaceExpander || rightExpander.module->model == modelQuadAlgorithmicRhythm ||
+											rightExpander.module->model == modelQARConditionalExpander));
 			if(anotherExpanderPresent)
 			{			
 				float *messagesFromExpander = (float*)rightExpander.consumerMessage;
@@ -238,6 +250,11 @@ struct QARProbabilityExpander : Module {
                 if(rightExpander.module->model != modelQuadAlgorithmicRhythm) { // Get QRE values		
 					std::copy(messagesFromExpander,messagesFromExpander + PASSTHROUGH_OFFSET,messagesToMother);		
 				}
+				for(int i=0;i<TRACK_COUNT;i++) {
+					trackDirty[i] = messagesFromExpander[i] || (!QARExpanderDisconnectReset);
+				}
+
+				QARExpanderDisconnectReset = true;
 
 				//QAR Pass through left
 				std::copy(messagesFromExpander+PASSTHROUGH_OFFSET,messagesFromExpander+PASSTHROUGH_OFFSET+PASSTHROUGH_LEFT_VARIABLE_COUNT,messagesToMother+PASSTHROUGH_OFFSET);		
@@ -247,18 +264,26 @@ struct QARProbabilityExpander : Module {
 									messageToExpander+PASSTHROUGH_OFFSET + PASSTHROUGH_LEFT_VARIABLE_COUNT);			
 
 				rightExpander.module->leftExpander.messageFlipRequested = true;
+			} else {
+				std::fill(trackDirty,trackDirty+TRACK_COUNT,0);
+				isDirty = QARExpanderDisconnectReset;
+				QARExpanderDisconnectReset = false;
 			}
 		
 			for (int i = 0; i < TRACK_COUNT; i++) {
                 if(trackProbabilitySelected[i]) {
-                    messagesToMother[TRACK_COUNT * 3 + i] = stepsOrDivs ? 2 : 1;
+                    messagesToMother[TRACK_COUNT * 4 + i] = stepsOrDivs ? 2 : 1;
     				for (int j = 0; j < MAX_STEPS; j++) {
 						float probability = clamp(params[PROBABILITY_1_PARAM+j].getValue() + (inputs[PROBABILITY_1_INPUT + j].isConnected() ? inputs[PROBABILITY_1_INPUT + j].getVoltage() / 10 * params[PROBABILITY_ATTEN_1_PARAM + j].getValue() : 0.0f),0.0,1.0f);
+						if(probability != lastProbability[j]) {
+							isDirty = true;
+						}
 						messagesToMother[TRACK_LEVEL_PARAM_COUNT + i * MAX_STEPS + j] = probability;
 						stepProbabilityPercentage[j] = probability;
 						messagesToMother[TRACK_LEVEL_PARAM_COUNT + (MAX_STEPS * TRACK_COUNT) + i * MAX_STEPS + j] = probabilityGroupMode[j];
 					} 					 
 				} 
+				messagesToMother[i] = isDirty || trackDirty[i];
 			}			
 			
 			leftExpander.module->rightExpander.messageFlipRequested = true;		

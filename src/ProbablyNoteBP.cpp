@@ -1,6 +1,7 @@
 #include "FrozenWasteland.hpp"
 #include "ui/knobs.hpp"
 #include "ui/ports.hpp"
+#include "ui/menu.hpp"
 #include "dsp-noise/noise.hpp"
 #include "osdialog.h"
 #include <sstream>
@@ -88,6 +89,11 @@ struct ProbablyNoteBP : Module {
 		TRIGGER_POLYPHONIC_LIGHT,
         NOTE_ACTIVE_LIGHT,
 		NUM_LIGHTS = NOTE_ACTIVE_LIGHT + MAX_NOTES*2
+	};
+	enum QuantizeModes {
+		QUANTIZE_CLOSEST,
+		QUANTIZE_LOWER,
+		QUANTIZE_UPPER,
 	};
 	enum ShiftModes {
 		SHIFT_STEP_PER_VOLT,
@@ -189,6 +195,8 @@ struct ProbablyNoteBP : Module {
 	bool tritaveMapping = true;
 	bool pitchRandomGaussian = false;
 
+	int quantizeMode = QUANTIZE_CLOSEST;
+
 	int currentPolyphony = 1;
 
 	std::string lastPath;
@@ -203,7 +211,7 @@ struct ProbablyNoteBP : Module {
 	float shiftPercentage = 0;
 	float tritavePercentage = 0;
 	float pitchRandomnessPercentage = 0;
-
+	float weightPercentage[MAX_NOTES] = {0};
 
 	ProbablyNoteBP() {
 		// Configure the module
@@ -314,6 +322,7 @@ struct ProbablyNoteBP : Module {
 		json_object_set_new(rootJ, "tritaveMapping", json_integer((int) tritaveMapping));
 		json_object_set_new(rootJ, "pitchRandomGaussian", json_integer((int) pitchRandomGaussian));
 		json_object_set_new(rootJ, "triggerPolyphonic", json_integer((int) triggerPolyphonic)); 
+		json_object_set_new(rootJ, "quantizeMode", json_integer((int) quantizeMode)); 
 
 		for(int i=0;i<MAX_SCALES;i++) {
 			for(int j=0;j<MAX_NOTES;j++) {
@@ -380,6 +389,13 @@ struct ProbablyNoteBP : Module {
 		if (sumTp) {
 			triggerPolyphonic = json_integer_value(sumTp);			
 		}
+
+		json_t *sumQm = json_object_get(rootJ, "quantizeMode");
+		if (sumQm) {
+			quantizeMode = json_integer_value(sumQm);			
+		}
+
+
 
 
 		for(int i=0;i<MAX_SCALES;i++) {
@@ -516,13 +532,39 @@ struct ProbablyNoteBP : Module {
 				noteIn = noteIn / tritaveFrequency;
 			}
 			tritaveIn[channel] = std::floor(noteIn);
-			double fractionalValue = noteIn - tritaveIn[channel];
-			double lastDif = 1.0f;    
-			for(int i = 0;i<MAX_NOTES;i++) {            
-				double currentDif = std::abs((i / 13.0) - fractionalValue);
+			double fractionalValue = std::abs(noteIn - tritaveIn[channel]);
+			double lastDif = 99.0f;    
+			for(int i = 0;i<MAX_NOTES;i++) {
+				double lowNote = (i / 13.0);
+				double highNote = ((i+1) / 13.0);
+				double median = (lowNote + highNote) / 2.0;
+				            
+				double lowNoteDif = std::abs(lowNote - fractionalValue);
+				double highNoteDif = std::abs(highNote - fractionalValue);
+				double medianDif = std::abs(median - fractionalValue);
+
+				double currentDif;
+				bool direction = lowNoteDif < highNoteDif;
+				int note;
+				switch(quantizeMode) {
+					case QUANTIZE_CLOSEST :
+					default:
+						currentDif = medianDif;
+						note = direction ? i : (i + 1) % MAX_NOTES;
+						break;
+					case QUANTIZE_LOWER :
+						currentDif = lowNoteDif;
+						note = i;
+						break;
+					case QUANTIZE_UPPER :
+						currentDif = highNoteDif;
+						note = (i + 1) % MAX_NOTES;
+						break;
+				}
+
 				if(currentDif < lastDif) {
 					lastDif = currentDif;
-					currentNote[channel] = i;
+					currentNote[channel] = note;
 				}            
 			}
 			if(currentNote[channel] != lastNote[channel]) {
@@ -665,11 +707,13 @@ struct ProbablyNoteBP : Module {
 			float userProbability;
 			if(noteActive[actualTarget]) {
 	            userProbability = clamp(params[NOTE_WEIGHT_PARAM+i].getValue() + (inputs[NOTE_WEIGHT_INPUT+i].getVoltage() / 10.0f),0.0f,1.0f);    
-				lights[NOTE_ACTIVE_LIGHT+i*2].value = userProbability;    
+				weightPercentage[i] = userProbability;
+				lights[NOTE_ACTIVE_LIGHT+i*2].value = userProbability;
 				lights[NOTE_ACTIVE_LIGHT+i*2+1].value = 0;    
 			}
 			else { 
 				userProbability = 0.0;
+				weightPercentage[i] = 0;
 				lights[NOTE_ACTIVE_LIGHT+i*2].value = 0;    
 				lights[NOTE_ACTIVE_LIGHT+i*2+1].value = 1;    	
 			}
@@ -1084,7 +1128,12 @@ struct ProbablyNoteBPWidget : ModuleWidget {
 			double y= sin(position) * 54.0 + 230.5;
 
 			//Rotate inputs 1 degrees
-			addParam(createParam<RoundReallySmallFWKnob>(Vec(x,y), module, ProbablyNoteBP::NOTE_WEIGHT_PARAM+i));			
+			ParamWidget* weightParam = createParam<RoundReallySmallFWKnob>(Vec(x,y), module, ProbablyNoteBP::NOTE_WEIGHT_PARAM+i);
+			if (module) {
+				dynamic_cast<RoundReallySmallFWKnob*>(weightParam)->percentage = &module->weightPercentage[i];
+			}
+			addParam(weightParam);							
+
 			x= cos(position + (M_PI / 180.0 * 1.0)) * 36.0 + 94.0;
 			y= sin(position + (M_PI / 180.0 * 1.0)) * 36.0 + 235.0;
 			addInput(createInput<FWPortInReallySmall>(Vec(x, y), module, ProbablyNoteBP::NOTE_WEIGHT_INPUT+i));
@@ -1125,9 +1174,19 @@ struct ProbablyNoteBPWidget : ModuleWidget {
 		ProbablyNoteBP *module = dynamic_cast<ProbablyNoteBP*>(this->module);
 		assert(module);
 
+		menu->addChild(new MenuLabel());
+		{
+      		OptionsMenuItem* mi = new OptionsMenuItem("Quantize Mode");
+			mi->addItem(OptionMenuItem("Closet", [module]() { return module->quantizeMode == 0; }, [module]() { module->quantizeMode = 0; }));
+			mi->addItem(OptionMenuItem("Round Lower", [module]() { return module->quantizeMode == 1; }, [module]() { module->quantizeMode = 1; }));
+			mi->addItem(OptionMenuItem("Round Upper", [module]() { return module->quantizeMode == 2; }, [module]() { module->quantizeMode = 2; }));
+			menu->addChild(mi);
+		}
+
 		TriggerDelayItem *triggerDelayItem = new TriggerDelayItem();
 		triggerDelayItem->module = module;
 		menu->addChild(triggerDelayItem);
+		
 
 	}
 	

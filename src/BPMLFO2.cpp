@@ -427,8 +427,10 @@ struct BPMLFO2ProgressDisplay : TransparentWidget {
 	void drawProgress(const DrawArgs &args, int waveshape, float skew, float waveslope, float phase) 
 	{		
 		// Draw indicator
-		nvgStrokeColor(args.vg, nvgRGBA(0xff, 0xff, 0x20, 0xff));	
+		// nvgStrokeColor(args.vg, nvgRGBA(0xff, 0xff, 0x20, 0xff));	
 		nvgStrokeWidth(args.vg, 1.0);
+		NVGpaint paint = nvgLinearGradient(args.vg,0,0,0,151,nvgRGBA(0xff, 0xff, 0x20, 0xff), nvgRGBA(0xff, 0xff, 0x20, 0x1f));
+        nvgStrokePaint(args.vg, paint);
 
 		nvgBeginPath(args.vg);
 		//nvgMoveTo(args.vg,140,177 - module->waveValues[0]);

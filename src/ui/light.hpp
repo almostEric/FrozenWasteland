@@ -1,3 +1,4 @@
+
 template <typename TBase>
 struct LargeSMLight : TBase {
 	LargeSMLight() {

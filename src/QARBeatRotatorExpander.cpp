@@ -8,7 +8,7 @@
 #define NUM_TAPS 16
 #define PASSTHROUGH_LEFT_VARIABLE_COUNT 13
 #define PASSTHROUGH_RIGHT_VARIABLE_COUNT 9
-#define TRACK_LEVEL_PARAM_COUNT TRACK_COUNT * 15
+#define TRACK_LEVEL_PARAM_COUNT TRACK_COUNT * 17
 #define PASSTHROUGH_OFFSET MAX_STEPS * TRACK_COUNT * 3 + TRACK_LEVEL_PARAM_COUNT
 
 
@@ -50,6 +50,9 @@ struct QARBeatRotatorExpander : Module {
 	// Expander
 	float leftMessages[2][PASSTHROUGH_OFFSET + PASSTHROUGH_LEFT_VARIABLE_COUNT + PASSTHROUGH_RIGHT_VARIABLE_COUNT] = {};
 	float rightMessages[2][PASSTHROUGH_OFFSET + PASSTHROUGH_LEFT_VARIABLE_COUNT + PASSTHROUGH_RIGHT_VARIABLE_COUNT] = {};
+
+	bool trackDirty[TRACK_COUNT] = {0};
+
 
 	float sceneData[NBR_SCENES][8] = {{0}};
 	int sceneChangeMessage = 0;
@@ -197,14 +200,16 @@ struct QARBeatRotatorExpander : Module {
 									messageToExpander+PASSTHROUGH_OFFSET + PASSTHROUGH_LEFT_VARIABLE_COUNT);			
 
 				rightExpander.module->leftExpander.messageFlipRequested = true;
+			} else {
+				std::fill(trackDirty,trackDirty+TRACK_COUNT,0);
 			}
 
 
             float rotateAmount = clamp(params[ROTATE_AMOUNT_PARAM].getValue() + (inputs[ROTATE_AMOUNT_INPUT].isConnected() ? inputs[ROTATE_AMOUNT_INPUT].getVoltage() * 0.6f * params[ROTATE_AMOUNT_CV_ATTENUVETER_PARAM].getValue() : 0.0f),1.0,6.0);
             for (int i = 0; i < TRACK_COUNT; i++) {
                 if(trackWarpSelected[i]) {
-                    messagesToMother[TRACK_COUNT * 13 + i] = 1;
-                    messagesToMother[TRACK_COUNT * 14 + i] = rotateAmount;                    
+                    messagesToMother[TRACK_COUNT * 14 + i] = 1;
+                    messagesToMother[TRACK_COUNT * 15 + i] = rotateAmount;                    
 				} 
 			}
 					

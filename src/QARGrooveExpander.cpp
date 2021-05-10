@@ -10,8 +10,8 @@
 #define NUM_TAPS 16
 #define PASSTHROUGH_LEFT_VARIABLE_COUNT 13
 #define PASSTHROUGH_RIGHT_VARIABLE_COUNT 9
-#define STEP_LEVEL_PARAM_COUNT 4
-#define TRACK_LEVEL_PARAM_COUNT TRACK_COUNT * 15
+#define STEP_LEVEL_PARAM_COUNT 5
+#define TRACK_LEVEL_PARAM_COUNT TRACK_COUNT * 17
 #define PASSTHROUGH_OFFSET MAX_STEPS * TRACK_COUNT * STEP_LEVEL_PARAM_COUNT + TRACK_LEVEL_PARAM_COUNT
 
 
@@ -68,6 +68,8 @@ struct QARGrooveExpander : Module {
 	float leftMessages[2][PASSTHROUGH_OFFSET + PASSTHROUGH_LEFT_VARIABLE_COUNT + PASSTHROUGH_RIGHT_VARIABLE_COUNT] = {};
 	float rightMessages[2][PASSTHROUGH_OFFSET + PASSTHROUGH_LEFT_VARIABLE_COUNT + PASSTHROUGH_RIGHT_VARIABLE_COUNT] = {};
 
+	bool trackDirty[TRACK_COUNT] = {0};
+
 	float grooveLength;
 
 	float sceneData[NBR_SCENES][49] = {{0}};
@@ -92,6 +94,14 @@ struct QARGrooveExpander : Module {
 	float grooveLengthPercentage = 0;
 	float grooveAmountPercentage = 0;
 	float swingRandomnessPercentage = 0;
+
+	float lastStepSwing[MAX_STEPS] = {0};
+	float lastGrooveLength = 0;
+	float lastGrooveAmount = 0;
+	float lastSwingRandomness = 0;
+
+	bool isDirty = false;
+	bool QARExpanderDisconnectReset = true;
 	
 	QARGrooveExpander() {
 		config(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS, NUM_LIGHTS);
@@ -226,6 +236,7 @@ struct QARGrooveExpander : Module {
 
 
 	void process(const ProcessArgs &args) override {
+		isDirty = false;
 		for(int i=0; i< TRACK_COUNT; i++) {
 			if (trackGrooveTrigger[i].process(params[TRACK_1_GROOVE_ENABLED_PARAM+i].getValue())) {
 				trackGrooveSelected[i] = !trackGrooveSelected[i];
@@ -235,16 +246,19 @@ struct QARGrooveExpander : Module {
 
 	    if (stepDivTrigger.process(params[STEP_OR_DIV_PARAM].getValue())) {
             stepsOrDivs = !stepsOrDivs;
+			isDirty = true;
         }
         lights[USING_DIVS_LIGHT].value = stepsOrDivs;
 
 	    if (grooveLengthTrigger.process(params[GROOVE_LENGTH_SAME_AS_TRACK_PARAM].getValue())) {
             grooveIsTrackLength = !grooveIsTrackLength;
+			isDirty = true;
         }
         lights[GROOVE_IS_TRACK_LENGTH_LIGHT].value = grooveIsTrackLength;
 
 	    if (randomDistributionTrigger.process(params[RANDOM_DISTRIBUTION_PATTERN_PARAM].getValue())) {
              gaussianDistribution = !gaussianDistribution;
+			 isDirty = true;
         }
         lights[GAUSSIAN_DISTRIBUTION_LIGHT].value = gaussianDistribution;
 
@@ -254,6 +268,7 @@ struct QARGrooveExpander : Module {
 		bool motherPresent = (leftExpander.module && (leftExpander.module->model == modelQuadAlgorithmicRhythm || leftExpander.module->model == modelQARWellFormedRhythmExpander || 
 								leftExpander.module->model == modelQARProbabilityExpander || leftExpander.module->model == modelQARGrooveExpander || 
 								leftExpander.module->model == modelQARWarpedSpaceExpander || leftExpander.module->model == modelQARIrrationalityExpander || 
+								leftExpander.module->model == modelQARConditionalExpander ||
 								leftExpander.module->model == modelPWAlgorithmicExpander));
 		//lights[CONNECTED_LIGHT].value = motherPresent;
 		if (motherPresent) {
@@ -275,7 +290,9 @@ struct QARGrooveExpander : Module {
 			//If another expander is present, get its values (we can overwrite them)
 			bool anotherExpanderPresent = (rightExpander.module && (rightExpander.module->model == modelQARWellFormedRhythmExpander || rightExpander.module->model == modelQARGrooveExpander || 
 											rightExpander.module->model == modelQARProbabilityExpander || rightExpander.module->model == modelQARIrrationalityExpander || 
-											rightExpander.module->model == modelQARWarpedSpaceExpander || rightExpander.module->model == modelQuadAlgorithmicRhythm));
+											rightExpander.module->model == modelQARWarpedSpaceExpander || 
+											rightExpander.module->model == modelQARConditionalExpander || 
+											rightExpander.module->model == modelQuadAlgorithmicRhythm));
 			if(anotherExpanderPresent)
 			{			
 				float *messagesFromExpander = (float*)rightExpander.consumerMessage;
@@ -284,6 +301,11 @@ struct QARGrooveExpander : Module {
                 if(rightExpander.module->model != modelQuadAlgorithmicRhythm) { // Get QRE values							
 					std::copy(messagesFromExpander,messagesFromExpander + PASSTHROUGH_OFFSET,messagesToMother);		
 				}
+				for(int i=0;i<TRACK_COUNT;i++) {
+					trackDirty[i] = messagesFromExpander[i] || (!QARExpanderDisconnectReset);
+				}
+
+				QARExpanderDisconnectReset = true;
 
 				//QAR Pass through left
 				std::copy(messagesFromExpander+PASSTHROUGH_OFFSET,messagesFromExpander+PASSTHROUGH_OFFSET+PASSTHROUGH_LEFT_VARIABLE_COUNT,messagesToMother+PASSTHROUGH_OFFSET);		
@@ -293,29 +315,52 @@ struct QARGrooveExpander : Module {
 									messageToExpander+PASSTHROUGH_OFFSET + PASSTHROUGH_LEFT_VARIABLE_COUNT);			
 
 				rightExpander.module->leftExpander.messageFlipRequested = true;
+			} else {
+				std::fill(trackDirty,trackDirty+TRACK_COUNT,0);
+				isDirty = QARExpanderDisconnectReset;
+				QARExpanderDisconnectReset = false;
 			}
 
 
             grooveLength = clamp(params[GROOVE_LENGTH_PARAM].getValue() + (inputs[GROOVE_LENGTH_INPUT].isConnected() ? inputs[GROOVE_LENGTH_INPUT].getVoltage() * 1.8f * params[GROOVE_LENGTH_CV_PARAM].getValue() : 0.0f),1.0,18.0f);
 			grooveLengthPercentage = (grooveLength - 1) / 17.0;
+			if(grooveLength != lastGrooveLength) {
+				isDirty = true;
+				lastGrooveLength = grooveLength;
+			}
             float grooveAmount = clamp(params[GROOVE_AMOUNT_PARAM].getValue() + (inputs[GROOVE_AMOUNT_INPUT].isConnected() ? inputs[GROOVE_AMOUNT_INPUT].getVoltage() / 10 * params[GROOVE_AMOUNT_CV_PARAM].getValue() : 0.0f),0.0,1.0f);
 			grooveAmountPercentage = grooveAmount;
+			if(grooveAmount != lastGrooveAmount) {
+				isDirty = true;
+				lastGrooveAmount = grooveAmount;
+			}
             float randomAmount = clamp(params[SWING_RANDOMNESS_PARAM].getValue() + (inputs[SWING_RANDOMNESS_INPUT].isConnected() ? inputs[SWING_RANDOMNESS_INPUT].getVoltage() / 10 * params[SWING_RANDOMNESS_CV_PARAM].getValue() : 0.0f),0.0,1.0f);
 			swingRandomnessPercentage = randomAmount;
+			if(randomAmount != lastSwingRandomness) {
+				isDirty = true;
+				lastSwingRandomness = randomAmount;
+			}
+
+
             for (int i = 0; i < TRACK_COUNT; i++) {
                 if(trackGrooveSelected[i]) {
-                    messagesToMother[TRACK_COUNT * 4 + i] = stepsOrDivs ? 2 : 1;
-                    messagesToMother[TRACK_COUNT * 5 + i] = grooveLength;
-                    messagesToMother[TRACK_COUNT * 6 + i] = grooveIsTrackLength;
-                    messagesToMother[TRACK_COUNT * 7 + i] = randomAmount;
-                    messagesToMother[TRACK_COUNT * 8 + i] = gaussianDistribution;
+                    messagesToMother[TRACK_COUNT * 5 + i] = stepsOrDivs ? 2 : 1;
+                    messagesToMother[TRACK_COUNT * 6 + i] = grooveLength;
+                    messagesToMother[TRACK_COUNT * 7 + i] = grooveIsTrackLength;
+                    messagesToMother[TRACK_COUNT * 8 + i] = randomAmount;
+                    messagesToMother[TRACK_COUNT * 9 + i] = gaussianDistribution;
                     
     				for (int j = 0; j < MAX_STEPS; j++) {
                         float initialSwingAmount = clamp(params[STEP_1_SWING_AMOUNT_PARAM+j].getValue() + (inputs[STEP_1_SWING_AMOUNT_INPUT + j].isConnected() ? inputs[STEP_1_SWING_AMOUNT_INPUT + j].getVoltage() / 10 * params[STEP_1_SWING_CV_ATTEN_PARAM + j].getValue() : 0.0f),-0.5,0.5f);
+						if(initialSwingAmount != lastStepSwing[j]) {
+							isDirty = true;
+							lastStepSwing[j] = initialSwingAmount;
+						}
 						stepSwingPercentage[j] = initialSwingAmount * 2.0;
 						messagesToMother[TRACK_LEVEL_PARAM_COUNT + (MAX_STEPS * TRACK_COUNT * 2) + (i * MAX_STEPS) + j] = lerp(0,initialSwingAmount,grooveAmount);
 					} 					 
 				} 
+				messagesToMother[i] = isDirty || trackDirty[i];
 			}
 		
 			leftExpander.module->rightExpander.messageFlipRequested = true;

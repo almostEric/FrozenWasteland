@@ -317,7 +317,12 @@ struct BPMLFOProgressDisplay : TransparentWidget {
 
 		// Draw indicator
 		//nvgFillColor(args.vg, nvgRGBA(0xff, 0xff, 0x20, 0xff));
-		nvgFillColor(args.vg, nvgRGBA(0x4a, 0xc3, 0x27, 0xff));
+		//nvgFillColor(args.vg, nvgRGBA(0x4a, 0xc3, 0x27, 0xff));
+
+		NVGpaint paint = nvgRadialGradient(args.vg, 60, 124, 0, 25,
+						   nvgRGBA(0xff, 0xff, 0x20, 0xff), nvgRGBA(0xff, 0xff, 0x20, 0x1f));
+		nvgFillPaint(args.vg, paint);
+
 		{
 			nvgBeginPath(args.vg);
 			nvgArc(args.vg,60,124,25,startArc,endArc,NVG_CW);

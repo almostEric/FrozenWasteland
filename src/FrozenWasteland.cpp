@@ -43,6 +43,7 @@ void init(rack::Plugin *p) {
 	p->addModel(modelPWGridControlExpander);
 	p->addModel(modelPWTapBreakoutExpander);
 	p->addModel(modelQuadAlgorithmicRhythm);
+	p->addModel(modelQARConditionalExpander);
 	p->addModel(modelQARGrooveExpander);
 	p->addModel(modelQARIrrationalityExpander);
 	p->addModel(modelQARProbabilityExpander);

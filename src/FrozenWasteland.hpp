@@ -38,6 +38,7 @@ extern Model *modelPWGridControlExpander;
 extern Model *modelPWTapBreakoutExpander;
 extern Model *modelQuadAlgorithmicRhythm;
 //extern Model *modelQARBeatRotatorExpander;
+extern Model *modelQARConditionalExpander;
 extern Model *modelQARGrooveExpander;
 extern Model *modelQARIrrationalityExpander;
 extern Model *modelQARProbabilityExpander;

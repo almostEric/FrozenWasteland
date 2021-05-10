@@ -172,22 +172,22 @@ struct PNOctaveProbabilityExpanderDisplay : TransparentWidget {
 	}
 
     void drawAverages(const DrawArgs &args, Vec pos) {
-		// nvgFontSize(args.vg, 32);
-		// nvgFontFaceId(args.vg, textFont->handle);
-		// nvgTextAlign(args.vg,NVG_ALIGN_CENTER);
-		// nvgTextLetterSpacing(args.vg, -1);
-
 
         float total = module->weightTotal;
+		float largestProb = *std::max_element(module->octaveProbability, module->octaveProbability + NBR_OCTAVES);
+		float maxPixel = 140.5-(largestProb/total * 100.0);
+		// fprintf(stderr, "max pixel:%f\n",maxPixel);
         if(total > 0) {
             for(int i=0;i<NBR_OCTAVES;i++) {
     	        nvgBeginPath(args.vg);
-                float probability = module->octaveProbability[i] / total * 100;
-				nvgFillColor(args.vg, nvgRGBA(0xff, 0xff, 0x20, 0xff));
-
+                float probability = module->octaveProbability[i] / total * 100.0;
+				// nvgFillColor(args.vg, nvgRGBA(0xff, 0xff, 0x20, 0xff));
+				NVGpaint paint = nvgLinearGradient(args.vg,0,maxPixel,0,140,nvgRGBA(0xff, 0xff, 0x20, 0xff), nvgRGBA(0xff, 0xff, 0x20, 0x3f));
 				if(module->currentNote > 0 && module->noteActive[module->currentNote] && module->currentOctave == i ) {
-					nvgFillColor(args.vg, nvgRGBA(0x47, 0xff, 0x20, 0xff));
+					// nvgFillColor(args.vg, nvgRGBA(0x47, 0xff, 0x20, 0xff));
+					paint = nvgLinearGradient(args.vg,0,maxPixel,0,140,nvgRGBA(0x47, 0xff, 0x20, 0xff), nvgRGBA(0x47, 0xff, 0x20, 0x1f));
 				}
+				nvgFillPaint(args.vg, paint);
                 nvgRect(args.vg, (NBR_OCTAVES-i) * 9 - 3.0 ,140.5-probability,9,probability);
 	            nvgFill(args.vg);
             }

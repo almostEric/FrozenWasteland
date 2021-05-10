@@ -8,8 +8,8 @@
 #define NUM_TAPS 16
 #define PASSTHROUGH_LEFT_VARIABLE_COUNT 13
 #define PASSTHROUGH_RIGHT_VARIABLE_COUNT 9
-#define STEP_LEVEL_PARAM_COUNT 4
-#define TRACK_LEVEL_PARAM_COUNT TRACK_COUNT * 15
+#define STEP_LEVEL_PARAM_COUNT 5
+#define TRACK_LEVEL_PARAM_COUNT TRACK_COUNT * 17
 #define PASSTHROUGH_OFFSET MAX_STEPS * TRACK_COUNT * STEP_LEVEL_PARAM_COUNT + TRACK_LEVEL_PARAM_COUNT
 
 
@@ -59,24 +59,32 @@ struct QARWellFormedRhythmExpander : Module {
 	float leftMessages[2][PASSTHROUGH_OFFSET + PASSTHROUGH_LEFT_VARIABLE_COUNT + PASSTHROUGH_RIGHT_VARIABLE_COUNT] = {};
 	float rightMessages[2][PASSTHROUGH_OFFSET + PASSTHROUGH_LEFT_VARIABLE_COUNT + PASSTHROUGH_RIGHT_VARIABLE_COUNT] = {};
 
+	bool trackDirty[TRACK_COUNT] = {0};
+
+
 	dsp::SchmittTrigger trackHierarchicalTrigger[TRACK_COUNT],trackComplementTrigger[TRACK_COUNT];
+	float extraParameterValue[TRACK_COUNT] = {0};
 	bool trackHierachical[TRACK_COUNT] = {0};
 	int trackComplement[TRACK_COUNT] = {0};
+
+	int lastExtraParameterValue[TRACK_COUNT] = {0};
 
 	float sceneData[NBR_SCENES][12] = {{0}};
 	int sceneChangeMessage = 0;
 
+
+	bool isDirty = false;
+	bool QARExpanderDisconnectReset = true;
+
+
 	//percentages
 	float extraValuePercentage[TRACK_COUNT] = {0};
-
 
     float lerp(float v0, float v1, float t) {
 	  return (1 - t) * v0 + t * v1;
 	}
 
-	
-	float extraParameterValue[TRACK_COUNT] = {0};
-	
+
 	QARWellFormedRhythmExpander() {
 		config(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS, NUM_LIGHTS);
 		        
@@ -164,18 +172,25 @@ struct QARWellFormedRhythmExpander : Module {
 
 
 	void process(const ProcessArgs &args) override {
+		isDirty = false;
 		for(int i=0; i< TRACK_COUNT; i++) {            
             float t = clamp(params[TRACK_1_EXTRA_VALUE_PARAM+i].getValue() + (inputs[TRACK_1_EXTRA_VALUE_INPUT+i].isConnected() ? inputs[TRACK_1_EXTRA_VALUE_INPUT+i].getVoltage() / 10.0f : 0.0f ),0.0f,0.999f);
 			extraValuePercentage[i] = t;
 			extraParameterValue[i] = 1/(1-t);
+			if(extraParameterValue[i] != lastExtraParameterValue[i]) {
+				isDirty = true;
+				lastExtraParameterValue[i] = extraParameterValue[i];
+			}
 			
 			if (trackHierarchicalTrigger[i].process(params[TRACK_1_HIERARCHICAL_PARAM+i].getValue())) {
 				trackHierachical[i] = !trackHierachical[i];
+				isDirty = true;
 			}
 			lights[TRACK_1_HIERARCHICAL_LIGHT + i].value = trackHierachical[i];
 
 			if (trackComplementTrigger[i].process(params[TRACK_1_COMPLEMENT_PARAM+i].getValue())) {
 				trackComplement[i] = (trackComplement[i] + 1) % 3;
+				isDirty = true;
 			}
 			lights[TRACK_1_COMPLEMENT_LIGHT + (i * 3) + 0].value = trackComplement[i] == 2;
 			lights[TRACK_1_COMPLEMENT_LIGHT + (i * 3) + 1].value = trackComplement[i] > 0;
@@ -183,7 +198,8 @@ struct QARWellFormedRhythmExpander : Module {
 
 		bool motherPresent = (leftExpander.module && (leftExpander.module->model == modelQuadAlgorithmicRhythm || leftExpander.module->model == modelQARWellFormedRhythmExpander || 
 								leftExpander.module->model == modelQARProbabilityExpander || leftExpander.module->model == modelQARGrooveExpander || 
-								leftExpander.module->model == modelQARWarpedSpaceExpander || leftExpander.module->model == modelQARIrrationalityExpander || 
+								leftExpander.module->model == modelQARWarpedSpaceExpander || leftExpander.module->model == modelQARIrrationalityExpander ||
+								leftExpander.module->model == modelQARConditionalExpander || 
 								leftExpander.module->model == modelPWAlgorithmicExpander));
 		//lights[CONNECTED_LIGHT].value = motherPresent;
 		if (motherPresent) {
@@ -205,17 +221,22 @@ struct QARWellFormedRhythmExpander : Module {
 			//If another expander is present, get its values (we can overwrite them)
 			bool anotherExpanderPresent = (rightExpander.module && (rightExpander.module->model == modelQARWellFormedRhythmExpander || rightExpander.module->model == modelQARGrooveExpander || 
 											rightExpander.module->model == modelQARProbabilityExpander || rightExpander.module->model == modelQARIrrationalityExpander || 
-											rightExpander.module->model == modelQARWarpedSpaceExpander || rightExpander.module->model == modelQuadAlgorithmicRhythm));
+											rightExpander.module->model == modelQARWarpedSpaceExpander || rightExpander.module->model == modelQuadAlgorithmicRhythm ||
+											rightExpander.module->model == modelQARConditionalExpander));
 			if(anotherExpanderPresent)
 			{			
 				float *messagesFromExpander = (float*)rightExpander.consumerMessage;
 				float *messageToExpander = (float*)(rightExpander.module->leftExpander.producerMessage);
 
-                if(rightExpander.module->model == modelQARProbabilityExpander || rightExpander.module->model == modelQARGrooveExpander || rightExpander.module->model == modelQARWarpedSpaceExpander ) { // Get QRE values							
-					for(int i = 0; i < PASSTHROUGH_OFFSET; i++) {
-                        messagesToMother[i] = messagesFromExpander[i];
-					}
+                if(rightExpander.module->model != modelQuadAlgorithmicRhythm) { // Get QRE values							
+					std::copy(messagesFromExpander,messagesFromExpander + PASSTHROUGH_OFFSET,messagesToMother);		
 				}
+				for(int i=0;i<TRACK_COUNT;i++) {
+					trackDirty[i] = messagesFromExpander[i] || (!QARExpanderDisconnectReset);
+				}
+
+				QARExpanderDisconnectReset = true;
+
 
 				//QAR Pass through left
 				std::copy(messagesFromExpander+PASSTHROUGH_OFFSET,messagesFromExpander+PASSTHROUGH_OFFSET+PASSTHROUGH_LEFT_VARIABLE_COUNT,messagesToMother+PASSTHROUGH_OFFSET);		
@@ -225,13 +246,18 @@ struct QARWellFormedRhythmExpander : Module {
 									messageToExpander+PASSTHROUGH_OFFSET + PASSTHROUGH_LEFT_VARIABLE_COUNT);			
 
 				rightExpander.module->leftExpander.messageFlipRequested = true;
+			} else {
+				std::fill(trackDirty,trackDirty+TRACK_COUNT,0);
+				isDirty = QARExpanderDisconnectReset;
+				QARExpanderDisconnectReset = false;
 			}
 
 
             for (int i = 0; i < TRACK_COUNT; i++) {
-                messagesToMother[i] = extraParameterValue[i];
-				messagesToMother[TRACK_COUNT + i] = trackHierachical[i];
-				messagesToMother[TRACK_COUNT * 2 + i] = trackComplement[i];
+                messagesToMother[TRACK_COUNT + i] = extraParameterValue[i];
+				messagesToMother[TRACK_COUNT * 2 + i] = trackHierachical[i];
+				messagesToMother[TRACK_COUNT * 3 + i] = trackComplement[i];
+				messagesToMother[i] = isDirty || trackDirty[i];
 			}
 					
 			leftExpander.module->rightExpander.messageFlipRequested = true;

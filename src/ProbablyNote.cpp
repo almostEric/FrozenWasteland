@@ -1,6 +1,7 @@
 #include "FrozenWasteland.hpp"
 #include "ui/knobs.hpp"
 #include "ui/ports.hpp"
+#include "ui/menu.hpp"
 #include "dsp-noise/noise.hpp"
 #include "osdialog.h"
 #include <sstream>
@@ -91,6 +92,11 @@ struct ProbablyNote : Module {
 		TRIGGER_POLYPHONIC_LIGHT,
         NOTE_ACTIVE_LIGHT,
 		NUM_LIGHTS = NOTE_ACTIVE_LIGHT + MAX_NOTES*2
+	};
+	enum QuantizeModes {
+		QUANTIZE_CLOSEST,
+		QUANTIZE_LOWER,
+		QUANTIZE_UPPER,
 	};
 	enum ShiftModes {
 		SHIFT_STEP_PER_VOLT,
@@ -207,7 +213,7 @@ struct ProbablyNote : Module {
 	const char* tempermentNames[MAX_TEMPERMENTS] = {"Equal","Just","Pythagorean"};
     double noteTemperment[MAX_TEMPERMENTS][MAX_NOTES] = {
         {0,100,200,300,400,500,600,700,800,900,1000,1100},
-        {0,111.73,203.91,315.64,386.61,498.04,582.51,701.955,813.69,884.36,996.09,1088.27},
+        {0,111.73,203.91,315.64,386.61,498.04,582.51,701.955,813.69,884.36,1017.596,1088.27},
         {0,90.22,203.91,294.13,407.82,498.04,611.73,701.955,792.18,905.87,996.09,1109.78},
     };
 
@@ -285,6 +291,7 @@ struct ProbablyNote : Module {
 	bool pitchRandomGaussian = false;
 
 	bool useCircleLayout = false;
+	int quantizeMode = QUANTIZE_CLOSEST;
 
 	bool generateChords = false;
 	float dissonance5Prbability = 0.0;
@@ -313,6 +320,7 @@ struct ProbablyNote : Module {
 	float shiftPercentage = 0;
 	float octavePercentage = 0;
 	float pitchRandomnessPercentage = 0;
+	float weightPercentage[MAX_NOTES] = {0};
 
 	ProbablyNote() {
 		// Configure the module
@@ -427,7 +435,9 @@ struct ProbablyNote : Module {
 		json_object_set_new(rootJ, "useCircleLayout", json_integer((int) useCircleLayout));
 		json_object_set_new(rootJ, "pitchRandomGaussian", json_integer((int) pitchRandomGaussian)); 
 		json_object_set_new(rootJ, "triggerPolyphonic", json_integer((int) triggerPolyphonic)); 
+		json_object_set_new(rootJ, "quantizeMode", json_integer((int) quantizeMode)); 
 
+		
 		
 
 		for(int i=0;i<MAX_SCALES;i++) {
@@ -501,6 +511,13 @@ struct ProbablyNote : Module {
 		if (sumTp) {
 			triggerPolyphonic = json_integer_value(sumTp);			
 		}
+
+		json_t *sumQm = json_object_get(rootJ, "quantizeMode");
+		if (sumQm) {
+			quantizeMode = json_integer_value(sumQm);			
+		}
+
+
 		
 
 		for(int i=0;i<MAX_SCALES;i++) {
@@ -672,13 +689,39 @@ struct ProbablyNote : Module {
 		for(int channel = 0;channel<currentPolyphony;channel++) {
 			double noteIn = inputs[NOTE_INPUT].getVoltage(channel);
 			octaveIn[channel] = std::floor(noteIn);
-			double fractionalValue = noteIn - octaveIn[channel];
-			double lastDif = 1.0f;    
-			for(int i = 0;i<MAX_NOTES;i++) {            
-				double currentDif = std::abs((i / 12.0) - fractionalValue);
+			double fractionalValue = std::abs(noteIn - octaveIn[channel]);
+			double lastDif = 99.0f;    
+			for(int i = 0;i<MAX_NOTES;i++) {
+				double lowNote = (i / 12.0);
+				double highNote = ((i+1) / 12.0);
+				double median = (lowNote + highNote) / 2.0;
+				            
+				double lowNoteDif = std::abs(lowNote - fractionalValue);
+				double highNoteDif = std::abs(highNote - fractionalValue);
+				double medianDif = std::abs(median - fractionalValue);
+
+				double currentDif;
+				bool direction = lowNoteDif < highNoteDif;
+				int note;
+				switch(quantizeMode) {
+					case QUANTIZE_CLOSEST :
+					default:
+						currentDif = medianDif;
+						note = direction ? i : (i + 1) % MAX_NOTES;
+						break;
+					case QUANTIZE_LOWER :
+						currentDif = lowNoteDif;
+						note = i;
+						break;
+					case QUANTIZE_UPPER :
+						currentDif = highNoteDif;
+						note = (i + 1) % MAX_NOTES;
+						break;
+				}
+
 				if(currentDif < lastDif) {
 					lastDif = currentDif;
-					currentNote[channel] = i;
+					currentNote[channel] = note;
 				}            
 			}
 			if(currentNote[channel] != lastNote[channel]) {
@@ -819,12 +862,14 @@ struct ProbablyNote : Module {
 
 			float userProbability;
 			if(noteActive[actualTarget]) {
-	            userProbability = clamp(params[NOTE_WEIGHT_PARAM+i].getValue() + (inputs[NOTE_WEIGHT_INPUT+i].getVoltage() / 10.0f),0.0f,1.0f);    
+	            userProbability = clamp(params[NOTE_WEIGHT_PARAM+i].getValue() + (inputs[NOTE_WEIGHT_INPUT+i].getVoltage() / 10.0f),0.0f,1.0f);
+				weightPercentage[i] = userProbability;
 				lights[NOTE_ACTIVE_LIGHT+i*2].value = userProbability;    
 				lights[NOTE_ACTIVE_LIGHT+i*2+1].value = 0;    
 			}
 			else { 
 				userProbability = 0.0;
+				weightPercentage[i] = 0.0;
 				lights[NOTE_ACTIVE_LIGHT+i*2].value = 0;    
 				lights[NOTE_ACTIVE_LIGHT+i*2+1].value = 1;    	
 			}
@@ -1516,6 +1561,9 @@ struct ProbablyNoteWidget : ModuleWidget {
 
 		weightParam = createParam<RoundReallySmallFWKnob>(Vec(119,306), module, ProbablyNote::NOTE_WEIGHT_PARAM+0);
 		weightParams[0] = weightParam;
+		if (module) {
+			dynamic_cast<RoundReallySmallFWKnob*>(weightParam)->percentage = &module->weightPercentage[0];
+		}
 		addParam(weightParam);		
 		weightInput = createInput<FWPortInReallySmall>(Vec(142, 310), module, ProbablyNote::NOTE_WEIGHT_INPUT+0);
 		inputs[0] = weightInput;	
@@ -1529,6 +1577,9 @@ struct ProbablyNoteWidget : ModuleWidget {
 
 		weightParam = createParam<RoundReallySmallFWKnob>(Vec(47,292), module, ProbablyNote::NOTE_WEIGHT_PARAM+1);
 		weightParams[1] = weightParam;
+		if (module) {
+			dynamic_cast<RoundReallySmallFWKnob*>(weightParam)->percentage = &module->weightPercentage[1];
+		}
 		addParam(weightParam);		
 		weightInput = createInput<FWPortInReallySmall>(Vec(32, 296), module, ProbablyNote::NOTE_WEIGHT_INPUT+1);
 		inputs[1] = weightInput;	
@@ -1542,6 +1593,9 @@ struct ProbablyNoteWidget : ModuleWidget {
 
 		weightParam = createParam<RoundReallySmallFWKnob>(Vec(119,278), module, ProbablyNote::NOTE_WEIGHT_PARAM+2);
 		weightParams[2] = weightParam;
+		if (module) {
+			dynamic_cast<RoundReallySmallFWKnob*>(weightParam)->percentage = &module->weightPercentage[2];
+		}
 		addParam(weightParam);		
 		weightInput = createInput<FWPortInReallySmall>(Vec(142, 282), module, ProbablyNote::NOTE_WEIGHT_INPUT+2);
 		inputs[2] = weightInput;	
@@ -1555,6 +1609,9 @@ struct ProbablyNoteWidget : ModuleWidget {
 
 		weightParam = createParam<RoundReallySmallFWKnob>(Vec(47,264), module, ProbablyNote::NOTE_WEIGHT_PARAM+3);
 		weightParams[3] = weightParam;
+		if (module) {
+			dynamic_cast<RoundReallySmallFWKnob*>(weightParam)->percentage = &module->weightPercentage[3];
+		}
 		addParam(weightParam);		
 		weightInput = createInput<FWPortInReallySmall>(Vec(32, 268), module, ProbablyNote::NOTE_WEIGHT_INPUT+3);
 		inputs[3] = weightInput;	
@@ -1568,6 +1625,9 @@ struct ProbablyNoteWidget : ModuleWidget {
 
 		weightParam = createParam<RoundReallySmallFWKnob>(Vec(119,250), module, ProbablyNote::NOTE_WEIGHT_PARAM+4);
 		weightParams[4] = weightParam;
+		if (module) {
+			dynamic_cast<RoundReallySmallFWKnob*>(weightParam)->percentage = &module->weightPercentage[4];
+		}
 		addParam(weightParam);		
 		weightInput = createInput<FWPortInReallySmall>(Vec(142, 254), module, ProbablyNote::NOTE_WEIGHT_INPUT+4);
 		inputs[4] = weightInput;	
@@ -1581,6 +1641,9 @@ struct ProbablyNoteWidget : ModuleWidget {
 
 		weightParam = createParam<RoundReallySmallFWKnob>(Vec(119,222), module, ProbablyNote::NOTE_WEIGHT_PARAM+5);
 		weightParams[5] = weightParam;
+		if (module) {
+			dynamic_cast<RoundReallySmallFWKnob*>(weightParam)->percentage = &module->weightPercentage[5];
+		}
 		addParam(weightParam);		
 		weightInput = createInput<FWPortInReallySmall>(Vec(142, 226), module, ProbablyNote::NOTE_WEIGHT_INPUT+5);
 		inputs[5] = weightInput;	
@@ -1594,6 +1657,9 @@ struct ProbablyNoteWidget : ModuleWidget {
 
 		weightParam = createParam<RoundReallySmallFWKnob>(Vec(47,208), module, ProbablyNote::NOTE_WEIGHT_PARAM+6);
 		weightParams[6] = weightParam;
+		if (module) {
+			dynamic_cast<RoundReallySmallFWKnob*>(weightParam)->percentage = &module->weightPercentage[6];
+		}
 		addParam(weightParam);		
 		weightInput = createInput<FWPortInReallySmall>(Vec(32, 212), module, ProbablyNote::NOTE_WEIGHT_INPUT+6);
 		inputs[6] = weightInput;	
@@ -1607,6 +1673,9 @@ struct ProbablyNoteWidget : ModuleWidget {
 
 		weightParam = createParam<RoundReallySmallFWKnob>(Vec(119,194), module, ProbablyNote::NOTE_WEIGHT_PARAM+7);
 		weightParams[7] = weightParam;
+		if (module) {
+			dynamic_cast<RoundReallySmallFWKnob*>(weightParam)->percentage = &module->weightPercentage[7];
+		}
 		addParam(weightParam);		
 		weightInput = createInput<FWPortInReallySmall>(Vec(142, 198), module, ProbablyNote::NOTE_WEIGHT_INPUT+7);
 		inputs[7] = weightInput;	
@@ -1620,6 +1689,9 @@ struct ProbablyNoteWidget : ModuleWidget {
 
 		weightParam = createParam<RoundReallySmallFWKnob>(Vec(47,180), module, ProbablyNote::NOTE_WEIGHT_PARAM+8);
 		weightParams[8] = weightParam;
+		if (module) {
+			dynamic_cast<RoundReallySmallFWKnob*>(weightParam)->percentage = &module->weightPercentage[8];
+		}
 		addParam(weightParam);		
 		weightInput = createInput<FWPortInReallySmall>(Vec(32, 184), module, ProbablyNote::NOTE_WEIGHT_INPUT+8);
 		inputs[8] = weightInput;	
@@ -1633,6 +1705,9 @@ struct ProbablyNoteWidget : ModuleWidget {
 
 		weightParam = createParam<RoundReallySmallFWKnob>(Vec(119,166), module, ProbablyNote::NOTE_WEIGHT_PARAM+9);
 		weightParams[9] = weightParam;
+		if (module) {
+			dynamic_cast<RoundReallySmallFWKnob*>(weightParam)->percentage = &module->weightPercentage[9];
+		}
 		addParam(weightParam);		
 		weightInput = createInput<FWPortInReallySmall>(Vec(132, 170), module, ProbablyNote::NOTE_WEIGHT_INPUT+9);
 		inputs[9] = weightInput;	
@@ -1646,6 +1721,9 @@ struct ProbablyNoteWidget : ModuleWidget {
 
 		weightParam = createParam<RoundReallySmallFWKnob>(Vec(47,152), module, ProbablyNote::NOTE_WEIGHT_PARAM+10);
 		weightParams[10] = weightParam;
+		if (module) {
+			dynamic_cast<RoundReallySmallFWKnob*>(weightParam)->percentage = &module->weightPercentage[10];
+		}
 		addParam(weightParam);		
 		weightInput = createInput<FWPortInReallySmall>(Vec(32, 156), module, ProbablyNote::NOTE_WEIGHT_INPUT+10);
 		inputs[10] = weightInput;	
@@ -1659,6 +1737,9 @@ struct ProbablyNoteWidget : ModuleWidget {
 
 		weightParam = createParam<RoundReallySmallFWKnob>(Vec(119,138), module, ProbablyNote::NOTE_WEIGHT_PARAM+11);
 		weightParams[11] = weightParam;
+		if (module) {
+			dynamic_cast<RoundReallySmallFWKnob*>(weightParam)->percentage = &module->weightPercentage[11];
+		}
 		addParam(weightParam);		
 		weightInput = createInput<FWPortInReallySmall>(Vec(142, 142), module, ProbablyNote::NOTE_WEIGHT_INPUT+11);
 		inputs[11] = weightInput;	
@@ -1876,6 +1957,16 @@ struct ProbablyNoteWidget : ModuleWidget {
 
 		MenuLabel *spacerLabel2 = new MenuLabel();
 		menu->addChild(spacerLabel2);
+
+		menu->addChild(new MenuLabel());
+		{
+      		OptionsMenuItem* mi = new OptionsMenuItem("Quantize Mode");
+			mi->addItem(OptionMenuItem("Closet", [module]() { return module->quantizeMode == 0; }, [module]() { module->quantizeMode = 0; }));
+			mi->addItem(OptionMenuItem("Round Lower", [module]() { return module->quantizeMode == 1; }, [module]() { module->quantizeMode = 1; }));
+			mi->addItem(OptionMenuItem("Round Upper", [module]() { return module->quantizeMode == 2; }, [module]() { module->quantizeMode = 2; }));
+			menu->addChild(mi);
+		}
+
 
 		TriggerDelayItem *triggerDelayItem = new TriggerDelayItem();
 		triggerDelayItem->module = module;

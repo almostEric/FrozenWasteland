@@ -59,15 +59,25 @@ public:
     float maxAngle =  0.55;
 	float midAngle = (minAngle+maxAngle) / 2.0;
     nvgBeginPath(args.vg);
-    nvgStrokeColor(args.vg, nvgRGBA(0xc8, 0xa1, 0x29, 0xff));
+    // nvgStrokeColor(args.vg, nvgRGBA(0xc8, 0xa1, 0x29, 0xff));
+	// NVGpaint paint;
+    
     nvgStrokeWidth(args.vg, 2.0);
 	if(!biDirectional) {
 		float endAngle = ((maxAngle - minAngle) * *percentage) + minAngle;
 		nvgArc(args.vg, box.size.x / 2, box.size.y / 2, box.size.x / 2 - 4.0, minAngle, endAngle, NVG_CW);
-	} else {
+		paint = nvgLinearGradient(args.vg, 0, 0, box.size.x - 4.0, 0, nvgRGBA(0xc8, 0xa1, 0x29, 0x5f), nvgRGBA(0xc8, 0xc1, 0x29, 0xff));
+    } else {
 		float endAngle = ((maxAngle - midAngle) * *percentage) + midAngle;
-		nvgArc(args.vg, box.size.x / 2, box.size.y / 2, box.size.x / 2 - 4.0, midAngle, endAngle, endAngle > midAngle ? NVG_CW : NVG_CCW);
+		if(endAngle > midAngle) {
+			nvgArc(args.vg, box.size.x / 2, box.size.y / 2, box.size.x / 2 - 4.0, midAngle, endAngle, NVG_CW);
+			paint = nvgLinearGradient(args.vg, box.size.x / 2, 0, box.size.x, 0, nvgRGBA(0xc8, 0xa1, 0x29, 0x5f), nvgRGBA(0xc8, 0xc1, 0x29, 0xff));
+		} else {
+			nvgArc(args.vg, box.size.x / 2, box.size.y / 2, box.size.x / 2 - 4.0, midAngle, endAngle, NVG_CCW);
+			paint = nvgLinearGradient(args.vg, 0, 0, box.size.x / 2, 0, nvgRGBA(0xc8, 0xc1, 0x29, 0xff), nvgRGBA(0xc8, 0xa1, 0x29, 0x5f));
+		}
 	}
+    nvgStrokePaint(args.vg, paint);
     nvgStroke(args.vg);
   }
 };

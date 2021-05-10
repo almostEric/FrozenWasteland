@@ -200,6 +200,12 @@
 			"tags": ["Sequencer"]
 		},
 		{
+			"slug": "QARConditionalExpander",
+			"name": "QAR - Conditional",
+			"description": "Clock Divide individual beats in QAR Rhythms",
+			"tags": ["Expander","Random"]
+		},
+		{
 			"slug": "QARGrooveExpander",
 			"name": "QAR - Groove",
 			"description": "Add Grooves and Microrhythms to QAR",

@@ -67,7 +67,7 @@
    inkscape:cx="33.586018"
    gridtolerance="10"
    guidetolerance="10"
-   inkscape:cy="160.34963"
+   inkscape:cy="188.6339"
    units="px"
    inkscape:pageshadow="2"
    inkscape:window-width="1920"
@@ -223,23 +223,23 @@
 <text
    id="text5443-7-5"
    y="356.00003"
-   x="298.91599"
-   style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:8px;line-height:1.25;font-family:Quarca;-inkscape-font-specification:Quarca;letter-spacing:0px;word-spacing:0px;fill:#dddddd;fill-opacity:1;stroke:none;stroke-width:1;"
+   x="296.96399"
+   style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:8px;line-height:1.25;font-family:Quarca;-inkscape-font-specification:Quarca;letter-spacing:0px;word-spacing:0px;fill:#dddddd;fill-opacity:1;stroke:none;stroke-width:1"
    xml:space="preserve"><tspan
-     style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:8px;font-family:Quarca;-inkscape-font-specification:Quarca;stroke-width:1;fill:#dddddd;fill-opacity:1;"
+     style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:8px;font-family:Quarca;-inkscape-font-specification:Quarca;fill:#dddddd;fill-opacity:1;stroke-width:1"
      y="356.00003"
-     x="298.91599"
+     x="296.96399"
      id="tspan5441-1-6"
      sodipodi:role="line">RESET</tspan></text>
 <text
    id="text5443-7-5-4"
    y="413.944"
-   x="293.15601"
-   style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:8px;line-height:1.25;font-family:Quarca;-inkscape-font-specification:Quarca;letter-spacing:0px;word-spacing:0px;fill:#dddddd;fill-opacity:1;stroke:none;stroke-width:1;"
+   x="290.996"
+   style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:8px;line-height:1.25;font-family:Quarca;-inkscape-font-specification:Quarca;letter-spacing:0px;word-spacing:0px;fill:#dddddd;fill-opacity:1;stroke:none;stroke-width:1"
    xml:space="preserve"><tspan
-     style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:8px;font-family:Quarca;-inkscape-font-specification:Quarca;stroke-width:1;fill:#dddddd;fill-opacity:1;"
+     style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:8px;font-family:Quarca;-inkscape-font-specification:Quarca;fill:#dddddd;fill-opacity:1;stroke-width:1"
      y="413.944"
-     x="293.15601"
+     x="290.996"
      id="tspan5441-1-6-2"
      sodipodi:role="line">CLOCK IN</tspan></text>
 <g
@@ -313,15 +313,18 @@
        d="m 68.771683,144.02858 q -0.09172,-0.0388 -0.127,-0.0952 -0.03528,-0.0565 -0.03528,-0.10584 0,-0.0423 0.02822,-0.0529 0.02822,0.0176 0.07761,0.0247 0.04939,0.007 0.112888,0.007 0.03175,0 0.08819,-0.0106 0.05997,-0.0106 0.130528,-0.0212 0.07055,-0.0106 0.144639,-0.0212 0.07761,-0.0106 0.144638,-0.0106 0.162278,0 0.331612,0.0847 0.169333,0.0811 0.303388,0.254 0.134056,0.16934 0.218723,0.43392 0.08819,0.26106 0.08819,0.62442 0,0.30691 -0.05292,0.52916 -0.05292,0.22225 -0.134055,0.37748 -0.08114,0.15522 -0.179917,0.25047 -0.09878,0.0917 -0.194028,0.14464 -0.09172,0.0494 -0.169333,0.067 -0.07408,0.0176 -0.109361,0.0176 -0.05292,0 -0.112889,-0.0141 -0.05997,-0.0141 -0.119944,-0.0318 -0.05645,-0.0176 -0.109361,-0.0317 -0.04939,-0.0141 -0.08467,-0.0141 -0.03881,0 -0.07056,0.0141 -0.03175,0.0106 -0.06703,0.0247 -0.03175,0.0106 -0.07056,0.0247 -0.03881,0.0106 -0.08819,0.0106 -0.01764,0 -0.03881,-0.004 -0.01764,-0.004 -0.03528,-0.0106 -0.01764,-0.007 -0.03528,-0.0176 0.02822,-0.0176 0.05644,-0.06 0.02822,-0.0459 0.05292,-0.0952 0.02822,-0.0529 0.05644,-0.11641 z m 0.518583,2.10255 q 0,0.0741 0.02469,0.11642 0.02822,0.0388 0.05997,0.0564 0.03881,0.0212 0.08467,0.0247 0.08114,0 0.141111,-0.10936 0.0635,-0.10936 0.0635,-0.2787 v -1.54869 q 0,-0.16581 -0.03175,-0.25753 -0.03175,-0.0917 -0.07408,-0.13405 -0.04233,-0.0423 -0.08467,-0.0494 -0.04233,-0.0106 -0.06703,-0.0106 -0.04233,0 -0.08114,0.0564 -0.03528,0.0564 -0.03528,0.14816 z" /></g></g><text
    id="text5443-7-5-4-4"
    y="238"
-   x="354.98001"
-   style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:8px;line-height:1.25;font-family:Quarca;-inkscape-font-specification:Quarca;letter-spacing:0px;word-spacing:0px;fill:#dddddd;fill-opacity:1;stroke:none;stroke-width:1;"
+   x="352.46399"
+   style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:8px;line-height:1.25;font-family:Quarca;-inkscape-font-specification:Quarca;letter-spacing:0px;word-spacing:0px;fill:#dddddd;fill-opacity:1;stroke:none;stroke-width:1"
    xml:space="preserve"><tspan
-     style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:8px;font-family:Quarca;-inkscape-font-specification:Quarca;stroke-width:1;fill:#dddddd;fill-opacity:1;"
+     style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:8px;font-family:Quarca;-inkscape-font-specification:Quarca;fill:#dddddd;fill-opacity:1;stroke-width:1"
      y="238"
-     x="354.98001"
+     x="352.46399"
      id="tspan5441-1-6-2-3"
      sodipodi:role="line">NEW SEED DIV</tspan></text>
-<text
+<path
+   id="rect22843-7"
+   style="opacity:0.981;fill:#0e365d;fill-opacity:1;stroke:#000000;stroke-width:1;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+   d="m 348.7465,448.38894 h 39.507 v 31.507 h -39.507 z" /><text
    id="text5443-7-5-4-4-7"
    y="455.94403"
    x="352.98001"
@@ -357,23 +360,23 @@
      id="rect4735" /></g><text
    id="text5443-7-5-4-4-7-7-7"
    y="456.00003"
-   x="293.06799"
-   style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:8px;line-height:1.25;font-family:Quarca;-inkscape-font-specification:Quarca;letter-spacing:0px;word-spacing:0px;fill:#dddddd;fill-opacity:1;stroke:none;stroke-width:1;"
+   x="293.14801"
+   style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:8px;line-height:1.25;font-family:Quarca;-inkscape-font-specification:Quarca;letter-spacing:0px;word-spacing:0px;fill:#dddddd;fill-opacity:1;stroke:none;stroke-width:1"
    xml:space="preserve"><tspan
-     style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:8px;font-family:Quarca;-inkscape-font-specification:Quarca;stroke-width:1;fill:#dddddd;fill-opacity:1;"
+     style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:8px;font-family:Quarca;-inkscape-font-specification:Quarca;fill:#dddddd;fill-opacity:1;stroke-width:1"
      y="456.00003"
-     x="293.06799"
+     x="293.14801"
      id="tspan5441-1-6-2-3-5-6-0"
      sodipodi:role="line">SEED IN</tspan></text>
 <text
    id="text5443-7-5-4-06"
    y="237.806"
-   x="292.91599"
-   style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:8px;line-height:1.25;font-family:Quarca;-inkscape-font-specification:Quarca;letter-spacing:0px;word-spacing:0px;fill:#dddddd;fill-opacity:1;stroke:none;stroke-width:1;"
+   x="291.96399"
+   style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:8px;line-height:1.25;font-family:Quarca;-inkscape-font-specification:Quarca;letter-spacing:0px;word-spacing:0px;fill:#dddddd;fill-opacity:1;stroke:none;stroke-width:1"
    xml:space="preserve"><tspan
-     style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:8px;font-family:Quarca;-inkscape-font-specification:Quarca;stroke-width:1;fill:#dddddd;fill-opacity:1;"
+     style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:8px;font-family:Quarca;-inkscape-font-specification:Quarca;fill:#dddddd;fill-opacity:1;stroke-width:1"
      y="237.806"
-     x="292.91599"
+     x="291.96399"
      id="tspan5441-1-6-2-5"
      sodipodi:role="line">RESEED DIV</tspan></text>
 <g
@@ -396,15 +399,18 @@
        height="26.870058"
        width="100.76272"
        id="rect1401" /></flowRegion><flowPara
-     id="flowPara1403" /></flowRoot><text
+     id="flowPara1403" /></flowRoot><path
+   d="m 348.7465,406.2465 h 39.507 v 31.507 h -39.507 z"
+   style="opacity:0.981;fill:#0e365d;fill-opacity:1;stroke:#000000;stroke-width:1;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+   id="rect22843" /><text
    id="text5443-7-5-4-7"
    y="413.944"
-   x="353.15601"
-   style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:8px;line-height:1.25;font-family:Quarca;-inkscape-font-specification:Quarca;letter-spacing:0px;word-spacing:0px;fill:#dddddd;fill-opacity:1;stroke:none;stroke-width:1;"
+   x="350.996"
+   style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:8px;line-height:1.25;font-family:Quarca;-inkscape-font-specification:Quarca;letter-spacing:0px;word-spacing:0px;fill:#dddddd;fill-opacity:1;stroke:none;stroke-width:1"
    xml:space="preserve"><tspan
-     style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:8px;font-family:Quarca;-inkscape-font-specification:Quarca;stroke-width:1;fill:#dddddd;fill-opacity:1;"
+     style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:8px;font-family:Quarca;-inkscape-font-specification:Quarca;fill:#dddddd;fill-opacity:1;stroke-width:1"
      y="413.944"
-     x="353.15601"
+     x="350.996"
      id="tspan5441-1-6-2-4"
      sodipodi:role="line">CLOCK OUT</tspan></text>
 <text
@@ -421,34 +427,34 @@
 <text
    id="text5443-7-5-4-7-1-2"
    y="535.94397"
-   x="344.98001"
-   style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:8px;line-height:1.25;font-family:Quarca;-inkscape-font-specification:Quarca;letter-spacing:0px;word-spacing:0px;fill:#dddddd;fill-opacity:1;stroke:none;stroke-width:1;"
+   x="342.96399"
+   style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:8px;line-height:1.25;font-family:Quarca;-inkscape-font-specification:Quarca;letter-spacing:0px;word-spacing:0px;fill:#dddddd;fill-opacity:1;stroke:none;stroke-width:1"
    xml:space="preserve"><tspan
-     style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:8px;font-family:Quarca;-inkscape-font-specification:Quarca;stroke-width:1;fill:#dddddd;fill-opacity:1;"
+     style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:8px;font-family:Quarca;-inkscape-font-specification:Quarca;fill:#dddddd;fill-opacity:1;stroke-width:1"
      y="535.94397"
-     x="344.98001"
+     x="342.96399"
      id="tspan5441-1-6-2-4-3-5"
      sodipodi:role="line">NEW SEED TRIG</tspan></text>
 <text
    id="text5443-7-5-4-4-7-7-7-1"
    y="508.79999"
-   x="292.92401"
-   style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:8px;line-height:1.25;font-family:Quarca;-inkscape-font-specification:Quarca;letter-spacing:0px;word-spacing:0px;fill:#dddddd;fill-opacity:1;stroke:none;stroke-width:1;"
+   x="290.96399"
+   style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:8px;line-height:1.25;font-family:Quarca;-inkscape-font-specification:Quarca;letter-spacing:0px;word-spacing:0px;fill:#dddddd;fill-opacity:1;stroke:none;stroke-width:1"
    xml:space="preserve"><tspan
-     style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:8px;font-family:Quarca;-inkscape-font-specification:Quarca;stroke-width:1;fill:#dddddd;fill-opacity:1;"
+     style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:8px;font-family:Quarca;-inkscape-font-specification:Quarca;fill:#dddddd;fill-opacity:1;stroke-width:1"
      y="508.79999"
-     x="292.92401"
+     x="290.96399"
      id="tspan5441-1-6-2-3-5-6-0-4"
      sodipodi:role="line">DELAY COMP.</tspan></text>
 <text
    id="text5443-7-5-1"
    y="324.944"
-   x="343.92401"
-   style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:8px;line-height:1.25;font-family:Quarca;-inkscape-font-specification:Quarca;letter-spacing:0px;word-spacing:0px;fill:#dddddd;fill-opacity:1;stroke:none;stroke-width:1;"
+   x="340.96399"
+   style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:8px;line-height:1.25;font-family:Quarca;-inkscape-font-specification:Quarca;letter-spacing:0px;word-spacing:0px;fill:#dddddd;fill-opacity:1;stroke:none;stroke-width:1"
    xml:space="preserve"><tspan
-     style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:8px;font-family:Quarca;-inkscape-font-specification:Quarca;stroke-width:1;fill:#dddddd;fill-opacity:1;"
+     style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:8px;font-family:Quarca;-inkscape-font-specification:Quarca;fill:#dddddd;fill-opacity:1;stroke-width:1"
      y="324.944"
-     x="343.92401"
+     x="340.96399"
      id="tspan5441-1-6-4"
      sodipodi:role="line">DIV MODE</tspan></text>
 </svg>

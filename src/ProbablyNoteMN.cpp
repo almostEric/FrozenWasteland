@@ -20,7 +20,7 @@
 #define MAX_PRIME_NUMBERS 49 //Up to 200 and some transcenttals
 #define MAX_FACTORS 10
 #define MAX_GENERATED_PITCHES 100000 //hard limit but to prevent getting silly
-#define MAX_PITCHES 128 //Not really a hard limit but to prevent getting silly
+#define MAX_PITCHES 100000 //Not really a hard limit but to prevent getting silly
 #define MAX_SCALES 42
 #define MAX_NOTES 12
 #define NUM_SHIFT_MODES 3
@@ -28,6 +28,7 @@
 
 #define NBR_ALGORITHMS 4
 #define NBR_SCALE_MAPPING 4
+#define NBR_TEMPERING_MODES 3
 
 //GOLOMB RULER
 #define NUM_RULERS 36
@@ -44,11 +45,11 @@ using namespace frozenwasteland::dsp;
 
 struct EFPitch {
   int   pitchType;
-  float numerator;
-  float denominator;
-  float ratio;
-  float pitch;
-  float dissonance;
+  double numerator;
+  double denominator;
+  double ratio;
+  double pitch;
+  double dissonance;
   float weighting;
   bool inUse;
   bool operator<(const EFPitch& a) const {
@@ -188,6 +189,11 @@ struct ProbablyNoteMN : Module {
 		TRIGGER_POLYPHONIC_LIGHT = QUANTIZE_MOS_RATIO_LIGHT + 3,
 		NUM_LIGHTS = TRIGGER_POLYPHONIC_LIGHT + 3
 	};
+	enum QuantizeModes {
+		QUANTIZE_CLOSEST,
+		QUANTIZE_LOWER,
+		QUANTIZE_UPPER,
+	};
 	enum PitchTypes {
 		RATIO_PITCH_TYPE,
 		EQUAL_DIVISION_PITCH_TYPE,
@@ -205,15 +211,25 @@ struct ProbablyNoteMN : Module {
 		REPEAT_SCALE_MAPPING,
 		NEAREST_NEIGHBOR_SCALE_MAPPING
 	};
+	enum TemperingMpdes {
+		NO_TEMPERING,
+		KEEP_BEST_MATCH_TEMPERING,
+		TEMPER_ALL_PITCHES_TEMPERING,
+		TEMPER_BEST_MATCH_TEMPERING
+	};
 
-
+	const char* edoTemperingModes[NBR_TEMPERING_MODES] = {"Best Fit","Temper All"};
 	const char* algorithms[NBR_ALGORITHMS] = {"","Euclidean","Golumb Ruler","Perfect Balance"};
-	const char* scaleMappings[NBR_ALGORITHMS] = {"Spread","Repeat","Nearest Neighbor"};
+	const char* scaleMappings[NBR_SCALE_MAPPING] = {"Spread","Repeat","Nearest Neighbor"};
 
 // “”
 	const char* noteNames[MAX_NOTES] = {"C","C#/Db","D","D#/Eb","E","F","F#/Gb","G","G#/Ab","A","A#/Bb","B"};
     const double primeNumbers[MAX_PRIME_NUMBERS] = {(1 + std::sqrt(5))/2.0,M_E,M_PI,2,3,5,7,11,13,17,19,23,29,31,37,41,43,47,53,59,61,67,71,73,79,83,89,97,101,103,107,109,113,127,131,137,139,149,151,157,163,167,173,179,181,191,193,197,199};
     const std::string primeNumberNames[MAX_PRIME_NUMBERS] = {"ɸ","e","π","2","3","5","7","11","13","17","19","23","29","31","37","41","43","47","53","59","61","67","71","73","79","83","89","97","101","103","107","109","113","127","131","137","139","149","151","157","163","167","173","179","181","191","193","197","199"};
+
+
+	const float majorRatios[28] = {203.91,386.61,498.04,701.955,884.36,1088.27,1200.0,1403.91,1586.61,1698.04,1901.955,2084.36,2288.27,2400.0,2603.91,2786.61,2898.04,3001.955,3284.36,3488.27,3600,3803.91,3986.61,4098.04,4301.955,4484.36,4688.27,4800};
+	const float minorRatios[28] = {203.91,315.64,498.04,701.955,813.69,1017.596,1200.0,1403.91,1515.64,1698.04,1901.955,2013.69,2217.596,2400.0,2603.91,2715.64,2898.04,3001.955,3213.69,3417.596,3600,3803.91,3915.64,4098.04,4301.955,4413.69,4617.596,4800};
 
 	//GOLOMB RULER PATTERNS
     const int rulerOrders[NUM_RULERS] = {1,2,3,4,5,5,6,6,6,6,7,7,7,7,7,8,9,10,11,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27};
@@ -477,13 +493,14 @@ struct ProbablyNoteMN : Module {
 		{1,0,1,1,0,0,1,1,0,1,1,0}
 	}; 
 	
-	dsp::SchmittTrigger clockTrigger,algorithmTrigger,edoTemperingTrigger,scaleMappingTrigger,useScaleWeightingTrigger,octaveScaleMappingTrigger,
+	dsp::SchmittTrigger clockTrigger[POLYPHONY],clockModeTrigger,algorithmTrigger,edoTemperingTrigger,scaleMappingTrigger,useScaleWeightingTrigger,octaveScaleMappingTrigger,
 						octaveWrapAroundTrigger,shiftScalingTrigger,keyScalingTrigger,pitchRandomnessGaussianTrigger,spreadModeTrigger, 
 						quantizeOctaveSizeTrigger,quantizeMosRatioTrigger,setRootNoteTrigger; 
 	dsp::PulseGenerator noteChangePulse[POLYPHONY];
     GaussianNoiseGenerator _gauss;
  
     bool octaveWrapAround = false;
+	bool triggerPolyphonic = false;
     //bool noteActive[MAX_NOTES] = {false};
     float noteScaleProbability[MAX_NOTES] = {0.0f};
     float noteProbability[POLYPHONY][MAX_PITCHES] = {{0.0f}};
@@ -508,6 +525,7 @@ struct ProbablyNoteMN : Module {
 	int mosLevels = 1;
 	int lastMosLevels = 1;
 	bool quantizeMosRatio = true;
+	bool invalidMos = false;
 
 	ChristoffelWords christoffelWords;
 	std::string currentChristoffelword = {"unknown"};
@@ -523,8 +541,8 @@ struct ProbablyNoteMN : Module {
     uint8_t lastDSteps[MAX_FACTORS] = {0};
     uint8_t actualDSteps[MAX_FACTORS] = {0};
 
-	bool edoTempering = false;
-	bool lastEdoTempering = false;
+	int edoTempering = 0;
+	int lastEdoTempering = -1;
 	float edoTemperingThreshold = 0;
 	float lastEdoTemperingThreshold = 0;
 	float edoTemperingStrength = 0;
@@ -533,8 +551,8 @@ struct ProbablyNoteMN : Module {
 	bool reloadPitches = false;
 
 	bool triggerDelayEnabled = false;
-	float triggerDelay[TRIGGER_DELAY_SAMPLES] = {0};
-	int triggerDelayIndex = 0;
+	float triggerDelay[POLYPHONY][TRIGGER_DELAY_SAMPLES] = {{0}};
+	int triggerDelayIndex[POLYPHONY] = {0};
 
 	int pitchGridDisplayMode = 1;
 
@@ -546,8 +564,10 @@ struct ProbablyNoteMN : Module {
     std::vector<EFPitch> reducedEfPitches;
 	std::vector<uint8_t> pitchIncluded;
 	
-	uint64_t nbrPitches = 0;
-	uint64_t lastNbrPitches = 0;
+	uint64_t nbrGeneratedPitches = 0;
+	uint64_t lastNbrGeneratedPitches = 0;
+	uint64_t nbrReducedPitches = 0;
+	uint64_t nbrResultPitches = 0;
 	uint64_t scaleSize = 0;
 	uint64_t lastScaleSize = -1;
 	uint64_t actualScaleSize;
@@ -560,6 +580,7 @@ struct ProbablyNoteMN : Module {
 	bool useScaleWeighting = false;
 	bool lastUseScaleWeighting;
 
+	bool checkTemperingNeeded = false;
 	bool mapPitches = false;
 
 	float octaveSize = 2;;
@@ -585,6 +606,7 @@ struct ProbablyNoteMN : Module {
 	int lastRandomNote[POLYPHONY] = {-1}; 
 	int currentNote[POLYPHONY] = {0};
 	uint64_t probabilityNote[POLYPHONY] = {0};
+	double lastFractionalValue[POLYPHONY] = {0.0};
 	double lastQuantizedCV[POLYPHONY] = {0.0};
 	bool noteChange = false;
 	bool resetTriggered = false;
@@ -596,6 +618,8 @@ struct ProbablyNoteMN : Module {
 	int shiftMode = 0;
 	bool keyLogarithmic = false;
 	bool pitchRandomGaussian = false;
+
+	int quantizeMode = QUANTIZE_CLOSEST;
 
 	float modulationRoot = 0;
 	int microtonalKey = 0;
@@ -772,20 +796,25 @@ struct ProbablyNoteMN : Module {
 		numeratorList.resize(0);
 		denominatorList.resize(0);
 
-        //EFPitch efPitch = new EFPitch();
         EFPitch efPitch;
 		efPitch.pitchType = EQUAL_DIVISION_PITCH_TYPE;
         efPitch.numerator = 1;
         efPitch.denominator = 1;
 		efPitch.ratio = 1;
 		efPitch.pitch = 0.0;
-		efPitch.dissonance = 0.0;
         efPitches.push_back(efPitch);
 		temperingPitches.push_back(efPitch);
 
+        EFPitch octaveEfPitch;
+		octaveEfPitch.pitchType = EQUAL_DIVISION_PITCH_TYPE;
+        octaveEfPitch.numerator = 2;
+        octaveEfPitch.denominator = 1;
+		octaveEfPitch.ratio = 2;
+		octaveEfPitch.pitch = 1200.0;
+		temperingPitches.push_back(octaveEfPitch);
+
 		numeratorList.push_back(1);
 		denominatorList.push_back(1);
-
 
 		//Do Equal Divisions First
 
@@ -795,20 +824,22 @@ struct ProbablyNoteMN : Module {
 			if(divisionIndex > 0) {
 				EFPitch efPitch;
 				efPitch.pitchType = EQUAL_DIVISION_PITCH_TYPE;
-				float numerator = divisionCount;
-				float denominator = equalDivisions;        
-				float ratio = numerator / denominator;
-				efPitch.ratio = powf(2,ratio);
+				double numerator = divisionCount;
+				double denominator = equalDivisions;        
+				double ratio = numerator / denominator;
+				efPitch.ratio = pow(2,ratio);
 				if(IsUniqueRatio(efPitch.ratio)) {
-					float gcd = GCD(numerator,denominator);
+					double gcd = GCD(numerator,denominator);
 					efPitch.numerator = numerator / gcd;
 					efPitch.denominator = denominator / gcd;
-					float pitchInCents = 1200 * ratio; 
+					double pitchInCents = 1200 * ratio; 
 					efPitch.pitch = pitchInCents;
-					float dissonance = CalculateDissonance(numerator,denominator,gcd);
-					efPitch.dissonance = dissonance;
+					// double dissonance = CalculateDissonance(numerator,denominator,gcd);
+					// double dissonance = CalculateDissonance(efPitch.ratio);
+					// efPitch.dissonance = dissonance;
 					// fprintf(stderr, "n: %f d: %f  r: %f   p: %f \n", efPitch.numerator, efPitch.denominator, efPitch.ratio, pitchInCents);
-					if(edoTempering)
+					// fprintf(stderr, "n: %f d: %f  r:%f  p:%f diss: %f \n", efPitch.numerator, efPitch.denominator, ratio, pitchInCents, dissonance);
+					if(edoTempering > 0)
 						temperingPitches.push_back(efPitch);
 					else
 						efPitches.push_back(efPitch);
@@ -823,7 +854,7 @@ struct ProbablyNoteMN : Module {
 		int numberLargeSteps = mosLargeSteps;
 		int numberSmallSteps = mosSmallSteps;
 		int totalSteps = 0;
-		float currentRatio = mosRatio;
+		double currentRatio = mosRatio;
 		for(int l = 0;l<mosLevels;l++) {
 			totalSteps = numberLargeSteps + numberSmallSteps;
 			word = christoffelWords.Generate(totalSteps,mosSmallSteps);
@@ -838,8 +869,9 @@ struct ProbablyNoteMN : Module {
 				}
 			}
 		}
-		
+
 		if(word != "unknown") {
+			invalidMos = false;
 			currentChristoffelword = word;
 			float totalSize = numberSmallSteps + (numberLargeSteps * currentRatio);
 			float currentPosition = 0;
@@ -849,23 +881,29 @@ struct ProbablyNoteMN : Module {
 
 				EFPitch efPitch;
 				efPitch.pitchType = MOS_PITCH_TYPE;
-				float numerator = currentPosition;
-				float denominator = totalSize;        
-				float ratio = numerator / denominator;
-				efPitch.ratio = powf(2,ratio);
+				double numerator = currentPosition;
+				double denominator = totalSize;        
+				double ratio = numerator / denominator;
+				efPitch.ratio = pow(2,ratio);
 				if(IsUniqueRatio(efPitch.ratio)) {
-					float gcd = GCD(numerator,denominator); 
+					double gcd = GCD(numerator,denominator); 
 					efPitch.numerator = numerator / gcd;
 					efPitch.denominator = denominator / gcd;
-					float pitchInCents = 1200 * ratio; 
+					double pitchInCents = 1200 * ratio; 
 					efPitch.pitch = pitchInCents;
-					float dissonance = CalculateDissonance(numerator,denominator,gcd);
-					efPitch.dissonance = dissonance;
-					// fprintf(stderr, "n: %f d: %f  r: %f   p: %f \n", efPitch.numerator, efPitch.denominator, efPitch.ratio, pitchInCents);
+					// double dissonance = CalculateDissonance(numerator,denominator,gcd);
+					// double dissonance = CalculateDissonance(efPitch.ratio);
+					// efPitch.dissonance = dissonance;
+					// fprintf(stderr, "n: %f d: %f  r: %f   diss: %f \n", efPitch.numerator, efPitch.denominator, efPitch.ratio, pitchInCents);
+					
 					efPitches.push_back(efPitch);
 				}
 			}
+		} else {
+			invalidMos = true;
 		}
+
+		// fprintf(stderr, "word:%s  compare:%i  invalid:%i\n", word.c_str(),compare,invalidMos);
 
 
         //Check that we aren't getting too crazy - Simplifying out for now 
@@ -916,25 +954,25 @@ struct ProbablyNoteMN : Module {
         for (uint16_t d = 1; d < denominatorList.size(); d++) {
 			for (uint16_t n = 1; n < numeratorList.size(); n++) {
 				EFPitch efPitch;
-				float numerator = numeratorList[n];
-				float denominator = ScaleDenominator(numerator,denominatorList[d]);        
+				double numerator = numeratorList[n];
+				double denominator = ScaleDenominator(numerator,denominatorList[d]);        
 				numerator = ScaleNumerator(numerator,denominator);
 				if(numerator <= float(ULLONG_MAX) && denominator <= float(ULLONG_MAX)) {		
 					efPitch.pitchType = RATIO_PITCH_TYPE;
 					efPitch.numerator = numerator;
 					efPitch.denominator = denominator;        
-					float ratio = numerator / denominator;
+					double ratio = numerator / denominator;
 					efPitch.ratio = ratio;
 					if(numerator > 0 && IsUniqueRatio(ratio)) {
-						//uint64_t gcd = GCD(efPitch.numerator,efPitch.denominator);
-						float gcd = GCD(efPitch.numerator,efPitch.denominator);
+						double gcd = GCD(efPitch.numerator,efPitch.denominator);
 						efPitch.numerator = efPitch.numerator / gcd;
 						efPitch.denominator = efPitch.denominator / gcd;
-						float pitchInCents = 1200 * std::log2f(ratio);
+						double pitchInCents = 1200 * std::log2f(ratio);
 						efPitch.pitch = pitchInCents;
-						float dissonance = CalculateDissonance(efPitch.numerator,efPitch.denominator,gcd);
-						efPitch.dissonance = dissonance;
-						// fprintf(stderr, "n: %f d: %f  r:%f   p: %f \n", efPitch.numerator, efPitch.denominator, ratio, pitchInCents);
+						// double dissonance = CalculateDissonance(efPitch.numerator,efPitch.denominator,gcd);
+						// double dissonance = CalculateDissonance(efPitch.ratio);
+						// efPitch.dissonance = dissonance;
+						// fprintf(stderr, "n: %f d: %f  r:%f  p:%f  d: %f \n", efPitch.numerator, efPitch.denominator, ratio, pitchInCents, dissonance);
 		
 						efPitches.push_back(efPitch);
 					}
@@ -942,16 +980,17 @@ struct ProbablyNoteMN : Module {
 			}
 		}
 		
-        nbrPitches = efPitches.size(); //Actual Number of pitches
+        nbrGeneratedPitches = efPitches.size(); //Actual Number of pitches
         std::sort(efPitches.begin(), efPitches.end());
         //fprintf(stderr, "Number of Pitches: %llu \n",nbrPitches);
     }
 
-	bool IsUniqueRatio(float ratio, bool useTemperedPitches = false) {
+	bool IsUniqueRatio(double ratio, bool useTemperedPitches = false) {
 		bool isUnique = true;
+		const double epsilon = 1e-06;
 		size_t pc = useTemperedPitches ? resultingPitches.size() : efPitches.size();
 		for(uint64_t i = 0;i<pc;i++) {
-			if((!useTemperedPitches && efPitches[i].ratio == ratio) || ((useTemperedPitches && resultingPitches[i].ratio == ratio))) {
+			if((!useTemperedPitches && std::abs(efPitches[i].ratio - ratio) < epsilon) || ((useTemperedPitches && std::abs(resultingPitches[i].ratio - ratio) < epsilon))) {
 				isUnique = false;
 				break;
 			}
@@ -989,124 +1028,133 @@ struct ProbablyNoteMN : Module {
         return newNumerator;
     }
 
-    float CalculateDissonance(float numerator, float denominator, float gcd)
-    {
-        float lcm = LCM(numerator, denominator, gcd);
-        return std::log2f(lcm);
-    }
+    // float CalculateDissonance(float numerator, float denominator, float gcd)
+    // {
+    //     float lcm = LCM(numerator, denominator, gcd);
+    //     return std::log2f(lcm);
+    // }
+
+	double CalculateDissonance(double ratio) {
+		//Roughness Calculation Model  (from Vassilakis, 2001 & 2005)
+		// will use middle A for calc
+
+		int nbrPartials = 6;
+
+		double dstar= 0.24;  // this is the point of maximum dissonance - the value is derived from a model
+							// of the Plomp-Levelt dissonance  curves for all frequencies.
+		double s1 = 0.0207;// s1 and s2 are used to allow a single functional form to interpolate beween
+		double s2 = 18.96;  //  the various P&L curves of different frequencies by sliding, stretching/compressing
+		       				//  the curve so that its max dissonance occurse at dstar. A least-square-fit was made
+							// to determine the values.
+		
+		double c1 = 5;       // these parameters have values to fit the experimental data of Plomp and Levelt
+		double c2 = -5;
+		double b1 = -3.51; // theses values determine the rates at which the function rises and falls and 
+		double b2 = -5.75; // and are based on a gradient minimisation of the squared error between 
+						  //  Plomp and Levelt's averaged data and the curve
+		
+		double rootFrequency = 440;
+		double d = 0;
+		for(int minPartial = 1;minPartial<=nbrPartials;minPartial++) {
+			double fRootPartial = rootFrequency * minPartial; // Middle A
+			for(int freqPartial = 1;freqPartial<=nbrPartials;freqPartial++) {
+				double interval = ratio * rootFrequency * freqPartial;
+
+				double fMin = std::min(fRootPartial,interval);
+
+				double s=dstar/(s1*fMin+s2); // define s with interpolating values s1 and s2.
+											
+				double fdif=fabs(interval-fMin); // (fabs gives absolute value)
+												//	establishes the frequency difference					
+									
+				double arg1=b1*s*fdif; // gives arg1/arg2 the powers for e [i.e., as(f2-f1)] 
+				double arg2=b2*s*fdif ; // in the equation for dissonance given above.																										
+				double exp1=std::exp(arg1); // EXP returns a value containing e
+										//(the base of natural logarithms) raised to the specified power.											
+				double exp2=std::exp(arg2);
+											
+				double dNew = (c1*exp1+c2*exp2);//  The lesser of amp(i) and amp(j) is used
+				d+=dNew;
+			}	
+		}					
+
+
+// fprintf(stderr, "DISSONANCE ratio:%f   d:%f \n",ratio,  d);
+
+		return d / nbrPartials;
+	}
+
 
     //least common multiple
-    inline float LCM(float a, float b,float gcd)
+    inline double LCM(double a, double b,double gcd)
     {
         return (a * b) / gcd;
     }
 
     //Greatest common divisor
-    float GCD(float a, float b)
+    double GCD(double a, double b)
     {
         if (b == 0)
             return a;
         return GCD(b, std::fmod(a,b));
     }
 
-
-	void TemperScale(float threshold, float strength) {
-		
-		float pitchRange = (1200.0 / equalDivisions) * threshold / 2.0;
-		resultingPitches.clear();
-
-
-
-		for(size_t i=0;i<efPitches.size();i++) {
-			bool tempered = false;
-			for(size_t j=0;j<temperingPitches.size();j++) {
-				if(std::abs(efPitches[i].pitch - temperingPitches[j].pitch) <= pitchRange) {
-					EFPitch rfPitch;
-					rfPitch.pitchType = efPitches[i].pitchType;
-					float numerator = efPitches[i].numerator;
-					float denominator = efPitches[i].denominator;
-					float efRatio = numerator / denominator;
-					float tRatio = temperingPitches[j].numerator / temperingPitches[j].denominator;       
-					float ratio = lerp(efRatio,tRatio,edoTemperingStrength);
-					rfPitch.ratio = powf(2,ratio);
-					if(IsUniqueRatio(rfPitch.ratio, true)) {
-						float gcd = GCD(numerator,denominator); // this aint gonna work
-						rfPitch.numerator = numerator / gcd;
-						rfPitch.denominator = denominator / gcd;
-						float pitchInCents = 1200 * ratio; 
-						rfPitch.pitch = pitchInCents;
-						float dissonance = CalculateDissonance(numerator,denominator,gcd);
-						rfPitch.dissonance = dissonance;
-						resultingPitches.push_back(rfPitch);
-					}
-					
-					tempered = true;
-					break;
-				}
-			}
-			if(!tempered) {
-				resultingPitches.push_back(efPitches[i]);
-			}
-		}
-		nbrPitches = resultingPitches.size(); //Actual Number of pitches
-	}
-
-	void ChooseNotes(uint64_t totalSize, uint64_t scaleSize) {
+	void ReduceNotes(uint64_t originalSize, uint64_t reducedSize) {
 		pitchIncluded.clear();
-		pitchIncluded.resize(totalSize);
-		if(totalSize == 0 || scaleSize == 0) 
+		pitchIncluded.resize(originalSize);
+		if(originalSize == 0 || reducedSize == 0) 
 			return;
-		for(uint64_t i=0;i<totalSize;i++) {
+		for(uint64_t i=0;i<originalSize;i++) {
 			pitchIncluded[i] = 0;
 		}
 		
 		switch(noteReductionAlgorithm) {
 			case NO_REDUCTION_ALGO :
-				HardLimitAlgo(totalSize,scaleSize);
+				HardLimitAlgo(originalSize,reducedSize);
 				break;
 			case EUCLIDEAN_ALGO :
-				EuclideanAlgo(totalSize,scaleSize);
+				EuclideanAlgo(originalSize,reducedSize);
 				break;
 			case GOLUMB_RULER_ALGO :
-				GolumbRulerAlgo(totalSize,scaleSize);
+				GolumbRulerAlgo(originalSize,reducedSize);
 				break;
 			case PERFECT_BALANCE_ALGO :
-				PerfectBalanceAlgo(totalSize,scaleSize);
+				PerfectBalanceAlgo(originalSize,reducedSize);
 				break;
 		}
 	}
 
-	void HardLimitAlgo(uint64_t totalSize, uint64_t scaleSize) {
-		for(uint64_t noLimitStepIndex = 0; noLimitStepIndex < totalSize; noLimitStepIndex++)
+	void HardLimitAlgo(uint64_t originalSize, uint64_t reducedSize) {
+		for(uint64_t noLimitStepIndex = 0; noLimitStepIndex < originalSize; noLimitStepIndex++)
 		{
 			pitchIncluded[noLimitStepIndex] = 1;	
 		}
-		noteReductionPatternName = std::to_string(totalSize);
+		noteReductionPatternName = std::to_string(originalSize) + " No Reduce";
 	}
 
-	void EuclideanAlgo(uint64_t totalSize, uint64_t scaleSize) {
-		uint64_t bucket = totalSize - 1;                    
-		for(uint64_t euclideanStepIndex = 0; euclideanStepIndex < totalSize; euclideanStepIndex++)
+	void EuclideanAlgo(uint64_t originalSize, uint64_t reducedSize) {
+		uint64_t bucket = originalSize - 1;                    
+		for(uint64_t euclideanStepIndex = 0; euclideanStepIndex < originalSize; euclideanStepIndex++)
 		{
-			bucket += scaleSize;
-			if(bucket >= totalSize) {
-				bucket -= totalSize;
+			bucket += reducedSize;
+			if(bucket >= originalSize) {
+				bucket -= originalSize;
 				pitchIncluded[euclideanStepIndex] = 1;	
 			}                        
 		}
-		noteReductionPatternName = std::to_string(totalSize) + " to " + std::to_string(scaleSize);
+		noteReductionPatternName = std::to_string(originalSize) + " to " + std::to_string(reducedSize);
 	}
 
-	void GolumbRulerAlgo(uint64_t totalSize, uint64_t scaleSize) {
-		int rulerToUse = clamp(scaleSize-1,0,NUM_RULERS-1);
-		while(rulerLengths[rulerToUse] + 1 > totalSize && rulerToUse >= 0) {
+	void GolumbRulerAlgo(uint64_t originalSize, uint64_t reducedSize) {
+		int rulerToUse = clamp(reducedSize-1,0,NUM_RULERS-1);
+		while(rulerLengths[rulerToUse] + 1 > originalSize && rulerToUse >= 0) {
 			rulerToUse -=1;
 		}
 
-		noteReductionPatternName = std::to_string(totalSize) + " to " + rulerNames[rulerToUse]; 
+		noteReductionPatternName = std::to_string(originalSize) + " to " + rulerNames[rulerToUse]; 
 		
 		//Multiply beats so that low division beats fill out entire pattern
-		float spaceMultiplier = (totalSize / (rulerLengths[rulerToUse] + 1));
+		float spaceMultiplier = (originalSize / (rulerLengths[rulerToUse] + 1));
 
 		for (int rulerIndex = 0; rulerIndex < rulerOrders[rulerToUse];rulerIndex++)
 		{
@@ -1115,7 +1163,7 @@ struct ProbablyNoteMN : Module {
 		}
 	}
 
-	void PerfectBalanceAlgo(uint64_t totalSize, uint64_t scaleSize) {
+	void PerfectBalanceAlgo(uint64_t originalSize, uint64_t reducedSize) {
 		int pbPatternToUse = -1;
 		uint64_t pbMatchPatternCount = 0;
 		int pbLastMatchedPattern = 0;
@@ -1124,9 +1172,9 @@ struct ProbablyNoteMN : Module {
 			pbPatternToUse +=1;
 			if(pbPatternToUse >= NUM_PB_PATTERNS)
 				break;
-			if(pbPatternLengths[pbPatternToUse] <= totalSize && totalSize % pbPatternLengths[pbPatternToUse] == 0) {
+			if(pbPatternLengths[pbPatternToUse] <= originalSize && originalSize % pbPatternLengths[pbPatternToUse] == 0) {
 				pbLastMatchedPattern = pbPatternToUse;
-				if(pbMatchPatternCount >= scaleSize-1) {
+				if(pbMatchPatternCount >= reducedSize-1) {
 					patternFound = true;
 				} else {
 					pbMatchPatternCount +=1;							
@@ -1137,8 +1185,8 @@ struct ProbablyNoteMN : Module {
 			pbPatternToUse = pbLastMatchedPattern;
 		
 		//Multiply beats so that low division beats fill out entire pattern
-		float spaceMultiplier = (totalSize / (pbPatternLengths[pbPatternToUse]));
-		noteReductionPatternName =std::to_string(totalSize) + " to " + pbPatternNames[pbPatternToUse]; 
+		float spaceMultiplier = (originalSize / (pbPatternLengths[pbPatternToUse]));
+		noteReductionPatternName =std::to_string(originalSize) + " to " + pbPatternNames[pbPatternToUse]; 
 
 		for (int pbIndex = 0; pbIndex < pbPatternOrders[pbPatternToUse];pbIndex++)
 		{
@@ -1147,7 +1195,81 @@ struct ProbablyNoteMN : Module {
 		}
 	}
 
+	void TemperScale(int temperMode, double threshold, double strength) {
+		
+		double pitchRange = (1200.0 / equalDivisions) * threshold / 2.0;
+		resultingPitches.clear();
 
+		std::vector<std::vector<EFPitch>> temporaryPitches;
+		temporaryPitches.clear();
+		temporaryPitches.resize(temperingPitches.size());
+
+		for(size_t i=0;i<reducedEfPitches.size();i++) {
+			bool tempered = false;
+			for(size_t j=0;j<temperingPitches.size();j++) {
+				if(std::abs(reducedEfPitches[i].pitch - temperingPitches[j].pitch) <= pitchRange) {
+					EFPitch rfPitch;
+					rfPitch.pitchType = reducedEfPitches[i].pitchType;
+					double numerator = reducedEfPitches[i].numerator;
+					double denominator = reducedEfPitches[i].denominator;
+					// double efRatio = numerator / denominator;
+					// double tRatio = temperingPitches[j].numerator / temperingPitches[j].denominator	;
+					double ratio;
+					ratio = lerp(reducedEfPitches[i].ratio,temperingPitches[j].ratio,edoTemperingStrength);
+					if(ratio == 2) {
+						ratio = 1;
+					}
+					// fprintf(stderr,"pitch #:%lli pitch:%f  temperingPitch:%f  efRatio:%f  tRatio:%f calcRatio:%f \n",i,efPitches[i].pitch, temperingPitches[j].pitch, efPitches[i].ratio,temperingPitches[j].ratio,ratio);
+					rfPitch.ratio = ratio;
+					if(IsUniqueRatio(rfPitch.ratio, true)) {
+						double gcd = GCD(numerator,denominator); // this aint gonna work
+						rfPitch.numerator = numerator / gcd;
+						rfPitch.denominator = denominator / gcd;
+						double pitchInCents = 1200 * std::log2f(ratio);; 
+						rfPitch.pitch = pitchInCents;
+						double dissonance = CalculateDissonance(rfPitch.ratio);
+						rfPitch.dissonance = dissonance;
+						if(temperMode == TEMPER_ALL_PITCHES_TEMPERING)
+							resultingPitches.push_back(rfPitch);
+						else 
+							temporaryPitches[j].push_back(rfPitch);
+					}
+					
+					tempered = true;
+					break;
+				}
+			}
+			if(!tempered) {
+				resultingPitches.push_back(reducedEfPitches[i]);
+			}
+		}
+		if(temperMode == KEEP_BEST_MATCH_TEMPERING) {
+			for(size_t j=0;j<temperingPitches.size();j++) {
+				if(temporaryPitches[j].size() > 0) {
+					double bestFit = 50000; // something arbitrarily large
+					EFPitch bestFitPitch;
+					for(size_t k=0;k<temporaryPitches[j].size();k++) {
+						double fit = std::abs(temporaryPitches[j][k].pitch - temperingPitches[j].pitch);
+						if(fit < bestFit) {
+							bestFit = fit;
+							bestFitPitch = temporaryPitches[j][k];
+						}
+					}
+					resultingPitches.push_back(bestFitPitch);
+				}
+			}
+		}
+		// nbrPitches = resultingPitches.size(); //Actual Number of pitches
+	}
+
+	void CopyReducedNotes() {
+		resultingPitches.clear();
+		for(size_t i=0;i<reducedEfPitches.size();i++) {
+			EFPitch resultPitch = reducedEfPitches[i];
+			resultPitch.dissonance = CalculateDissonance(resultPitch.ratio);
+			resultingPitches.push_back(resultPitch);
+		}
+	}
 	json_t *dataToJson() override {
 		json_t *rootJ = json_object();
 
@@ -1156,7 +1278,7 @@ struct ProbablyNoteMN : Module {
 		json_object_set_new(rootJ, "noteReductionAlgorithm", json_integer((int) noteReductionAlgorithm));
 		json_object_set_new(rootJ, "scaleMappingMode", json_integer((int) scaleMappingMode));
 		json_object_set_new(rootJ, "useScaleWeighting", json_integer((bool) useScaleWeighting));
-		json_object_set_new(rootJ, "edoTempering", json_boolean(edoTempering));
+		json_object_set_new(rootJ, "edoTempering", json_integer(edoTempering));
 		json_object_set_new(rootJ, "quantizeMosRatio", json_boolean(quantizeMosRatio));
 		json_object_set_new(rootJ, "quantizeOctaveSize", json_boolean(quantizeOctaveSize));
 		json_object_set_new(rootJ, "octaveScaleMapping", json_integer((bool) octaveScaleMapping));
@@ -1165,7 +1287,8 @@ struct ProbablyNoteMN : Module {
 		json_object_set_new(rootJ, "shiftMode", json_integer((int) shiftMode));
 		json_object_set_new(rootJ, "keyLogarithmic", json_integer((int) keyLogarithmic));
 		json_object_set_new(rootJ, "pitchRandomGaussian", json_integer((int) pitchRandomGaussian));
-
+		json_object_set_new(rootJ, "quantizeMode", json_integer((int) quantizeMode)); 
+		json_object_set_new(rootJ, "triggerPolyphonic", json_integer((int) triggerPolyphonic)); 
 		
 		return rootJ;
 	};
@@ -1187,7 +1310,7 @@ struct ProbablyNoteMN : Module {
 
 		json_t *sumEdoT = json_object_get(rootJ, "edoTempering");
 		if (sumEdoT) {
-			edoTempering = json_boolean_value(sumEdoT);			
+			edoTempering = json_integer_value(sumEdoT);			
 		}
 
 		json_t *sumQos = json_object_get(rootJ, "quantizeOctaveSize");
@@ -1237,11 +1360,22 @@ struct ProbablyNoteMN : Module {
 			pitchRandomGaussian = json_integer_value(sumPg);			
 		}
 
+		json_t *sumQm = json_object_get(rootJ, "quantizeMode");
+		if (sumQm) {
+			quantizeMode = json_integer_value(sumQm);			
+		}
+
 		if(spreadMode) {
 			reConfigParam(SPREAD_PARAM,0,1,0.0f,"%",0,100); 
 		}	 else {
 			reConfigParam(SPREAD_PARAM,0,10.0,0.0f," Pitches",0,1);
 		}
+
+		json_t *sumTp = json_object_get(rootJ, "triggerPolyphonic");
+		if (sumTp) {
+			triggerPolyphonic = json_integer_value(sumTp);			
+		}
+
 	}
 	
 	void CreateScalaFile(std::string fileName) {
@@ -1274,7 +1408,7 @@ struct ProbablyNoteMN : Module {
 		}
 		scalefile << "\n";
 
-		if(actualScaleSize < nbrPitches) {
+		if(nbrReducedPitches < nbrGeneratedPitches) {
 			scalefile << "! Pitches Reduced to " + noteReductionPatternName + " by ";
 
 			switch (noteReductionAlgorithm) {
@@ -1313,17 +1447,17 @@ struct ProbablyNoteMN : Module {
 		scalefile << noteCount;
 		scalefile << "\n";
 		for(uint64_t i=1;i<actualScaleSize;i++) {
-			if(reducedEfPitches[i].inUse) {
-				scalefile <<  std::to_string((reducedEfPitches[i].pitch * octaveScaleConstant));
+			if(resultingPitches[i].inUse) {
+				scalefile <<  std::to_string((resultingPitches[i].pitch * octaveScaleConstant));
 				scalefile << "\n";
 				scalefile << "! Based on ratio of ";
-				scalefile << std::to_string(reducedEfPitches[i].numerator);
+				scalefile << std::to_string(resultingPitches[i].numerator);
 				if(octaveSize > 2.0) {
 					scalefile << " x ";
 					scalefile << std::to_string(octaveScaleConstant);
 				}
 				scalefile << " / ";
-				scalefile << std::to_string(reducedEfPitches[i].denominator);
+				scalefile << std::to_string(resultingPitches[i].denominator);
 				scalefile << "\n";
 			}
 		}
@@ -1335,9 +1469,25 @@ struct ProbablyNoteMN : Module {
 	void process(const ProcessArgs &args) override {
 
         if (edoTemperingTrigger.process(params[EDO_TEMPERING_PARAM].getValue() + inputs[EDO_TEMPERING_INPUT].getVoltage())) {
-			edoTempering = !edoTempering;
+			edoTempering = (edoTempering + 1) % NBR_TEMPERING_MODES;
 		}		
-		lights[EDO_TEMPERING_LIGHT].value = edoTempering;
+		switch (edoTempering) {
+			case NO_TEMPERING :
+				lights[EDO_TEMPERING_LIGHT].value = 0;
+				lights[EDO_TEMPERING_LIGHT + 1].value = 0;
+				lights[EDO_TEMPERING_LIGHT + 2].value = 0;
+				break;
+			case KEEP_BEST_MATCH_TEMPERING :
+				lights[EDO_TEMPERING_LIGHT].value = 0;
+				lights[EDO_TEMPERING_LIGHT + 1].value = 1.0;
+				lights[EDO_TEMPERING_LIGHT + 2].value = 0.0;
+				break;
+			case TEMPER_ALL_PITCHES_TEMPERING :
+				lights[EDO_TEMPERING_LIGHT].value = 0;
+				lights[EDO_TEMPERING_LIGHT + 1].value = 0.0;
+				lights[EDO_TEMPERING_LIGHT + 2].value = 1.0;
+				break;
+		}
 
         if (algorithmTrigger.process(params[NOTE_REDUCTION_ALGORITHM_PARAM].getValue() + inputs[NOTE_REDUCTION_ALGORITHM_INPUT].getVoltage())) {
 			noteReductionAlgorithm = (noteReductionAlgorithm + 1) % NBR_ALGORITHMS;
@@ -1449,6 +1599,11 @@ struct ProbablyNoteMN : Module {
 			keyLogarithmic = !keyLogarithmic;
 		}		
 		lights[KEY_LOGARITHMIC_SCALE_LIGHT].value = keyLogarithmic;
+
+		if (clockModeTrigger.process(params[TRIGGER_MODE_PARAM].getValue())) {
+			triggerPolyphonic = !triggerPolyphonic;
+		}		
+		lights[TRIGGER_POLYPHONIC_LIGHT].value = triggerPolyphonic;
 
 
 
@@ -1562,65 +1717,73 @@ struct ProbablyNoteMN : Module {
             BuildDerivedScale();
         }
 
-		if(edoTempering != lastEdoTempering || edoTemperingThreshold != lastEdoTemperingThreshold || edoTemperingStrength != lastEdoTemperingStrength || scaleChange) {
+		if(scaleChange || scaleSize != lastScaleSize || noteReductionAlgorithm != lastNoteReductionAlgorithm ) {
+			reloadPitches = true;
+			ReduceNotes(nbrGeneratedPitches,scaleSize);
+
+			reducedEfPitches.clear();
+			for(uint64_t i=0;i<nbrGeneratedPitches;i++) {
+				if(pitchIncluded[i] > 0) {
+					efPitches[i].inUse = false;
+					reducedEfPitches.push_back(efPitches[i]);
+				}
+			}
+
+			nbrReducedPitches = reducedEfPitches.size();
+			reloadPitches = false;
+			checkTemperingNeeded = true;
+			lastNbrGeneratedPitches =nbrGeneratedPitches;
+			lastNoteReductionAlgorithm = noteReductionAlgorithm;
+			lastScaleSize = scaleSize;				
+		}
+
+
+
+		if(edoTempering != lastEdoTempering || edoTemperingThreshold != lastEdoTemperingThreshold || edoTemperingStrength != lastEdoTemperingStrength || checkTemperingNeeded) {
 			
 			if(edoTempering) {
-				TemperScale(edoTemperingThreshold,edoTemperingStrength);
+				TemperScale(edoTempering, edoTemperingThreshold,edoTemperingStrength);
 			} else {
-				resultingPitches = efPitches;
+				CopyReducedNotes();
 			}
+			nbrResultPitches = resultingPitches.size();
 			lastEdoTempering = edoTempering;
 			lastEdoTemperingThreshold = edoTemperingThreshold;
 			lastEdoTemperingStrength = edoTemperingStrength;
+			checkTemperingNeeded = false;
+			mapPitches = true;				
 		}
 
-		if(nbrPitches != lastNbrPitches || scaleSize != lastScaleSize || noteReductionAlgorithm != lastNoteReductionAlgorithm ) {
-			reloadPitches = true;
-			ChooseNotes(nbrPitches,scaleSize);
 
-			lastNbrPitches = nbrPitches;
-			lastNoteReductionAlgorithm = noteReductionAlgorithm;
-			lastScaleSize = scaleSize;
-		}
-
-		if(reloadPitches) {
-			reducedEfPitches.clear();
-			for(uint64_t i=0;i<nbrPitches;i++) {
-				if(pitchIncluded[i] > 0) {
-					resultingPitches[i].inUse = false;
-					reducedEfPitches.push_back(resultingPitches[i]);
-				}
-			}
-			reloadPitches = false;
-			mapPitches = true;
-		}
 
 		if(scaleMappingMode != lastScaleMappingMode || scale != lastScale || useScaleWeighting != lastUseScaleWeighting ) {
 			mapPitches = true;
 		}
 
 		if(mapPitches) {
-			actualScaleSize = reducedEfPitches.size();
+							// fprintf(stderr, "Mapping Scale. %llu pitches \n", resultingPitches.size());
+
+			actualScaleSize = resultingPitches.size();
 			float scaleSpreadFactor = actualScaleSize / float(MAX_NOTES);
 			uint64_t scaleIndex;
 			switch(scaleMappingMode) {
 				case NO_SCALE_MAPPING :
 					for(uint64_t i=0;i<actualScaleSize;i++) {
-						reducedEfPitches[i].inUse = true;
-						reducedEfPitches[i].weighting = 0.8;
+						resultingPitches[i].inUse = true;
+						resultingPitches[i].weighting = 0.8;
 					}
 					break;
 				case SPREAD_SCALE_MAPPING :
-					for(uint64_t i=0;i<reducedEfPitches.size();i++) {
-						reducedEfPitches[i].inUse = false;
-                        reducedEfPitches[i].weighting = 0.8;
+					for(uint64_t i=0;i<resultingPitches.size();i++) {
+						resultingPitches[i].inUse = false;
+                        resultingPitches[i].weighting = 0.8;
 					}
 					for(uint64_t i=0;i<MAX_NOTES;i++) {
 						if(defaultScaleNoteStatus[scale][i]) {
 							uint64_t noteIndex = i * scaleSpreadFactor;
 							//fprintf(stderr, "note index set %i %i \n", noteIndex,reducedEfPitches[noteIndex].inUse);
-							reducedEfPitches[noteIndex].inUse = true;
-							reducedEfPitches[noteIndex].weighting = useScaleWeighting ? defaultScaleNoteWeighting[scale][i] : 1.0;
+							resultingPitches[noteIndex].inUse = true;
+							resultingPitches[noteIndex].weighting = useScaleWeighting ? defaultScaleNoteWeighting[scale][i] : 1.0;
 						}
 					}
 					break;
@@ -1628,19 +1791,19 @@ struct ProbablyNoteMN : Module {
 					scaleIndex = 0;
 					for(uint64_t i=0;i<actualScaleSize;i++) {
 						if(defaultScaleNoteStatus[scale][scaleIndex]) {
-							reducedEfPitches[i].inUse = true;
-							reducedEfPitches[i].weighting = useScaleWeighting ? defaultScaleNoteWeighting[scale][scaleIndex] : 1.0;
+							resultingPitches[i].inUse = true;
+							resultingPitches[i].weighting = useScaleWeighting ? defaultScaleNoteWeighting[scale][scaleIndex] : 1.0;
 						} else {
-							reducedEfPitches[i].inUse = false;
-                            reducedEfPitches[i].weighting = 0.8;
+							resultingPitches[i].inUse = false;
+                            resultingPitches[i].weighting = 0.8;
 						}
 						scaleIndex = (scaleIndex+1) % MAX_NOTES;
 					}
 					break;
 				case NEAREST_NEIGHBOR_SCALE_MAPPING:
-					for(uint64_t i=0;i<reducedEfPitches.size();i++) {
-						reducedEfPitches[i].inUse = false;
-                        reducedEfPitches[i].weighting = 0.8;
+					for(uint64_t i=0;i<resultingPitches.size();i++) {
+						resultingPitches[i].inUse = false;
+                        resultingPitches[i].weighting = 0.8;
 					}
 					for(uint64_t mapScaleIndex=0;mapScaleIndex<MAX_NOTES;mapScaleIndex++) {
 						if(defaultScaleNoteStatus[scale][mapScaleIndex]) {
@@ -1648,15 +1811,15 @@ struct ProbablyNoteMN : Module {
 							int64_t selectedPitchIndex = -1;
 							float lastDifference = 10000.0;
 							for(uint64_t i=0;i<actualScaleSize;i++) {
-								float difference = std::abs(reducedEfPitches[i].pitch - targetPitch);
+								float difference = std::abs(resultingPitches[i].pitch - targetPitch);
 								if(difference < lastDifference) {
 									lastDifference = difference;
 									selectedPitchIndex = i;
 								} 
 							}
 							if(selectedPitchIndex >= 0) {
-								reducedEfPitches[selectedPitchIndex].inUse = true;
-								reducedEfPitches[selectedPitchIndex].weighting = useScaleWeighting ? defaultScaleNoteWeighting[scale][mapScaleIndex] : 1.0;
+								resultingPitches[selectedPitchIndex].inUse = true;
+								resultingPitches[selectedPitchIndex].weighting = useScaleWeighting ? defaultScaleNoteWeighting[scale][mapScaleIndex] : 1.0;
 							}
 						}
 					}
@@ -1696,9 +1859,9 @@ struct ProbablyNoteMN : Module {
 		double octaveIn[POLYPHONY];
 
 //NOTE: Monophonic for testing - will need to be moved below loop
-			if (setRootNoteTrigger.process(params[SET_ROOT_NOTE_PARAM].getValue() + inputs[SET_ROOT_NOTE_INPUT].getVoltage())) {
-				getModulationRoot = true;
-			}		
+		if (setRootNoteTrigger.process(params[SET_ROOT_NOTE_PARAM].getValue() + inputs[SET_ROOT_NOTE_INPUT].getVoltage())) {
+			getModulationRoot = true;
+		}		
 
 		for(int channel = 0;channel<currentPolyphony;channel++) {
 			double noteIn;
@@ -1748,8 +1911,8 @@ struct ProbablyNoteMN : Module {
 			if(recalcKeyNeeded) {
 				double lastDif = 1.0f;    
 				for(uint64_t i = 0;i<actualScaleSize;i++) {            
-					if(reducedEfPitches[i].inUse) {
-						double currentDif = std::abs((reducedEfPitches[i].pitch / 1200.0) * (octaveScaleMapping ? 1.0 : octaveScaleConstant) - originalFractionalValue); // BOTEL Add octave size adjustment here
+					if(resultingPitches[i].inUse) {
+						double currentDif = std::abs((resultingPitches[i].pitch / 1200.0) * (octaveScaleMapping ? 1.0 : octaveScaleConstant) - originalFractionalValue); // BOTEL Add octave size adjustment here
 						if(currentDif < lastDif) {
 							lastDif = currentDif;
 							microtonalKey = i;
@@ -1761,19 +1924,58 @@ struct ProbablyNoteMN : Module {
 
 											              //fprintf(stderr, "%i %f \n", key, fractionalValue);
 			//Calcuate root note
-			double lastDif = 1.0f;    
-			for(uint64_t i = 0;i<actualScaleSize;i++) {            
-				if(reducedEfPitches[i].inUse) {
-					double currentDif = std::abs((reducedEfPitches[i].pitch / 1200.0) * (octaveScaleMapping ? 1.0 : octaveScaleConstant) - fractionalValue); // BOTEL Add octave size adjustment here
-					if(currentDif < lastDif) {
-						lastDif = currentDif;
-						currentNote[channel] = i;
-					}            
+			if(fractionalValue != lastFractionalValue[channel]) {
+				double lastDif = 99.0f;    
+				for(uint64_t i = 0;i<actualScaleSize;i++) {            
+					if(resultingPitches[i].inUse) {
+						double lowNote = (resultingPitches[i].pitch / 1200.0) * (octaveScaleMapping ? 1.0 : octaveScaleConstant); 					
+						double highNote = (resultingPitches[(i+1) % actualScaleSize].pitch / 1200.0) * (octaveScaleMapping ? 1.0 : octaveScaleConstant);
+						if(i==actualScaleSize-1) {
+							highNote += 1200 * (octaveScaleMapping ? 1.0 : octaveScaleConstant);;
+						}
+						double median = (lowNote + highNote) / 2.0;
+
+						double lowNoteDif = std::abs(lowNote - fractionalValue);
+						double highNoteDif = std::abs(highNote - fractionalValue);
+						double medianDif = std::abs(median - fractionalValue);
+					
+						double currentDif;
+						bool direction = lowNoteDif < highNoteDif;
+						int note;
+						switch(quantizeMode) {
+							case QUANTIZE_CLOSEST :
+							default :
+								currentDif = medianDif;
+								note = direction ? i : (i + 1) % MAX_NOTES;
+								break;
+							case QUANTIZE_LOWER :
+								currentDif = lowNoteDif;
+								note = i;
+								break;
+							case QUANTIZE_UPPER :
+								currentDif = highNoteDif;
+								note = (i + 1) % MAX_NOTES;
+								break;
+						}
+
+						if(currentDif < lastDif) {
+							lastDif = currentDif;
+							currentNote[channel] = note;
+						}  
+						
+
+						// double currentDif = std::abs((reducedEfPitches[i].pitch / 1200.0) * (octaveScaleMapping ? 1.0 : octaveScaleConstant) - fractionalValue); // BOTEL Add octave size adjustment here
+						// if(currentDif < lastDif) {
+						// 	lastDif = currentDif;
+						// 	currentNote[channel] = i;
+						// }            
+					}
 				}
-			}
-			if(currentNote[channel] != lastNote[channel]) {
-				noteChange = true;
-				lastNote[channel] = currentNote[channel];
+				lastFractionalValue[channel] = fractionalValue;
+				if(currentNote[channel] != lastNote[channel]) {
+					noteChange = true;
+					lastNote[channel] = currentNote[channel];
+				}
 			}
 		}
 		
@@ -1785,7 +1987,11 @@ struct ProbablyNoteMN : Module {
 			upperSpread = std::ceil(actualSpread * std::min(slant+1.0,1.0));
 			lowerSpread = std::ceil(actualSpread * std::min(1.0-slant,1.0));
 
-			float whatIsDissonant = 7.0; // lower than this is consonant
+
+							            //   fprintf(stderr, "Math Nerd - Note Processing \n");
+
+
+			float whatIsDissonant = 0.2; // lower than this is consonant
 			for(int channel = 0;channel<currentPolyphony;channel++) {
 				for(uint64_t i = 0; i<actualScaleSize;i++) {
 					noteProbability[channel][i] = 0.0;
@@ -1801,27 +2007,26 @@ struct ProbablyNoteMN : Module {
 					if(noteBelow < 0)
 						noteBelow +=actualScaleSize;
 
-					EFPitch upperPitch = reducedEfPitches[noteAbove];
-					EFPitch lowerPitch = reducedEfPitches[noteBelow];
+					EFPitch upperPitch = resultingPitches[noteAbove];
+					EFPitch lowerPitch = resultingPitches[noteBelow];
 					float upperDissonance = upperPitch.dissonance;
 					float lowerDissonance = lowerPitch.dissonance;
 					float upperNoteDissonanceProbabilityAdjustment = 1.0;
 					float lowerNoteDissonanceProbabilityAdjustment = 1.0;
 					if(dissonanceProbability < 0) {
 						if(upperDissonance > whatIsDissonant) {
-							upperNoteDissonanceProbabilityAdjustment = (1.0f-std::min(upperDissonance/100.0,1.0)) * (1.0 + dissonanceProbability);
+							upperNoteDissonanceProbabilityAdjustment = (1.0f-upperDissonance) * (1.0 + dissonanceProbability);
 						}
 						if(lowerDissonance > whatIsDissonant) {
-							lowerNoteDissonanceProbabilityAdjustment = (1.0f-std::min(lowerDissonance/100.0,1.0)) * (1.0 + dissonanceProbability);
+							lowerNoteDissonanceProbabilityAdjustment = (1.0f-lowerDissonance) * (1.0 + dissonanceProbability);
 						}
 					}					
 					if(dissonanceProbability > 0) {
 						if(upperDissonance < whatIsDissonant) {
-							upperNoteDissonanceProbabilityAdjustment = std::min((upperDissonance / whatIsDissonant) + 0.5f,1.0f)  * (1.0 - dissonanceProbability);
-							              //fprintf(stderr, "%f %f \n", upperDissonance, upperNoteDissonanceProbabilityAdjustment);
+							upperNoteDissonanceProbabilityAdjustment = std::min((upperDissonance / whatIsDissonant),1.0f)  * (1.0 - dissonanceProbability);
 						}
 						if(lowerDissonance < whatIsDissonant) {
-							lowerNoteDissonanceProbabilityAdjustment = std::min((lowerDissonance / whatIsDissonant) + 0.5f,1.0f) * (1.0 - dissonanceProbability);
+							lowerNoteDissonanceProbabilityAdjustment = std::min((lowerDissonance / whatIsDissonant),1.0f) * (1.0 - dissonanceProbability);
 						}
 					}					
 					
@@ -1845,15 +2050,18 @@ struct ProbablyNoteMN : Module {
 
         
 		if( inputs[TRIGGER_INPUT].active ) {
-			float currentTriggerInput = inputs[TRIGGER_INPUT].getVoltage();
-			triggerDelay[triggerDelayIndex] = currentTriggerInput;
-			int delayedIndex = (triggerDelayIndex + 1) % TRIGGER_DELAY_SAMPLES;
-			float triggerInputValue = triggerDelayEnabled ? triggerDelay[delayedIndex] : currentTriggerInput;
-			triggerDelayIndex = delayedIndex;
+			bool triggerFired = false;
+			for(int channel=0;channel<currentPolyphony;channel++) {
+				float currentTriggerInput = inputs[TRIGGER_INPUT].getVoltage(channel);
+				triggerDelay[channel][triggerDelayIndex[channel]] = currentTriggerInput;
+				int delayedIndex = (triggerDelayIndex[channel] + 1) % TRIGGER_DELAY_SAMPLES;
+				float triggerInputValue = triggerDelayEnabled ? triggerDelay[channel][delayedIndex] : currentTriggerInput;
+				triggerDelayIndex[channel] = delayedIndex;
 
-			if (clockTrigger.process(triggerInputValue) ) {		
-				for(int channel=0;channel<currentPolyphony;channel++) {
+				triggerFired = triggerPolyphonic ? clockTrigger[channel].process(triggerInputValue) : 
+									channel == 0 ? clockTrigger[0].process(triggerInputValue) : triggerFired;
 
+				if (triggerFired) {
 					float rnd = ((float) rand()/RAND_MAX);
 					if(inputs[EXTERNAL_RANDOM_INPUT].isConnected()) {
 						int randomPolyphony = inputs[EXTERNAL_RANDOM_INPUT].getChannels(); //Use as many random channels as possible
@@ -1864,7 +2072,7 @@ struct ProbablyNoteMN : Module {
 						rnd = inputs[EXTERNAL_RANDOM_INPUT].getVoltage(randomChannel) / 10.0f;
 					}
 
-					for(int i=0;i<MAX_PITCHES;i++) {
+					for(size_t i=0;i<actualScaleSize;i++) {
 						actualProbability[channel][i] = noteProbability[channel][i];
 					}	
 
@@ -1898,7 +2106,7 @@ struct ProbablyNoteMN : Module {
 
 					int notePosition = randomNote;				
 
-					double quantitizedNoteCV = (reducedEfPitches[notePosition].pitch * octaveScaleConstant / 1200.0) + (key / 12.0); 
+					double quantitizedNoteCV = (resultingPitches[notePosition].pitch * octaveScaleConstant / 1200.0) + (key / 12.0); 
             //   fprintf(stderr, "%f \n", reducedEfPitches[notePosition].pitch);
 
 					float pitchRandomness = 0;
@@ -1938,12 +2146,15 @@ struct ProbablyNoteMN : Module {
 };
 
 void ProbablyNoteMN::onReset() {
-	clockTrigger.reset();
-
-	for(int i=0;i<TRIGGER_DELAY_SAMPLES;i++) {
-		triggerDelay[i] = 0.0f;
+	for(int i=0;i<POLYPHONY;i++) {
+		clockTrigger[i].reset();
+		for(int j=0;j<TRIGGER_DELAY_SAMPLES;j++) {
+			triggerDelay[i][j] = 0.0f;
+		}
 	}
+	resetTriggered = true;
 	triggerDelayEnabled = false;
+
 	modulationRoot = 0.0;
 	microtonalKey = 0;
 }
@@ -2034,28 +2245,8 @@ struct ProbablyNoteMNDisplay : TransparentWidget {
     void drawPitchInfo(const DrawArgs &args, Vec pos) {
 
 		nvgStrokeWidth(args.vg, 1);
-        for(uint64_t i=0;i<module->reducedEfPitches.size();i++) {
-            float pitch = module->reducedEfPitches[i].pitch;
-            float dissonance = module->reducedEfPitches[i].dissonance;
-			bool inUse = module->reducedEfPitches[i].inUse;
-			uint8_t opacity =  std::max(255.0f * module->noteProbability[0][i],70.0f);
-			if(i == module->probabilityNote[0]) 
-				nvgStrokeColor(args.vg, nvgRGBA(0x4a, 0xc3, 0x27, 0xff));
-			else
-				nvgStrokeColor(args.vg, inUse ? nvgRGBA(0xff, 0xff, 0x00, opacity) : nvgRGBA(0xff, 0x00, 0x00, opacity));
-            nvgBeginPath(args.vg);
-            //   fprintf(stderr, "i:%llu p:%f d:%f\n", i, pitch,dissonance);
-            
-			float dissonanceDistance = std::min(dissonance * 2.5f,75.0f);
-			float theta = pitch / 1200.0 *  M_PI * 2.0 - (M_PI/2.0);
-			float x = cos(theta);
-			float y = sin(theta);
-			nvgMoveTo(args.vg, x*75.0+pos.x, y*75.0+pos.y);
-			nvgLineTo(args.vg, x*dissonanceDistance+pos.x, y*dissonanceDistance + pos.y);
-            nvgStroke(args.vg);
-        }
 
-		if(module->edoTempering) {
+		if(module->edoTempering > 0) {
 			nvgStrokeColor(args.vg, nvgRGBA(0x4a, 0x23, 0xc7, 0x4f));
 			for(uint64_t i=0;i<module->temperingPitches.size();i++) {
 				float pitch = module->temperingPitches[i].pitch;
@@ -2069,6 +2260,29 @@ struct ProbablyNoteMNDisplay : TransparentWidget {
 			}
 		}
 
+        for(uint64_t i=0;i<module->resultingPitches.size();i++) {
+            float pitch = module->resultingPitches[i].pitch;
+            float dissonance = module->resultingPitches[i].dissonance;
+			bool inUse = module->resultingPitches[i].inUse;
+			uint8_t opacity =  std::max(255.0f * module->noteProbability[0][i],70.0f);
+			
+			if(i == module->probabilityNote[0]) 
+				nvgStrokeColor(args.vg, nvgRGBA(0x4a, 0xc3, 0x27, 0xff));
+			else
+				nvgStrokeColor(args.vg, inUse ? nvgRGBA(0xff, 0xff, 0x00, opacity) : nvgRGBA(0xff, 0x00, 0x00, opacity));
+
+            //   fprintf(stderr, "i:%llu p:%f d:%f  iu:%i opacity:%u\n ", i, pitch,dissonance, inUse, opacity);
+
+            nvgBeginPath(args.vg);            
+			float dissonanceDistance = dissonance * 75.0f;
+			//  dissonanceDistance = 10;
+			float theta = pitch / 1200.0 *  M_PI * 2.0 - (M_PI/2.0);
+			float x = cos(theta);
+			float y = sin(theta);
+			nvgMoveTo(args.vg, x*75.0+pos.x, y*75.0+pos.y);
+			nvgLineTo(args.vg, x*dissonanceDistance+pos.x, y*dissonanceDistance + pos.y);
+            nvgStroke(args.vg);
+        }
 	}
 
 
@@ -2094,7 +2308,9 @@ struct ProbablyNoteMNDisplay : TransparentWidget {
 		nvgTextAlign(args.vg,NVG_ALIGN_RIGHT);
 			//fprintf(stderr, "a: %llu s: %llu  \n", module->actualScaleSize, module->nbrPitches);
 		char text[128];
-		if(module->mosLargeSteps > 0 || module->mosSmallSteps > 0) 
+		 if(module->invalidMos)
+			nvgFillColor(args.vg, nvgRGB(0xff, 0x00, 0x00));
+		else if(module->mosLargeSteps > 0 || module->mosSmallSteps > 0) 
 			nvgFillColor(args.vg, nvgRGBA(0x4a, 0xc3, 0x27, 0xff));
 		else
 			nvgFillColor(args.vg, nvgRGB(0xff, 0xff, 0x00));
@@ -2134,8 +2350,22 @@ struct ProbablyNoteMNDisplay : TransparentWidget {
 
 	}
 
+	void drawTemperingMode(const DrawArgs &args, Vec pos, int edoTemperingMode) {
+		if(module->edoTempering > 0) {
+			nvgFontSize(args.vg, 9);
+			nvgFontFaceId(args.vg, font->handle);
+			nvgTextLetterSpacing(args.vg, -1);
+			nvgTextAlign(args.vg,NVG_ALIGN_LEFT);
+			char text[128];
+			nvgFillColor(args.vg, nvgRGBA(0x4a, 0xc3, 0x27, 0xff));
+			snprintf(text, sizeof(text), "%s", module->edoTemperingModes[edoTemperingMode-1]);
+			nvgText(args.vg, pos.x, pos.y, text, NULL);
+		}
+	}
+
+
     void drawTempering(const DrawArgs &args, Vec pos) {
-		if(module->edoTempering) {
+		if(module->edoTempering > 0) {
 			nvgFontSize(args.vg, 9);
 			nvgFontFaceId(args.vg, font->handle);
 			nvgTextLetterSpacing(args.vg, -1);
@@ -2177,7 +2407,7 @@ struct ProbablyNoteMNDisplay : TransparentWidget {
 		nvgTextAlign(args.vg,NVG_ALIGN_LEFT);
 			// fprintf(stderr, "a: %llu s: %llu  \n", module->scaleSize, module->nbrPitches);
 		char text[128];
-		if(module->scaleSize <= module->nbrPitches) 
+		if(module->scaleSize <= module->nbrGeneratedPitches) 
 			nvgFillColor(args.vg, nvgRGBA(0x4a, 0xc3, 0x27, 0xff));
 		else
 			nvgFillColor(args.vg, nvgRGB(0xff, 0xff, 0x00));
@@ -2190,6 +2420,7 @@ struct ProbablyNoteMNDisplay : TransparentWidget {
 			nvgFontSize(args.vg, 9);
 			nvgFontFaceId(args.vg, font->handle);
 			nvgTextLetterSpacing(args.vg, -1);
+			nvgTextAlign(args.vg,NVG_ALIGN_LEFT);
 			char text[128];
 			nvgFillColor(args.vg, nvgRGBA(0x4a, 0xc3, 0x27, 0xff));
 			snprintf(text, sizeof(text), "%s", module->scaleMappings[scaleMappingMode-1]);
@@ -2202,6 +2433,7 @@ struct ProbablyNoteMNDisplay : TransparentWidget {
 			nvgFontSize(args.vg, 9);
 			nvgFontFaceId(args.vg, font->handle);
 			nvgTextLetterSpacing(args.vg, -1);
+			nvgTextAlign(args.vg,NVG_ALIGN_LEFT);
 			char text[128];
 			nvgFillColor(args.vg, nvgRGBA(0x4a, 0xc3, 0x27, 0xff));
 			snprintf(text, sizeof(text), "%s", module->scaleNames[module->scale]);
@@ -2214,7 +2446,6 @@ struct ProbablyNoteMNDisplay : TransparentWidget {
 			return;
 		} else if (pitchGridMode == 1) {
 			nvgStrokeWidth(args.vg, 1);
-			nvgStrokeColor(args.vg, nvgRGB(0x40, 0x40, 0x40));
 			float octaveSize = module->octaveSize;
 			float nbrCentLines = (octaveSize - 1.0f) * 12;
 			for(int i = 0; i < nbrCentLines;i++) {
@@ -2233,46 +2464,86 @@ struct ProbablyNoteMNDisplay : TransparentWidget {
 			}
 		} else if (pitchGridMode == 2) {
 			nvgStrokeWidth(args.vg, 1);
-			nvgStrokeColor(args.vg, nvgRGB(0x40, 0x40, 0x40));
 			float octaveSize = module->octaveSize;
-			float nbrCentLines = (octaveSize - 1.0f) * 12;
+			for(int i = 0; i < 28;i++) {
+				float majorRatio = module->majorRatios[i];
+				float octaveCents = ((octaveSize-1.0)*1200);				
+				if(majorRatio <= octaveCents) {
+					if(i % 7 == 6)
+						nvgStrokeColor(args.vg, nvgRGB(0x80, 0x80, 0x80));
+					else
+						nvgStrokeColor(args.vg, nvgRGB(0x40, 0x40, 0x40));
 
-			for(int i = 0; i < nbrCentLines;i++) {
-				if(i % 12 == 0)
-					nvgStrokeColor(args.vg, nvgRGB(0x80, 0x80, 0xD0));
-				else
-					nvgStrokeColor(args.vg, nvgRGB(0x40, 0x40, 0xD0));
+					nvgBeginPath(args.vg);
+					float theta = majorRatio/octaveCents * M_PI * 2.0 - (M_PI/2.0);
+					float x = cos(theta);
+					float y = sin(theta);
+					nvgMoveTo(args.vg, x*75.0+pos.x, y*75.0+pos.y);
+					nvgLineTo(args.vg, pos.x, pos.y);
+					nvgStroke(args.vg);
+				} else {
+					break;
+				}
+			}
+		} else if (pitchGridMode == 3) {
+			nvgStrokeWidth(args.vg, 1);
+			float octaveSize = module->octaveSize;
+			for(int i = 0; i < 28;i++) {
+				float minorRatio = module->minorRatios[i];
+				float octaveCents = ((octaveSize-1.0)*1200);				
+				if(minorRatio <= octaveCents) {
+					if(i % 7 == 6)
+						nvgStrokeColor(args.vg, nvgRGB(0x80, 0x80, 0x80));
+					else
+						nvgStrokeColor(args.vg, nvgRGB(0x40, 0x40, 0x40));
 
-				nvgBeginPath(args.vg);
-				float theta = float(i)/nbrCentLines * M_PI * 2.0 - (M_PI/2.0);
-				float x = cos(theta);
-				float y = sin(theta);
-				nvgMoveTo(args.vg, x*75.0+pos.x, y*75.0+pos.y);
-				nvgLineTo(args.vg, pos.x, pos.y);
-				nvgStroke(args.vg);
+					nvgBeginPath(args.vg);
+					float theta = minorRatio/octaveCents * M_PI * 2.0 - (M_PI/2.0);
+					float x = cos(theta);
+					float y = sin(theta);
+					nvgMoveTo(args.vg, x*75.0+pos.x, y*75.0+pos.y);
+					nvgLineTo(args.vg, pos.x, pos.y);
+					nvgStroke(args.vg);
+				} else {
+					break;
+				}
 			}
 		}
-
 	}
+
+	void drawNoteCount(const DrawArgs &args, Vec pos, size_t noteCount) {
+		nvgFontSize(args.vg, 9);
+		nvgFontFaceId(args.vg, font->handle);
+		nvgTextLetterSpacing(args.vg, -1);
+		nvgTextAlign(args.vg,NVG_ALIGN_RIGHT);
+		char text[128];
+		nvgFillColor(args.vg, nvgRGBA(0x4a, 0xc3, 0x27, 0xff));
+		snprintf(text, sizeof(text), "%llu", noteCount);
+		nvgText(args.vg, pos.x, pos.y, text, NULL);
+	}
+
+
 	
 
 	void draw(const DrawArgs &args) override {
 		if (!module)
 			return; 
 
-		drawPitchGrid(args, Vec(495.5,226.5),module->pitchGridDisplayMode);
-        drawPitchInfo(args,Vec(495.5,226.5));
+		drawPitchGrid(args, Vec(495.5,241.5),module->pitchGridDisplayMode);
+        drawPitchInfo(args,Vec(495.5,241.5));
 		drawKey(args, Vec(474,82), module->key, module->modulationRoot);
 		drawModulationRoot(args, Vec(488,332), module->microtonalKey);
 		drawOctaveSize(args, Vec(440,108),module->octaveSize);
 		drawMomentsOfSymmetry(args, Vec(256,55));
-		drawEqualDivisions(args, Vec(274,144));
+		drawEqualDivisions(args, Vec(264,139));
 		drawFactors(args, Vec(35,30));
-		drawTempering(args, Vec(331,204));
-		drawAlgorithm(args, Vec(344,260), module->noteReductionAlgorithm);
-		drawNoteReduction(args, Vec(274,260));
-		drawScaleMapping(args, Vec(273,318.5),module->scaleMappingMode);
-		drawScale(args, Vec(343,318.5),module->scaleMappingMode);
+		drawAlgorithm(args, Vec(324,200), module->noteReductionAlgorithm);
+		drawNoteReduction(args, Vec(254,200));
+		drawTemperingMode(args, Vec(227,259),module->edoTempering);
+		drawTempering(args, Vec(331,259));
+		drawScaleMapping(args, Vec(244,318.5),module->scaleMappingMode);
+		drawScale(args, Vec(324,318.5),module->scaleMappingMode);
+		drawNoteCount(args, Vec(519,158),module->actualScaleSize);
 	}
 };
 
@@ -2448,53 +2719,29 @@ struct ProbablyNoteMNWidget : ModuleWidget {
 		addInput(createInput<FWPortInReallySmall>(Vec(382, 61), module, ProbablyNoteMN::MOS_LEVELS_INPUT));
 
 //ED
-		ParamWidget* edoParam = createParam<RoundReallySmallFWSnapKnob>(Vec(234,150), module, ProbablyNoteMN::EQUAL_DIVISION_PARAM);
+		ParamWidget* edoParam = createParam<RoundReallySmallFWSnapKnob>(Vec(224,145), module, ProbablyNoteMN::EQUAL_DIVISION_PARAM);
 		if (module) {
 			dynamic_cast<RoundReallySmallFWSnapKnob*>(edoParam)->percentage = &module->edoPercentage;
 		}
 		addParam(edoParam);							
-        addParam(createParam<RoundExtremelySmallFWKnob>(Vec(256,167), module, ProbablyNoteMN::EQUAL_DIVISION_CV_ATTENUVERTER_PARAM));			
-		addInput(createInput<FWPortInReallySmall>(Vec(258, 152), module, ProbablyNoteMN::EQUAL_DIVISION_INPUT));
+        addParam(createParam<RoundExtremelySmallFWKnob>(Vec(246,162), module, ProbablyNoteMN::EQUAL_DIVISION_CV_ATTENUVERTER_PARAM));			
+		addInput(createInput<FWPortInReallySmall>(Vec(248, 147), module, ProbablyNoteMN::EQUAL_DIVISION_INPUT));
 
-		ParamWidget* edoStepsParam = createParam<RoundReallySmallFWSnapKnob>(Vec(291,150), module, ProbablyNoteMN::EDO_STEPS_PARAM);
+		ParamWidget* edoStepsParam = createParam<RoundReallySmallFWSnapKnob>(Vec(281,145), module, ProbablyNoteMN::EDO_STEPS_PARAM);
 		if (module) {
 			dynamic_cast<RoundReallySmallFWSnapKnob*>(edoStepsParam)->percentage = &module->edoStepsPercentage;
 		}
 		addParam(edoStepsParam);							
-        addParam(createParam<RoundExtremelySmallFWKnob>(Vec(313,167), module, ProbablyNoteMN::EDO_STEPS_CV_ATTENUVERTER_PARAM));			
-		addInput(createInput<FWPortInReallySmall>(Vec(315, 152), module, ProbablyNoteMN::EDO_STEPS_INPUT));
+        addParam(createParam<RoundExtremelySmallFWKnob>(Vec(303,162), module, ProbablyNoteMN::EDO_STEPS_CV_ATTENUVERTER_PARAM));			
+		addInput(createInput<FWPortInReallySmall>(Vec(305, 147), module, ProbablyNoteMN::EDO_STEPS_INPUT));
 
-		ParamWidget* edoWrapsParam = createParam<RoundReallySmallFWSnapKnob>(Vec(348,150), module, ProbablyNoteMN::EDO_WRAPS_PARAM);
+		ParamWidget* edoWrapsParam = createParam<RoundReallySmallFWSnapKnob>(Vec(338,145), module, ProbablyNoteMN::EDO_WRAPS_PARAM);
 		if (module) {
 			dynamic_cast<RoundReallySmallFWSnapKnob*>(edoWrapsParam)->percentage = &module->edoWrapsPercentage;
 		}
 		addParam(edoWrapsParam);							
-        addParam(createParam<RoundExtremelySmallFWKnob>(Vec(370,167), module, ProbablyNoteMN::EDO_WRAPS_CV_ATTENUVERTER_PARAM));			
-		addInput(createInput<FWPortInReallySmall>(Vec(372, 152), module, ProbablyNoteMN::EDO_WRAPS_INPUT));
-
-//Tempering
-
-		addParam(createParam<LEDButton>(Vec(234, 196), module, ProbablyNoteMN::EDO_TEMPERING_PARAM));
-		addChild(createLight<LargeLight<BlueLight>>(Vec(235.5, 195.5), module, ProbablyNoteMN::EDO_TEMPERING_LIGHT));
-		addInput(createInput<FWPortInReallySmall>(Vec(256, 199), module, ProbablyNoteMN::EDO_TEMPERING_INPUT));
-
-        ParamWidget* edoTemperingThresholdParam = createParam<RoundReallySmallFWKnob>(Vec(295,210), module, ProbablyNoteMN::EDO_TEMPERING_THRESHOLD_PARAM);		
-		if (module) {
-			 dynamic_cast<RoundReallySmallFWKnob*>(edoTemperingThresholdParam)->percentage = &module->edoTemperingThresholdPercentage;
-		}
-        addParam(edoTemperingThresholdParam);							
-        addParam(createParam<RoundExtremelySmallFWKnob>(Vec(317,227), module, ProbablyNoteMN::EDO_TEMPERING_THRESHOLD_CV_ATTENUVERTER_PARAM));			
-		addInput(createInput<FWPortInReallySmall>(Vec(319, 213), module, ProbablyNoteMN::EDO_TEMPERING_THRESHOLD_INPUT));
-
-		ParamWidget* edoTemperingStrengthParam = createParam<RoundReallySmallFWKnob>(Vec(354,210), module, ProbablyNoteMN::EDO_TEMPERING_STRENGTH_PARAM);
-		if (module) {
-			dynamic_cast<RoundReallySmallFWKnob*>(edoTemperingStrengthParam)->percentage = &module->edoTemperingStrengthPercentage;
-		}
-		addParam(edoTemperingStrengthParam);							
-        addParam(createParam<RoundExtremelySmallFWKnob>(Vec(376,227), module, ProbablyNoteMN::EDO_TEMPERING_STRENGTH_CV_ATTENUVERTER_PARAM));			
-		addInput(createInput<FWPortInReallySmall>(Vec(378, 213), module, ProbablyNoteMN::EDO_TEMPERING_STRENGTH_INPUT));
-
-
+        addParam(createParam<RoundExtremelySmallFWKnob>(Vec(360,162), module, ProbablyNoteMN::EDO_WRAPS_CV_ATTENUVERTER_PARAM));			
+		addInput(createInput<FWPortInReallySmall>(Vec(362, 147), module, ProbablyNoteMN::EDO_WRAPS_INPUT));
 
 //Prime Factors
         for(int i=0;i<MAX_FACTORS;i++) {	
@@ -2525,35 +2772,56 @@ struct ProbablyNoteMNWidget : ModuleWidget {
 
 
 //Note reduction
-		ParamWidget* numberOfNotesParam = createParam<RoundReallySmallFWSnapKnob>(Vec(282,264), module, ProbablyNoteMN::NUMBER_OF_NOTES_PARAM);
+		ParamWidget* numberOfNotesParam = createParam<RoundReallySmallFWSnapKnob>(Vec(262,205), module, ProbablyNoteMN::NUMBER_OF_NOTES_PARAM);
 		if (module) {
 			dynamic_cast<RoundReallySmallFWSnapKnob*>(numberOfNotesParam)->percentage = &module->numberOfNotesPercentage;
 		}
 		addParam(numberOfNotesParam);							
-        addParam(createParam<RoundExtremelySmallFWKnob>(Vec(306,281), module, ProbablyNoteMN::NUMBER_OF_NOTES_CV_ATTENUVERTER_PARAM));			
-		addInput(createInput<FWPortInReallySmall>(Vec(308, 267), module, ProbablyNoteMN::NUMBER_OF_NOTES_INPUT));
+        addParam(createParam<RoundExtremelySmallFWKnob>(Vec(286,222), module, ProbablyNoteMN::NUMBER_OF_NOTES_CV_ATTENUVERTER_PARAM));			
+		addInput(createInput<FWPortInReallySmall>(Vec(288, 208), module, ProbablyNoteMN::NUMBER_OF_NOTES_INPUT));
 
-		addParam(createParam<LEDButton>(Vec(352, 265), module, ProbablyNoteMN::NOTE_REDUCTION_ALGORITHM_PARAM));
-		addChild(createLight<LargeLight<RedGreenBlueLight>>(Vec(353.5, 266.5), module, ProbablyNoteMN::NOTE_REDUCTION_ALGORITHM_LIGHT));
-		addInput(createInput<FWPortInReallySmall>(Vec(374, 268), module, ProbablyNoteMN::NOTE_REDUCTION_ALGORITHM_INPUT));
+		addParam(createParam<LEDButton>(Vec(332, 205), module, ProbablyNoteMN::NOTE_REDUCTION_ALGORITHM_PARAM));
+		addChild(createLight<LargeLight<RedGreenBlueLight>>(Vec(333.5, 206.5), module, ProbablyNoteMN::NOTE_REDUCTION_ALGORITHM_LIGHT));
+		addInput(createInput<FWPortInReallySmall>(Vec(354, 208), module, ProbablyNoteMN::NOTE_REDUCTION_ALGORITHM_INPUT));
+
+//Tempering
+		addParam(createParam<LEDButton>(Vec(234, 265), module, ProbablyNoteMN::EDO_TEMPERING_PARAM));
+		addChild(createLight<LargeLight<RedGreenBlueLight>>(Vec(235.5, 266.5), module, ProbablyNoteMN::EDO_TEMPERING_LIGHT));
+		addInput(createInput<FWPortInReallySmall>(Vec(256, 268), module, ProbablyNoteMN::EDO_TEMPERING_INPUT));
+
+        ParamWidget* edoTemperingThresholdParam = createParam<RoundReallySmallFWKnob>(Vec(295,265), module, ProbablyNoteMN::EDO_TEMPERING_THRESHOLD_PARAM);
+		if (module) {
+			 dynamic_cast<RoundReallySmallFWKnob*>(edoTemperingThresholdParam)->percentage = &module->edoTemperingThresholdPercentage;
+		}
+        addParam(edoTemperingThresholdParam);							
+        addParam(createParam<RoundExtremelySmallFWKnob>(Vec(317,281), module, ProbablyNoteMN::EDO_TEMPERING_THRESHOLD_CV_ATTENUVERTER_PARAM));
+		addInput(createInput<FWPortInReallySmall>(Vec(319, 267), module, ProbablyNoteMN::EDO_TEMPERING_THRESHOLD_INPUT));
+
+		ParamWidget* edoTemperingStrengthParam = createParam<RoundReallySmallFWKnob>(Vec(354,265), module, ProbablyNoteMN::EDO_TEMPERING_STRENGTH_PARAM);
+		if (module) {
+			dynamic_cast<RoundReallySmallFWKnob*>(edoTemperingStrengthParam)->percentage = &module->edoTemperingStrengthPercentage;
+		}
+		addParam(edoTemperingStrengthParam);							
+        addParam(createParam<RoundExtremelySmallFWKnob>(Vec(376,281), module, ProbablyNoteMN::EDO_TEMPERING_STRENGTH_CV_ATTENUVERTER_PARAM));
+		addInput(createInput<FWPortInReallySmall>(Vec(378, 267), module, ProbablyNoteMN::EDO_TEMPERING_STRENGTH_INPUT));
 
 // Map to normal scale
-		addParam(createParam<LEDButton>(Vec(280, 323), module, ProbablyNoteMN::SCALE_MAPPING_PARAM));
-		addChild(createLight<LargeLight<RedGreenBlueLight>>(Vec(281.5, 324.5), module, ProbablyNoteMN::SCALE_MAPPING_LIGHT));
-		addInput(createInput<FWPortInReallySmall>(Vec(304, 326), module, ProbablyNoteMN::SCALE_MAPPING_INPUT));
+		addParam(createParam<LEDButton>(Vec(260, 323), module, ProbablyNoteMN::SCALE_MAPPING_PARAM));
+		addChild(createLight<LargeLight<RedGreenBlueLight>>(Vec(261.5, 324.5), module, ProbablyNoteMN::SCALE_MAPPING_LIGHT));
+		addInput(createInput<FWPortInReallySmall>(Vec(284, 326), module, ProbablyNoteMN::SCALE_MAPPING_INPUT));
 
 
-        ParamWidget* scaleParam = createParam<RoundReallySmallFWSnapKnob>(Vec(354,324), module, ProbablyNoteMN::SCALE_PARAM);
+        ParamWidget* scaleParam = createParam<RoundReallySmallFWSnapKnob>(Vec(334,324), module, ProbablyNoteMN::SCALE_PARAM);
 		if (module) {
 			dynamic_cast<RoundReallySmallFWSnapKnob*>(scaleParam)->percentage = &module->scalePercentage;
 		}
 		addParam(scaleParam);							
-        addParam(createParam<RoundExtremelySmallFWKnob>(Vec(378,341), module, ProbablyNoteMN::SCALE_CV_ATTENUVERTER_PARAM));			
-		addInput(createInput<FWPortInReallySmall>(Vec(380, 327), module, ProbablyNoteMN::SCALE_INPUT));
+        addParam(createParam<RoundExtremelySmallFWKnob>(Vec(358,341), module, ProbablyNoteMN::SCALE_CV_ATTENUVERTER_PARAM));			
+		addInput(createInput<FWPortInReallySmall>(Vec(360, 327), module, ProbablyNoteMN::SCALE_INPUT));
 
-		addParam(createParam<LEDButton>(Vec(280, 343), module, ProbablyNoteMN::USE_SCALE_WEIGHTING_PARAM));
-		addChild(createLight<LargeLight<RedGreenBlueLight>>(Vec(281.5, 344.5), module, ProbablyNoteMN::SCALE_WEIGHTING_LIGHT));
-		addInput(createInput<FWPortInReallySmall>(Vec(304, 346), module, ProbablyNoteMN::USE_SCALE_WEIGHTING_INPUT));
+		addParam(createParam<LEDButton>(Vec(260, 343), module, ProbablyNoteMN::USE_SCALE_WEIGHTING_PARAM));
+		addChild(createLight<LargeLight<RedGreenBlueLight>>(Vec(261.5, 344.5), module, ProbablyNoteMN::SCALE_WEIGHTING_LIGHT));
+		addInput(createInput<FWPortInReallySmall>(Vec(284, 346), module, ProbablyNoteMN::USE_SCALE_WEIGHTING_INPUT));
 
       
 
@@ -2602,13 +2870,24 @@ struct ProbablyNoteMNWidget : ModuleWidget {
 		ProbablyNoteMN *module = dynamic_cast<ProbablyNoteMN*>(this->module);
 		assert(module);
 
+
 		menu->addChild(new MenuLabel());
 		{
       		OptionsMenuItem* mi = new OptionsMenuItem("Pitch Grid");
 			mi->addItem(OptionMenuItem("Off", [module]() { return module->pitchGridDisplayMode == 0; }, [module]() { module->pitchGridDisplayMode = 0; }));
 			mi->addItem(OptionMenuItem("100¢", [module]() { return module->pitchGridDisplayMode == 1; }, [module]() { module->pitchGridDisplayMode = 1; }));
-			mi->addItem(OptionMenuItem("Ratios", [module]() { return module->pitchGridDisplayMode == 2; }, [module]() { module->pitchGridDisplayMode = 2; }));
+			mi->addItem(OptionMenuItem("Major Ratios", [module]() { return module->pitchGridDisplayMode == 2; }, [module]() { module->pitchGridDisplayMode = 2; }));
+			mi->addItem(OptionMenuItem("Minor Ratios", [module]() { return module->pitchGridDisplayMode == 3; }, [module]() { module->pitchGridDisplayMode = 3; }));
 			menu->addChild(mi);
+		}
+
+		menu->addChild(new MenuLabel());
+		{
+      		OptionsMenuItem* qmi = new OptionsMenuItem("Quantize Mode");
+			qmi->addItem(OptionMenuItem("Closet", [module]() { return module->quantizeMode == 0; }, [module]() { module->quantizeMode = 0; }));
+			qmi->addItem(OptionMenuItem("Round Lower", [module]() { return module->quantizeMode == 1; }, [module]() { module->quantizeMode = 1; }));
+			qmi->addItem(OptionMenuItem("Round Upper", [module]() { return module->quantizeMode == 2; }, [module]() { module->quantizeMode = 2; }));
+			menu->addChild(qmi);
 		}
 
 
@@ -2628,4 +2907,3 @@ struct ProbablyNoteMNWidget : ModuleWidget {
 
 // Define the Model with the Module type, ModuleWidget type, and module slug
 Model *modelProbablyNoteMN = createModel<ProbablyNoteMN, ProbablyNoteMNWidget>("ProbablyNoteMN");
-    

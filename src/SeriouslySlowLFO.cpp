@@ -272,7 +272,13 @@ struct SSLFOProgressDisplay : TransparentWidget {
 		float endArc = (phase * M_PI * 2) - rotate90;
 
 		// Draw indicator
-		nvgFillColor(args.vg, nvgRGBA(0xff, 0xff, 0x20, 0xff));
+		// nvgFillColor(args.vg, nvgRGBA(0xff, 0xff, 0x20, 0xff));
+
+		NVGpaint paint = nvgRadialGradient(args.vg, 141, 194.5, 0, 35,
+						   nvgRGBA(0xff, 0xff, 0x20, 0xff), nvgRGBA(0xff, 0xff, 0x20, 0x1f));
+		nvgFillPaint(args.vg, paint);
+
+
 		{
 			nvgBeginPath(args.vg);
 			nvgArc(args.vg,141,194.5,35,startArc,endArc,NVG_CW);

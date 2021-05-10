@@ -1,6 +1,7 @@
 #include "FrozenWasteland.hpp"
 #include "ui/knobs.hpp"
 #include "ui/ports.hpp"
+#include "ui/menu.hpp"
 #include "dsp-noise/noise.hpp"
 #include "osdialog.h"
 #include <sstream>
@@ -120,6 +121,11 @@ struct ProbablyNoteArabic : Module {
 		AJNAS_ACTIVE_LIGHT = PITCH_RANDOMNESS_GAUSSIAN_LIGHT + 2,
         NOTE_ACTIVE_LIGHT = AJNAS_ACTIVE_LIGHT + (MAX_AJNAS_IN_SAYR+1) * 2 ,
 		NUM_LIGHTS = NOTE_ACTIVE_LIGHT + MAX_JINS_NOTES * 2
+	};
+	enum QuantizeModes {
+		QUANTIZE_CLOSEST,
+		QUANTIZE_LOWER,
+		QUANTIZE_UPPER,
 	};
 
 
@@ -437,6 +443,8 @@ struct ProbablyNoteArabic : Module {
 	float lastFocus = -1;
 	bool pitchRandomGaussian = false;
 
+	int quantizeMode = QUANTIZE_CLOSEST;
+
 	int family = 0;
 	int lastFamily = -1;
 
@@ -485,7 +493,8 @@ struct ProbablyNoteArabic : Module {
 	float currentJinsPercentage = 0;
 	float tonicPercentage = 0;
 	float pitchRandomnessPercentage = 0;
-
+	float noteWeightPercentage[MAX_NOTES] = {0};
+	float anjasWeightPercentage[MAX_AJNAS_IN_SAYR] = {0};
     
 
 	ProbablyNoteArabic() {
@@ -615,6 +624,7 @@ struct ProbablyNoteArabic : Module {
 		json_object_set_new(rootJ, "triggerDelayEnabled", json_boolean(triggerDelayEnabled));
 		json_object_set_new(rootJ, "maqamScaleMode", json_boolean(maqamScaleMode));
 		json_object_set_new(rootJ, "pitchRandomGaussian", json_boolean(pitchRandomGaussian));
+		json_object_set_new(rootJ, "quantizeMode", json_integer((int) quantizeMode)); 
 
 		
 
@@ -673,6 +683,11 @@ struct ProbablyNoteArabic : Module {
 		json_t *ctRg = json_object_get(rootJ, "pitchRandomGaussian");
 		if (ctRg)
 			pitchRandomGaussian = json_boolean_value(ctRg);
+
+		json_t *sumQm = json_object_get(rootJ, "quantizeMode");
+		if (sumQm) {
+			quantizeMode = json_integer_value(sumQm);			
+		}
 
 
 
@@ -967,15 +982,54 @@ struct ProbablyNoteArabic : Module {
 			noteIn = clamp(noteIn,-1.0,0.9999f);
 
 			octaveIn = std::floor(noteIn);
-			double fractionalValue = noteIn - octaveIn;
-			double lastDif = 1.0f;    
-			for(int i = 0;i<SCALE_SIZE;i++) {            
-				double currentDif = std::abs((whiteKeys[i] / 1200.0) - fractionalValue);
+			// double fractionalValue = noteIn - octaveIn;
+			// double lastDif = 1.0f;    
+			// for(int i = 0;i<SCALE_SIZE;i++) {            
+			// 	double currentDif = std::abs( - fractionalValue);
+			// 	if(currentDif < lastDif) {
+			// 		lastDif = currentDif;
+			// 		currentNote = i;
+			// 	}            
+			// }
+			double fractionalValue = std::abs(noteIn - octaveIn);
+			double lastDif = 99.0f;    
+			for(int i = 0;i<SCALE_SIZE;i++) {
+				double lowNote = whiteKeys[i] / 1200.0;
+				double highNote = whiteKeys[(i+1) % SCALE_SIZE] / 1200.0;
+				if(i == SCALE_SIZE-1) {
+					highNote +=1200;
+				}
+				double median = (lowNote + highNote) / 2.0;
+				            
+				double lowNoteDif = std::abs(lowNote - fractionalValue);
+				double highNoteDif = std::abs(highNote - fractionalValue);
+				double medianDif = std::abs(median - fractionalValue);
+
+				double currentDif;
+				bool direction = lowNoteDif < highNoteDif;
+				int note;
+				switch(quantizeMode) {
+					case QUANTIZE_CLOSEST :
+						currentDif = medianDif;
+						note = direction ? i : (i + 1) % MAX_NOTES;
+						break;
+					case QUANTIZE_LOWER :
+						currentDif = lowNoteDif;
+						note = i;
+						break;
+					case QUANTIZE_UPPER :
+						currentDif = highNoteDif;
+						note = (i + 1) % MAX_NOTES;
+						break;
+				}
+
 				if(currentDif < lastDif) {
 					lastDif = currentDif;
-					currentNote = i;
+					currentNote = note;
 				}            
 			}
+
+			
 
 			switch ((int)octaveIn) {
 				case -1 : 
@@ -1064,13 +1118,16 @@ struct ProbablyNoteArabic : Module {
 				}
 			}
 
-			maqams[family][maqamIndex].AjnasWeighting[i] = params[AJNAS_WEIGHT_PARAM+i].getValue();
+			float anjasWeighting = clamp(params[AJNAS_WEIGHT_PARAM+i].getValue() + (inputs[AJNAS_WEIGHT_INPUT+i].getVoltage() / 10.0f),0.0f,1.0f);
+			maqams[family][maqamIndex].AjnasWeighting[i] = anjasWeighting;
 			maqams[family][maqamIndex].AjnasUsed[jinsIndex][i] = ajnasActive[i];
 			if(ajnasActive[i]) {
-	            lights[AJNAS_ACTIVE_LIGHT+i*2].value = clamp(params[AJNAS_WEIGHT_PARAM+i].getValue() + (inputs[AJNAS_WEIGHT_INPUT+i].getVoltage() / 10.0f),0.0f,1.0f);  
+				anjasWeightPercentage[i] = anjasWeighting;
+	            lights[AJNAS_ACTIVE_LIGHT+i*2].value = anjasWeighting;  
 				lights[AJNAS_ACTIVE_LIGHT+(i*2)+1].value = 0;    
 			}
 			else { 
+				anjasWeightPercentage[i] = 0.0;
 				lights[AJNAS_ACTIVE_LIGHT+(i*2)].value = 0;    
 				lights[AJNAS_ACTIVE_LIGHT+(i*2)+1].value = 1;    
 			}
@@ -1084,12 +1141,14 @@ struct ProbablyNoteArabic : Module {
 			float userProbability;
 			if(noteActive[i]) {
 	            userProbability = clamp(params[NOTE_WEIGHT_PARAM+i].getValue() + (inputs[NOTE_WEIGHT_INPUT+i].getVoltage() / 10.0f),0.0f,1.0f);    
+				noteWeightPercentage[i] = userProbability;
 				lights[NOTE_ACTIVE_LIGHT+(i*2)].value = userProbability;    
 				lights[NOTE_ACTIVE_LIGHT+(i*2)+1].value = 0;    
 				jins[jinsId].Weighting[i-buttonOffset] = params[NOTE_WEIGHT_PARAM+i].getValue();
 			}
 			else { 
 				userProbability = 0.0;
+				noteWeightPercentage[i] = 0.0;
 				lights[NOTE_ACTIVE_LIGHT+(i*2)].value = 0;    
 				lights[NOTE_ACTIVE_LIGHT+(i*2)+1].value = 1;    
 				jins[jinsId].Weighting[i-buttonOffset] = 0.0;
@@ -1540,7 +1599,11 @@ struct ProbablyNoteArabicWidget : ModuleWidget {
 			float y = i * 17 + 125;
 			addParam(createParam<LEDButton>(Vec(x, y), module, ProbablyNoteArabic::AJNAS_ACTIVE_PARAM+i));
 			addChild(createLight<LargeLight<GreenRedLight>>(Vec(x+1.5, y+1.5), module, ProbablyNoteArabic::AJNAS_ACTIVE_LIGHT+i*2));
-			addParam(createParam<RoundExtremelySmallFWKnob>(Vec(x + 20,y+2), module, ProbablyNoteArabic::AJNAS_WEIGHT_PARAM+i));			
+			ParamWidget* weightParam = createParam<RoundExtremelySmallFWKnob>(Vec(x + 20,y+2), module, ProbablyNoteArabic::AJNAS_WEIGHT_PARAM+i);
+			if (module) {
+				dynamic_cast<RoundExtremelySmallFWKnob*>(weightParam)->percentage = &module->anjasWeightPercentage[i];
+			}
+			addParam(weightParam);							
 			addInput(createInput<FWPortInReallySmall>(Vec(x + 40, y+4), module, ProbablyNoteArabic::AJNAS_WEIGHT_INPUT+i));
 
 		}
@@ -1548,7 +1611,11 @@ struct ProbablyNoteArabicWidget : ModuleWidget {
 		for(int i=0;i<MAX_JINS_NOTES;i++) {
 			addParam(createParam<LEDButton>(Vec(175, 312 - i*23), module, ProbablyNoteArabic::NOTE_ACTIVE_PARAM+i));
 			addChild(createLight<LargeLight<GreenRedLight>>(Vec(176.5, 313.5 - i*23), module, ProbablyNoteArabic::NOTE_ACTIVE_LIGHT+i*2));
-			addParam(createParam<RoundReallySmallFWKnob>(Vec(195,310 - i*23), module, ProbablyNoteArabic::NOTE_WEIGHT_PARAM+i));		
+			ParamWidget* weightParam = createParam<RoundReallySmallFWKnob>(Vec(195,310 - i*23), module, ProbablyNoteArabic::NOTE_WEIGHT_PARAM+i);
+			if (module) {
+				dynamic_cast<RoundReallySmallFWKnob*>(weightParam)->percentage = &module->noteWeightPercentage[i];
+			}
+			addParam(weightParam);							
 			addInput(createInput<FWPortInReallySmall>(Vec(219, 314 - i*23), module, ProbablyNoteArabic::NOTE_WEIGHT_INPUT+i));
 		}
 
@@ -1607,6 +1674,15 @@ struct ProbablyNoteArabicWidget : ModuleWidget {
 
 		ProbablyNoteArabic *module = dynamic_cast<ProbablyNoteArabic*>(this->module);
 		assert(module);
+
+		menu->addChild(new MenuLabel());
+		{
+      		OptionsMenuItem* mi = new OptionsMenuItem("Quantize Mode");
+			mi->addItem(OptionMenuItem("Closet", [module]() { return module->quantizeMode == 0; }, [module]() { module->quantizeMode = 0; }));
+			mi->addItem(OptionMenuItem("Round Lower", [module]() { return module->quantizeMode == 1; }, [module]() { module->quantizeMode = 1; }));
+			mi->addItem(OptionMenuItem("Round Upper", [module]() { return module->quantizeMode == 2; }, [module]() { module->quantizeMode = 2; }));
+			menu->addChild(mi);
+		}
 
 		TriggerDelayItem *triggerDelayItem = new TriggerDelayItem();
 		triggerDelayItem->module = module;
