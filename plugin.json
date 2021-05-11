@@ -136,7 +136,7 @@
 		{
 			"slug": "PortlandWeather",
 			"name": "Portland Weather",
-			"description": "16 tap rhytmic delay with per tap pitch shifting and filtering",
+			"description": "16 tap rhythmic delay with per tap pitch shifting and filtering",
 			"tags": ["Delay", "Granular", "VCF"]
 		},
 		{

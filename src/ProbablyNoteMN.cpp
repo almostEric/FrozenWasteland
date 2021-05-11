@@ -834,11 +834,6 @@ struct ProbablyNoteMN : Module {
 					efPitch.denominator = denominator / gcd;
 					double pitchInCents = 1200 * ratio; 
 					efPitch.pitch = pitchInCents;
-					// double dissonance = CalculateDissonance(numerator,denominator,gcd);
-					// double dissonance = CalculateDissonance(efPitch.ratio);
-					// efPitch.dissonance = dissonance;
-					// fprintf(stderr, "n: %f d: %f  r: %f   p: %f \n", efPitch.numerator, efPitch.denominator, efPitch.ratio, pitchInCents);
-					// fprintf(stderr, "n: %f d: %f  r:%f  p:%f diss: %f \n", efPitch.numerator, efPitch.denominator, ratio, pitchInCents, dissonance);
 					if(edoTempering > 0)
 						temperingPitches.push_back(efPitch);
 					else
@@ -891,11 +886,6 @@ struct ProbablyNoteMN : Module {
 					efPitch.denominator = denominator / gcd;
 					double pitchInCents = 1200 * ratio; 
 					efPitch.pitch = pitchInCents;
-					// double dissonance = CalculateDissonance(numerator,denominator,gcd);
-					// double dissonance = CalculateDissonance(efPitch.ratio);
-					// efPitch.dissonance = dissonance;
-					// fprintf(stderr, "n: %f d: %f  r: %f   diss: %f \n", efPitch.numerator, efPitch.denominator, efPitch.ratio, pitchInCents);
-					
 					efPitches.push_back(efPitch);
 				}
 			}
@@ -969,11 +959,6 @@ struct ProbablyNoteMN : Module {
 						efPitch.denominator = efPitch.denominator / gcd;
 						double pitchInCents = 1200 * std::log2f(ratio);
 						efPitch.pitch = pitchInCents;
-						// double dissonance = CalculateDissonance(efPitch.numerator,efPitch.denominator,gcd);
-						// double dissonance = CalculateDissonance(efPitch.ratio);
-						// efPitch.dissonance = dissonance;
-						// fprintf(stderr, "n: %f d: %f  r:%f  p:%f  d: %f \n", efPitch.numerator, efPitch.denominator, ratio, pitchInCents, dissonance);
-		
 						efPitches.push_back(efPitch);
 					}
 				}
@@ -1217,7 +1202,8 @@ struct ProbablyNoteMN : Module {
 					double ratio;
 					ratio = lerp(reducedEfPitches[i].ratio,temperingPitches[j].ratio,edoTemperingStrength);
 					if(ratio == 2) {
-						ratio = 1;
+						tempered = true;
+						break;						
 					}
 					// fprintf(stderr,"pitch #:%lli pitch:%f  temperingPitch:%f  efRatio:%f  tRatio:%f calcRatio:%f \n",i,efPitches[i].pitch, temperingPitches[j].pitch, efPitches[i].ratio,temperingPitches[j].ratio,ratio);
 					rfPitch.ratio = ratio;
@@ -1227,7 +1213,7 @@ struct ProbablyNoteMN : Module {
 						rfPitch.denominator = denominator / gcd;
 						double pitchInCents = 1200 * std::log2f(ratio);; 
 						rfPitch.pitch = pitchInCents;
-						double dissonance = CalculateDissonance(rfPitch.ratio);
+						double dissonance = CalculateDissonance(rfPitch.ratio * octaveScaleConstant);
 						rfPitch.dissonance = dissonance;
 						if(temperMode == TEMPER_ALL_PITCHES_TEMPERING)
 							resultingPitches.push_back(rfPitch);
@@ -1266,10 +1252,12 @@ struct ProbablyNoteMN : Module {
 		resultingPitches.clear();
 		for(size_t i=0;i<reducedEfPitches.size();i++) {
 			EFPitch resultPitch = reducedEfPitches[i];
-			resultPitch.dissonance = CalculateDissonance(resultPitch.ratio);
+			resultPitch.dissonance = CalculateDissonance(resultPitch.ratio * octaveScaleConstant);
 			resultingPitches.push_back(resultPitch);
 		}
 	}
+
+
 	json_t *dataToJson() override {
 		json_t *rootJ = json_object();
 

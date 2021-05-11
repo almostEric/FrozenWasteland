@@ -1,3 +1,14 @@
+### 1.20.3 (2021-05-12)
+- Massive UI Refactor with fonts and color change
+- Probably Not(e) - Math Nerd rewritten
+- QAR Accents now have their own algorithms
+- bugs with QAR accens and reset fixed
+- Lowered CPU usage when adding expanders to QAR
+- Probably Note(e) Quantizers track pitch better (and there are options now in menu)
+- The Gardener CV bug fixed
+- Lots of String Theory CV bug fixes, negative feedback added
+- Lots of Just a Phase CV bug fixes
+
 ### 1.18.3 (2021-04-09)
 - QAR Irrational Rhythms can now do nesting
 - Added Groove EOC output to QAR
