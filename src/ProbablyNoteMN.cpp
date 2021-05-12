@@ -1257,6 +1257,49 @@ struct ProbablyNoteMN : Module {
 		}
 	}
 
+	int QuantizeNote(double inValue) {
+		int selectedNote = 0;
+		double lastDif = 99.0f;    
+		for(uint64_t i = 0;i<actualScaleSize;i++) {            
+			if(resultingPitches[i].inUse) {
+				double lowNote = (resultingPitches[i].pitch / 1200.0) * (octaveScaleMapping ? 1.0 : octaveScaleConstant); 					
+				double highNote = (resultingPitches[(i+1) % actualScaleSize].pitch / 1200.0) * (octaveScaleMapping ? 1.0 : octaveScaleConstant);
+				if(i==actualScaleSize-1) {
+					highNote += 1200 * (octaveScaleMapping ? 1.0 : octaveScaleConstant);;
+				}
+				double median = (lowNote + highNote) / 2.0;
+
+				double lowNoteDif = std::abs(lowNote - inValue);
+				double highNoteDif = std::abs(highNote - inValue);
+				double medianDif = std::abs(median - inValue);
+			
+				double currentDif;
+				bool direction = lowNoteDif < highNoteDif;
+				int note;
+				switch(quantizeMode) {
+					case QUANTIZE_CLOSEST :
+					default :
+						currentDif = medianDif;
+						note = direction ? i : (i + 1) % actualScaleSize;
+						break;
+					case QUANTIZE_LOWER :
+						currentDif = lowNoteDif;
+						note = i;
+						break;
+					case QUANTIZE_UPPER :
+						currentDif = highNoteDif;
+						note = (i + 1) % MAX_NOTES;
+						break;
+				}
+
+				if(currentDif < lastDif) {
+					lastDif = currentDif;
+					selectedNote = note;
+				}  								
+			}
+		}
+		return selectedNote;
+	}
 
 	json_t *dataToJson() override {
 		json_t *rootJ = json_object();
@@ -1897,68 +1940,14 @@ struct ProbablyNoteMN : Module {
 
 			//Calcuate microtonal key note
 			if(recalcKeyNeeded) {
-				double lastDif = 1.0f;    
-				for(uint64_t i = 0;i<actualScaleSize;i++) {            
-					if(resultingPitches[i].inUse) {
-						double currentDif = std::abs((resultingPitches[i].pitch / 1200.0) * (octaveScaleMapping ? 1.0 : octaveScaleConstant) - originalFractionalValue); // BOTEL Add octave size adjustment here
-						if(currentDif < lastDif) {
-							lastDif = currentDif;
-							microtonalKey = i;
-						}            
-					}
-				}
+				microtonalKey = QuantizeNote(originalFractionalValue);
 				recalcKeyNeeded = false;				
 			}
 
 											              //fprintf(stderr, "%i %f \n", key, fractionalValue);
 			//Calcuate root note
 			if(fractionalValue != lastFractionalValue[channel]) {
-				double lastDif = 99.0f;    
-				for(uint64_t i = 0;i<actualScaleSize;i++) {            
-					if(resultingPitches[i].inUse) {
-						double lowNote = (resultingPitches[i].pitch / 1200.0) * (octaveScaleMapping ? 1.0 : octaveScaleConstant); 					
-						double highNote = (resultingPitches[(i+1) % actualScaleSize].pitch / 1200.0) * (octaveScaleMapping ? 1.0 : octaveScaleConstant);
-						if(i==actualScaleSize-1) {
-							highNote += 1200 * (octaveScaleMapping ? 1.0 : octaveScaleConstant);;
-						}
-						double median = (lowNote + highNote) / 2.0;
-
-						double lowNoteDif = std::abs(lowNote - fractionalValue);
-						double highNoteDif = std::abs(highNote - fractionalValue);
-						double medianDif = std::abs(median - fractionalValue);
-					
-						double currentDif;
-						bool direction = lowNoteDif < highNoteDif;
-						int note;
-						switch(quantizeMode) {
-							case QUANTIZE_CLOSEST :
-							default :
-								currentDif = medianDif;
-								note = direction ? i : (i + 1) % MAX_NOTES;
-								break;
-							case QUANTIZE_LOWER :
-								currentDif = lowNoteDif;
-								note = i;
-								break;
-							case QUANTIZE_UPPER :
-								currentDif = highNoteDif;
-								note = (i + 1) % MAX_NOTES;
-								break;
-						}
-
-						if(currentDif < lastDif) {
-							lastDif = currentDif;
-							currentNote[channel] = note;
-						}  
-						
-
-						// double currentDif = std::abs((reducedEfPitches[i].pitch / 1200.0) * (octaveScaleMapping ? 1.0 : octaveScaleConstant) - fractionalValue); // BOTEL Add octave size adjustment here
-						// if(currentDif < lastDif) {
-						// 	lastDif = currentDif;
-						// 	currentNote[channel] = i;
-						// }            
-					}
-				}
+				currentNote[channel] = QuantizeNote(fractionalValue);
 				lastFractionalValue[channel] = fractionalValue;
 				if(currentNote[channel] != lastNote[channel]) {
 					noteChange = true;
@@ -2852,12 +2841,24 @@ struct ProbablyNoteMNWidget : ModuleWidget {
 	
 	
 	void appendContextMenu(Menu *menu) override {
-		MenuLabel *spacerLabel = new MenuLabel();
-		menu->addChild(spacerLabel);
+		// MenuLabel *spacerLabel = new MenuLabel();
+		// menu->addChild(spacerLabel);
 
 		ProbablyNoteMN *module = dynamic_cast<ProbablyNoteMN*>(this->module);
 		assert(module);
 
+		menu->addChild(new MenuLabel());
+		{
+      		OptionsMenuItem* qmi = new OptionsMenuItem("Quantize Mode");
+			qmi->addItem(OptionMenuItem("Closet", [module]() { return module->quantizeMode == 0; }, [module]() { module->quantizeMode = 0; }));
+			qmi->addItem(OptionMenuItem("Round Lower", [module]() { return module->quantizeMode == 1; }, [module]() { module->quantizeMode = 1; }));
+			qmi->addItem(OptionMenuItem("Round Upper", [module]() { return module->quantizeMode == 2; }, [module]() { module->quantizeMode = 2; }));
+			menu->addChild(qmi);			
+		}
+
+		TriggerDelayItem *triggerDelayItem = new TriggerDelayItem();
+		triggerDelayItem->module = module;
+		menu->addChild(triggerDelayItem);
 
 		menu->addChild(new MenuLabel());
 		{
@@ -2869,19 +2870,7 @@ struct ProbablyNoteMNWidget : ModuleWidget {
 			menu->addChild(mi);
 		}
 
-		menu->addChild(new MenuLabel());
-		{
-      		OptionsMenuItem* qmi = new OptionsMenuItem("Quantize Mode");
-			qmi->addItem(OptionMenuItem("Closet", [module]() { return module->quantizeMode == 0; }, [module]() { module->quantizeMode = 0; }));
-			qmi->addItem(OptionMenuItem("Round Lower", [module]() { return module->quantizeMode == 1; }, [module]() { module->quantizeMode = 1; }));
-			qmi->addItem(OptionMenuItem("Round Upper", [module]() { return module->quantizeMode == 2; }, [module]() { module->quantizeMode = 2; }));
-			menu->addChild(qmi);
-		}
 
-
-		TriggerDelayItem *triggerDelayItem = new TriggerDelayItem();
-		triggerDelayItem->module = module;
-		menu->addChild(triggerDelayItem);
 
 		PNMNSaveScaletem *saveScaleItem = new PNMNSaveScaletem();
 		saveScaleItem->module = module;
