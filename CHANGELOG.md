@@ -1,4 +1,7 @@
-### 1.20.3 (2021-05-12)
+### 1.20.1 (2021-05-17)
+- Fixed minor SOC bug
+
+### 1.20.0 (2021-05-12)
 - Massive UI Refactor with fonts and color change
 - Probably Not(e) - Math Nerd rewritten
 - QAR Accents now have their own algorithms

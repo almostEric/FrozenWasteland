@@ -109,20 +109,20 @@ struct SeedsOfChangeCVExpander : Module {
             init_genrand((unsigned long)(latest_seed));
         } 
 
-		for (int i=0; i<NBOUT; i++) {
-			float mult=params[MULTIPLY_1_PARAM+i].value;
-			float off=params[OFFSET_1_PARAM+i].value;
-			if (inputs[MULTIPLY_1_INPUT + i].active) {
-				mult = mult + (inputs[MULTIPLY_1_INPUT + i].value / 10.0f * params[MULTIPLY_1_CV_ATTENUVERTER + i].value);
-			}
-			mult = clamp(mult,0.0,10.0);
-			multiplyPercentage[i] = mult / 10.0;
-			if (inputs[OFFSET_1_INPUT + i].active) {
-				off = clamp(off + (inputs[OFFSET_1_INPUT + i].value * params[OFFSET_1_CV_ATTENUVERTER + i].value),-10.0f,10.0f);
-			}
-			offsetPercentage[i] = off / 10.0f;
+		if (clockTrigger.process(clockInput)) {
+			for (int i=0; i<NBOUT; i++) {
+				float mult=params[MULTIPLY_1_PARAM+i].value;
+				float off=params[OFFSET_1_PARAM+i].value;
+				if (inputs[MULTIPLY_1_INPUT + i].active) {
+					mult = mult + (inputs[MULTIPLY_1_INPUT + i].value / 10.0f * params[MULTIPLY_1_CV_ATTENUVERTER + i].value);
+				}
+				mult = clamp(mult,0.0,10.0);
+				multiplyPercentage[i] = mult / 10.0;
+				if (inputs[OFFSET_1_INPUT + i].active) {
+					off = clamp(off + (inputs[OFFSET_1_INPUT + i].value * params[OFFSET_1_CV_ATTENUVERTER + i].value),-10.0f,10.0f);
+				}
+				offsetPercentage[i] = off / 10.0f;
 
-			if (clockTrigger.process(clockInput)) {
 				float initialRandomNumber = gaussianMode ? normal_number() : genrand_real();					
 				//outbuffer[i] = clamp((float)(initialRandomNumber * mult + off - mult*.5),-10.0f, 10.0f);
 				outbuffer[i] = clamp((float)(initialRandomNumber * mult + off),-10.0f, 10.0f);			
