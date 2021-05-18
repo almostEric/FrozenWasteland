@@ -201,6 +201,9 @@ struct BPMLFO2 : Module {
 	float waveSlopePercentage = 0;
 	float waveSkewPercentage = 0;
 
+	int slowParamCount = 0;
+	int paramLimiter = 20;
+
 
 	BPMLFO2() {
 		config(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS, NUM_LIGHTS);
@@ -272,21 +275,26 @@ void BPMLFO2::process(const ProcessArgs &args) {
 	division = clamp(division,1.0f,128.0f);
 	divisionPercentage = division / 128.0;
 
-	waveshape = params[WAVESHAPE_PARAM].getValue();
+	if(slowParamCount % paramLimiter == 0) {
+		waveshape = params[WAVESHAPE_PARAM].getValue();
 
-	waveSlope = params[WAVESLOPE_PARAM].getValue();
-	if(inputs[WAVESLOPE_INPUT].isConnected()) {
-		waveSlope +=inputs[WAVESLOPE_INPUT].getVoltage() / 10 * params[WAVESLOPE_CV_ATTENUVERTER_PARAM].getValue();
-	}
-	waveSlope = clamp(waveSlope,0.0f,1.0f);
-	waveSlopePercentage = waveSlope;
+		waveSlope = params[WAVESLOPE_PARAM].getValue();
+		if(inputs[WAVESLOPE_INPUT].isConnected()) {
+			waveSlope +=inputs[WAVESLOPE_INPUT].getVoltage() / 10 * params[WAVESLOPE_CV_ATTENUVERTER_PARAM].getValue();
+		}
+		waveSlope = clamp(waveSlope,0.0f,1.0f);
+		waveSlopePercentage = waveSlope;
 
-	skew = params[SKEW_PARAM].getValue();
-	if(inputs[SKEW_INPUT].isConnected()) {
-		skew +=inputs[SKEW_INPUT].getVoltage() / 10 * params[SKEW_CV_ATTENUVERTER_PARAM].getValue();
+		skew = params[SKEW_PARAM].getValue();
+		if(inputs[SKEW_INPUT].isConnected()) {
+			skew +=inputs[SKEW_INPUT].getVoltage() / 10 * params[SKEW_CV_ATTENUVERTER_PARAM].getValue();
+		}
+		skew = clamp(skew,0.0f,1.0f);
+		waveSkewPercentage = skew;
+
+		slowParamCount = 0;
 	}
-	skew = clamp(skew,0.0f,1.0f);
-	waveSkewPercentage = skew;
+	slowParamCount++;
 
 	if (quantizePhaseTrigger.process(params[QUANTIZE_PHASE_PARAM].getValue())) {
 		phase_quantized = !phase_quantized;

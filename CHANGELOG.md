@@ -1,5 +1,6 @@
 ### 1.20.1 (2021-05-17)
 - Fixed minor SOC bug
+- Fixed BPM LFO CPU Usage
 
 ### 1.20.0 (2021-05-12)
 - Massive UI Refactor with fonts and color change
