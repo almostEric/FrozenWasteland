@@ -24,7 +24,7 @@
 
 #define PASSTHROUGH_LEFT_VARIABLE_COUNT 13
 #define PASSTHROUGH_RIGHT_VARIABLE_COUNT 9
-#define STEP_LEVEL_PARAM_COUNT 5
+#define STEP_LEVEL_PARAM_COUNT 6
 #define TRACK_LEVEL_PARAM_COUNT TRACK_COUNT * 17
 #define PASSTHROUGH_OFFSET EXPANDER_MAX_STEPS * TRACK_COUNT * STEP_LEVEL_PARAM_COUNT + TRACK_LEVEL_PARAM_COUNT
 
@@ -220,11 +220,14 @@ struct QuadAlgorithmicRhythm : Module {
 	double workingIrrationalRhythmMatrix[TRACK_COUNT][MAX_STEPS];
 	float workingConditionalMatrix[TRACK_COUNT][MAX_STEPS];
 	int conditionalMatrix[TRACK_COUNT][MAX_STEPS];
+	bool workingConditionaModeMatrix[TRACK_COUNT][MAX_STEPS];
+	bool conditionalModeMatrix[TRACK_COUNT][MAX_STEPS] = {{0}};
 	int conditionalCounterMatrix[TRACK_COUNT][MAX_STEPS] = {{0}};
 
 	float lastProbabilityGroupModeMatrix[TRACK_COUNT][MAX_STEPS];
 	float lastProbabilityMatrix[TRACK_COUNT][MAX_STEPS];
 	float lastConditionalMatrix[TRACK_COUNT][MAX_STEPS];
+	bool lastConditionalModeMatrix[TRACK_COUNT][MAX_STEPS];
 
 
 	int beatIndex[TRACK_COUNT];
@@ -812,6 +815,9 @@ struct QuadAlgorithmicRhythm : Module {
 					beatWarpingPosition[trackNumber] = 8;
 					beatWarpingLength[trackNumber] = 72;
 					extraParameterValue[trackNumber] = 1.0;
+					for(int stepNumber=0;stepNumber<MAX_STEPS;stepNumber++) {
+						conditionalCounterMatrix[trackNumber][stepNumber] = 0;
+					}
 				}
 				timeElapsed = 0;
 				firstClockReceived = false;
@@ -1580,7 +1586,8 @@ struct QuadAlgorithmicRhythm : Module {
 			for(int i = 0; i < TRACK_COUNT; i++) {
 				if(expanderDataChanged[i]) {
 					for(int j = 0; j < stepsCount[i]; j++) { //reset all conditiona, find first group step
-						workingConditionalMatrix[i][j] = 1;					
+						workingConditionalMatrix[i][j] = 1;
+						workingConditionaModeMatrix[i][j] = 0;											
 					}
 
 					if(messagesFromExpanders[TRACK_COUNT * 16 + i] > 0) { // 0 is track not selected
@@ -1601,8 +1608,10 @@ struct QuadAlgorithmicRhythm : Module {
 
 							if(stepFound) {
 								int divideCount = messagesFromExpanders[TRACK_LEVEL_PARAM_COUNT + (EXPANDER_MAX_STEPS * TRACK_COUNT * 4) + (i * EXPANDER_MAX_STEPS) + messageIndex];
+								bool conditionalMode = messagesFromExpanders[TRACK_LEVEL_PARAM_COUNT + (EXPANDER_MAX_STEPS * TRACK_COUNT * 5) + (i * EXPANDER_MAX_STEPS) + messageIndex];
 								// fprintf(stderr, "Conditional Track:%i step:%i DC:%i \n",i,stepIndex,divideCount);
 								workingConditionalMatrix[i][stepIndex] = divideCount;
+								workingConditionaModeMatrix[i][stepIndex] = conditionalMode;
 							} 
 						}
 					}
@@ -1758,6 +1767,7 @@ struct QuadAlgorithmicRhythm : Module {
 					for(int j = 0; j < stepsCount[i]; j++) { 
 						probabilityMatrix[i][j] = workingProbabilityMatrix[i][j];
 						conditionalMatrix[i][j] = workingConditionalMatrix[i][j];
+						conditionalModeMatrix[i][j] = workingConditionaModeMatrix[i][j];
 						swingMatrix[i][j] = workingSwingMatrix[i][j];
 						beatWarpMatrix[i][j] = workingBeatWarpMatrix[i][j];
 						irrationalRhythmMatrix[i][j] = workingIrrationalRhythmMatrix[i][j];
@@ -1778,6 +1788,7 @@ struct QuadAlgorithmicRhythm : Module {
 					for(int j = 0; j < stepsCount[i]; j++) { //reset all probabilities
 						probabilityMatrix[i][j] = 1;
 						conditionalMatrix[i][j] = 1;
+						conditionalModeMatrix[i][j] = 0;
 						swingMatrix[i][j] = 0;
 						beatWarpMatrix[i][j] = 1.0;
 						irrationalRhythmMatrix[i][j] = 1.0;
@@ -2144,7 +2155,9 @@ struct QuadAlgorithmicRhythm : Module {
 		}
 
         //Create Beat Trigger    
-        if(beatMatrix[trackNumber][beatIndex[trackNumber]] == true && probabilityResult && conditionalResult && running[trackNumber] && !muted) {
+        if(beatMatrix[trackNumber][beatIndex[trackNumber]] == true && probabilityResult && 
+									(conditionalResult != conditionalModeMatrix[trackNumber][beatIndex[trackNumber]]) && 
+									running[trackNumber] && !muted) {
             beatPulse[trackNumber].trigger(pulseLength);
 			beatCountAtIndex[trackNumber]++;
 
@@ -2197,7 +2210,8 @@ struct QuadAlgorithmicRhythm : Module {
 			for(int j = 0; j < MAX_STEPS; j++) {
 				probabilityMatrix[i][j] = 1.0;
 				conditionalMatrix[i][j] = 1.0;
-				conditionalCounterMatrix[i][j] = 1.0;
+				conditionalModeMatrix[i][j] = 0.0;
+				conditionalCounterMatrix[i][j] = 0.0;
 				swingMatrix[i][j] = 0.0;
 				beatMatrix[i][j] = false;
 				accentMatrix[i][j] = false;
@@ -2233,7 +2247,7 @@ struct QARBeatDisplay : FramebufferWidget {
 
 	
 	void drawArc(const DrawArgs &args, float trackNumber, float stepsCount, float stepNumber, float runningTrackWidth, int algorithm, bool isBeat, bool isAccent,
-					 bool isCurrent, float beatWarp, float probability,int countsLeft, int divideCount, int triggerState, int probabilityGroupMode, 
+					 bool isCurrent, float beatWarp, float probability,int countsLeft, int divideCount, bool conditionalMode, int triggerState, int probabilityGroupMode, 
 					 float swing,float nextSwing, float swingRandomness, float wfTrackDurationAdjustment, float wfStepDuration) 
 	{		
 
@@ -2347,8 +2361,8 @@ struct QARBeatDisplay : FramebufferWidget {
 			if(divideCount > 1) {
 				nvgBeginPath(args.vg);
 				nvgStrokeWidth(args.vg, 0.5);
-				nvgStrokeColor(args.vg, countsLeft > 1 ? nvgRGBA(0xff, 0x1f, 0, 0xaf) : nvgRGBA(0x1f, 0xff, 0x1f, 0xaf));				
-				nvgFillColor(args.vg, countsLeft > 1 ? nvgRGBA(0xff, 0x1f, 0, 0xaf) : nvgRGBA(0x1f, 0xff, 0x1f, 0xaf));				
+				nvgStrokeColor(args.vg, ((countsLeft > 1) != conditionalMode) ? nvgRGBA(0xff, 0x1f, 0, 0xaf) : nvgRGBA(0x1f, 0xff, 0x1f, 0xaf));				
+				nvgFillColor(args.vg, ((countsLeft > 1) != conditionalMode) ? nvgRGBA(0xff, 0x1f, 0, 0xaf) : nvgRGBA(0x1f, 0xff, 0x1f, 0xaf));				
 					
 				double cx= ((cos(startDegree) * (baseRadius+25) + 119.0) + x) / 2.0;
             	double cy= ((sin(startDegree) * (baseRadius+25) + 120.0) + y) / 2.0;
@@ -2496,6 +2510,7 @@ struct QARBeatDisplay : FramebufferWidget {
 				float probability = module->probabilityMatrix[trackNumber][stepNumber];
 				int countsLeft = module->conditionalCounterMatrix[trackNumber][stepNumber];
 				int divideCount = module->conditionalMatrix[trackNumber][stepNumber];
+				bool conditionalMode = module->conditionalModeMatrix[trackNumber][stepNumber];
 				float swing = module->swingMatrix[trackNumber][stepNumber];	
 				float nextSwing = module->swingMatrix[trackNumber][nextStepNumber];	
 				float swingRandomness = module->swingRandomness[trackNumber];
@@ -2506,7 +2521,7 @@ struct QARBeatDisplay : FramebufferWidget {
 				int triggerState = module->probabilityGroupTriggered[trackNumber];
 				int probabilityGroupMode = module->probabilityGroupModeMatrix[trackNumber][stepNumber];
 				drawArc(args, float(trackNumber), float(stepsCount), float(stepNumber),runningTrackWidth,algorithn,isBeat,isAccent,isCurrent,beatSizeAdjust,
-						probability,countsLeft,divideCount,triggerState,probabilityGroupMode,
+						probability,countsLeft,divideCount,conditionalMode, triggerState,probabilityGroupMode,
 						swing,nextSwing,swingRandomness,wfTrackDurationAdjustment,wfStepDuration);
 				runningTrackWidth += beatSizeAdjust * (algorithn == module->WELL_FORMED_ALGO ? wfStepDuration * wfTrackDurationAdjustment : 1);
 			}

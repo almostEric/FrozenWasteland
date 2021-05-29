@@ -122,11 +122,15 @@ struct MultiTapDelayLine {
 
 
 	void clear() {
-		 //std::fill(&buffer_[0], &buffer_[size], 0); //REMEMBER THIS FUNCTION!!!!
-		//std::fill(&DelayBuffer[0], &DelayBuffer[DELAY_LINE_SIZE-1], 0); 
+
+		T empty;
+		empty.l = 0;
+		empty.r = 0;
+		// std::fill(&buffer_[0], &buffer_[size], 0); //REMEMBER THIS FUNCTION!!!!
+		std::fill_n(DelayBuffer, DELAY_LINE_SIZE, empty); 
 		// std::fill(&readPtr[0], &readPtr[N-1], 0); 
 		// std::fill(&desiredReadPtr[0], &desiredReadPtr[N-1], 0); 
-    	writePtr = 0; // write ptr
+    	// writePtr = 0; // write ptr
 	}
 
 

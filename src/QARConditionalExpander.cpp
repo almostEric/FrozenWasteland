@@ -8,7 +8,7 @@
 #define MAX_DIVIDE_COUNT 16
 #define PASSTHROUGH_LEFT_VARIABLE_COUNT 13
 #define PASSTHROUGH_RIGHT_VARIABLE_COUNT 9
-#define STEP_LEVEL_PARAM_COUNT 5
+#define STEP_LEVEL_PARAM_COUNT 6
 #define TRACK_LEVEL_PARAM_COUNT TRACK_COUNT * 17
 #define PASSTHROUGH_OFFSET MAX_STEPS * TRACK_COUNT * STEP_LEVEL_PARAM_COUNT + TRACK_LEVEL_PARAM_COUNT
 
@@ -20,12 +20,14 @@ struct QARConditionalExpander : Module {
 		TRACK_4_CONDITIONAL_ENABLED_PARAM,
 		DIVIDE_COUNT_1_PARAM,
 		DIVIDE_COUNT_ATTEN_1_PARAM = DIVIDE_COUNT_1_PARAM + MAX_STEPS,
-		STEP_OR_DIV_PARAM = DIVIDE_COUNT_ATTEN_1_PARAM + MAX_STEPS,
+		CONDITIONAL_MODE_PARAM = DIVIDE_COUNT_ATTEN_1_PARAM + MAX_STEPS,
+		STEP_OR_DIV_PARAM = CONDITIONAL_MODE_PARAM + MAX_STEPS,
 		NUM_PARAMS
 	};
 	enum InputIds {
 		DIVIDE_COUNT_1_INPUT,
-		NUM_INPUTS = DIVIDE_COUNT_1_INPUT + MAX_STEPS
+		CONDITIONAL_MODE_1_INPUT = DIVIDE_COUNT_1_INPUT + MAX_STEPS,
+		NUM_INPUTS = CONDITIONAL_MODE_1_INPUT + MAX_STEPS
 	};
 	enum OutputIds {
 		NUM_OUTPUTS
@@ -37,7 +39,8 @@ struct QARConditionalExpander : Module {
 		TRACK_3_CONDITIONAL_ENABELED_LIGHT,
 		TRACK_4_CONDITIONAL_ENABELED_LIGHT,
         USING_DIVS_LIGHT,
-		NUM_LIGHTS
+		CONDITIONAL_MODE_1_LIGHT,
+		NUM_LIGHTS = CONDITIONAL_MODE_1_LIGHT + (MAX_STEPS * 3)
 	};
 
 
@@ -50,13 +53,14 @@ struct QARConditionalExpander : Module {
 	bool trackDirty[TRACK_COUNT] = {0};
 
 	
-	dsp::SchmittTrigger stepDivTrigger,trackConditionalTrigger[TRACK_COUNT];
+	dsp::SchmittTrigger stepDivTrigger,trackConditionalTrigger[TRACK_COUNT],conditionalModeTrigger[MAX_STEPS];
 	bool stepsOrDivs;
 	bool trackConditionalSelected[TRACK_COUNT];
+	bool conditionalMode[MAX_STEPS];
 
 	float lastDivideCount[MAX_STEPS] = {0};
 
-	float sceneData[NBR_SCENES][41] = {{0}};
+	float sceneData[NBR_SCENES][59] = {{0}};
 	int sceneChangeMessage = 0;
 
 	//percentages
@@ -83,10 +87,11 @@ struct QARConditionalExpander : Module {
         for (int i = 0; i < MAX_STEPS; i++) {
             configParam(DIVIDE_COUNT_1_PARAM + i, 1.0f, 16.0f, 1.0f,"Step "  + std::to_string(i+1) + " Divide Count");
 			configParam(DIVIDE_COUNT_ATTEN_1_PARAM + i, -1.0, 1.0, 0.0,"Step "  + std::to_string(i+1) + " Divide Count CV Attenuation","%",0,100);
+			configParam(CONDITIONAL_MODE_PARAM + i, 0.0, 1.0, 0.0,"Step "  + std::to_string(i+1) + " Conditional Mode");
 		}
 
 
-		configParam(STEP_OR_DIV_PARAM, 0.0, 1.0, 0.0);
+		configParam(STEP_OR_DIV_PARAM, 0.0, 1.0, 0.0,"Step/Beat Mode");
 		
         onReset();
 	}
@@ -103,9 +108,17 @@ struct QARConditionalExpander : Module {
 			strcat(buf, stepNames[i]);
 			json_object_set_new(rootJ, buf, json_integer((int) trackConditionalSelected[i]));			
 		}
-		
+
+		for(int i=0;i<MAX_STEPS;i++) {
+			//This is so stupid!!! why did he not use strings?
+			char buf[100];
+			strcpy(buf, "conditionalMode");
+			strcat(buf, stepNames[i]);
+			json_object_set_new(rootJ, buf, json_boolean(conditionalMode[i]));			
+		}
+
 		for(int scene=0;scene<NBR_SCENES;scene++) {
-			for(int i=0;i<41;i++) {
+			for(int i=0;i<59;i++) {
 				std::string buf = "sceneData-" + std::to_string(scene) + "-" + std::to_string(i) ;
 				json_object_set_new(rootJ, buf.c_str(), json_real(sceneData[scene][i]));
 			}
@@ -130,8 +143,19 @@ struct QARConditionalExpander : Module {
 			}
 		}	
 
+		for(int i=0;i<MAX_STEPS;i++) {
+			char buf[100];
+			strcpy(buf, "conditionalMode");
+			strcat(buf, stepNames[i]);
+
+			json_t *cmJ = json_object_get(rootJ, buf);
+			if (cmJ) {
+				conditionalMode[i] = json_boolean_value(cmJ);			
+			}
+		}	
+
 		for(int scene=0;scene<NBR_SCENES;scene++) {
-			for(int i=0;i<41;i++) {
+			for(int i=0;i<59;i++) {
 				std::string buf = "sceneData-" + std::to_string(scene) + "-" + std::to_string(i) ;
 				json_t *sdJ = json_object_get(rootJ, buf.c_str());
 				if (json_real_value(sdJ)) {
@@ -149,6 +173,7 @@ struct QARConditionalExpander : Module {
 		for(int stepNumber=0;stepNumber<MAX_STEPS;stepNumber++) {
 			sceneData[scene][stepNumber+5] = params[DIVIDE_COUNT_1_PARAM+stepNumber].getValue();
 			sceneData[scene][stepNumber+23] = params[DIVIDE_COUNT_ATTEN_1_PARAM+stepNumber].getValue();
+			sceneData[scene][stepNumber+41] = conditionalMode[stepNumber];
 		}
 	}
 
@@ -158,8 +183,9 @@ struct QARConditionalExpander : Module {
 			trackConditionalSelected[trackNumber] = sceneData[scene][trackNumber+1];
 		}
 		for(int stepNumber=0;stepNumber<MAX_STEPS;stepNumber++) {
-			 params[DIVIDE_COUNT_1_PARAM+stepNumber].setValue(sceneData[scene][stepNumber+5]);
-			 params[DIVIDE_COUNT_ATTEN_1_PARAM+stepNumber].setValue(sceneData[scene][stepNumber+23]);
+			params[DIVIDE_COUNT_1_PARAM+stepNumber].setValue(sceneData[scene][stepNumber+5]);
+			params[DIVIDE_COUNT_ATTEN_1_PARAM+stepNumber].setValue(sceneData[scene][stepNumber+23]);
+			conditionalMode[stepNumber] = sceneData[scene][stepNumber+41];
 		}
 	}
 
@@ -178,6 +204,15 @@ struct QARConditionalExpander : Module {
 			isDirty = true;
         }
         lights[USING_DIVS_LIGHT].value = stepsOrDivs;
+		for(int i=0; i< MAX_STEPS; i++) {
+			if (conditionalModeTrigger[i].process(params[CONDITIONAL_MODE_PARAM+i].getValue() + inputs[CONDITIONAL_MODE_1_INPUT+i].getVoltage())) {
+				conditionalMode[i] = !conditionalMode[i];
+				isDirty = true;
+			}
+			lights[CONDITIONAL_MODE_1_LIGHT+i*3].value = conditionalMode[i];
+			lights[CONDITIONAL_MODE_1_LIGHT+i*3+1].value = 0;
+			lights[CONDITIONAL_MODE_1_LIGHT+i*3+2].value = conditionalMode[i];
+		}
 
 		
 		bool motherPresent = (leftExpander.module && (leftExpander.module->model == modelQuadAlgorithmicRhythm || leftExpander.module->model == modelQARWellFormedRhythmExpander || 
@@ -244,6 +279,7 @@ struct QARConditionalExpander : Module {
 						}
 						messagesToMother[TRACK_LEVEL_PARAM_COUNT + (MAX_STEPS * TRACK_COUNT * 4) + (i * MAX_STEPS) + j] = divideCount;
 						stepConditionalPercentage[j] = (divideCount-1.0)/(MAX_DIVIDE_COUNT-1.0);
+						messagesToMother[TRACK_LEVEL_PARAM_COUNT + (MAX_STEPS * TRACK_COUNT * 5) + (i * MAX_STEPS) + j] = conditionalMode[j];
 					} 					 
 				} 
 				messagesToMother[i] = isDirty || trackDirty[i];
@@ -313,6 +349,19 @@ struct QARConditionalExpanderWidget : ModuleWidget {
     		addInput(createInput<FWPortInReallySmall>(Vec(40, 33 + i*46), module, QARConditionalExpander::DIVIDE_COUNT_1_INPUT + i));
     		addInput(createInput<FWPortInReallySmall>(Vec(102, 33 + i*46), module, QARConditionalExpander::DIVIDE_COUNT_1_INPUT + i + (MAX_STEPS / 3)));
     		addInput(createInput<FWPortInReallySmall>(Vec(164, 33 + i*46), module, QARConditionalExpander::DIVIDE_COUNT_1_INPUT + i + (MAX_STEPS * 2 / 3)));
+
+			addParam(createParam<LEDButton>(Vec(16, 53 + i*46), module, QARConditionalExpander::CONDITIONAL_MODE_PARAM+i));
+			addChild(createLight<LargeLight<RedGreenBlueLight>>(Vec(17.5, 54.5 + i*46), module, QARConditionalExpander::CONDITIONAL_MODE_1_LIGHT + (i*3)));
+			addParam(createParam<LEDButton>(Vec(78, 53 + i*46), module, QARConditionalExpander::CONDITIONAL_MODE_PARAM+i+(MAX_STEPS / 3)));
+			addChild(createLight<LargeLight<RedGreenBlueLight>>(Vec(79.5, 54.5 + i*46), module, QARConditionalExpander::CONDITIONAL_MODE_1_LIGHT + (i*3) + MAX_STEPS));
+			addParam(createParam<LEDButton>(Vec(140, 53 + i*46), module, QARConditionalExpander::CONDITIONAL_MODE_PARAM+i + (MAX_STEPS * 2 / 3)));
+			addChild(createLight<LargeLight<RedGreenBlueLight>>(Vec(141.5, 54.5 + i*46), module, QARConditionalExpander::CONDITIONAL_MODE_1_LIGHT + (i*3) + MAX_STEPS * 2));
+
+
+    		addInput(createInput<FWPortInReallySmall>(Vec(4, 57 + i*46), module, QARConditionalExpander::CONDITIONAL_MODE_1_INPUT + i));
+    		addInput(createInput<FWPortInReallySmall>(Vec(66, 57 + i*46), module, QARConditionalExpander::CONDITIONAL_MODE_1_INPUT + i + (MAX_STEPS / 3)));
+    		addInput(createInput<FWPortInReallySmall>(Vec(128, 57 + i*46), module, QARConditionalExpander::CONDITIONAL_MODE_1_INPUT + i + (MAX_STEPS * 2 / 3)));
+
         }
 	
 

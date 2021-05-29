@@ -354,7 +354,7 @@ struct PortlandWeather : Module {
 		configParam(FEEDBACK_R_DETUNE_PARAM, -99.0f, 99.0f, 0.0f,"Feedback R Detune", " cents");
 
 	
-		configParam(CLEAR_BUFFER_PARAM, 0.0f, 1.0f, 0.0f);
+		configParam(CLEAR_BUFFER_PARAM, 0.0f, 1.0f, 0.0f,"Clear Buffer");
 
 		configParam(REVERSE_PARAM, 0.0f, 1.0f, 0.0f);		
 		configParam(PING_PONG_PARAM, 0.0f, 1.0f, 0.0f);

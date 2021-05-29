@@ -1,3 +1,7 @@
+### 1.20.2 (2021-05-30)
+- Fixed Portland Weather clear buffer
+- Added Mode to QAR Conditional Expander
+
 ### 1.20.1 (2021-05-17)
 - Fixed minor SOC bug
 - Fixed BPM LFO CPU Usage

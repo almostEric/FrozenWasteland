@@ -421,6 +421,17 @@ When they are connected this way, the Clock, Mute and Reset signals, and Eoc out
 -- 6 = NXOR
 - Operators repeat if Division is past 6
 
+## QAR Conditional Expander
+
+![QAR Conditional Expander](./doc/QARC.png)
+
+- Expander Module for Quad Algorithmic Rhythm
+- Basically a CV controllable per-step/beat clock divider
+- If Conditional Mode is off, beats will fire when clock counts down to 0
+- If Conditional Mode on on (purple light),  beats will fire unless clock is 0
+- Conditional expanders can be chained so different tracks can have different counts
+- Can also be chained with QAR Probability
+
 ## QAR Groove Expander
 
 ![QAR Groove Expander](./doc/QARG.png)
