@@ -25,6 +25,7 @@ struct BPMLFO2 : Module {
 		WAVESHAPE_PARAM,
 		HOLD_CLOCK_BEHAVIOR_PARAM,
 		HOLD_MODE_PARAM,
+		CLOCK_MODE_PARAM,
 		NUM_PARAMS
 	};
 	enum InputIds {
@@ -48,6 +49,7 @@ struct BPMLFO2 : Module {
 	enum LightIds {
 		QUANTIZE_PHASE_LIGHT,
 		HOLD_LIGHT,
+		CLOCK_MODE_LIGHT,
 		NUM_LIGHTS
 	};	
 	enum Waveshapes {
@@ -180,7 +182,8 @@ struct BPMLFO2 : Module {
 	bool holding = false;
 	bool firstClockReceived = false;
 	bool secondClockReceived = false;
-	bool phase_quantized = false;
+	bool phaseQuantized = false;
+	bool clockMode = false;
 
 	float lfoOutputValue = 0.0;
 	float lfo45OutputValue = 0.0;
@@ -192,7 +195,7 @@ struct BPMLFO2 : Module {
 	float lastSkew = -1;
 	float waveValues[DISPLAY_SIZE] = {};
 
-	dsp::SchmittTrigger quantizePhaseTrigger;
+	dsp::SchmittTrigger quantizePhaseTrigger,clockModeTrigger;
 
 	//percentages
 	float multiplierPercentage = 0;
@@ -219,13 +222,16 @@ struct BPMLFO2 : Module {
 		configParam(PHASE_CV_ATTENUVERTER_PARAM, -1.0, 1.0, 0.0,"Phase CV Attenuation","%",0,100);
 		configParam(QUANTIZE_PHASE_PARAM, 0.0, 1.0, 0.0);
 		configParam(OFFSET_PARAM, 0.0, 1.0, 1.0);
-		configParam(WAVESHAPE_PARAM, 0.0, 1.0, 0.0);
+		configParam(WAVESHAPE_PARAM, 0.0, 1.0, 0.0,"TRI/SQR");
 		configParam(HOLD_CLOCK_BEHAVIOR_PARAM, 0.0, 1.0, 1.0);
 		configParam(HOLD_MODE_PARAM, 0.0, 1.0, 1.0);
+		configParam(CLOCK_MODE_PARAM, 0.0, 1.0, 1.0,"Clock Mode");
 
 		leftExpander.producerMessage = producerMessage;
 		leftExpander.consumerMessage = consumerMessage;
 	}
+	json_t *dataToJson() override;
+	void dataFromJson(json_t *rootJ) override;
 	void process(const ProcessArgs &args) override;
 
 	// void reset() override {
@@ -238,21 +244,45 @@ struct BPMLFO2 : Module {
 	// - onReset, onRandomize, onCreate, onDelete: implements special behavior when user clicks these from the context menu
 };
 
+json_t *BPMLFO2::dataToJson()  {
+	json_t *rootJ = json_object();
+			
+	json_object_set_new(rootJ, "phaseQuantized", json_boolean(phaseQuantized));
+	json_object_set_new(rootJ, "clockMode", json_boolean(clockMode));
+
+	return rootJ;
+}
+
+void BPMLFO2::dataFromJson(json_t *rootJ) {
+	json_t *pqj = json_object_get(rootJ, "phaseQuantized");
+	if (pqj)
+		phaseQuantized = json_boolean_value(pqj);
+
+	json_t *cmj = json_object_get(rootJ, "clockMode");
+	if (cmj)
+		clockMode = json_boolean_value(cmj);
+}
 
 void BPMLFO2::process(const ProcessArgs &args) {
 
     timeElapsed += 1.0 / args.sampleRate;
 	if(inputs[CLOCK_INPUT].isConnected()) {
-		if(clockTrigger.process(inputs[CLOCK_INPUT].getVoltage())) {
-			if(firstClockReceived) {
-				duration = timeElapsed;
-				secondClockReceived = true;
-			}
-			timeElapsed = 0;
-			firstClockReceived = true;			
-		} else if(secondClockReceived && timeElapsed > duration) {  //allow absense of second clock to affect duration
-			duration = timeElapsed;				
-		}	
+		if(!params[CLOCK_MODE_PARAM].getValue()) {
+			double bpm = powf(2.0,clamp(inputs[CLOCK_INPUT].getVoltage(),-10.0f,10.0f)) * 120.0;
+			duration = 60.0 / bpm;
+		} else {
+			if(clockTrigger.process(inputs[CLOCK_INPUT].getVoltage())) {
+				if(firstClockReceived) {
+					duration = timeElapsed;
+					secondClockReceived = true;
+				}
+				timeElapsed = 0;
+				firstClockReceived = true;			
+			} else if(secondClockReceived && timeElapsed > duration) {  //allow absense of second clock to affect duration
+				duration = timeElapsed;				
+			}		
+		}
+			// fprintf(stderr, "duration  %f\n", duration);
 	} else {
 		duration = 0.0f;
 		firstClockReceived = false;
@@ -296,10 +326,15 @@ void BPMLFO2::process(const ProcessArgs &args) {
 	}
 	slowParamCount++;
 
-	if (quantizePhaseTrigger.process(params[QUANTIZE_PHASE_PARAM].getValue())) {
-		phase_quantized = !phase_quantized;
+	if (clockModeTrigger.process(params[CLOCK_MODE_PARAM].getValue())) {
+		clockMode = !clockMode;
 	}
-	lights[QUANTIZE_PHASE_LIGHT].value = phase_quantized;
+	lights[CLOCK_MODE_LIGHT].value = clockMode;
+
+	if (quantizePhaseTrigger.process(params[QUANTIZE_PHASE_PARAM].getValue())) {
+		phaseQuantized = !phaseQuantized;
+	}
+	lights[QUANTIZE_PHASE_LIGHT].value = phaseQuantized;
 
 	initialPhase = params[PHASE_PARAM].getValue();
 	if(inputs[PHASE_INPUT].isConnected()) {
@@ -310,7 +345,7 @@ void BPMLFO2::process(const ProcessArgs &args) {
 	else if (initialPhase < 0)
 		initialPhase += 1.0;	
 	phasePercentage = initialPhase;
-	if(phase_quantized) // Limit to 90 degree increments
+	if(phaseQuantized) // Limit to 90 degree increments
 		initialPhase = std::round(initialPhase * 4.0f) / 4.0f;
 	
 	
@@ -543,12 +578,14 @@ struct BPMLFO2Widget : ModuleWidget {
 		addParam(phaseParam);							
 		addParam(createParam<RoundReallySmallFWKnob>(Vec(92, 223), module, BPMLFO2::PHASE_CV_ATTENUVERTER_PARAM));
 		addParam(createParam<LEDButton>(Vec(75, 191), module, BPMLFO2::QUANTIZE_PHASE_PARAM));
+		addChild(createLight<LargeLight<BlueLight>>(Vec(76.5, 192.5), module, BPMLFO2::QUANTIZE_PHASE_LIGHT));
 		
 		
-		addParam(createParam<CKSS>(Vec(5, 262), module, BPMLFO2::OFFSET_PARAM));
-		addParam(createParam<CKSS>(Vec(35, 262), module, BPMLFO2::WAVESHAPE_PARAM));
-		addParam(createParam<CKSS>(Vec(65, 262), module, BPMLFO2::HOLD_CLOCK_BEHAVIOR_PARAM));
-		addParam(createParam<CKSS>(Vec(95, 262), module, BPMLFO2::HOLD_MODE_PARAM));
+		addParam(createParam<CKSS>(Vec(5, 262), module, BPMLFO2::CLOCK_MODE_PARAM));
+		addParam(createParam<CKSS>(Vec(28, 262), module, BPMLFO2::OFFSET_PARAM));
+		addParam(createParam<CKSS>(Vec(51, 262), module, BPMLFO2::WAVESHAPE_PARAM));
+		addParam(createParam<CKSS>(Vec(76, 262), module, BPMLFO2::HOLD_CLOCK_BEHAVIOR_PARAM));
+		addParam(createParam<CKSS>(Vec(99, 262), module, BPMLFO2::HOLD_MODE_PARAM));
 
 		addInput(createInput<FWPortInSmall>(Vec(30, 54), module, BPMLFO2::MULTIPLIER_INPUT));
 		addInput(createInput<FWPortInSmall>(Vec(93, 54), module, BPMLFO2::DIVISION_INPUT));
@@ -557,7 +594,7 @@ struct BPMLFO2Widget : ModuleWidget {
 		addInput(createInput<FWPortInSmall>(Vec(48, 202), module, BPMLFO2::SKEW_INPUT));
 		addInput(createInput<FWPortInSmall>(Vec(93, 202), module, BPMLFO2::PHASE_INPUT));
 
-		addInput(createInput<FWPortInSmall>(Vec(7, 312), module, BPMLFO2::CLOCK_INPUT));
+		addInput(createInput<FWPortInSmall>(Vec(9, 312), module, BPMLFO2::CLOCK_INPUT));
 		addInput(createInput<FWPortInSmall>(Vec(48, 312), module, BPMLFO2::RESET_INPUT));
 		addInput(createInput<FWPortInSmall>(Vec(80, 312), module, BPMLFO2::HOLD_INPUT));
 
@@ -568,8 +605,7 @@ struct BPMLFO2Widget : ModuleWidget {
 
 
 
-		addChild(createLight<LargeLight<BlueLight>>(Vec(76.5, 192.5), module, BPMLFO2::QUANTIZE_PHASE_LIGHT));
-		addChild(createLight<LargeLight<RedLight>>(Vec(100, 312), module, BPMLFO2::HOLD_LIGHT));
+		addChild(createLight<LargeLight<RedLight>>(Vec(100, 313.5), module, BPMLFO2::HOLD_LIGHT));
 	}
 };
 

@@ -18,6 +18,7 @@ struct BPMLFO : Module {
 		OFFSET_PARAM,	
 		HOLD_CLOCK_BEHAVIOR_PARAM,
 		HOLD_MODE_PARAM,
+		CLOCK_MODE_PARAM,
 		NUM_PARAMS
 	};
 	enum InputIds {
@@ -38,7 +39,7 @@ struct BPMLFO : Module {
 	};
 	enum LightIds {
 		QUANTIZE_PHASE_LIGHT,	
-		HOLD_LIGHT,
+		HOLD_LIGHT,		
 		NUM_LIGHTS
 	};	
 
@@ -137,8 +138,8 @@ struct BPMLFO : Module {
 	bool holding = false;
 	bool firstClockReceived = false;
 	bool secondClockReceived = false;
-	bool phase_quantized = false;
-
+	bool phaseQuantized = false;
+	
 	float sinOutputValue = 0.0;
 	float triOutputValue = 0.0;
 	float sawOutputValue = 0.0;
@@ -148,6 +149,8 @@ struct BPMLFO : Module {
 	float multiplierPercentage = 0;
 	float divisionPercentage = 0;
 	float phasePercentage = 0;
+
+	
 	
 
 
@@ -159,29 +162,53 @@ struct BPMLFO : Module {
 		configParam(DIVISION_CV_ATTENUVERTER_PARAM, -1.0, 1.0, 0.0,"Division CV Attenuation","%",0,100);
 		configParam(PHASE_PARAM, 0.0, 0.9999, 0.0,"Phase","°",0,360);
 		configParam(PHASE_CV_ATTENUVERTER_PARAM, -1.0, 1.0, 0.0,"Phase CV Attenuation","%",0,100);
-		configParam(QUANTIZE_PHASE_PARAM, 0.0, 1.0, 0.0);
-		configParam(OFFSET_PARAM, 0.0, 1.0, 1.0);
-		configParam(HOLD_CLOCK_BEHAVIOR_PARAM, 0.0, 1.0, 1.0);
-		configParam(HOLD_MODE_PARAM, 0.0, 1.0, 1.0);
+		configParam(QUANTIZE_PHASE_PARAM, 0.0, 1.0, 0.0,"Quantize Phase to 90°");
+		configParam(OFFSET_PARAM, 0.0, 1.0, 1.0,"5V/10V");
+		configParam(HOLD_CLOCK_BEHAVIOR_PARAM, 0.0, 1.0, 1.0,"Hold Clock Behavior");
+		configParam(HOLD_MODE_PARAM, 0.0, 1.0, 1.0,"Hold Mode");
+		configParam(CLOCK_MODE_PARAM, 0.0, 1.0, 1.0,"Clock Mode");
 
 		leftExpander.producerMessage = producerMessage;
 		leftExpander.consumerMessage = consumerMessage;
 	}
 
+	json_t *dataToJson() override {
+		json_t *rootJ = json_object();
+		        
+        json_object_set_new(rootJ, "phaseQuantized", json_boolean(phaseQuantized));
+        
+
+		return rootJ;
+	}
+
+	void dataFromJson(json_t *rootJ) override {
+		json_t *pqj = json_object_get(rootJ, "phaseQuantized");
+		if (pqj)
+			phaseQuantized = json_boolean_value(pqj);
+	}
+
+
 	void process(const ProcessArgs &args) override {
+
 
 		timeElapsed += 1.0 / args.sampleRate;
 		if(inputs[CLOCK_INPUT].isConnected()) {
-			if(clockTrigger.process(inputs[CLOCK_INPUT].getVoltage())) {
-				if(firstClockReceived) {
-					duration = timeElapsed;
-					secondClockReceived = true;
-				}
-				timeElapsed = 0;
-				firstClockReceived = true;			
-			} else if(secondClockReceived && timeElapsed > duration) {  //allow absense of second clock to affect duration
-				duration = timeElapsed;				
-			}		
+			if(!params[CLOCK_MODE_PARAM].getValue()) {
+				double bpm = powf(2.0,clamp(inputs[CLOCK_INPUT].getVoltage(),-10.0f,10.0f)) * 120.0;
+				duration = 60.0 / bpm;
+			} else {
+				if(clockTrigger.process(inputs[CLOCK_INPUT].getVoltage())) {
+					if(firstClockReceived) {
+						duration = timeElapsed;
+						secondClockReceived = true;
+					}
+					timeElapsed = 0;
+					firstClockReceived = true;			
+				} else if(secondClockReceived && timeElapsed > duration) {  //allow absense of second clock to affect duration
+					duration = timeElapsed;				
+				}		
+			}
+				// fprintf(stderr, "duration  %f\n", duration);
 		} else {
 			duration = 0.0f;
 			firstClockReceived = false;
@@ -212,9 +239,10 @@ struct BPMLFO : Module {
 		}
 
 		if (quantizePhaseTrigger.process(params[QUANTIZE_PHASE_PARAM].getValue())) {
-			phase_quantized = !phase_quantized;
+			phaseQuantized = !phaseQuantized;
 		}
-		lights[QUANTIZE_PHASE_LIGHT].value = phase_quantized;
+		lights[QUANTIZE_PHASE_LIGHT].value = phaseQuantized;
+
 
 		initialPhase = params[PHASE_PARAM].getValue();
 		if(inputs[PHASE_INPUT].isConnected()) {
@@ -225,7 +253,7 @@ struct BPMLFO : Module {
 		else if (initialPhase < 0)
 			initialPhase += 1.0;	
 		phasePercentage = initialPhase;
-		if(phase_quantized) // Limit to 90 degree increments
+		if(phaseQuantized) // Limit to 90 degree increments
 			initialPhase = std::round(initialPhase * 4.0f) / 4.0f;
 		
 		oscillator.offset = (params[OFFSET_PARAM].getValue() > 0.0);
@@ -411,10 +439,12 @@ struct BPMLFOWidget : ModuleWidget {
 		addParam(phaseParam);							
 		addParam(createParam<RoundReallySmallFWKnob>(Vec(48, 222), module, BPMLFO::PHASE_CV_ATTENUVERTER_PARAM));
 		addParam(createParam<LEDButton>(Vec(31, 192), module, BPMLFO::QUANTIZE_PHASE_PARAM));
+		addChild(createLight<LargeLight<BlueLight>>(Vec(32.5, 193.5), module, BPMLFO::QUANTIZE_PHASE_LIGHT));		
 
-		addParam(createParam<CKSS>(Vec(10, 262), module, BPMLFO::OFFSET_PARAM));
-		addParam(createParam<CKSS>(Vec(50, 262), module, BPMLFO::HOLD_CLOCK_BEHAVIOR_PARAM));
-		addParam(createParam<CKSS>(Vec(90, 262), module, BPMLFO::HOLD_MODE_PARAM));
+		addParam(createParam<CKSS>(Vec(8, 262), module, BPMLFO::CLOCK_MODE_PARAM));
+		addParam(createParam<CKSS>(Vec(38, 262), module, BPMLFO::OFFSET_PARAM));
+		addParam(createParam<CKSS>(Vec(68, 262), module, BPMLFO::HOLD_CLOCK_BEHAVIOR_PARAM));
+		addParam(createParam<CKSS>(Vec(98, 262), module, BPMLFO::HOLD_MODE_PARAM));
 
 		addInput(createInput<FWPortInSmall>(Vec(30, 54), module, BPMLFO::MULTIPLIER_INPUT));
 		addInput(createInput<FWPortInSmall>(Vec(93, 54), module, BPMLFO::DIVISION_INPUT));
@@ -422,17 +452,18 @@ struct BPMLFOWidget : ModuleWidget {
 		
 		addInput(createInput<FWPortInSmall>(Vec(49, 202), module, BPMLFO::PHASE_INPUT));
 
-		addInput(createInput<FWPortInSmall>(Vec(7, 312), module, BPMLFO::CLOCK_INPUT));
+		addInput(createInput<FWPortInSmall>(Vec(9, 312), module, BPMLFO::CLOCK_INPUT));
 		addInput(createInput<FWPortInSmall>(Vec(48, 312), module, BPMLFO::RESET_INPUT));
 		addInput(createInput<FWPortInSmall>(Vec(80, 312), module, BPMLFO::HOLD_INPUT));
 
+		
 		addOutput(createOutput<FWPortOutSmall>(Vec(5, 345), module, BPMLFO::SIN_OUTPUT));
 		addOutput(createOutput<FWPortOutSmall>(Vec(35, 345), module, BPMLFO::TRI_OUTPUT));
 		addOutput(createOutput<FWPortOutSmall>(Vec(65, 345), module, BPMLFO::SAW_OUTPUT));
 		addOutput(createOutput<FWPortOutSmall>(Vec(95, 345), module, BPMLFO::SQR_OUTPUT));
 
-		addChild(createLight<LargeLight<BlueLight>>(Vec(32.5, 193.5), module, BPMLFO::QUANTIZE_PHASE_LIGHT));		
-		addChild(createLight<LargeLight<RedLight>>(Vec(100, 312), module, BPMLFO::HOLD_LIGHT));
+
+		addChild(createLight<LargeLight<RedLight>>(Vec(100, 313.5), module, BPMLFO::HOLD_LIGHT));
 	}
 
 };

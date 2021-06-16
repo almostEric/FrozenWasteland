@@ -1,3 +1,6 @@
+### 1.20.3 (2021-06-16)
+- Added BPM/Clock mode to BPM LFOs
+
 ### 1.20.2 (2021-05-30)
 - Fixed Portland Weather clear buffer
 - Added Mode to QAR Conditional Expander

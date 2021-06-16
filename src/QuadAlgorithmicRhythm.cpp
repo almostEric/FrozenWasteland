@@ -241,6 +241,7 @@ struct QuadAlgorithmicRhythm : Module {
     double lastSwingDuration[TRACK_COUNT];
 
 	bool expanderDataChanged[TRACK_COUNT] = {0};
+	bool expanderRecalcNeeded[TRACK_COUNT] = {0};
 
 //Stuff for Advanced Rhythms
 	int lastAlgorithmSetting[TRACK_COUNT] = {0};
@@ -646,9 +647,9 @@ struct QuadAlgorithmicRhythm : Module {
 	}
 
 	void toggleManualBeat(int trackNumber, int8_t stepNumber,bool accent) {
-		for(uint8_t i=0;i<stepsCount[i];i++) {
-			fprintf(stderr, "------- track:%i step:%i  beat:%u  accent:%u\n", trackNumber, i, getManualBeat(trackNumber,i),getManualAccent(trackNumber,i));
-		}
+		// for(uint8_t i=0;i<stepsCount[i];i++) {
+		// 	fprintf(stderr, "------- track:%i step:%i  beat:%u  accent:%u\n", trackNumber, i, getManualBeat(trackNumber,i),getManualAccent(trackNumber,i));
+		// }
 
 		if(accent) {
 			// stepNumber -= lastOffsetSetting[trackNumber];
@@ -665,7 +666,7 @@ struct QuadAlgorithmicRhythm : Module {
 					}
 				}
 				if(bl >= 0) {
-					fprintf(stderr, "changing accent on track:%i step:%u beat:%i rotation:%i \n", trackNumber, stepNumber,bl,lastAccentRotationSetting[trackNumber]);
+					// fprintf(stderr, "changing accent on track:%i step:%u beat:%i rotation:%i \n", trackNumber, stepNumber,bl,lastAccentRotationSetting[trackNumber]);
 					int accentNumber = (bl - lastAccentRotationSetting[trackNumber]);
 					if(accentNumber < 0)
 						accentNumber += beatCount[trackNumber];
@@ -683,7 +684,7 @@ struct QuadAlgorithmicRhythm : Module {
 			uint8_t index = stepNumber >> 2;
 			uint8_t bitPosition = stepNumber & 0x0F;
 			manualBeatMatrix[trackNumber][index]  ^= 1UL << bitPosition;
-		fprintf(stderr, "track:%i step:%u index:%u bit:%u  value:%u \n", trackNumber, stepNumber, index,bitPosition,manualBeatMatrix[trackNumber][index]);
+		// fprintf(stderr, "track:%i step:%u index:%u bit:%u  value:%u \n", trackNumber, stepNumber, index,bitPosition,manualBeatMatrix[trackNumber][index]);
 		}
 
 		dirty[trackNumber] = true;
@@ -1538,7 +1539,7 @@ struct QuadAlgorithmicRhythm : Module {
 			float *messagesFromExpanders = (float*)rightExpander.consumerMessage;
 
 			for(int i = 0;i<TRACK_COUNT;i++) {
-				expanderDataChanged[i] = messagesFromExpanders[i] || (!QARExpanderDisconnectReset); //If an expander first gets hooked up get data changes
+				expanderDataChanged[i] = messagesFromExpanders[i] || expanderRecalcNeeded[i] || (!QARExpanderDisconnectReset); //If an expander first gets hooked up get data changes
 			}
 
 			QARExpanderDisconnectReset = true;
@@ -1620,7 +1621,7 @@ struct QuadAlgorithmicRhythm : Module {
 
 			//Process Groove Expander Stuff									
 			for(int i = 0; i < TRACK_COUNT; i++) {
-				if(expanderDataChanged[i]) {				
+				if(expanderDataChanged[i] || expanderRecalcNeeded[i]) {				
 					for(int j = 0; j < stepsCount[i]; j++) { //reset all swing
 						workingSwingMatrix[i][j] = 0.0;
 					}
@@ -1761,7 +1762,7 @@ struct QuadAlgorithmicRhythm : Module {
 			//set calculated probability and swing 
 			//switch to std::copy
 			for(int i = 0; i < TRACK_COUNT; i++) {
-				if(expanderDataChanged[i]) {
+				if(expanderDataChanged[i] || expanderRecalcNeeded[i]) {
 					totalIrrationalAdjustment[i] = 1.0;
 					double runningTotal = 0.0;
 					for(int j = 0; j < stepsCount[i]; j++) { 
@@ -1775,6 +1776,7 @@ struct QuadAlgorithmicRhythm : Module {
 					}
 					totalIrrationalAdjustment[i] = runningTotal / stepsCount[i];
 				}
+				expanderRecalcNeeded[i] = false;
 			}
 											
 		} else {
@@ -2129,13 +2131,15 @@ struct QuadAlgorithmicRhythm : Module {
 			if(subBeatIndex[trackNumber] >= subBeatLength[trackNumber]) { 
 				subBeatIndex[trackNumber] = 0;
 				grooveEocPulse[trackNumber].trigger(pulseLength);
+				expanderRecalcNeeded[trackNumber] = true;
 			}
 		} else if(trackSwingUsingDivs[trackNumber] && beatMatrix[trackNumber][beatIndex[trackNumber]] == true) {
 			subBeatIndex[trackNumber]++;
 			if(subBeatIndex[trackNumber] >= subBeatLength[trackNumber]) { 
 				subBeatIndex[trackNumber] = 0;
 				grooveEocPulse[trackNumber].trigger(pulseLength);
-				}
+				expanderRecalcNeeded[trackNumber] = true;
+			}
 		}
 
 

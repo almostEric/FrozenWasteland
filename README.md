@@ -7,6 +7,7 @@ A collection of unusual plugins that will add a certain coolness to your patches
 ![BPM LFO](./doc/bpmlfo.png)
 
 - Tempo Sync'd LFO.
+- Can be either clock driven, or use the BPM output standard of Clockd
 - CV Control of Time Multiplication/Division to create LFOs sync'd to some ratio of clock
 - Phase Control allows LFOs to be offset (cv controllable). 90° button limits offset to 0, 90, 180, 270 degrees.
 - Pairs well with the Quad Algorithmic Rhythm
@@ -18,6 +19,7 @@ A collection of unusual plugins that will add a certain coolness to your patches
 ![BPM LFO](./doc/bpmlfo2.png)
 
 - Variation of original BPM LFO.
+- Can be either clock driven, or use the BPM output standard of Clockd
 - CV Control of Time Multiplication/Division and Wave Shape
 - Slope control interpolates between selected waveform and a sin wave
 - Skew either moves between sawtooth and triangle waves or controls duty cycle of square wave
