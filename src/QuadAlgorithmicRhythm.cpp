@@ -309,7 +309,7 @@ struct QuadAlgorithmicRhythm : Module {
 	int lastScene = 0;
 	int lastCVScene = 0;
 	bool saveMode = false;
-	float sceneData[NBR_SCENES][75] = {{0}};
+	float sceneData[NBR_SCENES][79] = {{0}};
 	int sceneChangeMessage = 0;
 
 	bool hardReset = false;
@@ -605,17 +605,18 @@ struct QuadAlgorithmicRhythm : Module {
 		sceneData[scene][1] = masterTrack;
 		sceneData[scene][2] = params[META_STEP_PARAM].getValue();
 		for(int trackNumber=0;trackNumber<TRACK_COUNT;trackNumber++) {
-			sceneData[scene][trackNumber*18+3] = algorithmMatrix[trackNumber];
-			sceneData[scene][trackNumber*18+4] = params[(trackNumber * 8) + STEPS_1_PARAM].getValue();
-			sceneData[scene][trackNumber*18+5] = params[(trackNumber * 8) + DIVISIONS_1_PARAM].getValue();
-			sceneData[scene][trackNumber*18+6] = params[(trackNumber * 8) + OFFSET_1_PARAM].getValue();
-			sceneData[scene][trackNumber*18+7] = params[(trackNumber * 8) + PAD_1_PARAM].getValue();
-			sceneData[scene][trackNumber*18+8] = params[(trackNumber * 8) + ACCENTS_1_PARAM].getValue();
-			sceneData[scene][trackNumber*18+9] = params[(trackNumber * 8) + ACCENT_ROTATE_1_INPUT].getValue();
-			sceneData[scene][trackNumber*18+10] = trackIndependent[trackNumber];
+			sceneData[scene][trackNumber*19+3] = algorithmMatrix[trackNumber];
+			sceneData[scene][trackNumber*19+4] = params[(trackNumber * 8) + STEPS_1_PARAM].getValue();
+			sceneData[scene][trackNumber*19+5] = params[(trackNumber * 8) + DIVISIONS_1_PARAM].getValue();
+			sceneData[scene][trackNumber*19+6] = params[(trackNumber * 8) + OFFSET_1_PARAM].getValue();
+			sceneData[scene][trackNumber*19+7] = params[(trackNumber * 8) + PAD_1_PARAM].getValue();
+			sceneData[scene][trackNumber*19+8] = params[(trackNumber * 8) + ACCENTS_1_PARAM].getValue();
+			sceneData[scene][trackNumber*19+9] = params[(trackNumber * 8) + ACCENT_ROTATE_1_INPUT].getValue();
+			sceneData[scene][trackNumber*19+10] = trackIndependent[trackNumber];
+			sceneData[scene][trackNumber*19+11] = accentAlgorithmMatrix[trackNumber];
 			for(int index=0;index<5;index++) {
-				sceneData[scene][trackNumber*18+11+index] = manualBeatMatrix[trackNumber][index];
-				sceneData[scene][trackNumber*18+16+index] = manualAccentMatrix[trackNumber][index];
+				sceneData[scene][trackNumber*19+12+index] = manualBeatMatrix[trackNumber][index];
+				sceneData[scene][trackNumber*19+17+index] = manualAccentMatrix[trackNumber][index];
 			}
 		}
 	}
@@ -626,17 +627,18 @@ struct QuadAlgorithmicRhythm : Module {
 			constantTime = masterTrack > 0;
 			params[META_STEP_PARAM].setValue(sceneData[scene][2]);
 			for(int trackNumber=0;trackNumber<TRACK_COUNT;trackNumber++) {
-				algorithmMatrix[trackNumber] = sceneData[scene][trackNumber*18+3];
-				params[(trackNumber * 8) + STEPS_1_PARAM].setValue(sceneData[scene][trackNumber*18+4]);
-				params[(trackNumber * 8) + DIVISIONS_1_PARAM].setValue(sceneData[scene][trackNumber*18+5]);
-				params[(trackNumber * 8) + OFFSET_1_PARAM].setValue(sceneData[scene][trackNumber*18+6]);
-				params[(trackNumber * 8) + PAD_1_PARAM].setValue(sceneData[scene][trackNumber*18+7]);
-				params[(trackNumber * 8) + ACCENTS_1_PARAM].setValue(sceneData[scene][trackNumber*18+8]);
-				params[(trackNumber * 8) + ACCENT_ROTATE_1_INPUT].setValue(sceneData[scene][trackNumber*18+9]);
-				trackIndependent[trackNumber] = sceneData[scene][trackNumber*18+10];
+				algorithmMatrix[trackNumber] = sceneData[scene][trackNumber*19+3];
+				params[(trackNumber * 8) + STEPS_1_PARAM].setValue(sceneData[scene][trackNumber*19+4]);
+				params[(trackNumber * 8) + DIVISIONS_1_PARAM].setValue(sceneData[scene][trackNumber*19+5]);
+				params[(trackNumber * 8) + OFFSET_1_PARAM].setValue(sceneData[scene][trackNumber*19+6]);
+				params[(trackNumber * 8) + PAD_1_PARAM].setValue(sceneData[scene][trackNumber*19+7]);
+				params[(trackNumber * 8) + ACCENTS_1_PARAM].setValue(sceneData[scene][trackNumber*19+8]);
+				params[(trackNumber * 8) + ACCENT_ROTATE_1_INPUT].setValue(sceneData[scene][trackNumber*19+9]);
+				trackIndependent[trackNumber] = sceneData[scene][trackNumber*19+10];
+				accentAlgorithmMatrix[trackNumber] = sceneData[scene][trackNumber*19+11];
 				for(int index=0;index<5;index++) {
-					manualBeatMatrix[trackNumber][index] = sceneData[scene][trackNumber*18+11+index];
-					manualAccentMatrix[trackNumber][index] = sceneData[scene][trackNumber*18+16+index];
+					manualBeatMatrix[trackNumber][index] = sceneData[scene][trackNumber*19+12+index];
+					manualAccentMatrix[trackNumber][index] = sceneData[scene][trackNumber*19+17+index];
 				}
 				dirty[trackNumber] = true;
 			}
@@ -2011,7 +2013,7 @@ struct QuadAlgorithmicRhythm : Module {
 
 
 		for(int scene=0;scene<NBR_SCENES;scene++) {
-			for(int i=0;i<75;i++) {
+			for(int i=0;i<79;i++) {
 				std::string buf = "sceneData-" + std::to_string(scene) + "-" + std::to_string(i) ;
 				json_object_set_new(rootJ, buf.c_str(), json_real(sceneData[scene][i]));
 			}
@@ -2088,7 +2090,7 @@ struct QuadAlgorithmicRhythm : Module {
 
 
 		for(int scene=0;scene<NBR_SCENES;scene++) {
-			for(int i=0;i<75;i++) {
+			for(int i=0;i<79;i++) {
 				std::string buf = "sceneData-" + std::to_string(scene) + "-" + std::to_string(i) ;
 				json_t *sdJ = json_object_get(rootJ, buf.c_str());
 				if (json_real_value(sdJ)) {
@@ -2227,7 +2229,7 @@ struct QuadAlgorithmicRhythm : Module {
 				manualAccentMatrix[i][j] = 0;
 			}
 			for(int scene=0;scene<NBR_SCENES;scene++) {
-				std::fill(sceneData[scene], sceneData[scene]+75, 0.0);
+				std::fill(sceneData[scene], sceneData[scene]+79, 0.0);
 			}
 			
 		}	
