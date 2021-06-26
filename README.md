@@ -317,6 +317,7 @@ A collection of unusual plugins that will add a certain coolness to your patches
 - - If a value > 1, then powers of the factor up to that value are used (ie if factor is 5 and numerator/denominator value is 3, then combinations 5, 25 and 125 are used)
 - - Example: If 2 and 3 are used for numerators and 5 and 7 are used for denominators, pitch ratios generated are 2/5,2/7,2/35,3/5,3/7,3/35,6/5,6/7 and 6/35.
 - - ratios < 1 and > 2 are scaled to fit within octave.
+- - Tempering allows ratios using a factor to be stretched or shrunk
 - - This can potentially generate a *LOT* of pitch ratios
 - Second Method Equal Divisions of Octaves (EDOs)
 - - Divides the octave into an equal number of pitches - 12 is the standard western equal temperment scale

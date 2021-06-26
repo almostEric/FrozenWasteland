@@ -2255,9 +2255,11 @@ struct ProbablyNoteMNDisplay : TransparentWidget {
             nvgText(args.vg, pos.x+149, pos.y+i*34.5, text, NULL);
 
 			if(module->factorsTempering[i] == 0) 
-				nvgFillColor(args.vg, nvgRGBA(0xff, 0xff, 0x00, 0x8f));
-			else
 				nvgFillColor(args.vg, nvgRGBA(0x4a, 0xc3, 0x27, 0xff));
+			else if(module->factorsTempering[i] > 0)
+				nvgFillColor(args.vg, nvgRGBA(0x37, 0x6a, 0xf3, 0xff));
+			else
+				nvgFillColor(args.vg, nvgRGBA(0xc3, 0x27, 0x27, 0xff));
             snprintf(text, sizeof(text), "%2.2f", module->factorsTempering[i]);
             nvgText(args.vg, pos.x+227, pos.y+i*34.5, text, NULL);
 

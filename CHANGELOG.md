@@ -1,3 +1,7 @@
+### 1.20.4 (2021-06-26)
+-- Added Factor Tempering to Probably Not(e)-Math Nerd
+-- QAR now saves Accent Alogrithm in scenes
+
 ### 1.20.3 (2021-06-16)
 - Added BPM/Clock mode to BPM LFOs
 
