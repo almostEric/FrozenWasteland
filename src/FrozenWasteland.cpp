@@ -53,6 +53,7 @@ void init(rack::Plugin *p) {
 	p->addModel(modelSeedsOfChange);
 	p->addModel(modelSeedsOfChangeCVExpander);
 	p->addModel(modelSeedsOfChangeGateExpander);
+	p->addModel(modelSliceOfLife);
 	p->addModel(modelStringTheory);
 	p->addModel(modelRouletteLFO);
 	p->addModel(modelSeriouslySlowEG);

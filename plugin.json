@@ -1,7 +1,7 @@
 {
 	"slug": "FrozenWasteland",
 	"name": "Frozen Wasteland",
-	"version": "1.20.4",
+	"version": "1.21.0",
 	"author": "almostEric",
 	"license": "GPL-3.0-only",
 	"authorEmail": "almostEric@frozenwastelandmodules.com",
@@ -16,13 +16,13 @@
 			"slug": "BPMLFO",
 			"name": "BPM LFO",
 			"description": "Beat Synchronized LFO",
-			"tags": ["LFO"]
+			"tags": ["Low-frequency oscillator"]
 		},
 		{
 			"slug": "BPMLFO2",
 			"name": "BPM LFO 2",
 			"description": "Beat Synchronized LFO with CV Waveshape",
-			"tags": ["LFO"]
+			"tags": ["Low-frequency oscillator"]
 		},
 		{
 			"slug": "BPMLFOPhaseExpander",
@@ -34,13 +34,13 @@
 			"slug": "CDCSeriouslySlowLFO",
 			"name": "CDC Seriously Slow LFO",
 			"description": "Slow LFO taken to absurdity",
-			"tags": ["LFO"]
+			"tags": ["Low-frequency oscillator"]
 		},
 		{
 			"slug": "DamianLillard",
 			"name": "Damian Lillard",
 			"description": "4-channel CV crossover/mixer",
-			"tags": ["VCA"]
+			"tags": ["Voltage-controlled amplifier"]
 		},
 		{
 		  "slug": "DrunkenRampage",
@@ -65,7 +65,7 @@
 			"slug": "EverlastingGlottalStopper",
 			"name": "Everlasting Glottal Stopper",
 			"description": "Vocal Tract simulating VCO",
-			"tags": ["VCO"]
+			"tags": ["Oscillator"]
 		},
 		{
 			"slug": "TheGardener",
@@ -77,7 +77,7 @@
 			"slug": "HairPick",
 			"name": "Hair Pick",
 			"description": "64 Tap Rhythmic Comb Filter",
-			"tags": ["VCF"]
+			"tags": ["Filter"]
 		},
 		{
 			"slug": "JustAPhaser",
@@ -89,7 +89,7 @@
 			"slug": "LissajousLFO",
 			"name":  "Lissajous LFO",
 			"description": "LFO based on interactions of 4 sine waves",
-			"tags": ["LFO"]
+			"tags": ["Low-frequency oscillator"]
 		},
 		{
 			"slug": "ManicCompression",
@@ -131,13 +131,13 @@
 			"slug": "PhasedLockedLoop",
 			"name": "Phased Locked Loop",
 			"description": "PLL attempts to follow input signals freqency",
-			"tags": ["VCO"]
+			"tags": ["Oscillator"]
 		},
 		{
 			"slug": "PortlandWeather",
 			"name": "Portland Weather",
 			"description": "16 tap rhythmic delay with per tap pitch shifting and filtering",
-			"tags": ["Delay", "Granular", "VCF"]
+			"tags": ["Delay", "Granular", "Filter"]
 		},
 		{
 			"slug": "ProbablyNote",
@@ -245,7 +245,7 @@
 			"slug": "RouletteLFO",
 			"name": "Roulette LFO",
 			"description": "LFO Based on based on rolling curves",
-			"tags": ["LFO"]
+			"tags": ["Low-frequency oscillator"]
 		},
 		{
 			"slug": "SeedsOfChange",
@@ -266,10 +266,16 @@
 			"tags": ["Expander","Random"]
 		},
 		{
+			"slug": "SliceOfLife",
+			"name": "Slice Of Life",
+			"description": "Wave Slicing VCO",
+			"tags": ["Oscillator"]
+		},
+		{
 			"slug": "StringTheory",
 			"name": "String Theory",
 			"description": "Karpus-Strong String Synthesis",
-			"tags": ["VCO"]
+			"tags": ["Oscillator"]
 		},
 		{
 			"slug": "SeriouslySlowEG",
@@ -281,13 +287,13 @@
 			"slug": "SeriouslySlowLFO",
 			"name": "Seriously Slow LFO",
 			"description": "LFO for modulating CV over *very* long time periods",
-			"tags": ["LFO"]
+			"tags": ["Low-frequency oscillator"]
 		},
 		{
 			"slug": "VoxInhumana",
 			"name": "Vox Inhumana",
 			"description": "Formant/Vowel Filter",
-			"tags": ["VCF"]
+			"tags": ["Filter"]
 		}		,
 		{
 			"slug": "VoxInhumanaExpander",

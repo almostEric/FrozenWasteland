@@ -48,6 +48,7 @@ extern Model *modelQuantussyCell;
 extern Model *modelSeedsOfChange;
 extern Model *modelSeedsOfChangeCVExpander;
 extern Model *modelSeedsOfChangeGateExpander;
+extern Model *modelSliceOfLife;
 extern Model *modelStringTheory;
 extern Model *modelRouletteLFO;
 extern Model *modelSeriouslySlowEG;

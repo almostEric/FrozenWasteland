@@ -557,6 +557,14 @@ When they are connected this way, the Clock, Mute and Reset signals, and Eoc out
 - The Seriously Slow LFO's new buddy
 - Basic Envelope Generator but on looooonnnnnnggggg time scales.
 
+## Slice of Life
+
+![Slice of Life](./doc/sol.png)
+- FW's interpretation of Future Sound System's OSC Recombination Engine Eurorack module
+
+- Best bet is to refer to this: https://www.futuresoundsystems.co.uk/returnosc2.html
+- PW Skew now has two modes - one like the original, the other where the frequency change is inverted
+
 ## String Theory VCO
 
 ![String Theory VCO](./doc/st.png)

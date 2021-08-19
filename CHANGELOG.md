@@ -1,3 +1,8 @@
+### 1.21.0 (2021=08-20)
+-- Added Slice of Life VCO Module
+-- Probably Not(e)-Math Nerd now supports Equal Step scales.
+-- Added note inspector to Math Nerd - hovering over a note will display info
+
 ### 1.20.4 (2021-06-26)
 -- Added Factor Tempering to Probably Not(e)-Math Nerd
 -- QAR now saves Accent Alogrithm in scenes

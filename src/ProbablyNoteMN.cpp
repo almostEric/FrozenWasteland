@@ -29,6 +29,8 @@
 #define NBR_ALGORITHMS 4
 #define NBR_SCALE_MAPPING 4
 #define NBR_TEMPERING_MODES 3
+#define NBR_EDO_MODES 3
+#define NBR_MOS_MODES 2
 
 //GOLOMB RULER
 #define NUM_RULERS 36
@@ -47,10 +49,14 @@ struct EFPitch {
   int   pitchType;
   double numerator;
   double denominator;
+  double tempering;
   double ratio;
   double pitch;
+  std::string mondo;
   double dissonance;
   float weighting;
+  float xPos;
+  float yPos;
   bool inUse;
   bool operator<(const EFPitch& a) const {
     return pitch < a.pitch;
@@ -109,12 +115,15 @@ struct ProbablyNoteMN : Module {
         NOTE_WEIGHT_PARAM = NOTE_ACTIVE_PARAM + MAX_NOTES,
 		NON_REPEATABILITY_PARAM = NOTE_WEIGHT_PARAM + MAX_NOTES,
 		NON_REPEATABILITY_CV_ATTENUVERTER_PARAM,
+		EQUAL_DIVISION_MODE_PARAM,
 		EQUAL_DIVISION_PARAM,
+		EQUAL_STEP_SIZE_PARAM,
 		EQUAL_DIVISION_CV_ATTENUVERTER_PARAM,
 		EDO_STEPS_PARAM,
 		EDO_STEPS_CV_ATTENUVERTER_PARAM,
 		EDO_WRAPS_PARAM,
 		EDO_WRAPS_CV_ATTENUVERTER_PARAM,
+		MOS_MODE_PARAM,
 		MOS_LARGE_STEPS_PARAM,
 		MOS_LARGE_STEPS_CV_ATTENUVERTER_PARAM,
 		MOS_SMALL_STEPS_PARAM,
@@ -161,6 +170,7 @@ struct ProbablyNoteMN : Module {
 		PITCH_RANDOMNESS_INPUT,
         NOTE_WEIGHT_INPUT,
 		NON_REPEATABILITY_INPUT = NOTE_WEIGHT_INPUT + MAX_NOTES,
+		EQUAL_DIVISION_MODE_INPUT,
 		EQUAL_DIVISION_INPUT,
 		EDO_STEPS_INPUT,
 		EDO_WRAPS_INPUT,
@@ -191,7 +201,9 @@ struct ProbablyNoteMN : Module {
         KEY_LOGARITHMIC_SCALE_LIGHT = SHIFT_MODE_LIGHT + 3,
 		PITCH_RANDOMNESS_GAUSSIAN_LIGHT = KEY_LOGARITHMIC_SCALE_LIGHT + 3,
 		SPREAD_MODE_LIGHT = PITCH_RANDOMNESS_GAUSSIAN_LIGHT + 3,
-		EDO_TEMPERING_LIGHT = SPREAD_MODE_LIGHT + 3,
+		EDO_MODE_LIGHT = SPREAD_MODE_LIGHT + 3,
+		MOS_MODE_LIGHT = EDO_MODE_LIGHT + 3,
+		EDO_TEMPERING_LIGHT = MOS_MODE_LIGHT + 3,
 		QUANTIZE_OCTAVE_SIZE_LIGHT = EDO_TEMPERING_LIGHT + 3,
 		QUANTIZE_MOS_RATIO_LIGHT = QUANTIZE_OCTAVE_SIZE_LIGHT + 3,
 		TRIGGER_POLYPHONIC_LIGHT = QUANTIZE_MOS_RATIO_LIGHT + 3,
@@ -202,9 +214,15 @@ struct ProbablyNoteMN : Module {
 		QUANTIZE_LOWER,
 		QUANTIZE_UPPER,
 	};
+	enum EqualDivisionModes {
+		EQUAL_DIVISION_EDES_MODE,
+		EQUAL_STEP_WITH_COMMA_EDES_MODE,
+		EQUAL_STEP_SET_OCTAVE_SIZE_EDES_MODE
+	};
 	enum PitchTypes {
 		RATIO_PITCH_TYPE,
 		EQUAL_DIVISION_PITCH_TYPE,
+		EQUAL_STEP_SIZE_PITCH_TYPE,
 		MOS_PITCH_TYPE,
 	};
 	enum Algorithms {
@@ -501,7 +519,7 @@ struct ProbablyNoteMN : Module {
 		{1,0,1,1,0,0,1,1,0,1,1,0}
 	}; 
 	
-	dsp::SchmittTrigger clockTrigger[POLYPHONY],clockModeTrigger,algorithmTrigger,edoTemperingTrigger,scaleMappingTrigger,useScaleWeightingTrigger,octaveScaleMappingTrigger,
+	dsp::SchmittTrigger clockTrigger[POLYPHONY],clockModeTrigger,algorithmTrigger,edoModeTrigger,mosModeTrigger,edoTemperingTrigger,scaleMappingTrigger,useScaleWeightingTrigger,octaveScaleMappingTrigger,
 						octaveWrapAroundTrigger,shiftScalingTrigger,keyScalingTrigger,pitchRandomnessGaussianTrigger,spreadModeTrigger, 
 						quantizeOctaveSizeTrigger,quantizeMosRatioTrigger,setRootNoteTrigger; 
 	dsp::PulseGenerator noteChangePulse[POLYPHONY];
@@ -517,13 +535,18 @@ struct ProbablyNoteMN : Module {
 	float actualProbability[POLYPHONY][MAX_PITCHES] = {{0.0f}};
 	int controlIndex[MAX_NOTES] = {0};
 
+	int equalDivisionMode = 0; //0 = equal divisions, 1=equal steps within octave, 2 = equal steps with octave adjust 
 	int equalDivisions = 0;
 	int lastEqualDivisions = 0;
 	int equalDivisionSteps = 1;
 	int lastEqualDivisionSteps = 1;
 	int equalDivisionWraps = 1;
 	int lastEqualDivisionWraps = 1;
-
+	int lastEqualDivisionMode = -1;
+	float equalStepSize = 0;
+	float lastEqualStepSize = 0;
+	
+	int mosMode = 0; //0 = MOS by christoff words, 1=MOS by prime factors 
 	int mosLargeSteps = 0;
 	int lastMosLargeSteps = 0;
 	int mosSmallSteps = 0;
@@ -705,6 +728,7 @@ struct ProbablyNoteMN : Module {
 
 
 		configParam(ProbablyNoteMN::EQUAL_DIVISION_PARAM, 0.0, 300.0, 0.0,"# of Equal Divisions");
+		configParam(ProbablyNoteMN::EQUAL_STEP_SIZE_PARAM, 1.0, 300.0, 50.0,"Equal Step Size"," cents");
         configParam(ProbablyNoteMN::EQUAL_DIVISION_CV_ATTENUVERTER_PARAM, -1.0, 1.0, 0.0,"Equal Divisions CV Attenuation","%",0,100);
 		configParam(ProbablyNoteMN::EDO_STEPS_PARAM, 1.0, 100.0, 1.0,"# of Equal Division Steps");
         configParam(ProbablyNoteMN::EDO_STEPS_CV_ATTENUVERTER_PARAM, -1.0, 1.0, 0.0,"Equal Division Steps CV Attenuation","%",0,100);
@@ -836,28 +860,75 @@ struct ProbablyNoteMN : Module {
 		//Do Equal Divisions First
 
 		int eodCount = clamp(equalDivisionWraps * equalDivisions / equalDivisionSteps,0,equalDivisions);
+		float stepCount = 1200.0 / equalStepSize; // this should become a float
 		uint16_t divisionCount = 0;
-		for(uint16_t divisionIndex = 0;divisionIndex<eodCount;divisionIndex++) {
-			if(divisionIndex > 0) {
-				EFPitch efPitch;
-				efPitch.pitchType = EQUAL_DIVISION_PITCH_TYPE;
-				double numerator = divisionCount;
-				double denominator = equalDivisions;        
-				double ratio = numerator / denominator;
-				efPitch.ratio = pow(2,ratio);
-				if(IsUniqueRatio(efPitch.ratio)) {
-					double gcd = GCD(numerator,denominator);
-					efPitch.numerator = numerator / gcd;
-					efPitch.denominator = denominator / gcd;
-					double pitchInCents = 1200 * ratio; 
-					efPitch.pitch = pitchInCents;
-					if(edoTempering > 0)
-						temperingPitches.push_back(efPitch);
-					else
-						efPitches.push_back(efPitch);
+		switch(equalDivisionMode) {
+			case EQUAL_DIVISION_EDES_MODE :
+			for(uint16_t divisionIndex = 0;divisionIndex<eodCount;divisionIndex++) {
+				if(divisionIndex > 0) {
+					EFPitch efPitch;
+					efPitch.pitchType = EQUAL_DIVISION_PITCH_TYPE;
+					double numerator = divisionCount;
+					double denominator = equalDivisions;        
+					double ratio = numerator / denominator;
+					efPitch.ratio = pow(2,ratio);
+					if(IsUniqueRatio(efPitch.ratio)) {
+						double gcd = GCD(numerator,denominator);
+						efPitch.numerator = numerator / gcd;
+						efPitch.denominator = denominator / gcd;
+						double pitchInCents = 1200 * ratio; 
+						efPitch.pitch = pitchInCents;
+						if(edoTempering > 0)
+							temperingPitches.push_back(efPitch);
+						else
+							efPitches.push_back(efPitch);
+					}
 				}
+				divisionCount = (divisionCount + equalDivisionSteps) % equalDivisions;
 			}
-			divisionCount = (divisionCount + equalDivisionSteps) % equalDivisions;
+			break;
+			case EQUAL_STEP_WITH_COMMA_EDES_MODE :
+				for(uint16_t stepIndex = 0;stepIndex<stepCount;stepIndex++) {
+					if(stepIndex > 0) {
+						EFPitch efPitch;
+						efPitch.pitchType = EQUAL_STEP_SIZE_PITCH_TYPE;
+						double numerator = stepIndex*equalStepSize;
+						double denominator = 1200;        
+						efPitch.ratio = 1200/equalStepSize*float(stepIndex);
+						if(IsUniqueRatio(efPitch.ratio)) {
+							double gcd = GCD(numerator,denominator);
+							efPitch.numerator = numerator / gcd;
+							efPitch.denominator = denominator / gcd;
+							efPitch.pitch = equalStepSize*float(stepIndex);
+							if(edoTempering > 0)
+								temperingPitches.push_back(efPitch);
+							else
+								efPitches.push_back(efPitch);
+						}
+					}
+				}
+			break;
+			case EQUAL_STEP_SET_OCTAVE_SIZE_EDES_MODE :
+				for(uint16_t stepIndex = 0;stepIndex<stepCount;stepIndex++) {
+					if(stepIndex > 0) {
+						EFPitch efPitch;
+						efPitch.pitchType = EQUAL_STEP_SIZE_PITCH_TYPE;
+						double numerator = stepIndex*equalStepSize;
+						double denominator = 1200;        
+						efPitch.ratio = 1200/equalStepSize*float(stepIndex);
+						if(IsUniqueRatio(efPitch.ratio)) {
+							double gcd = GCD(numerator,denominator);
+							efPitch.numerator = numerator / gcd;
+							efPitch.denominator = denominator / gcd;
+							efPitch.pitch = equalStepSize*float(stepIndex);
+							if(edoTempering > 0)
+								temperingPitches.push_back(efPitch);
+							else
+								efPitches.push_back(efPitch);
+						}
+					}
+				}
+			break;
 		}
 		std::sort(temperingPitches.begin(), temperingPitches.end());
 
@@ -866,12 +937,17 @@ struct ProbablyNoteMN : Module {
 		int numberLargeSteps = mosLargeSteps;
 		int numberSmallSteps = mosSmallSteps;
 		int totalSteps = 0;
-		double currentRatio = mosRatio;
+		double currentRatio = mosRatio * mosLevels; //Ensure that our ratios don't go to infinity
 		for(int l = 0;l<mosLevels;l++) {
 			totalSteps = numberLargeSteps + numberSmallSteps;
-			word = christoffelWords.Generate(totalSteps,mosSmallSteps);
+			word = christoffelWords.Generate(totalSteps,numberSmallSteps);
+			if(word == "unknown") {
+				break;
+			}
+					// fprintf(stderr, "word:%s l:%i  s:%i  r:%f\n", word.c_str(),numberLargeSteps,numberSmallSteps,currentRatio);
+
 			if(l < mosLevels - 1.0) { // don't calculate this for last level
-				if(currentRatio < 2) {
+				if(currentRatio <= 2) {
 					numberSmallSteps = numberLargeSteps;
 					numberLargeSteps = totalSteps;
 					currentRatio = 1.0 / (currentRatio - 1.0);
@@ -910,7 +986,6 @@ struct ProbablyNoteMN : Module {
 			invalidMos = true;
 		}
 
-		// fprintf(stderr, "word:%s  compare:%i  invalid:%i\n", word.c_str(),compare,invalidMos);
 
 
         //Check that we aren't getting too crazy - Simplifying out for now 
@@ -976,7 +1051,6 @@ struct ProbablyNoteMN : Module {
 					efPitch.pitchType = RATIO_PITCH_TYPE;
 					efPitch.numerator = numerator.factor;
 					efPitch.denominator = denominator.factor;        
-					// double ratio = (numerator.factor / denominator.factor) * (numerator.tempering / denominator.tempering);
 					double ratio = (numerator.factor / denominator.factor) ;
 					efPitch.ratio = ratio;
 					if(numerator.factor > 0 && IsUniqueRatio(ratio)) {
@@ -984,6 +1058,7 @@ struct ProbablyNoteMN : Module {
 						double gcd = GCD(efPitch.numerator,efPitch.denominator);
 						efPitch.numerator = efPitch.numerator / gcd;
 						efPitch.denominator = efPitch.denominator / gcd;
+						efPitch.tempering = numerator.tempering + denominator.tempering;
 						double pitchInCents = 1200 * std::log2f(ratio) + (numerator.tempering + denominator.tempering);
 						efPitch.pitch = pitchInCents;
 						efPitches.push_back(efPitch);
@@ -1247,6 +1322,7 @@ struct ProbablyNoteMN : Module {
 						rfPitch.denominator = denominator / gcd;
 						double pitchInCents = 1200 * std::log2f(ratio);; 
 						rfPitch.pitch = pitchInCents;
+						rfPitch.tempering = reducedEfPitches[i].tempering + (std::log2f(ratio/reducedEfPitches[i].ratio) * 1200.0);
 						double dissonance = CalculateDissonance(rfPitch.ratio * octaveScaleConstant);
 						rfPitch.dissonance = dissonance;
 						if(temperMode == TEMPER_ALL_PITCHES_TEMPERING)
@@ -1344,6 +1420,7 @@ struct ProbablyNoteMN : Module {
 		json_object_set_new(rootJ, "scaleMappingMode", json_integer((int) scaleMappingMode));
 		json_object_set_new(rootJ, "useScaleWeighting", json_integer((bool) useScaleWeighting));
 		json_object_set_new(rootJ, "edoTempering", json_integer(edoTempering));
+		json_object_set_new(rootJ, "equalDivisionMode", json_integer(equalDivisionMode));
 		json_object_set_new(rootJ, "quantizeMosRatio", json_boolean(quantizeMosRatio));
 		json_object_set_new(rootJ, "quantizeOctaveSize", json_boolean(quantizeOctaveSize));
 		json_object_set_new(rootJ, "octaveScaleMapping", json_integer((bool) octaveScaleMapping));
@@ -1367,6 +1444,11 @@ struct ProbablyNoteMN : Module {
 		json_t *ctTd = json_object_get(rootJ, "triggerDelayEnabled");
 		if (ctTd)
 			triggerDelayEnabled = json_integer_value(ctTd);
+
+		json_t *sumEDM = json_object_get(rootJ, "equalDivisionMode");
+		if (sumEDM) {
+			equalDivisionMode = json_integer_value(sumEDM);			
+		}
 
 		json_t *sumMosR = json_object_get(rootJ, "quantizeMosRatio");
 		if (sumMosR) {
@@ -1460,6 +1542,8 @@ struct ProbablyNoteMN : Module {
 			for(int j=0;j<actualNSteps[i];j++) {
 				scalefile << " ";
 				scalefile << factorNames[i];
+				scalefile << " Tempering: ";
+				scalefile << std::to_string(factorsTempering[i]);
 			}
 		}
 		scalefile << "\n";
@@ -1469,6 +1553,8 @@ struct ProbablyNoteMN : Module {
 			for(int j=0;j<actualDSteps[i];j++) {
 				scalefile << " ";
 				scalefile << factorNames[i];
+				scalefile << " Tempering: ";
+				scalefile << std::to_string(factorsTempering[i]);
 			}
 		}
 		scalefile << "\n";
@@ -1533,6 +1619,14 @@ struct ProbablyNoteMN : Module {
 
 	void process(const ProcessArgs &args) override {
 
+        if (edoModeTrigger.process(params[EQUAL_DIVISION_MODE_PARAM].getValue())) {
+			equalDivisionMode = (equalDivisionMode + 1) % NBR_EDO_MODES;
+		}		
+		lights[EDO_MODE_LIGHT].value = equalDivisionMode > 1;
+		lights[EDO_MODE_LIGHT + 1].value = equalDivisionMode > 0;
+		lights[EDO_MODE_LIGHT + 2].value = 0;
+
+
         if (edoTemperingTrigger.process(params[EDO_TEMPERING_PARAM].getValue() + inputs[EDO_TEMPERING_INPUT].getVoltage())) {
 			edoTempering = (edoTempering + 1) % NBR_TEMPERING_MODES;
 		}		
@@ -1553,6 +1647,14 @@ struct ProbablyNoteMN : Module {
 				lights[EDO_TEMPERING_LIGHT + 2].value = 1.0;
 				break;
 		}
+
+		if (mosModeTrigger.process(params[MOS_MODE_PARAM].getValue())) {
+			mosMode = (mosMode + 1) % NBR_MOS_MODES;
+		}		
+		lights[MOS_MODE_LIGHT].value = 0;
+		lights[MOS_MODE_LIGHT + 1].value = mosMode > 0;
+		lights[MOS_MODE_LIGHT + 2].value = mosMode > 0;
+
 
         if (algorithmTrigger.process(params[NOTE_REDUCTION_ALGORITHM_PARAM].getValue() + inputs[NOTE_REDUCTION_ALGORITHM_INPUT].getVoltage())) {
 			noteReductionAlgorithm = (noteReductionAlgorithm + 1) % NBR_ALGORITHMS;
@@ -1722,11 +1824,12 @@ struct ProbablyNoteMN : Module {
 			mosLevelsPercentage = (mosLevels - 1.0) / 2.0;
 
 			equalDivisions = clamp(params[EQUAL_DIVISION_PARAM].getValue() + (inputs[EQUAL_DIVISION_INPUT].getVoltage() * 20.0 * params[EQUAL_DIVISION_CV_ATTENUVERTER_PARAM].getValue()),0.0f,300.0f);
-			edoPercentage = equalDivisions / 300.0;
 			equalDivisionSteps = clamp(params[EDO_STEPS_PARAM].getValue() + (inputs[EDO_STEPS_INPUT].getVoltage() * 20.0 * params[EDO_STEPS_CV_ATTENUVERTER_PARAM].getValue()),1.0,equalDivisions);
 			edoStepsPercentage = equalDivisionSteps / 100.0;
 			equalDivisionWraps = clamp(params[EDO_WRAPS_PARAM].getValue() + (inputs[EDO_WRAPS_INPUT].getVoltage() * 20.0 * params[EDO_WRAPS_CV_ATTENUVERTER_PARAM].getValue()),1.0,equalDivisionSteps);
 			edoWrapsPercentage = equalDivisionWraps / 100.0;
+			equalStepSize = clamp(params[EQUAL_STEP_SIZE_PARAM].getValue() + (inputs[EQUAL_DIVISION_INPUT].getVoltage() * 20.0 * params[EQUAL_DIVISION_CV_ATTENUVERTER_PARAM].getValue()),1.0f,300.0f);			
+			edoPercentage = equalDivisionMode == 0 ? equalDivisions / 300.0 : equalStepSize / 300.0;
 
 			edoTemperingThreshold = clamp(params[EDO_TEMPERING_THRESHOLD_PARAM].getValue() + (inputs[EDO_TEMPERING_THRESHOLD_INPUT].getVoltage() / 10.0 * params[EDO_TEMPERING_THRESHOLD_CV_ATTENUVERTER_PARAM].getValue()),0.0f,1.0f);
 			edoTemperingThresholdPercentage = edoTemperingThreshold;
@@ -1759,11 +1862,14 @@ struct ProbablyNoteMN : Module {
 			octaveScaleConstant = octaveSize - 1.0;
 		}
 
-		if(equalDivisions != lastEqualDivisions || equalDivisionSteps != lastEqualDivisionSteps || equalDivisionWraps != lastEqualDivisionWraps) {
+		if(equalDivisionMode != lastEqualDivisionMode || equalDivisions != lastEqualDivisions || equalDivisionSteps != lastEqualDivisionSteps || 
+			equalDivisionWraps != lastEqualDivisionWraps || equalStepSize != lastEqualStepSize) {
 			scaleChange = true;
+			lastEqualDivisionMode = equalDivisionMode;
 			lastEqualDivisions = equalDivisions;
 			lastEqualDivisionSteps = equalDivisionSteps;
 			lastEqualDivisionWraps = equalDivisionWraps;
+			lastEqualStepSize = equalStepSize;
 		}
 
 		if(mosLargeSteps != lastMosLargeSteps || mosSmallSteps != lastMosSmallSteps || mosRatio != lastMosRatio || mosLevels != lastMosLevels) {
@@ -2121,7 +2227,7 @@ struct ProbablyNoteMN : Module {
 					int notePosition = randomNote;				
 
 					double quantitizedNoteCV = (resultingPitches[notePosition].pitch * octaveScaleConstant / 1200.0) + (key / 12.0); 
-            //   fprintf(stderr, "%f \n", reducedEfPitches[notePosition].pitch);
+            //   fprintf(stderr, "%f  %f\n", resultingPitches[notePosition].pitch,octaveScaleConstant);
 
 					float pitchRandomness = 0;
 					if(pitchRandomGaussian) {
@@ -2174,13 +2280,75 @@ void ProbablyNoteMN::onReset() {
 }
 
 
+
 struct ProbablyNoteMNDisplay : TransparentWidget {
 	ProbablyNoteMN *module;
 	int frame = 0;
 	std::shared_ptr<Font> font;
 
+	bool noteInspectorVisible = false;
+	int64_t displayedNoteIndex;
+	
+
 	ProbablyNoteMNDisplay() {
 		font = APP->window->loadFont(asset::plugin(pluginInstance, "res/fonts/DejaVuSansMono.ttf"));
+	}
+
+
+	//this needs to be mouse hover
+	// void onDragStart(const event::DragStart &e) override {
+	// 	float hoverX = APP->scene->rack->mousePos.x;
+	// 	float hoverY = APP->scene->rack->mousePos.y;
+	// }
+
+	void onHover(const event::Hover& e) override {
+		//hard coded center for now;
+		float hoverX = e.pos.x;
+		float hoverY = e.pos.y;
+
+		findNoteByPos(Vec(585.5,241.5),hoverX, hoverY);
+		
+	}
+
+	void onLeave(const event::Leave& e) override {
+		noteInspectorVisible = false;
+	}
+
+
+	void findNoteByPos(Vec center,float hoverX, float hoverY) {
+
+		float posX = hoverX - center.x;
+		float posY = hoverY - center.y;
+
+		float distance = posX * posX + posY * posY;
+		if(distance < 5625) //75^2
+		{
+			float theta = atan2(posY,posX);
+			float x = cos(theta)*75;
+			float y = sin(theta)*75;
+			float distanceThreshold = 1;
+			int64_t noteIndex = -1;
+			for(uint64_t i=0;i<module->resultingPitches.size();i++) {
+				float xDist = module->resultingPitches[i].xPos-x;
+				float yDist = module->resultingPitches[i].yPos-y;
+				float distance = xDist * xDist + yDist * yDist;
+				if(distance < distanceThreshold) {
+					noteIndex = i;
+					break;
+				}
+			}
+
+			displayedNoteIndex = noteIndex;
+			if(noteIndex >= 0) {
+				noteInspectorVisible = true;
+				// fprintf(stderr, "Show Note! %lli\n", noteIndex);
+			} else {
+				noteInspectorVisible = false;
+			}
+			// displayNoteInfo = true;
+		} else {
+			noteInspectorVisible = false;
+		}
 	}
 
 
@@ -2276,9 +2444,9 @@ struct ProbablyNoteMNDisplay : TransparentWidget {
 				float pitch = module->temperingPitches[i].pitch;
 				nvgBeginPath(args.vg);
 				float theta = pitch / 1200.0 *  M_PI * 2.0 - (M_PI/2.0);
-				float x = cos(theta);
-				float y = sin(theta);
-				nvgMoveTo(args.vg, x*75.0+pos.x, y*75.0+pos.y);
+				float x = cos(theta)*75+pos.x;
+				float y = sin(theta)*75+pos.y;
+				nvgMoveTo(args.vg, x, y);
 				nvgLineTo(args.vg, pos.x, pos.y);
 				nvgStroke(args.vg);
 			}
@@ -2305,6 +2473,8 @@ struct ProbablyNoteMNDisplay : TransparentWidget {
 			float y = sin(theta);
 			nvgMoveTo(args.vg, x*75.0+pos.x, y*75.0+pos.y);
 			nvgLineTo(args.vg, x*dissonanceDistance+pos.x, y*dissonanceDistance + pos.y);
+			module->resultingPitches[i].xPos = x*75.0;
+			module->resultingPitches[i].yPos = y*75.0;
             nvgStroke(args.vg);
         }
 	}
@@ -2359,19 +2529,25 @@ struct ProbablyNoteMNDisplay : TransparentWidget {
 		nvgTextAlign(args.vg,NVG_ALIGN_RIGHT);
 			//fprintf(stderr, "a: %llu s: %llu  \n", module->actualScaleSize, module->nbrPitches);
 		char text[128];
-		if(module->equalDivisions > 0) 
+		if(module->equalDivisionMode == 0) {
+			if(module->equalDivisions > 0) 
+				nvgFillColor(args.vg, nvgRGBA(0x4a, 0xc3, 0x27, 0xff));
+			else
+				nvgFillColor(args.vg, nvgRGB(0xff, 0xff, 0x00));
+			snprintf(text, sizeof(text), "%i", module->equalDivisions);
+			nvgText(args.vg, pos.x, pos.y, text, NULL);
+
+			snprintf(text, sizeof(text), "%i", module->equalDivisionSteps);
+			nvgText(args.vg, pos.x+59, pos.y, text, NULL);
+
+			snprintf(text, sizeof(text), "%i", module->equalDivisionWraps);
+			nvgText(args.vg, pos.x+116, pos.y, text, NULL);
+		} else {
 			nvgFillColor(args.vg, nvgRGBA(0x4a, 0xc3, 0x27, 0xff));
-		else
-			nvgFillColor(args.vg, nvgRGB(0xff, 0xff, 0x00));
-		snprintf(text, sizeof(text), "%i", module->equalDivisions);
-		nvgText(args.vg, pos.x, pos.y, text, NULL);
+			snprintf(text, sizeof(text), "%.3f", module->equalStepSize);
+			nvgText(args.vg, pos.x, pos.y, text, NULL);
 
-		snprintf(text, sizeof(text), "%i", module->equalDivisionSteps);
-		nvgText(args.vg, pos.x+59, pos.y, text, NULL);
-
-		snprintf(text, sizeof(text), "%i", module->equalDivisionWraps);
-		nvgText(args.vg, pos.x+116, pos.y, text, NULL);
-
+		}
 	}
 
 	void drawTemperingMode(const DrawArgs &args, Vec pos, int edoTemperingMode) {
@@ -2546,7 +2722,51 @@ struct ProbablyNoteMNDisplay : TransparentWidget {
 		nvgText(args.vg, pos.x, pos.y, text, NULL);
 	}
 
+	void drawNoteInspector(const DrawArgs &args, Vec pos, int64_t currentNote) {
+			nvgStrokeWidth(args.vg, 1.0);
+			nvgStrokeColor(args.vg, nvgRGBA(0x99, 0x99, 0x99, 0xff));
+			nvgFillColor(args.vg, nvgRGBA(0x10, 0x10, 0x15, 0xff));
 
+			nvgBeginPath(args.vg);
+			nvgRect(args.vg,pos.x,pos.y,100,60);
+			nvgClosePath(args.vg);		
+			nvgStroke(args.vg);
+			nvgFill(args.vg);
+
+			EFPitch inspectedPitch = module->resultingPitches[currentNote];
+
+			nvgFontSize(args.vg, 9);
+			nvgFontFaceId(args.vg, font->handle);
+			nvgTextLetterSpacing(args.vg, -1);
+			nvgTextAlign(args.vg,NVG_ALIGN_LEFT);
+			char text[128];
+			nvgFillColor(args.vg, nvgRGBA(0x4a, 0xc3, 0x27, 0xff));
+			std::string pitchTypeName = "";
+			switch(inspectedPitch.pitchType) {
+				case module->RATIO_PITCH_TYPE:
+					pitchTypeName = "JI";
+					break;
+				case module->EQUAL_DIVISION_PITCH_TYPE:
+					pitchTypeName = "EDO";
+					break;
+				case module->EQUAL_STEP_SIZE_PITCH_TYPE:
+					pitchTypeName = "Equal Step";
+					break;
+				case module->MOS_PITCH_TYPE:
+					pitchTypeName = "MOS";
+					break;
+			}
+
+			snprintf(text, sizeof(text), "Type: %s", pitchTypeName.c_str());
+			nvgText(args.vg, pos.x+2, pos.y+10, text, NULL);
+			snprintf(text, sizeof(text), "Ratio: %.0f/%.0f", inspectedPitch.numerator,inspectedPitch.denominator);
+			nvgText(args.vg, pos.x+2, pos.y+20, text, NULL);
+			snprintf(text, sizeof(text), "Tempering: %.3f", inspectedPitch.tempering);
+			nvgText(args.vg, pos.x+2, pos.y+30, text, NULL);
+			snprintf(text, sizeof(text), "Pitch: %.3f", inspectedPitch.pitch * module->octaveScaleConstant );
+			nvgText(args.vg, pos.x+2, pos.y+40, text, NULL);
+
+	}
 	
 
 	void draw(const DrawArgs &args) override {
@@ -2557,33 +2777,31 @@ struct ProbablyNoteMNDisplay : TransparentWidget {
         drawPitchInfo(args,Vec(585.5,241.5));
 		drawKey(args, Vec(564,82), module->key, module->modulationRoot);
 		drawModulationRoot(args, Vec(578,332), module->microtonalKey);
-		drawOctaveSize(args, Vec(530,108),module->octaveSize);
-		drawMomentsOfSymmetry(args, Vec(346,55));
-		drawEqualDivisions(args, Vec(354,139));
+		drawOctaveSize(args, Vec(532,109),module->octaveSize);
+		drawEqualDivisions(args, Vec(344,49)); 
+		drawMomentsOfSymmetry(args, Vec(331,131)); 
 		drawFactors(args, Vec(35,30));
-		drawAlgorithm(args, Vec(414,200), module->noteReductionAlgorithm);
-		drawNoteReduction(args, Vec(344,200));
-		drawTemperingMode(args, Vec(317,259),module->edoTempering);
-		drawTempering(args, Vec(421,259));
-		drawScaleMapping(args, Vec(334,318.5),module->scaleMappingMode);
-		drawScale(args, Vec(414,318.5),module->scaleMappingMode);
-		drawNoteCount(args, Vec(609,158),module->actualScaleSize);
+		drawAlgorithm(args, Vec(404,200), module->noteReductionAlgorithm);
+		drawNoteReduction(args, Vec(334,200));
+		drawTemperingMode(args, Vec(307,259),module->edoTempering);
+		drawTempering(args, Vec(411,259));
+		drawScaleMapping(args, Vec(324,318.5),module->scaleMappingMode);
+		drawScale(args, Vec(414,308.5),module->scaleMappingMode);
+		drawNoteCount(args, Vec(608.5,159),module->actualScaleSize);
+		if(noteInspectorVisible)
+			drawNoteInspector(args, Vec(420,159),displayedNoteIndex);
 	}
 };
 
 struct ProbablyNoteMNWidget : ModuleWidget {
+
+	ParamWidget* edoParam;
+	ParamWidget* esoParam;
+
 	ProbablyNoteMNWidget(ProbablyNoteMN *module) {
 		setModule(module);
 		setPanel(APP->window->loadSvg(asset::plugin(pluginInstance, "res/ProbablyNoteMN.svg")));
 
-
-		{
-			ProbablyNoteMNDisplay *display = new ProbablyNoteMNDisplay();
-			display->module = module;
-			display->box.pos = Vec(0, 0);
-			display->box.size = Vec(box.size.x, box.size.y);
-			addChild(display);
-		}
 
 		addChild(createWidget<ScrewSilver>(Vec(RACK_GRID_WIDTH - 12, 0)));
 		addChild(createWidget<ScrewSilver>(Vec(box.size.x - 2 * RACK_GRID_WIDTH + 12, 0)));
@@ -2706,67 +2924,6 @@ struct ProbablyNoteMNWidget : ModuleWidget {
 
 
 //Scale Generation
-//MOS
-		ParamWidget* mosLargeStepsParam = createParam<RoundReallySmallFWSnapKnob>(Vec(310,58), module, ProbablyNoteMN::MOS_LARGE_STEPS_PARAM);
-		if (module) {
-			dynamic_cast<RoundReallySmallFWSnapKnob*>(mosLargeStepsParam)->percentage = &module->mosLargeStepsPercentage;
-		}
-		addParam(mosLargeStepsParam);							
-        addParam(createParam<RoundExtremelySmallFWKnob>(Vec(332,75), module, ProbablyNoteMN::MOS_LARGE_STEPS_CV_ATTENUVERTER_PARAM));			
-		addInput(createInput<FWPortInReallySmall>(Vec(334, 61), module, ProbablyNoteMN::MOS_LARGE_STEPS_INPUT));
-
-		ParamWidget* mosSmallStepsParam = createParam<RoundReallySmallFWSnapKnob>(Vec(356,58), module, ProbablyNoteMN::MOS_SMALL_STEPS_PARAM);
-		if (module) {
-			dynamic_cast<RoundReallySmallFWSnapKnob*>(mosSmallStepsParam)->percentage = &module->mosSmallStepsPercentage;
-		}
-		addParam(mosSmallStepsParam);							
-        addParam(createParam<RoundExtremelySmallFWKnob>(Vec(378,75), module, ProbablyNoteMN::MOS_SMALL_STEPS_CV_ATTENUVERTER_PARAM));			
-		addInput(createInput<FWPortInReallySmall>(Vec(380, 61), module, ProbablyNoteMN::MOS_SMALL_STEPS_INPUT));
-
-		ParamWidget* mosRatioParam = createParam<RoundReallySmallFWKnob>(Vec(402,58), module, ProbablyNoteMN::MOS_RATIO_PARAM);
-		if (module) {
-			dynamic_cast<RoundReallySmallFWKnob*>(mosRatioParam)->percentage = &module->mosRatioPercentage;
-		}
-		addParam(mosRatioParam);							
-        addParam(createParam<RoundExtremelySmallFWKnob>(Vec(424,75), module, ProbablyNoteMN::MOS_RATIO_CV_ATTENUVERTER_PARAM));			
-		addInput(createInput<FWPortInReallySmall>(Vec(426, 61), module, ProbablyNoteMN::MOS_RATIO_INPUT));
-
-		addParam(createParam<LEDButton>(Vec(405, 82), module, ProbablyNoteMN::QUANTIZE_MOS_RATIO_PARAM));
-		addChild(createLight<LargeLight<BlueLight>>(Vec(406.5, 83.5), module, ProbablyNoteMN::QUANTIZE_MOS_RATIO_LIGHT));
-
-		ParamWidget* mosLevelsParam = createParam<RoundReallySmallFWSnapKnob>(Vec(448,58), module, ProbablyNoteMN::MOS_LEVELS_PARAM);
-		if (module) {
-			dynamic_cast<RoundReallySmallFWSnapKnob*>(mosLevelsParam)->percentage = &module->mosLevelsPercentage;
-		}
-		addParam(mosLevelsParam);							
-        addParam(createParam<RoundExtremelySmallFWKnob>(Vec(470,75), module, ProbablyNoteMN::MOS_LEVELS_CV_ATTENUVERTER_PARAM));			
-		addInput(createInput<FWPortInReallySmall>(Vec(472, 61), module, ProbablyNoteMN::MOS_LEVELS_INPUT));
-
-//ED
-		ParamWidget* edoParam = createParam<RoundReallySmallFWSnapKnob>(Vec(314,145), module, ProbablyNoteMN::EQUAL_DIVISION_PARAM);
-		if (module) {
-			dynamic_cast<RoundReallySmallFWSnapKnob*>(edoParam)->percentage = &module->edoPercentage;
-		}
-		addParam(edoParam);							
-        addParam(createParam<RoundExtremelySmallFWKnob>(Vec(336,162), module, ProbablyNoteMN::EQUAL_DIVISION_CV_ATTENUVERTER_PARAM));			
-		addInput(createInput<FWPortInReallySmall>(Vec(338, 147), module, ProbablyNoteMN::EQUAL_DIVISION_INPUT));
-
-		ParamWidget* edoStepsParam = createParam<RoundReallySmallFWSnapKnob>(Vec(371,145), module, ProbablyNoteMN::EDO_STEPS_PARAM);
-		if (module) {
-			dynamic_cast<RoundReallySmallFWSnapKnob*>(edoStepsParam)->percentage = &module->edoStepsPercentage;
-		}
-		addParam(edoStepsParam);							
-        addParam(createParam<RoundExtremelySmallFWKnob>(Vec(393,162), module, ProbablyNoteMN::EDO_STEPS_CV_ATTENUVERTER_PARAM));			
-		addInput(createInput<FWPortInReallySmall>(Vec(395, 147), module, ProbablyNoteMN::EDO_STEPS_INPUT));
-
-		ParamWidget* edoWrapsParam = createParam<RoundReallySmallFWSnapKnob>(Vec(428,145), module, ProbablyNoteMN::EDO_WRAPS_PARAM);
-		if (module) {
-			dynamic_cast<RoundReallySmallFWSnapKnob*>(edoWrapsParam)->percentage = &module->edoWrapsPercentage;
-		}
-		addParam(edoWrapsParam);							
-        addParam(createParam<RoundExtremelySmallFWKnob>(Vec(450,162), module, ProbablyNoteMN::EDO_WRAPS_CV_ATTENUVERTER_PARAM));			
-		addInput(createInput<FWPortInReallySmall>(Vec(452, 147), module, ProbablyNoteMN::EDO_WRAPS_INPUT));
-
 //Prime Factors
         for(int i=0;i<MAX_FACTORS;i++) {	
 			ParamWidget* factorParam = createParam<RoundReallySmallFWSnapKnob>(Vec(10,i*34.5+33), module, ProbablyNoteMN::FACTOR_1_PARAM+i);
@@ -2805,57 +2962,130 @@ struct ProbablyNoteMNWidget : ModuleWidget {
         }   
 
 
+//ED
+		edoParam = createParam<RoundReallySmallFWSnapKnob>(Vec(304,53), module, ProbablyNoteMN::EQUAL_DIVISION_PARAM);
+		if (module) {
+			dynamic_cast<RoundReallySmallFWSnapKnob*>(edoParam)->percentage = &module->edoPercentage;
+		}
+		addParam(edoParam);							
+        esoParam = createParam<RoundReallySmallFWKnob>(Vec(304,53), module, ProbablyNoteMN::EQUAL_STEP_SIZE_PARAM);
+		addParam(esoParam);							
+        addParam(createParam<RoundExtremelySmallFWKnob>(Vec(326,70), module, ProbablyNoteMN::EQUAL_DIVISION_CV_ATTENUVERTER_PARAM));			
+		addInput(createInput<FWPortInReallySmall>(Vec(328, 55), module, ProbablyNoteMN::EQUAL_DIVISION_INPUT));
+
+		addParam(createParam<LEDButton>(Vec(306, 80), module, ProbablyNoteMN::EQUAL_DIVISION_MODE_PARAM));
+		addChild(createLight<LargeLight<RedGreenBlueLight>>(Vec(307.5, 81.5), module, ProbablyNoteMN::EDO_MODE_LIGHT));
+
+
+		ParamWidget* edoStepsParam = createParam<RoundReallySmallFWSnapKnob>(Vec(361,53), module, ProbablyNoteMN::EDO_STEPS_PARAM);
+		if (module) {
+			dynamic_cast<RoundReallySmallFWSnapKnob*>(edoStepsParam)->percentage = &module->edoStepsPercentage;
+		}
+		addParam(edoStepsParam);							
+        addParam(createParam<RoundExtremelySmallFWKnob>(Vec(383,70), module, ProbablyNoteMN::EDO_STEPS_CV_ATTENUVERTER_PARAM));			
+		addInput(createInput<FWPortInReallySmall>(Vec(385, 55), module, ProbablyNoteMN::EDO_STEPS_INPUT));
+
+		ParamWidget* edoWrapsParam = createParam<RoundReallySmallFWSnapKnob>(Vec(418,53), module, ProbablyNoteMN::EDO_WRAPS_PARAM);
+		if (module) {
+			dynamic_cast<RoundReallySmallFWSnapKnob*>(edoWrapsParam)->percentage = &module->edoWrapsPercentage;
+		}
+		addParam(edoWrapsParam);							
+        addParam(createParam<RoundExtremelySmallFWKnob>(Vec(440,70), module, ProbablyNoteMN::EDO_WRAPS_CV_ATTENUVERTER_PARAM));			
+		addInput(createInput<FWPortInReallySmall>(Vec(442, 55), module, ProbablyNoteMN::EDO_WRAPS_INPUT));
+
+//MOS
+
+//This needs more research!
+		// addParam(createParam<LEDButton>(Vec(297, 162), module, ProbablyNoteMN::MOS_MODE_PARAM));
+		// addChild(createLight<LargeLight<RedGreenBlueLight>>(Vec(298.5, 163.5), module, ProbablyNoteMN::MOS_MODE_LIGHT));
+
+		ParamWidget* mosLargeStepsParam = createParam<RoundReallySmallFWSnapKnob>(Vec(295,135), module, ProbablyNoteMN::MOS_LARGE_STEPS_PARAM);
+		if (module) {
+			dynamic_cast<RoundReallySmallFWSnapKnob*>(mosLargeStepsParam)->percentage = &module->mosLargeStepsPercentage;
+		}
+		addParam(mosLargeStepsParam);							
+        addParam(createParam<RoundExtremelySmallFWKnob>(Vec(317,152), module, ProbablyNoteMN::MOS_LARGE_STEPS_CV_ATTENUVERTER_PARAM));			
+		addInput(createInput<FWPortInReallySmall>(Vec(319, 138), module, ProbablyNoteMN::MOS_LARGE_STEPS_INPUT));
+
+		ParamWidget* mosSmallStepsParam = createParam<RoundReallySmallFWSnapKnob>(Vec(341,135), module, ProbablyNoteMN::MOS_SMALL_STEPS_PARAM);
+		if (module) {
+			dynamic_cast<RoundReallySmallFWSnapKnob*>(mosSmallStepsParam)->percentage = &module->mosSmallStepsPercentage;
+		}
+		addParam(mosSmallStepsParam);							
+        addParam(createParam<RoundExtremelySmallFWKnob>(Vec(363,152), module, ProbablyNoteMN::MOS_SMALL_STEPS_CV_ATTENUVERTER_PARAM));			
+		addInput(createInput<FWPortInReallySmall>(Vec(365, 138), module, ProbablyNoteMN::MOS_SMALL_STEPS_INPUT));
+
+		ParamWidget* mosRatioParam = createParam<RoundReallySmallFWKnob>(Vec(387,135), module, ProbablyNoteMN::MOS_RATIO_PARAM);
+		if (module) {
+			dynamic_cast<RoundReallySmallFWKnob*>(mosRatioParam)->percentage = &module->mosRatioPercentage;
+		}
+		addParam(mosRatioParam);								
+        addParam(createParam<RoundExtremelySmallFWKnob>(Vec(409,152), module, ProbablyNoteMN::MOS_RATIO_CV_ATTENUVERTER_PARAM));			
+		addInput(createInput<FWPortInReallySmall>(Vec(411, 138), module, ProbablyNoteMN::MOS_RATIO_INPUT));
+
+		addParam(createParam<LEDButton>(Vec(390, 159), module, ProbablyNoteMN::QUANTIZE_MOS_RATIO_PARAM));
+		addChild(createLight<LargeLight<BlueLight>>(Vec(391.5, 160.5), module, ProbablyNoteMN::QUANTIZE_MOS_RATIO_LIGHT));
+
+		ParamWidget* mosLevelsParam = createParam<RoundReallySmallFWSnapKnob>(Vec(433,135), module, ProbablyNoteMN::MOS_LEVELS_PARAM);
+		if (module) {
+			dynamic_cast<RoundReallySmallFWSnapKnob*>(mosLevelsParam)->percentage = &module->mosLevelsPercentage;
+		}
+		addParam(mosLevelsParam);							
+        addParam(createParam<RoundExtremelySmallFWKnob>(Vec(455,152), module, ProbablyNoteMN::MOS_LEVELS_CV_ATTENUVERTER_PARAM));			
+		addInput(createInput<FWPortInReallySmall>(Vec(457, 138), module, ProbablyNoteMN::MOS_LEVELS_INPUT));
+
+
 //Note reduction
-		ParamWidget* numberOfNotesParam = createParam<RoundReallySmallFWSnapKnob>(Vec(352,205), module, ProbablyNoteMN::NUMBER_OF_NOTES_PARAM);
+		ParamWidget* numberOfNotesParam = createParam<RoundReallySmallFWSnapKnob>(Vec(342,205), module, ProbablyNoteMN::NUMBER_OF_NOTES_PARAM);
 		if (module) {
 			dynamic_cast<RoundReallySmallFWSnapKnob*>(numberOfNotesParam)->percentage = &module->numberOfNotesPercentage;
 		}
 		addParam(numberOfNotesParam);							
-        addParam(createParam<RoundExtremelySmallFWKnob>(Vec(376,222), module, ProbablyNoteMN::NUMBER_OF_NOTES_CV_ATTENUVERTER_PARAM));			
-		addInput(createInput<FWPortInReallySmall>(Vec(378, 208), module, ProbablyNoteMN::NUMBER_OF_NOTES_INPUT));
+        addParam(createParam<RoundExtremelySmallFWKnob>(Vec(366,222), module, ProbablyNoteMN::NUMBER_OF_NOTES_CV_ATTENUVERTER_PARAM));			
+		addInput(createInput<FWPortInReallySmall>(Vec(368, 208), module, ProbablyNoteMN::NUMBER_OF_NOTES_INPUT));
 
-		addParam(createParam<LEDButton>(Vec(422, 205), module, ProbablyNoteMN::NOTE_REDUCTION_ALGORITHM_PARAM));
-		addChild(createLight<LargeLight<RedGreenBlueLight>>(Vec(423.5, 206.5), module, ProbablyNoteMN::NOTE_REDUCTION_ALGORITHM_LIGHT));
-		addInput(createInput<FWPortInReallySmall>(Vec(444, 208), module, ProbablyNoteMN::NOTE_REDUCTION_ALGORITHM_INPUT));
+		addParam(createParam<LEDButton>(Vec(412, 205), module, ProbablyNoteMN::NOTE_REDUCTION_ALGORITHM_PARAM));
+		addChild(createLight<LargeLight<RedGreenBlueLight>>(Vec(413.5, 206.5), module, ProbablyNoteMN::NOTE_REDUCTION_ALGORITHM_LIGHT));
+		addInput(createInput<FWPortInReallySmall>(Vec(434, 208), module, ProbablyNoteMN::NOTE_REDUCTION_ALGORITHM_INPUT));
 
 //Tempering
-		addParam(createParam<LEDButton>(Vec(324, 265), module, ProbablyNoteMN::EDO_TEMPERING_PARAM));
-		addChild(createLight<LargeLight<RedGreenBlueLight>>(Vec(325.5, 266.5), module, ProbablyNoteMN::EDO_TEMPERING_LIGHT));
-		addInput(createInput<FWPortInReallySmall>(Vec(346, 268), module, ProbablyNoteMN::EDO_TEMPERING_INPUT));
+		addParam(createParam<LEDButton>(Vec(314, 265), module, ProbablyNoteMN::EDO_TEMPERING_PARAM));
+		addChild(createLight<LargeLight<RedGreenBlueLight>>(Vec(315.5, 266.5), module, ProbablyNoteMN::EDO_TEMPERING_LIGHT));
+		addInput(createInput<FWPortInReallySmall>(Vec(336, 268), module, ProbablyNoteMN::EDO_TEMPERING_INPUT));
 
-        ParamWidget* edoTemperingThresholdParam = createParam<RoundReallySmallFWKnob>(Vec(385,265), module, ProbablyNoteMN::EDO_TEMPERING_THRESHOLD_PARAM);
+        ParamWidget* edoTemperingThresholdParam = createParam<RoundReallySmallFWKnob>(Vec(375,265), module, ProbablyNoteMN::EDO_TEMPERING_THRESHOLD_PARAM);
 		if (module) {
 			 dynamic_cast<RoundReallySmallFWKnob*>(edoTemperingThresholdParam)->percentage = &module->edoTemperingThresholdPercentage;
 		}
         addParam(edoTemperingThresholdParam);							
-        addParam(createParam<RoundExtremelySmallFWKnob>(Vec(407,281), module, ProbablyNoteMN::EDO_TEMPERING_THRESHOLD_CV_ATTENUVERTER_PARAM));
-		addInput(createInput<FWPortInReallySmall>(Vec(409, 267), module, ProbablyNoteMN::EDO_TEMPERING_THRESHOLD_INPUT));
+        addParam(createParam<RoundExtremelySmallFWKnob>(Vec(397,281), module, ProbablyNoteMN::EDO_TEMPERING_THRESHOLD_CV_ATTENUVERTER_PARAM));
+		addInput(createInput<FWPortInReallySmall>(Vec(399, 267), module, ProbablyNoteMN::EDO_TEMPERING_THRESHOLD_INPUT));
 
-		ParamWidget* edoTemperingStrengthParam = createParam<RoundReallySmallFWKnob>(Vec(444,265), module, ProbablyNoteMN::EDO_TEMPERING_STRENGTH_PARAM);
+		ParamWidget* edoTemperingStrengthParam = createParam<RoundReallySmallFWKnob>(Vec(434,265), module, ProbablyNoteMN::EDO_TEMPERING_STRENGTH_PARAM);
 		if (module) {
 			dynamic_cast<RoundReallySmallFWKnob*>(edoTemperingStrengthParam)->percentage = &module->edoTemperingStrengthPercentage;
 		}
 		addParam(edoTemperingStrengthParam);							
-        addParam(createParam<RoundExtremelySmallFWKnob>(Vec(466,281), module, ProbablyNoteMN::EDO_TEMPERING_STRENGTH_CV_ATTENUVERTER_PARAM));
-		addInput(createInput<FWPortInReallySmall>(Vec(468, 267), module, ProbablyNoteMN::EDO_TEMPERING_STRENGTH_INPUT));
+        addParam(createParam<RoundExtremelySmallFWKnob>(Vec(456,281), module, ProbablyNoteMN::EDO_TEMPERING_STRENGTH_CV_ATTENUVERTER_PARAM));
+		addInput(createInput<FWPortInReallySmall>(Vec(458, 267), module, ProbablyNoteMN::EDO_TEMPERING_STRENGTH_INPUT));
 
 // Map to normal scale
-		addParam(createParam<LEDButton>(Vec(350, 323), module, ProbablyNoteMN::SCALE_MAPPING_PARAM));
-		addChild(createLight<LargeLight<RedGreenBlueLight>>(Vec(351.5, 324.5), module, ProbablyNoteMN::SCALE_MAPPING_LIGHT));
-		addInput(createInput<FWPortInReallySmall>(Vec(374, 326), module, ProbablyNoteMN::SCALE_MAPPING_INPUT));
+		addParam(createParam<LEDButton>(Vec(340, 323), module, ProbablyNoteMN::SCALE_MAPPING_PARAM));
+		addChild(createLight<LargeLight<RedGreenBlueLight>>(Vec(341.5, 324.5), module, ProbablyNoteMN::SCALE_MAPPING_LIGHT));
+		addInput(createInput<FWPortInReallySmall>(Vec(364, 326), module, ProbablyNoteMN::SCALE_MAPPING_INPUT));
 
 
-        ParamWidget* scaleParam = createParam<RoundReallySmallFWSnapKnob>(Vec(424,324), module, ProbablyNoteMN::SCALE_PARAM);
+        ParamWidget* scaleParam = createParam<RoundReallySmallFWSnapKnob>(Vec(414,324), module, ProbablyNoteMN::SCALE_PARAM);
 		if (module) {
 			dynamic_cast<RoundReallySmallFWSnapKnob*>(scaleParam)->percentage = &module->scalePercentage;
 		}
 		addParam(scaleParam);							
-        addParam(createParam<RoundExtremelySmallFWKnob>(Vec(448,341), module, ProbablyNoteMN::SCALE_CV_ATTENUVERTER_PARAM));			
-		addInput(createInput<FWPortInReallySmall>(Vec(450, 327), module, ProbablyNoteMN::SCALE_INPUT));
+        addParam(createParam<RoundExtremelySmallFWKnob>(Vec(438,341), module, ProbablyNoteMN::SCALE_CV_ATTENUVERTER_PARAM));			
+		addInput(createInput<FWPortInReallySmall>(Vec(440, 327), module, ProbablyNoteMN::SCALE_INPUT));
 
-		addParam(createParam<LEDButton>(Vec(350, 343), module, ProbablyNoteMN::USE_SCALE_WEIGHTING_PARAM));
-		addChild(createLight<LargeLight<RedGreenBlueLight>>(Vec(351.5, 344.5), module, ProbablyNoteMN::SCALE_WEIGHTING_LIGHT));
-		addInput(createInput<FWPortInReallySmall>(Vec(374, 346), module, ProbablyNoteMN::USE_SCALE_WEIGHTING_INPUT));
+		addParam(createParam<LEDButton>(Vec(340, 343), module, ProbablyNoteMN::USE_SCALE_WEIGHTING_PARAM));
+		addChild(createLight<LargeLight<RedGreenBlueLight>>(Vec(341.5, 344.5), module, ProbablyNoteMN::SCALE_WEIGHTING_LIGHT));
+		addInput(createInput<FWPortInReallySmall>(Vec(364, 346), module, ProbablyNoteMN::USE_SCALE_WEIGHTING_INPUT));
 
       
 
@@ -2863,6 +3093,28 @@ struct ProbablyNoteMNWidget : ModuleWidget {
 		addOutput(createOutput<FWPortInSmall>(Vec(667, 345),  module, ProbablyNoteMN::WEIGHT_OUTPUT));
 		addOutput(createOutput<FWPortInSmall>(Vec(629, 345),  module, ProbablyNoteMN::NOTE_CHANGE_OUTPUT));
 
+
+		{
+			ProbablyNoteMNDisplay *display = new ProbablyNoteMNDisplay();
+			display->module = module;
+			display->box.pos = Vec(0, 0);
+			display->box.size = Vec(box.size.x, box.size.y);
+			addChild(display);
+		}
+
+	}
+
+	void step() override {
+		if (module) {
+			if((((ProbablyNoteMN*)module)->equalDivisionMode) == 0) {
+				edoParam->visible = true;
+				esoParam->visible = false;
+			} else {
+				edoParam->visible = false;
+				esoParam->visible = true;
+			}
+		}
+		Widget::step();
 	}
 
 	struct TriggerDelayItem : MenuItem {
