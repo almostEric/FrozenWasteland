@@ -362,10 +362,10 @@ struct SliceOfLife : Module {
 	SliceOfLife() {
 		config(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS, NUM_LIGHTS);
 		configParam(POS_VCO_MODE_PARAM, 0.f, 1.f, 1.f, "Positive VCO - Analog mode");
-		configParam(POS_VCO_SYNC_PARAM, 0.f, 1.f, 1.f, "Positvie VCO - Hard sync");
-		configParam(POS_VCO_FREQ_PARAM, -54.f, 54.f, 0.f, "Positvie VCO - Frequency", " Hz", dsp::FREQ_SEMITONE, dsp::FREQ_C4);
-		configParam(POS_VCO_FINE_PARAM, -1.f, 1.f, 0.f, "Positvie VCO - Fine frequency");
-		configParam(POS_VCO_FM_PARAM, 0.f, 1.f, 0.f, "Positvie VCO - Frequency modulation", "%", 0.f, 100.f);
+		configParam(POS_VCO_SYNC_PARAM, 0.f, 1.f, 1.f, "Positive VCO - Hard sync");
+		configParam(POS_VCO_FREQ_PARAM, -54.f, 54.f, 0.f, "Positive VCO - Frequency", " Hz", dsp::FREQ_SEMITONE, dsp::FREQ_C4);
+		configParam(POS_VCO_FINE_PARAM, -1.f, 1.f, 0.f, "Positive VCO - Fine frequency");
+		configParam(POS_VCO_FM_PARAM, 0.f, 1.f, 0.f, "Positive VCO - Frequency modulation", "%", 0.f, 100.f);
 		configParam(POS_SIN_VCA_PARAM, 0.f, 1.f, 1.f, "Positive Sin Level","%",0.f,100.f);
 		configParam(POS_TRI_VCA_PARAM, 0.f, 1.f, 1.f, "Positive Triangle Level","%",0.f,100.f);
 		configParam(POS_SAW_VCA_PARAM, 0.f, 1.f, 1.f, "Positive Sawtooth Level","%",0.f,100.f);
