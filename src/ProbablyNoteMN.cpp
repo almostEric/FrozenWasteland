@@ -2743,16 +2743,16 @@ struct ProbablyNoteMNDisplay : TransparentWidget {
 			nvgFillColor(args.vg, nvgRGBA(0x4a, 0xc3, 0x27, 0xff));
 			std::string pitchTypeName = "";
 			switch(inspectedPitch.pitchType) {
-				case module->RATIO_PITCH_TYPE:
+				case ProbablyNoteMN::RATIO_PITCH_TYPE:
 					pitchTypeName = "JI";
 					break;
-				case module->EQUAL_DIVISION_PITCH_TYPE:
+				case ProbablyNoteMN::EQUAL_DIVISION_PITCH_TYPE:
 					pitchTypeName = "EDO";
 					break;
-				case module->EQUAL_STEP_SIZE_PITCH_TYPE:
+				case ProbablyNoteMN::EQUAL_STEP_SIZE_PITCH_TYPE:
 					pitchTypeName = "Equal Step";
 					break;
-				case module->MOS_PITCH_TYPE:
+				case ProbablyNoteMN::MOS_PITCH_TYPE:
 					pitchTypeName = "MOS";
 					break;
 			}
