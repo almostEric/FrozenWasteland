@@ -2786,7 +2786,7 @@ struct ProbablyNoteMNDisplay : TransparentWidget {
 		drawTemperingMode(args, Vec(307,259),module->edoTempering);
 		drawTempering(args, Vec(411,259));
 		drawScaleMapping(args, Vec(324,318.5),module->scaleMappingMode);
-		drawScale(args, Vec(414,308.5),module->scaleMappingMode);
+		drawScale(args, Vec(414,318.5),module->scaleMappingMode);
 		drawNoteCount(args, Vec(608.5,159),module->actualScaleSize);
 		if(noteInspectorVisible)
 			drawNoteInspector(args, Vec(420,159),displayedNoteIndex);

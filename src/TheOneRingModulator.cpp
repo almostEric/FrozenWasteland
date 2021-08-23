@@ -17,6 +17,10 @@ struct TheOneRingModulator : Module {
 		NONLINEARITY_ATTENUVERTER_PARAM,
 		MIX_PARAM,
 		MIX_ATTENUVERTER_PARAM,
+		FEEDBACK_PARAM,
+		FEEDBACK_ATTENUVERTER_PARAM,
+		FEEDBACK_NONLINEARITY_PARAM,
+		FEEDBACK_NONLINEARITY_ATTENUVERTER_PARAM,
 		DROP_COMPENSATE_PARAM,
 		NUM_PARAMS
 	};
@@ -28,6 +32,7 @@ struct TheOneRingModulator : Module {
 		SLOPE_CV_INPUT,
 		NONLINEARITY_CV_INPUT,
 		MIX_INPUT,
+		FEEDBACK_INPUT,
 		NUM_INPUTS
 	};
 	enum OutputIds {
@@ -57,6 +62,8 @@ struct TheOneRingModulator : Module {
 
 	float compensationCoefficient = 1.0;
 
+	float lastFbValue = 0;
+
 	///Advanced Model
 	double C=10e-9;
 	double Cp=10e-9;
@@ -77,6 +84,7 @@ struct TheOneRingModulator : Module {
 	float linearVoltagePercentage = 0;
 	float slopePercentage = 0;
 	float mixPercentage = 0;
+	float feedbackPercentage = 0;
 
 int sampleCount = 0;
 
@@ -122,6 +130,9 @@ int sampleCount = 0;
 		configParam(MIX_PARAM, 0.0, 1.0, 0.5,"Mix","%",0,100);
 		configParam(MIX_ATTENUVERTER_PARAM, -1.0, 1.0, 0.0,"Mix CV Attenuation","%",0,100);
 
+		configParam(FEEDBACK_PARAM, -1.0, 1.0, 0.0,"Feedback","%",0,100);
+		configParam(FEEDBACK_ATTENUVERTER_PARAM, -1.0, 1.0, 0.0,"Feedback CV Attenuation","%",0,100);
+
 	}
 
 	void process(const ProcessArgs &args) override;
@@ -164,6 +175,9 @@ void TheOneRingModulator::process(const ProcessArgs &args) {
     float vIn = inputs[ SIGNAL_INPUT ].getVoltage(); 
     float vC  = inputs[ CARRIER_INPUT ].getVoltage();
 
+    float feedback  = clamp(params[FEEDBACK_PARAM].getValue() + (inputs[FEEDBACK_INPUT].getVoltage() / 10.0 * params[FEEDBACK_ATTENUVERTER_PARAM].getValue()),-1.0f,1.0f);
+	feedbackPercentage = feedback;	
+
     float wd  = clamp(params[MIX_PARAM].getValue() + (inputs[MIX_INPUT].getVoltage() / 10.0 * params[MIX_ATTENUVERTER_PARAM].getValue()),0.0f,1.0f);
 	mixPercentage = wd;
 
@@ -177,6 +191,8 @@ void TheOneRingModulator::process(const ProcessArgs &args) {
 
 	compensationCoefficient = 10.0 / diode_sim(10.0);
 
+	vC += (feedback * lastFbValue);  // Maybe add non-linearity here
+
     float A = vC + 0.5 * vIn;
     float B = vC - 0.5 * vIn;
 
@@ -189,7 +205,9 @@ void TheOneRingModulator::process(const ProcessArgs &args) {
 	if(dropCompensate) {
 		res *= compensationCoefficient;
 	}
-    outputs[MIX_OUTPUT].setVoltage(wd * res + ( 1.0 - wd ) * vIn);
+	float mixOut = wd * res + ( 1.0 - wd ) * vIn;
+	lastFbValue = mixOut;
+    outputs[MIX_OUTPUT].setVoltage(mixOut);
 
 // 	double T = args.sampleTime;
 // 	// double T = 1.0;
@@ -294,8 +312,8 @@ struct TheOneRingModulatorWidget : ModuleWidget {
 			addChild(display);
 		}
 
-		addParam(createParam<LEDButton>(Vec(25, 264), module, TheOneRingModulator::DROP_COMPENSATE_PARAM));
-		addChild(createLight<LargeLight<BlueLight>>(Vec(26.5, 265.5), module, TheOneRingModulator::DROP_COMPENSATE_LIGHT));
+		addParam(createParam<LEDButton>(Vec(70, 338), module, TheOneRingModulator::DROP_COMPENSATE_PARAM));
+		addChild(createLight<LargeLight<BlueLight>>(Vec(71.5, 339.5), module, TheOneRingModulator::DROP_COMPENSATE_LIGHT));
 
 
 		ParamWidget* forwardBiasParam = createParam<RoundSmallFWKnob>(Vec(13, 190), module, TheOneRingModulator::FORWARD_BIAS_PARAM);
@@ -318,19 +336,28 @@ struct TheOneRingModulatorWidget : ModuleWidget {
 		addParam(createParam<RoundReallySmallFWKnob>(Vec(125, 216), module, TheOneRingModulator::SLOPE_ATTENUVERTER_PARAM));
 		// addParam(createParam<RoundFWKnob>(Vec(110, 270), module, TheOneRingModulator::NONLINEARITY_PARAM));
 		// addParam(createParam<RoundSmallFWKnob>(Vec(113, 302), module, TheOneRingModulator::NONLINEARITY_ATTENUVERTER_PARAM));
-		ParamWidget* mixParam = createParam<RoundSmallFWKnob>(Vec(95, 264), module, TheOneRingModulator::MIX_PARAM);
+		ParamWidget* mixParam = createParam<RoundSmallFWKnob>(Vec(100, 264), module, TheOneRingModulator::MIX_PARAM);
 		if (module) {
 			dynamic_cast<RoundSmallFWKnob*>(mixParam)->percentage = &module->mixPercentage;
 		}
 		addParam(mixParam);							
-		addParam(createParam<RoundReallySmallFWKnob>(Vec(110, 290), module, TheOneRingModulator::MIX_ATTENUVERTER_PARAM));
+		addParam(createParam<RoundReallySmallFWKnob>(Vec(115, 290), module, TheOneRingModulator::MIX_ATTENUVERTER_PARAM));
+
+		ParamWidget* fbParam = createParam<RoundSmallFWKnob>(Vec(40, 264), module, TheOneRingModulator::FEEDBACK_PARAM);
+		if (module) {
+			dynamic_cast<RoundSmallFWKnob*>(fbParam)->percentage = &module->feedbackPercentage;
+			dynamic_cast<RoundSmallFWKnob*>(fbParam)->biDirectional = true;
+		}
+		addParam(fbParam);							
+		addParam(createParam<RoundReallySmallFWKnob>(Vec(55, 290), module, TheOneRingModulator::FEEDBACK_ATTENUVERTER_PARAM));
 
 		addInput(createInput<FWPortInSmall>(Vec(14, 340), module, TheOneRingModulator::CARRIER_INPUT));
 		addInput(createInput<FWPortInSmall>(Vec(35, 340), module, TheOneRingModulator::SIGNAL_INPUT));
 		addInput(createInput<FWPortInSmall>(Vec(6, 217), module, TheOneRingModulator::FORWARD_BIAS_CV_INPUT));
 		addInput(createInput<FWPortInSmall>(Vec(57, 217), module, TheOneRingModulator::LINEAR_VOLTAGE_CV_INPUT));
 		addInput(createInput<FWPortInSmall>(Vec(104, 217), module, TheOneRingModulator::SLOPE_CV_INPUT));
-		addInput(createInput<FWPortInSmall>(Vec(87, 291), module, TheOneRingModulator::MIX_INPUT));
+		addInput(createInput<FWPortInSmall>(Vec(92, 291), module, TheOneRingModulator::MIX_INPUT));
+		addInput(createInput<FWPortInSmall>(Vec(32, 291), module, TheOneRingModulator::FEEDBACK_INPUT));
 		// addInput(createInput<PJ301MPort>(Vec(113, 283), module, TheOneRingModulator::NONLINEARITY_CV_INPUT));
 
 		addOutput(createOutput<FWPortInSmall>(Vec(112, 340), module, TheOneRingModulator::MIX_OUTPUT));

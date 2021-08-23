@@ -1,3 +1,6 @@
+### 1.21.1 (2021-08-??)
+-- Added Feedback to The One Ring Modulattor
+
 ### 1.21.0 (2021=08-20)
 -- Added Slice of Life VCO Module
 -- Probably Not(e)-Math Nerd now supports Equal Step scales.
