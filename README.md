@@ -181,7 +181,7 @@ A collection of unusual plugins that will add a certain coolness to your patches
 - These controls can lower the overall output, Gain Compensation keeps output level constant
 - The graph display is useful for seeing the diodes' voltage responses
 - CV control over everything
-- Feedback allows adding the mixed output to the input - this can create some added upper harmonics
+- Feedback allows adding the mixed output to the input - this can create some added upper harmonics. Feedback can be positive or negative.
 ### Ring Modulation
 - Ring Modulation has always appealed to the math nerd in me, because while the process is pretty straightfoward, the results are really cool.
 - example. If you feed into a RM a 200hz sine wave and a 500hz sine wave, the output is the sum and difference of those two frequencies, so 300hz and 700hz.
