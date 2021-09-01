@@ -8,9 +8,9 @@
    xmlns:xlink="http://www.w3.org/1999/xlink"
    xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
    xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
-   width="330"
+   width="390"
    height="380"
-   viewBox="0 0 87.3125 100.54167"
+   viewBox="0 0 103.1875 100.54167"
    version="1.1"
    id="svg11003"
    inkscape:version="1.0 (4035a4fb49, 2020-05-01)"
@@ -26,7 +26,7 @@
        x2="35.219627"
        y2="50.462322"
        gradientUnits="userSpaceOnUse"
-       gradientTransform="matrix(0.91521491,0,0,1.0014499,32.559437,24.592486)" />
+       gradientTransform="matrix(1.0816175,0,0,1.0014499,26.698799,24.592486)" />
     <linearGradient
        inkscape:collect="always"
        id="linearGradient4047">
@@ -52,9 +52,9 @@
      borderopacity="1.0"
      inkscape:pageopacity="0.0"
      inkscape:pageshadow="2"
-     inkscape:zoom="5.6"
-     inkscape:cx="98.403274"
-     inkscape:cy="278.70791"
+     inkscape:zoom="2.8"
+     inkscape:cx="212.68899"
+     inkscape:cy="278.70792"
      inkscape:document-units="px"
      inkscape:current-layer="layer1"
      showgrid="false"
@@ -89,12 +89,12 @@
     <path
        inkscape:export-ydpi="150.22649"
        inkscape:export-xdpi="150.22649"
-       style="fill:url(#linearGradient4049);fill-opacity:1;fill-rule:nonzero;stroke:none;stroke-width:0.410151"
-       d="M 64.792954,75.127975 H 152.10546 V 175.66964 H 64.792954 Z m 0,0"
+       style="fill:url(#linearGradient4049);fill-opacity:1;fill-rule:nonzero;stroke:none;stroke-width:0.445881"
+       d="M 64.792954,75.127975 H 167.98046 V 175.66964 H 64.792954 Z m 0,0"
        id="path18723"
        inkscape:connector-curvature="0" />
     <g
-       transform="matrix(0.88308049,0,0,0.88308049,53.36662,45.128602)"
+       transform="matrix(0.88308049,0,0,0.88308049,62.627036,45.128602)"
        id="g18799"
        style="font-style:normal;font-weight:normal;font-size:3.52778px;line-height:1.25;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#00a3f2;fill-opacity:1;stroke:none;stroke-width:0.264583"
        aria-label="Frozen Wasteland">
@@ -183,24 +183,24 @@
     <text
        xml:space="preserve"
        style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:1.76389px;line-height:1.25;font-family:Quarca;-inkscape-font-specification:Quarca;letter-spacing:0px;word-spacing:0px;fill:#dddddd;fill-opacity:1;stroke:none;stroke-width:0.264583"
-       x="98.356583"
+       x="107.617"
        y="78.412338"
        id="text19169-2-3"><tspan
          sodipodi:role="line"
          id="tspan19167-4-7"
-         x="98.356583"
+         x="107.617"
          y="78.412338"
          style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:3.88056px;font-family:Quarca;-inkscape-font-specification:Quarca;fill:#dddddd;fill-opacity:1;stroke-width:0.264583">SLICE OF LIFE</tspan></text>
     <rect
        y="161.91132"
        x="66.909622"
-       height="8.4666662"
+       height="9.5249996"
        width="7.4083328"
        id="rect22843"
        style="opacity:0.981;fill:#0e365d;fill-opacity:1;stroke:#000000;stroke-width:0;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1" />
     <path
        style="fill:none;stroke:#ffffff;stroke-width:0.132292;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
-       d="m 69.555454,164.06105 h 0.760674 v -1.02526 h 0.628387 v 1.0418 h 0.396867"
+       d="m 69.820037,163.79647 h 0.760674 v -1.02526 h 0.628387 v 1.0418 h 0.396867"
        id="path872"
        inkscape:connector-curvature="0" />
     <g
@@ -240,22 +240,22 @@
        style="opacity:0.981;fill:#0e365d;fill-opacity:1;stroke:#000000;stroke-width:0;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
        id="rect22843-9"
        width="7.4083328"
-       height="8.4666662"
-       x="142.05128"
+       height="9.5249996"
+       x="158.72005"
        y="161.91132" />
     <rect
        style="opacity:0.981;fill:#0e365d;fill-opacity:1;stroke:#000000;stroke-width:0;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
        id="rect22843-7"
        width="7.4083328"
-       height="8.4666662"
-       x="117.18046"
+       height="9.5249996"
+       x="128.29295"
        y="161.91132" />
     <rect
        style="opacity:0.981;fill:#0e365d;fill-opacity:1;stroke:#000000;stroke-width:0;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
        id="rect22843-8"
        width="7.4083328"
-       height="8.4666662"
-       x="106.59712"
+       height="9.5249996"
+       x="99.188789"
        y="161.91132" />
     <text
        id="text2148-3"
@@ -267,7 +267,7 @@
          y="93.564148"
          x="94.284492"
          id="tspan2146-3"
-         sodipodi:role="line">FM CV</tspan></text>
+         sodipodi:role="line">FM1 CV</tspan></text>
     <text
        xml:space="preserve"
        style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:3.52777px;line-height:1.25;font-family:Quarca;-inkscape-font-specification:Quarca;text-align:start;letter-spacing:0px;word-spacing:0px;text-anchor:start;fill:#dddddd;fill-opacity:1;stroke:none;stroke-width:0.264583"
@@ -289,29 +289,7 @@
          y="110.76344"
          x="67.296974"
          id="tspan2146-3-4-5"
-         sodipodi:role="line">PILSE WIDTH</tspan></text>
-    <text
-       xml:space="preserve"
-       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:3.52778px;line-height:1.25;font-family:Quarca;-inkscape-font-specification:Quarca;text-align:start;letter-spacing:0px;word-spacing:0px;text-anchor:start;fill:#dddddd;fill-opacity:1;stroke:none;stroke-width:0.264583"
-       x="109.66276"
-       y="164.52721"
-       id="text2148-3-5"><tspan
-         sodipodi:role="line"
-         id="tspan2146-3-8"
-         x="109.66276"
-         y="164.52721"
-         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:3.52778px;font-family:Quarca;-inkscape-font-specification:Quarca;text-align:start;text-anchor:start;fill:#dddddd;fill-opacity:1;stroke-width:0.264583">+</tspan></text>
-    <text
-       id="text2148-3-5-6"
-       y="164.6277"
-       x="120.46481"
-       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:3.52777px;line-height:1.25;font-family:Quarca;-inkscape-font-specification:Quarca;text-align:start;letter-spacing:0px;word-spacing:0px;text-anchor:start;fill:#dddddd;fill-opacity:1;stroke:none;stroke-width:0.264583"
-       xml:space="preserve"><tspan
-         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:3.52777px;font-family:Quarca;-inkscape-font-specification:Quarca;text-align:start;text-anchor:start;fill:#dddddd;fill-opacity:1;stroke-width:0.264583"
-         y="164.6277"
-         x="120.46481"
-         id="tspan2146-3-8-9"
-         sodipodi:role="line">-</tspan></text>
+         sodipodi:role="line">PULSE WIDTH</tspan></text>
     <g
        transform="translate(0.52916668,-8.2433838)"
        id="g7461">
@@ -415,25 +393,14 @@
     <text
        xml:space="preserve"
        style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:3.52777px;line-height:1.25;font-family:Quarca;-inkscape-font-specification:Quarca;text-align:start;letter-spacing:0px;word-spacing:0px;text-anchor:start;fill:#dddddd;fill-opacity:1;stroke:none;stroke-width:0.264583"
-       x="92.572952"
-       y="110.49747"
+       x="68.884468"
+       y="123.72665"
        id="text2148-3-6"><tspan
          sodipodi:role="line"
          id="tspan2146-3-1"
-         x="92.572952"
-         y="110.49747"
+         x="68.884468"
+         y="123.72665"
          style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:2.11667px;font-family:Quarca;-inkscape-font-specification:Quarca;text-align:start;text-anchor:start;fill:#dddddd;fill-opacity:1;stroke-width:0.264583">PW CV</tspan></text>
-    <text
-       id="text2148-3-6-9"
-       y="164.19803"
-       x="144.30438"
-       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:3.52777px;line-height:1.25;font-family:Quarca;-inkscape-font-specification:Quarca;text-align:start;letter-spacing:0px;word-spacing:0px;text-anchor:start;fill:#dddddd;fill-opacity:1;stroke:none;stroke-width:0.264583"
-       xml:space="preserve"><tspan
-         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:2.11667px;font-family:Quarca;-inkscape-font-specification:Quarca;text-align:start;text-anchor:start;fill:#dddddd;fill-opacity:1;stroke-width:0.264583"
-         y="164.19803"
-         x="144.30438"
-         id="tspan2146-3-1-8"
-         sodipodi:role="line">OUT</tspan></text>
     <g
        style="stroke:#ffffff;stroke-width:1.06662;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
        transform="matrix(0.12402883,0,0,0.12402883,110.04492,135.92409)"
@@ -504,44 +471,44 @@
        xml:space="preserve"
        style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:3.52777px;line-height:1.25;font-family:Quarca;-inkscape-font-specification:Quarca;text-align:start;letter-spacing:0px;word-spacing:0px;text-anchor:start;fill:#dddddd;fill-opacity:1;stroke:none;stroke-width:0.264583"
        x="67.864281"
-       y="131.13498"
+       y="144.36415"
        id="text2148-3-4"><tspan
          sodipodi:role="line"
          id="tspan2146-3-9"
          x="67.864281"
-         y="131.13498"
+         y="144.36415"
          style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:2.11667px;font-family:Quarca;-inkscape-font-specification:Quarca;text-align:start;text-anchor:start;fill:#dddddd;fill-opacity:1;stroke-width:0.264583">PW SKEW</tspan></text>
     <text
        id="text2148-3-4-2"
-       y="131.14035"
+       y="144.36952"
        x="81.919838"
        style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:3.52777px;line-height:1.25;font-family:Quarca;-inkscape-font-specification:Quarca;text-align:start;letter-spacing:0px;word-spacing:0px;text-anchor:start;fill:#dddddd;fill-opacity:1;stroke:none;stroke-width:0.264583"
        xml:space="preserve"><tspan
          style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:2.11667px;font-family:Quarca;-inkscape-font-specification:Quarca;text-align:start;text-anchor:start;fill:#dddddd;fill-opacity:1;stroke-width:0.264583"
-         y="131.14035"
+         y="144.36952"
          x="81.919838"
          id="tspan2146-3-9-7"
          sodipodi:role="line">CV  LOCK</tspan></text>
     <text
        id="text2148-3-4-5"
-       y="131.14574"
+       y="144.37491"
        x="93.813332"
        style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:3.52777px;line-height:1.25;font-family:Quarca;-inkscape-font-specification:Quarca;text-align:start;letter-spacing:0px;word-spacing:0px;text-anchor:start;fill:#dddddd;fill-opacity:1;stroke:none;stroke-width:0.264583"
        xml:space="preserve"><tspan
          style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:2.11667px;font-family:Quarca;-inkscape-font-specification:Quarca;text-align:start;text-anchor:start;fill:#dddddd;fill-opacity:1;stroke-width:0.264583"
-         y="131.14574"
+         y="144.37491"
          x="93.813332"
          id="tspan2146-3-9-5"
          sodipodi:role="line">SYNC LOCK</tspan></text>
     <text
        xml:space="preserve"
        style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:3.52777px;line-height:1.25;font-family:Quarca;-inkscape-font-specification:Quarca;text-align:start;letter-spacing:0px;word-spacing:0px;text-anchor:start;fill:#dddddd;fill-opacity:1;stroke:none;stroke-width:0.264583"
-       x="120.82221"
+       x="121.35138"
        y="82.410698"
        id="text2148-8-3"><tspan
          sodipodi:role="line"
          id="tspan2146-0-8"
-         x="120.82221"
+         x="121.35138"
          y="82.410698"
          style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:2.82223px;font-family:Quarca;-inkscape-font-specification:Quarca;text-align:start;text-anchor:start;fill:#dddddd;fill-opacity:1;stroke-width:0.264583">POSITIVE</tspan></text>
     <text
@@ -569,56 +536,56 @@
     <text
        xml:space="preserve"
        style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:3.52777px;line-height:1.25;font-family:Quarca;-inkscape-font-specification:Quarca;text-align:start;letter-spacing:0px;word-spacing:0px;text-anchor:start;fill:#dddddd;fill-opacity:1;stroke:none;stroke-width:0.264583"
-       x="77.880302"
+       x="76.425095"
        y="155.21207"
        id="text2148-3-4-7-8"><tspan
          sodipodi:role="line"
          id="tspan2146-3-9-0-0"
-         x="77.880302"
+         x="76.425095"
          y="155.21207"
-         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:2.11667px;font-family:Quarca;-inkscape-font-specification:Quarca;text-align:start;text-anchor:start;fill:#dddddd;fill-opacity:1;stroke-width:0.264583">FM</tspan></text>
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:2.11667px;font-family:Quarca;-inkscape-font-specification:Quarca;text-align:start;text-anchor:start;fill:#dddddd;fill-opacity:1;stroke-width:0.264583">FM1</tspan></text>
     <text
        id="text2148-3-4-7-8-4"
        y="155.21207"
-       x="85.866486"
+       x="91.158157"
        style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:3.52777px;line-height:1.25;font-family:Quarca;-inkscape-font-specification:Quarca;text-align:start;letter-spacing:0px;word-spacing:0px;text-anchor:start;fill:#dddddd;fill-opacity:1;stroke:none;stroke-width:0.264583"
        xml:space="preserve"><tspan
          style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:2.11667px;font-family:Quarca;-inkscape-font-specification:Quarca;text-align:start;text-anchor:start;fill:#dddddd;fill-opacity:1;stroke-width:0.264583"
          y="155.21207"
-         x="85.866486"
+         x="91.158157"
          id="tspan2146-3-9-0-0-3"
          sodipodi:role="line">SYNC</tspan></text>
     <text
        id="text2148-3-4-7-8-42"
        y="155.21207"
-       x="95.871971"
+       x="99.973015"
        style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:3.52777px;line-height:1.25;font-family:Quarca;-inkscape-font-specification:Quarca;text-align:start;letter-spacing:0px;word-spacing:0px;text-anchor:start;fill:#dddddd;fill-opacity:1;stroke:none;stroke-width:0.264583"
        xml:space="preserve"><tspan
          style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:2.11667px;font-family:Quarca;-inkscape-font-specification:Quarca;text-align:start;text-anchor:start;fill:#dddddd;fill-opacity:1;stroke-width:0.264583"
          y="155.21207"
-         x="95.871971"
+         x="99.973015"
          id="tspan2146-3-9-0-0-5"
          sodipodi:role="line">PW</tspan></text>
     <text
        xml:space="preserve"
        style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:3.52777px;line-height:1.25;font-family:Quarca;-inkscape-font-specification:Quarca;text-align:start;letter-spacing:0px;word-spacing:0px;text-anchor:start;fill:#dddddd;fill-opacity:1;stroke:none;stroke-width:0.264583"
-       x="109.45462"
+       x="112.10046"
        y="155.28192"
        id="text2148-3-4-7-1"><tspan
          sodipodi:role="line"
          id="tspan2146-3-9-0-3"
-         x="109.45462"
+         x="112.10046"
          y="155.28192"
          style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:2.11667px;font-family:Quarca;-inkscape-font-specification:Quarca;text-align:start;text-anchor:start;fill:#dddddd;fill-opacity:1;stroke-width:0.264583">V/O</tspan></text>
     <text
        id="text2148-3-4-7-8-8"
        y="155.21205"
-       x="120.21364"
+       x="121.53655"
        style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:3.52777px;line-height:1.25;font-family:Quarca;-inkscape-font-specification:Quarca;text-align:start;letter-spacing:0px;word-spacing:0px;text-anchor:start;fill:#dddddd;fill-opacity:1;stroke:none;stroke-width:0.264583"
        xml:space="preserve"><tspan
          style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:2.11667px;font-family:Quarca;-inkscape-font-specification:Quarca;text-align:start;text-anchor:start;fill:#dddddd;fill-opacity:1;stroke-width:0.264583"
          y="155.21205"
-         x="120.21364"
+         x="121.53655"
          id="tspan2146-3-9-0-0-39"
          sodipodi:role="line">FM</tspan></text>
     <text
@@ -635,23 +602,23 @@
     <text
        xml:space="preserve"
        style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:3.52777px;line-height:1.25;font-family:Quarca;-inkscape-font-specification:Quarca;text-align:start;letter-spacing:0px;word-spacing:0px;text-anchor:start;fill:#dddddd;fill-opacity:1;stroke:none;stroke-width:0.264583"
-       x="109.45462"
+       x="112.10046"
        y="112.94859"
        id="text2148-3-4-7-0"><tspan
          sodipodi:role="line"
          id="tspan2146-3-9-0-9"
-         x="109.45462"
+         x="112.10046"
          y="112.94859"
          style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:2.11667px;font-family:Quarca;-inkscape-font-specification:Quarca;text-align:start;text-anchor:start;fill:#dddddd;fill-opacity:1;stroke-width:0.264583">V/O</tspan></text>
     <text
        id="text2148-3-4-7-8-7"
        y="112.87873"
-       x="120.21364"
+       x="121.53655"
        style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:3.52777px;line-height:1.25;font-family:Quarca;-inkscape-font-specification:Quarca;text-align:start;letter-spacing:0px;word-spacing:0px;text-anchor:start;fill:#dddddd;fill-opacity:1;stroke:none;stroke-width:0.264583"
        xml:space="preserve"><tspan
          style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:2.11667px;font-family:Quarca;-inkscape-font-specification:Quarca;text-align:start;text-anchor:start;fill:#dddddd;fill-opacity:1;stroke-width:0.264583"
          y="112.87873"
-         x="120.21364"
+         x="121.53655"
          id="tspan2146-3-9-0-0-9"
          sodipodi:role="line">FM</tspan></text>
     <text
@@ -698,5 +665,304 @@
          x="101.18727"
          y="95.430336"
          style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:1.76389px;font-family:Quarca;-inkscape-font-specification:Quarca;text-align:start;text-anchor:start;fill:#dddddd;fill-opacity:1;stroke-width:0.264583">EXP</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:3.52777px;line-height:1.25;font-family:Quarca;-inkscape-font-specification:Quarca;text-align:start;letter-spacing:0px;word-spacing:0px;text-anchor:start;fill:#dddddd;fill-opacity:1;stroke:none;stroke-width:0.264583"
+       x="94.28447"
+       y="106.79331"
+       id="text2148-3-1"><tspan
+         sodipodi:role="line"
+         id="tspan2146-3-6"
+         x="94.28447"
+         y="106.79331"
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:2.11667px;font-family:Quarca;-inkscape-font-specification:Quarca;text-align:start;text-anchor:start;fill:#dddddd;fill-opacity:1;stroke-width:0.264583">FM2 CV</tspan></text>
+    <text
+       id="text2148-3-8-4-9-1"
+       y="108.65948"
+       x="101.18727"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:1.76389px;line-height:1.25;font-family:Quarca;-inkscape-font-specification:Quarca;text-align:start;letter-spacing:0px;word-spacing:0px;text-anchor:start;fill:#dddddd;fill-opacity:1;stroke:none;stroke-width:0.264583"
+       xml:space="preserve"><tspan
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:1.76389px;font-family:Quarca;-inkscape-font-specification:Quarca;text-align:start;text-anchor:start;fill:#dddddd;fill-opacity:1;stroke-width:0.264583"
+         y="108.65948"
+         x="101.18727"
+         id="tspan2146-3-40-0-8-0"
+         sodipodi:role="line">EXP</tspan></text>
+    <rect
+       style="opacity:0.981;fill:#0e365d;fill-opacity:1;stroke:#000000;stroke-width:0;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       id="rect22843-1"
+       width="7.4083328"
+       height="9.5249996"
+       x="73.524208"
+       y="161.91132" />
+    <rect
+       style="opacity:0.981;fill:#0e365d;fill-opacity:1;stroke:#000000;stroke-width:0;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       id="rect22843-75"
+       width="7.4083328"
+       height="9.5249996"
+       x="80.138786"
+       y="161.91132" />
+    <path
+       sodipodi:nodetypes="ccc"
+       inkscape:connector-curvature="0"
+       id="path870-2"
+       d="m 76.75712,163.79283 0.529167,-0.95911 0.578776,0.89297"
+       style="fill:none;stroke:#ffffff;stroke-width:0.132292;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1" />
+    <g
+       style="stroke:#ffffff;stroke-width:1.06535;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       id="g318-7"
+       transform="matrix(0.12417689,0,0,0.12417689,82.232887,158.66873)">
+      <g
+         style="stroke:#ffffff;stroke-width:1.06535;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+         id="g316-0"
+         transform="translate(9,33.5)">
+        <path
+           style="fill:none;stroke:#ffffff;stroke-width:1.06535;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+           d="M 0,8 12,0 v 8"
+           id="polyline314-1"
+           inkscape:connector-curvature="0" />
+      </g>
+    </g>
+    <rect
+       y="161.91132"
+       x="105.80338"
+       height="9.5249996"
+       width="7.4083328"
+       id="rect22843-8-5"
+       style="opacity:0.981;fill:#0e365d;fill-opacity:1;stroke:#000000;stroke-width:0;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1" />
+    <text
+       id="text2148-3-6-9"
+       y="164.2079"
+       x="160.70335"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:3.52777px;line-height:1.25;font-family:Quarca;-inkscape-font-specification:Quarca;text-align:start;letter-spacing:0px;word-spacing:0px;text-anchor:start;fill:#dddddd;fill-opacity:1;stroke:none;stroke-width:0.264583"
+       xml:space="preserve"><tspan
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:2.11667px;font-family:Quarca;-inkscape-font-specification:Quarca;text-align:start;text-anchor:start;fill:#dddddd;fill-opacity:1;stroke-width:0.264583"
+         y="164.2079"
+         x="160.70335"
+         id="tspan2146-3-1-8"
+         sodipodi:role="line">OUT</tspan></text>
+    <rect
+       style="opacity:0.981;fill:#0e365d;fill-opacity:1;stroke:#000000;stroke-width:0;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       id="rect22843-8-5-8"
+       width="7.4083328"
+       height="9.5249996"
+       x="112.41795"
+       y="161.91132" />
+    <rect
+       y="161.91132"
+       x="118.50337"
+       height="9.5249996"
+       width="7.4083328"
+       id="rect22843-8-5-8-1"
+       style="opacity:0.981;fill:#0e365d;fill-opacity:1;stroke:#000000;stroke-width:0;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1" />
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:3.52778px;line-height:1.25;font-family:Quarca;-inkscape-font-specification:Quarca;text-align:start;letter-spacing:0px;word-spacing:0px;text-anchor:start;fill:#dddddd;fill-opacity:1;stroke:none;stroke-width:0.264583"
+       x="121.27197"
+       y="164.2079"
+       id="text2148-3-5"><tspan
+         sodipodi:role="line"
+         id="tspan2146-3-8"
+         x="121.27197"
+         y="164.2079"
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:3.52778px;font-family:Quarca;-inkscape-font-specification:Quarca;text-align:start;text-anchor:start;fill:#dddddd;fill-opacity:1;stroke-width:0.264583"><tspan
+           id="tspan2192"
+           style="font-size:2.11667px">MIX</tspan></tspan></text>
+    <text
+       id="text2148-3-5-7"
+       y="171.52097"
+       x="111.75755"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:4.23333px;line-height:1.25;font-family:Quarca;-inkscape-font-specification:Quarca;text-align:start;letter-spacing:0px;word-spacing:0px;text-anchor:start;fill:#dddddd;fill-opacity:1;stroke:none;stroke-width:0.264583"
+       xml:space="preserve"><tspan
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:4.23333px;font-family:Quarca;-inkscape-font-specification:Quarca;text-align:start;text-anchor:start;fill:#dddddd;fill-opacity:1;stroke-width:0.264583"
+         y="171.52097"
+         x="111.75755"
+         id="tspan2146-3-8-4"
+         sodipodi:role="line">+</tspan></text>
+    <rect
+       y="161.91132"
+       x="134.90753"
+       height="9.5249996"
+       width="7.4083328"
+       id="rect22843-7-1"
+       style="opacity:0.981;fill:#0e365d;fill-opacity:1;stroke:#000000;stroke-width:0;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1" />
+    <rect
+       y="161.91132"
+       x="140.1992"
+       height="9.5249996"
+       width="7.4083328"
+       id="rect22843-7-4"
+       style="opacity:0.981;fill:#0e365d;fill-opacity:1;stroke:#000000;stroke-width:0;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1" />
+    <rect
+       style="opacity:0.981;fill:#0e365d;fill-opacity:1;stroke:#000000;stroke-width:0;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       id="rect22843-7-4-5"
+       width="7.4083328"
+       height="9.5249996"
+       x="146.81378"
+       y="161.91132" />
+    <text
+       id="text2148-3-5-6"
+       y="164.2079"
+       x="150.09781"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:3.52777px;line-height:1.25;font-family:Quarca;-inkscape-font-specification:Quarca;text-align:start;letter-spacing:0px;word-spacing:0px;text-anchor:start;fill:#dddddd;fill-opacity:1;stroke:none;stroke-width:0.264583"
+       xml:space="preserve"><tspan
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:3.52777px;font-family:Quarca;-inkscape-font-specification:Quarca;text-align:start;text-anchor:start;fill:#dddddd;fill-opacity:1;stroke-width:0.264583"
+         y="164.2079"
+         x="150.09781"
+         id="tspan2146-3-8-9"
+         sodipodi:role="line"><tspan
+           id="tspan2194"
+           style="font-size:2.11667px">MIX</tspan></tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:3.52777px;line-height:1.25;font-family:Quarca;-inkscape-font-specification:Quarca;text-align:start;letter-spacing:0px;word-spacing:0px;text-anchor:start;fill:#dddddd;fill-opacity:1;stroke:none;stroke-width:0.264583"
+       x="140.5421"
+       y="171.35164"
+       id="text2148-3-5-6-3"><tspan
+         sodipodi:role="line"
+         id="tspan2146-3-8-9-1"
+         x="140.5421"
+         y="171.35164"
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:4.23333px;font-family:Quarca;-inkscape-font-specification:Quarca;text-align:start;text-anchor:start;fill:#dddddd;fill-opacity:1;stroke-width:0.264583">-</tspan></text>
+    <text
+       id="text2148-3-4-7-8-5"
+       y="155.21207"
+       x="83.965721"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:3.52777px;line-height:1.25;font-family:Quarca;-inkscape-font-specification:Quarca;text-align:start;letter-spacing:0px;word-spacing:0px;text-anchor:start;fill:#dddddd;fill-opacity:1;stroke:none;stroke-width:0.264583"
+       xml:space="preserve"><tspan
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:2.11667px;font-family:Quarca;-inkscape-font-specification:Quarca;text-align:start;text-anchor:start;fill:#dddddd;fill-opacity:1;stroke-width:0.264583"
+         y="155.21207"
+         x="83.965721"
+         id="tspan2146-3-9-0-0-7"
+         sodipodi:role="line">FM2</tspan></text>
+    <path
+       style="fill:none;stroke:#ffffff;stroke-width:0.132292;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       d="m 108.50712,163.92166 0.52917,-0.95911 0.57878,0.89297"
+       id="path870-1"
+       inkscape:connector-curvature="0"
+       sodipodi:nodetypes="ccc" />
+    <g
+       id="g346-6"
+       transform="matrix(0.12402883,0,0,0.12402883,100.51992,158.67826)"
+       style="stroke:#ffffff;stroke-width:1.06662;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1">
+      <!-- <text font-size="6pt" letter-spacing="2px" transform="translate(6.5 40)">SIN</text> -->
+      <g
+         id="g344-7"
+         transform="translate(9,33.5)"
+         style="stroke:#ffffff;stroke-width:1.06662;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1">
+        <!-- <rect width="12" height="8" fill="none" stroke-width="1" stroke="#0f0" /> -->
+        <path
+           style="fill:none;stroke:#ffffff;stroke-width:1.06662;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+           inkscape:connector-curvature="0"
+           id="path340-2"
+           d="M 0,4 A 3,4.5 0 0 1 6,4" />
+        <path
+           style="fill:none;stroke:#ffffff;stroke-width:1.06662;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+           inkscape:connector-curvature="0"
+           id="path342-6"
+           d="m 6,4 a 3,4.5 0 0 0 6,0" />
+      </g>
+    </g>
+    <g
+       transform="matrix(0.12417689,0,0,0.12417689,113.7183,158.74524)"
+       id="g318-12"
+       style="stroke:#ffffff;stroke-width:1.06535;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1">
+      <g
+         transform="translate(9,33.5)"
+         id="g316-1"
+         style="stroke:#ffffff;stroke-width:1.06535;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1">
+        <path
+           inkscape:connector-curvature="0"
+           id="polyline314-11"
+           d="M 0,8 12,0 v 8"
+           style="fill:none;stroke:#ffffff;stroke-width:1.06535;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1" />
+      </g>
+    </g>
+    <path
+       style="fill:none;stroke:#ffffff;stroke-width:0.132292;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       d="m 137.61129,163.95946 0.52917,-0.95911 0.57877,0.89297"
+       id="path870-19"
+       inkscape:connector-curvature="0"
+       sodipodi:nodetypes="ccc" />
+    <g
+       id="g346-3"
+       transform="matrix(0.12402883,0,0,0.12402883,129.62409,158.71606)"
+       style="stroke:#ffffff;stroke-width:1.06662;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1">
+      <!-- <text font-size="6pt" letter-spacing="2px" transform="translate(6.5 40)">SIN</text> -->
+      <g
+         id="g344-70"
+         transform="translate(9,33.5)"
+         style="stroke:#ffffff;stroke-width:1.06662;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1">
+        <!-- <rect width="12" height="8" fill="none" stroke-width="1" stroke="#0f0" /> -->
+        <path
+           style="fill:none;stroke:#ffffff;stroke-width:1.06662;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+           inkscape:connector-curvature="0"
+           id="path340-8"
+           d="M 0,4 A 3,4.5 0 0 1 6,4" />
+        <path
+           style="fill:none;stroke:#ffffff;stroke-width:1.06662;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+           inkscape:connector-curvature="0"
+           id="path342-1"
+           d="m 6,4 a 3,4.5 0 0 0 6,0" />
+      </g>
+    </g>
+    <g
+       transform="matrix(0.12417689,0,0,0.12417689,142.82247,158.78304)"
+       id="g318-3"
+       style="stroke:#ffffff;stroke-width:1.06535;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1">
+      <g
+         transform="translate(9,33.5)"
+         id="g316-03"
+         style="stroke:#ffffff;stroke-width:1.06535;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1">
+        <path
+           inkscape:connector-curvature="0"
+           id="polyline314-2"
+           d="M 0,8 12,0 v 8"
+           style="fill:none;stroke:#ffffff;stroke-width:1.06535;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1" />
+      </g>
+    </g>
+    <text
+       id="text2148-3-8-5"
+       y="87.214142"
+       x="156.02129"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:3.52777px;line-height:1.25;font-family:Quarca;-inkscape-font-specification:Quarca;text-align:start;letter-spacing:0px;word-spacing:0px;text-anchor:start;fill:#dddddd;fill-opacity:1;stroke:none;stroke-width:0.264583"
+       xml:space="preserve"><tspan
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:2.11667px;font-family:Quarca;-inkscape-font-specification:Quarca;text-align:start;text-anchor:start;fill:#dddddd;fill-opacity:1;stroke-width:0.264583"
+         y="87.214142"
+         x="156.02129"
+         id="tspan2146-3-40-9"
+         sodipodi:role="line">VCA BIAS</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:3.52777px;line-height:1.25;font-family:Quarca;-inkscape-font-specification:Quarca;text-align:start;letter-spacing:0px;word-spacing:0px;text-anchor:start;fill:#dddddd;fill-opacity:1;stroke:none;stroke-width:0.264583"
+       x="158.57822"
+       y="100.44331"
+       id="text2148-3-8-5-9"><tspan
+         sodipodi:role="line"
+         id="tspan2146-3-40-9-5"
+         x="158.57822"
+         y="100.44331"
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:2.11667px;font-family:Quarca;-inkscape-font-specification:Quarca;text-align:start;text-anchor:start;fill:#dddddd;fill-opacity:1;stroke-width:0.264583">MIX</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:1.76389px;line-height:1.25;font-family:Quarca;-inkscape-font-specification:Quarca;text-align:start;letter-spacing:0px;word-spacing:0px;text-anchor:start;fill:#dddddd;fill-opacity:1;stroke:none;stroke-width:0.264583"
+       x="157.35303"
+       y="113.422"
+       id="text2148-3-8-4-4"><tspan
+         sodipodi:role="line"
+         id="tspan2146-3-40-0-1"
+         x="157.35303"
+         y="113.422"
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:1.76389px;font-family:Quarca;-inkscape-font-specification:Quarca;text-align:start;text-anchor:start;fill:#dddddd;fill-opacity:1;stroke-width:0.264583">VCA CV</tspan></text>
+    <text
+       id="text2148-3-6-0"
+       y="123.72665"
+       x="88.512321"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:3.52777px;line-height:1.25;font-family:Quarca;-inkscape-font-specification:Quarca;text-align:start;letter-spacing:0px;word-spacing:0px;text-anchor:start;fill:#dddddd;fill-opacity:1;stroke:none;stroke-width:0.264583"
+       xml:space="preserve"><tspan
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:2.11667px;font-family:Quarca;-inkscape-font-specification:Quarca;text-align:start;text-anchor:start;fill:#dddddd;fill-opacity:1;stroke-width:0.264583"
+         y="123.72665"
+         x="88.512321"
+         id="tspan2146-3-1-0"
+         sodipodi:role="line">SKEW AMOUNT</tspan></text>
   </g>
 </svg>

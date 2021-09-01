@@ -560,7 +560,7 @@ When they are connected this way, the Clock, Mute and Reset signals, and Eoc out
 
 ## Slice of Life
 
-![Slice of Life](./doc/sol.png)
+![Slice of Life](./doc/SoL.png)
 - FW's interpretation of Future Sound System's OSC Recombination Engine Eurorack module
 
 - Best bet is to refer to this: https://www.futuresoundsystems.co.uk/returnosc2.html

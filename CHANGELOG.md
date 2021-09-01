@@ -1,3 +1,6 @@
+### 1.21.1 (2021-09-01)
+-- Updated Slice of Life to be more like hardware it's based on
+
 ### 1.21.1 (2021-08-23)
 -- Added Feedback to The One Ring Modulator
 
