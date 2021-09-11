@@ -1,4 +1,7 @@
-### 1.21.1 (2021-09-01)
+### 1.21.3 (2021-09-11)
+-- Fixed negative scaling bug in SOL
+
+### 1.21.2 (2021-09-01)
 -- Updated Slice of Life to be more like hardware it's based on
 
 ### 1.21.1 (2021-08-23)

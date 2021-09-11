@@ -597,8 +597,6 @@ struct SliceOfLife : Module {
 
             scissorOutput[c] = oscillator->sqr();
             outputs[SIS_SQR_OUTPUT].setVoltageSimd(scissorOutput[c] * 5.f, c);
-			float triVCAParam = params[POS_TRI_VCA_PARAM].getValue();
-			float sawVCAParam = params[POS_SAW_VCA_PARAM].getValue();
             outputs[SIS_TRI_OUTPUT].setVoltageSimd(oscillator->tri() * 5.f, c);
             outputs[SIS_SAW_OUTPUT].setVoltageSimd(oscillator->saw() * 5.f, c);
 
@@ -763,7 +761,7 @@ struct SliceOfLife : Module {
             // negativeOutput[c] = (negSin * sinVCA4 + negTri * triVCA4 + negSaw * sawVCA4) / totalVCA4;  
             negativeOutput[c] = ((negSin * sinVCA4Processed) + 
 								(negTri * triVCA4Processed) + 
-								(negSaw * sawVCA4Processed));  
+								(negSaw * sawVCA4Processed)) / totalVCA4;  
 
 
 
