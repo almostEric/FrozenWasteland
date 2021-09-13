@@ -66,7 +66,6 @@ struct QARConditionalExpander : Module {
 	//percentages
 	float stepConditionalPercentage[MAX_STEPS] = {0};
 
-	bool isDirty = false;
 	bool QARExpanderDisconnectReset = true;
 
 	QARConditionalExpander() {
@@ -191,7 +190,7 @@ struct QARConditionalExpander : Module {
 
 
 	void process(const ProcessArgs &args) override {
-		isDirty = false;
+		bool isDirty = false;
 		for(int i=0; i< TRACK_COUNT; i++) {
 			if (trackConditionalTrigger[i].process(params[TRACK_1_CONDITIONAL_ENABLED_PARAM+i].getValue())) {
 				trackConditionalSelected[i] = !trackConditionalSelected[i];

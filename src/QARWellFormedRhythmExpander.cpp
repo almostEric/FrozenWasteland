@@ -73,7 +73,6 @@ struct QARWellFormedRhythmExpander : Module {
 	int sceneChangeMessage = 0;
 
 
-	bool isDirty = false;
 	bool QARExpanderDisconnectReset = true;
 
 
@@ -172,7 +171,7 @@ struct QARWellFormedRhythmExpander : Module {
 
 
 	void process(const ProcessArgs &args) override {
-		isDirty = false;
+		bool isDirty = false;
 		for(int i=0; i< TRACK_COUNT; i++) {            
             float t = clamp(params[TRACK_1_EXTRA_VALUE_PARAM+i].getValue() + (inputs[TRACK_1_EXTRA_VALUE_INPUT+i].isConnected() ? inputs[TRACK_1_EXTRA_VALUE_INPUT+i].getVoltage() / 10.0f : 0.0f ),0.0f,0.999f);
 			extraValuePercentage[i] = t;

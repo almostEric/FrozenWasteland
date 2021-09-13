@@ -100,7 +100,6 @@ struct QARGrooveExpander : Module {
 	float lastGrooveAmount = 0;
 	float lastSwingRandomness = 0;
 
-	bool isDirty = false;
 	bool QARExpanderDisconnectReset = true;
 	
 	QARGrooveExpander() {
@@ -236,7 +235,7 @@ struct QARGrooveExpander : Module {
 
 
 	void process(const ProcessArgs &args) override {
-		isDirty = false;
+		bool isDirty = false;
 		for(int i=0; i< TRACK_COUNT; i++) {
 			if (trackGrooveTrigger[i].process(params[TRACK_1_GROOVE_ENABLED_PARAM+i].getValue())) {
 				trackGrooveSelected[i] = !trackGrooveSelected[i];

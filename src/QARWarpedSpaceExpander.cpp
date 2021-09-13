@@ -75,7 +75,6 @@ struct QARWarpedSpaceExpander : Module {
 	float lastWarpPosition = 0;
 	float lastWarpLength = 0;
 
-	bool isDirty = false;
 	bool QARExpanderDisconnectReset = true;
 
     float lerp(float v0, float v1, float t) {
@@ -191,7 +190,7 @@ struct QARWarpedSpaceExpander : Module {
 
 
 	void process(const ProcessArgs &args) override {
-		isDirty = false;
+		bool isDirty = false;
 		for(int i=0; i< TRACK_COUNT; i++) {
 			if (trackWarpTrigger[i].process(params[TRACK_1_WARP_ENABLED_PARAM+i].getValue())) {
 				trackWarpSelected[i] = !trackWarpSelected[i];

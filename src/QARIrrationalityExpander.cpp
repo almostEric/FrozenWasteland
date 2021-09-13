@@ -94,7 +94,6 @@ struct QARIrrationalityExpander : Module {
 	float irRatioPercentage = 0;
 			
 			
-	bool isDirty = false;
 	bool QARExpanderDisconnectReset = true;
 
 	QARIrrationalityExpander() {
@@ -204,7 +203,7 @@ struct QARIrrationalityExpander : Module {
 	}
 
 	void process(const ProcessArgs &args) override {
-		isDirty = false;
+		bool isDirty = false;
 		for(int i=0; i< TRACK_COUNT; i++) {
 			if (trackIRTrigger[i].process(params[TRACK_1_IR_ENABLED_PARAM+i].getValue())) {
 				trackIRSelected[i] = !trackIRSelected[i];
