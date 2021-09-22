@@ -426,15 +426,15 @@ struct ProbablyNote : Module {
 	json_t *dataToJson() override {
 		json_t *rootJ = json_object();
 
-		json_object_set_new(rootJ, "triggerDelayEnabled", json_integer((bool) triggerDelayEnabled));
-		json_object_set_new(rootJ, "octaveWrapAround", json_integer((int) octaveWrapAround));
-		json_object_set_new(rootJ, "alternateIntonationActive", json_integer((int) alternateIntonationActive));
+		json_object_set_new(rootJ, "triggerDelayEnabled", json_boolean(triggerDelayEnabled));
+		json_object_set_new(rootJ, "octaveWrapAround", json_boolean(octaveWrapAround));
+		json_object_set_new(rootJ, "alternateIntonationActive", json_boolean(alternateIntonationActive));
 		json_object_set_new(rootJ, "currentIntonation", json_integer((int) currentIntonation));
 		json_object_set_new(rootJ, "shiftMode", json_integer((int) shiftMode));
-		json_object_set_new(rootJ, "keyLogarithmic", json_integer((int) keyLogarithmic));
-		json_object_set_new(rootJ, "useCircleLayout", json_integer((int) useCircleLayout));
-		json_object_set_new(rootJ, "pitchRandomGaussian", json_integer((int) pitchRandomGaussian)); 
-		json_object_set_new(rootJ, "triggerPolyphonic", json_integer((int) triggerPolyphonic)); 
+		json_object_set_new(rootJ, "keyLogarithmic", json_boolean(keyLogarithmic));
+		json_object_set_new(rootJ, "useCircleLayout", json_boolean(useCircleLayout));
+		json_object_set_new(rootJ, "pitchRandomGaussian", json_boolean(pitchRandomGaussian)); 
+		json_object_set_new(rootJ, "triggerPolyphonic", json_boolean(triggerPolyphonic)); 
 		json_object_set_new(rootJ, "quantizeMode", json_integer((int) quantizeMode)); 
 
 		
@@ -458,7 +458,7 @@ struct ProbablyNote : Module {
 				strcat(buf2, ".");
 				sprintf(notebuf2, "%i", j);
 				strcat(buf2, notebuf2);
-				json_object_set_new(rootJ, buf2, json_integer((int) scaleNoteStatus[i][j]));
+				json_object_set_new(rootJ, buf2, json_boolean(scaleNoteStatus[i][j]));
 			}
 		}
 		return rootJ;
@@ -468,17 +468,17 @@ struct ProbablyNote : Module {
 
 		json_t *ctTd = json_object_get(rootJ, "triggerDelayEnabled");
 		if (ctTd)
-			triggerDelayEnabled = json_integer_value(ctTd);
+			triggerDelayEnabled = json_boolean_value(ctTd);
 
 
 		json_t *sumO = json_object_get(rootJ, "octaveWrapAround");
 		if (sumO) {
-			octaveWrapAround = json_integer_value(sumO);			
+			octaveWrapAround = json_boolean_value(sumO);			
 		}
 
 		json_t *sumTa = json_object_get(rootJ, "alternateIntonationActive");
 		if (sumTa) {
-			alternateIntonationActive = json_integer_value(sumTa);			
+			alternateIntonationActive = json_boolean_value(sumTa);			
 		}
 
 		json_t *sumT = json_object_get(rootJ, "currentIntonation");
@@ -494,22 +494,22 @@ struct ProbablyNote : Module {
 
 		json_t *sumK = json_object_get(rootJ, "keyLogarithmic");
 		if (sumK) {
-			keyLogarithmic = json_integer_value(sumK);			
+			keyLogarithmic = json_boolean_value(sumK);			
 		}
 
 		json_t *sumPg = json_object_get(rootJ, "pitchRandomGaussian");
 		if (sumPg) {
-			pitchRandomGaussian = json_integer_value(sumPg);			
+			pitchRandomGaussian = json_boolean_value(sumPg);			
 		}
 
 		json_t *sumCl = json_object_get(rootJ, "useCircleLayout");
 		if (sumCl) {
-			useCircleLayout = json_integer_value(sumCl);			
+			useCircleLayout = json_boolean_value(sumCl);			
 		}
 
 		json_t *sumTp = json_object_get(rootJ, "triggerPolyphonic");
 		if (sumTp) {
-			triggerPolyphonic = json_integer_value(sumTp);			
+			triggerPolyphonic = json_boolean_value(sumTp);			
 		}
 
 		json_t *sumQm = json_object_get(rootJ, "quantizeMode");
@@ -543,10 +543,12 @@ struct ProbablyNote : Module {
 				strcat(buf2, notebuf2);
 				json_t *sumJ2 = json_object_get(rootJ, buf2);
 				if (sumJ2) {
-					scaleNoteStatus[i][j] = json_integer_value(sumJ2);
+					scaleNoteStatus[i][j] = json_boolean_value(sumJ2);
 				}
 			}
 		}		
+
+		resetTriggered = true;
 	}
 	
 

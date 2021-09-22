@@ -1523,6 +1523,7 @@ struct ProbablyNoteMN : Module {
 			triggerPolyphonic = json_integer_value(sumTp);			
 		}
 
+		resetTriggered = true;
 	}
 	
 	void CreateScalaFile(std::string fileName) {

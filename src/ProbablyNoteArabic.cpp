@@ -738,6 +738,7 @@ struct ProbablyNoteArabic : Module {
 			}
 		}
 
+		resetTriggered = true;
 	}
 	
 

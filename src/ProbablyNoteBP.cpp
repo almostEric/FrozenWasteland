@@ -425,6 +425,8 @@ struct ProbablyNoteBP : Module {
 				}
 			}
 		}		
+
+		resetTriggered = true;
 	}
 	
 

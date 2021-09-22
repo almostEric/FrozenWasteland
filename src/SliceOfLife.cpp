@@ -608,7 +608,7 @@ struct SliceOfLife : Module {
 		freqParam = params[POS_VCO_FREQ_PARAM].getValue() / 12.f;
 		freqParam += dsp::quadraticBipolar(params[POS_VCO_FINE_PARAM].getValue()) * 3.f / 12.f;
 		float fmParam = dsp::quadraticBipolar(params[POS_VCO_FM_PARAM].getValue());
-
+	
 		float sinVCAParam = params[POS_SIN_VCA_PARAM].getValue();
 		float triVCAParam = params[POS_TRI_VCA_PARAM].getValue();
 		float sawVCAParam = params[POS_SAW_VCA_PARAM].getValue();
