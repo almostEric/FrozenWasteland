@@ -280,19 +280,19 @@ struct QARWellFormedRhythmExpanderDisplay : TransparentWidget {
 	QARWellFormedRhythmExpander *module;
 	int frame = 0;
 	std::shared_ptr<Font> font;
+	std::string fontPath;
 
 	QARWellFormedRhythmExpanderDisplay() {
-		font = APP->window->loadFont(asset::plugin(pluginInstance, "res/fonts/DejaVuSansMono.ttf"));
+		fontPath = asset::plugin(pluginInstance, "res/fonts/DejaVuSansMono.ttf");
 	}
 
 
 
-	
+void draw(const DrawArgs &args) override {
+	font = APP->window->loadFont(fontPath);
 
-
-	void draw(const DrawArgs &args) override {
-		if (!module)
-			return; 		
+	if (!module)
+		return; 		
 	}
 };
 

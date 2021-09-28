@@ -220,12 +220,28 @@ struct BPMLFO2 : Module {
 		configParam(SKEW_CV_ATTENUVERTER_PARAM, -1.0, 1.0, 0.0,"Skew CV Attenuation","%",0,100);
 		configParam(PHASE_PARAM, 0.0, 0.9999, 0.0,"Phase","°",0,360);
 		configParam(PHASE_CV_ATTENUVERTER_PARAM, -1.0, 1.0, 0.0,"Phase CV Attenuation","%",0,100);
-		configParam(QUANTIZE_PHASE_PARAM, 0.0, 1.0, 0.0);
-		configParam(OFFSET_PARAM, 0.0, 1.0, 1.0);
-		configParam(WAVESHAPE_PARAM, 0.0, 1.0, 0.0,"TRI/SQR");
-		configParam(HOLD_CLOCK_BEHAVIOR_PARAM, 0.0, 1.0, 1.0);
-		configParam(HOLD_MODE_PARAM, 0.0, 1.0, 1.0);
-		configParam(CLOCK_MODE_PARAM, 0.0, 1.0, 1.0,"Clock Mode");
+		
+
+		configButton(QUANTIZE_PHASE_PARAM,"Quantize Phase");
+		configSwitch(OFFSET_PARAM, 0.f,1.f,0.f, "Offset", {"-5v to 5v", "0v-10v"});
+		configSwitch(HOLD_CLOCK_BEHAVIOR_PARAM, 0.f,1.f,0.f, "Hold Clock Mode", {"Free running","Pause"});
+		configSwitch(HOLD_MODE_PARAM, 0.f,1.f,0.f, "Hold Mode", {"Momentary", "Gate"});
+		configSwitch(CLOCK_MODE_PARAM, 0.f,1.f,1.f, "Clock Mode", {"BPM", "Clock"});
+		configSwitch(WAVESHAPE_PARAM, 0.f,1.f,0.f, "Wave Shape", {"Triangle", "Square"});
+
+		configInput(CLOCK_INPUT, "Clock");
+		configInput(MULTIPLIER_INPUT, "Multiplier CV");
+		configInput(DIVISION_INPUT, "Division CV");
+		configInput(PHASE_INPUT, "Phase");
+		configInput(RESET_INPUT, "Reset");
+		configInput(HOLD_INPUT, "Hold");
+
+		configOutput(LFO_OUTPUT, "Main");
+		configOutput(LFO_45_OUTPUT, "+45°");
+		configOutput(LFO_90_OUTPUT, "+90°");
+		configOutput(LFO_180_OUTPUT, "+180°");
+
+
 
 		leftExpander.producerMessage = producerMessage;
 		leftExpander.consumerMessage = consumerMessage;
@@ -444,11 +460,12 @@ struct BPMLFO2ProgressDisplay : TransparentWidget {
 	BPMLFO2 *module;
 	int frame = 0;
 	std::shared_ptr<Font> font;
+	std::string fontPath;
 
 	
 
 	BPMLFO2ProgressDisplay() {
-		font = APP->window->loadFont(asset::plugin(pluginInstance, "res/fonts/SUBWT___.ttf"));
+		fontPath = asset::plugin(pluginInstance, "res/fonts/SUBWT___.ttf");
 	}
 
 
@@ -514,6 +531,8 @@ struct BPMLFO2ProgressDisplay : TransparentWidget {
 	}
 
 	void draw(const DrawArgs &args) override {
+		font = APP->window->loadFont(fontPath);
+		
 		if (!module)
 			return;	
 		drawWaveShape(args,module->waveshape, module->skew, module->waveSlope);

@@ -315,6 +315,9 @@ struct FillingStationDisplay : FramebufferWidget {
 	FillingStation *module;
 	std::shared_ptr<Font> digitalFont;
 	std::shared_ptr<Font> textFont;
+    std::string digitalFontPath;
+	std::string textFontPath;
+
     float initX = 0;
     float initY = 0;
     float dragX = 0;
@@ -328,8 +331,8 @@ struct FillingStationDisplay : FramebufferWidget {
 
 
 	FillingStationDisplay() {
-		digitalFont = APP->window->loadFont(asset::plugin(pluginInstance, "res/fonts/01 Digit.ttf"));
-		textFont = APP->window->loadFont(asset::plugin(pluginInstance, "res/fonts/DejaVuSansMono.ttf"));
+        digitalFontPath = asset::plugin(pluginInstance, "res/fonts/01 Digit.ttf");
+        textFontPath = asset::plugin(pluginInstance, "res/fonts/DejaVuSansMono.ttf");
 	}
 
 
@@ -348,8 +351,8 @@ struct FillingStationDisplay : FramebufferWidget {
     }
 
      void onDragStart(const event::DragStart &e) override {
-        dragX = APP->scene->rack->mousePos.x;
-        dragY = APP->scene->rack->mousePos.y;
+        dragX = APP->scene->rack->getMousePos().x;
+        dragY = APP->scene->rack->getMousePos().y;
         if(editTrack >= 0 && editTrack < NBR_INPUTS && editStep >=0 && editStep < MAX_STEPS) {
             initialValue = module->trackMatrix[sceneNbr][editTrack][editStep];
             dragging = true;
@@ -360,7 +363,7 @@ struct FillingStationDisplay : FramebufferWidget {
 
     void onDragMove(const event::DragMove &e) override {
         // float newDragX = APP->scene->rack->mousePos.x - 10.0; //Ignoring X for now
-        float newDragY = APP->scene->rack->mousePos.y;
+        float newDragY = APP->scene->rack->getMousePos().y;
         float difference = dragY - newDragY;
 
         if(dragging) {
@@ -435,6 +438,9 @@ struct FillingStationDisplay : FramebufferWidget {
 
 
 	void draw(const DrawArgs &args) override {
+		digitalFont = APP->window->loadFont(digitalFontPath);
+        textFont = APP->window->loadFont(textFontPath);
+
 		if (!module)
 			return;
 

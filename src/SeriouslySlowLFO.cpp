@@ -256,11 +256,12 @@ struct SSLFOProgressDisplay : TransparentWidget {
 	SeriouslySlowLFO *module;
 	int frame = 0;
 	std::shared_ptr<Font> font;
+	std::string fontPath;
 
 
 
 	SSLFOProgressDisplay() {
-		font = APP->window->loadFont(asset::plugin(pluginInstance, "res/fonts/SUBWT___.ttf"));
+		fontPath = asset::plugin(pluginInstance, "res/fonts/SUBWT___.ttf");
 	}
 
 	void drawProgress(const DrawArgs &args, float phase)
@@ -302,6 +303,8 @@ struct SSLFOProgressDisplay : TransparentWidget {
 	}
 
 	void draw(const DrawArgs &args) override {
+		font = APP->window->loadFont(fontPath);
+
 		if (!module)
 			return;
 		drawProgress(args,module->oscillator.progress());

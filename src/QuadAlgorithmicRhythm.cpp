@@ -2243,12 +2243,16 @@ struct QARBeatDisplay : FramebufferWidget {
 	float stepThetas[TRACK_COUNT][MAX_STEPS] = {{0}};
 	std::shared_ptr<Font> digitalFont;
 	std::shared_ptr<Font> textFont;
+	std::string digitalFontPath;
+	std::string textFontPath;
+
 
 	const float rotate90 = (M_PI) / 2.0;
 
 	QARBeatDisplay() {
-		digitalFont = APP->window->loadFont(asset::plugin(pluginInstance, "res/fonts/01 Digit.ttf"));
-		textFont = APP->window->loadFont(asset::plugin(pluginInstance, "res/fonts/DejaVuSansMono.ttf"));
+		digitalFontPath = asset::plugin(pluginInstance, "res/fonts/01 Digit.ttf");
+		textFontPath = asset::plugin(pluginInstance, "res/fonts/DejaVuSansMono.ttf");
+
 	}
 
 	
@@ -2488,6 +2492,9 @@ struct QARBeatDisplay : FramebufferWidget {
 
 
 	void draw(const DrawArgs &args) override {
+		digitalFont = APP->window->loadFont(digitalFontPath);
+		textFont = APP->window->loadFont(textFontPath);
+
 		if (!module)
 			return;
 		

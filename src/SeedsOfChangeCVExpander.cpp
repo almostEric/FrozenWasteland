@@ -229,7 +229,6 @@ float SeedsOfChangeCVExpander::normal_number() {
 struct SeedsOfChangeCVExpanderSeedDisplay : TransparentWidget {
 	SeedsOfChangeCVExpander *module;
 	int frame = 0;
-	std::shared_ptr<Font> font;
 
 	void draw(const DrawArgs &args) override {
 		if (!module)

@@ -347,9 +347,10 @@ struct QARIrrationalityExpanderDisplay : TransparentWidget {
 	QARIrrationalityExpander *module;
 	int frame = 0;
 	std::shared_ptr<Font> font;
+	std::string fontPath;
 
 	QARIrrationalityExpanderDisplay() {
-		font = APP->window->loadFont(asset::plugin(pluginInstance, "res/fonts/DejaVuSansMono.ttf"));
+		fontPath = asset::plugin(pluginInstance, "res/fonts/DejaVuSansMono.ttf");
 	}
 
 	void drawStartPosition(const DrawArgs &args, Vec pos, int startPosition) {
@@ -399,6 +400,8 @@ struct QARIrrationalityExpanderDisplay : TransparentWidget {
 
 
 	void draw(const DrawArgs &args) override {
+		font = APP->window->loadFont(fontPath);
+
 		if (!module)
 			return; 		
 

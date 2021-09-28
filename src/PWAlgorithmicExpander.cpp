@@ -843,9 +843,13 @@ struct PWAEBeatDisplay : FramebufferWidget {
 	std::shared_ptr<Font> digitalFont;
 	std::shared_ptr<Font> textFont;
 
+	std::string digitalFontPath;
+	std::string textFontPath;
+
+
 	PWAEBeatDisplay() {
-		digitalFont = APP->window->loadFont(asset::plugin(pluginInstance, "res/fonts/01 Digit.ttf"));
-		textFont = APP->window->loadFont(asset::plugin(pluginInstance, "res/fonts/DejaVuSansMono.ttf"));
+        digitalFontPath =asset::plugin(pluginInstance, "res/fonts/01 Digit.ttf");
+        textFontPath = asset::plugin(pluginInstance, "res/fonts/DejaVuSansMono.ttf");
 	}
 
 
@@ -982,6 +986,9 @@ struct PWAEBeatDisplay : FramebufferWidget {
 
 
 	void draw(const DrawArgs &args) override {
+        digitalFont = APP->window->loadFont(digitalFontPath);
+		textFont = APP->window->loadFont(textFontPath);
+
 		if (!module)
 			return;
 		

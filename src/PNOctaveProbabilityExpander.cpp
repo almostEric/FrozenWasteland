@@ -166,9 +166,10 @@ struct PNOctaveProbabilityExpanderDisplay : TransparentWidget {
 	PNOctaveProbabilityExpander *module;
 	int frame = 0;
 	std::shared_ptr<Font> font;
+	std::string fontPath;
 
 	PNOctaveProbabilityExpanderDisplay() {
-		font = APP->window->loadFont(asset::plugin(pluginInstance, "res/fonts/DejaVuSansMono.ttf"));
+		fontPath = asset::plugin(pluginInstance, "res/fonts/DejaVuSansMono.ttf");
 	}
 
     void drawAverages(const DrawArgs &args, Vec pos) {
@@ -195,6 +196,8 @@ struct PNOctaveProbabilityExpanderDisplay : TransparentWidget {
 	}
 
 	void draw(const DrawArgs &args) override {
+		font = APP->window->loadFont(fontPath);
+
 		if (!module)
 			return; 
         drawAverages(args,Vec(0, 0));

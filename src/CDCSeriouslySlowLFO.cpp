@@ -111,6 +111,16 @@ struct LowFrequencyOscillator {
 		configParam(TIME_BASE_PARAM, 0.0, 1.0, 0.0);
 		configParam(DURATION_PARAM, 1.0, 100.0, 1.0);
 		configParam(FM_CV_ATTENUVERTER_PARAM, -1.0, 1.0, 0.0);
+
+		configInput(FM_INPUT, "FM");
+		configInput(RESET_INPUT, "Reset");
+
+		configOutput(SIN_OUTPUT, "Sine");
+		configOutput(TRI_OUTPUT, "Triangle");
+		configOutput(SAW_OUTPUT, "Sawtooth");
+		configOutput(SQR_OUTPUT, "Square/Pulse");
+
+
 	}
 	void process(const ProcessArgs &args) override;
 
@@ -198,11 +208,12 @@ struct CDCSSLFOProgressDisplay : TransparentWidget {
 	CDCSeriouslySlowLFO *module;
 	int frame = 0;
 	std::shared_ptr<Font> font;
+	std::string fontPath;
 
 
 
 	CDCSSLFOProgressDisplay() {
-		font = APP->window->loadFont(asset::plugin(pluginInstance, "res/fonts/01 Digit.ttf"));
+		fontPath = asset::plugin(pluginInstance, "res/fonts/01 Digit.ttf");
 	}
 
 	void drawProgress(const DrawArgs &args, float phase)
@@ -236,6 +247,8 @@ struct CDCSSLFOProgressDisplay : TransparentWidget {
 	}
 
 	void draw(const DrawArgs &args) override {
+		font = APP->window->loadFont(fontPath);
+
 		if (!module)
 			return;
 		drawProgress(args,module->oscillator.progress());

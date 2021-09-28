@@ -319,9 +319,10 @@ struct QARWarpedSpaceExpanderDisplay : TransparentWidget {
 	QARWarpedSpaceExpander *module;
 	int frame = 0;
 	std::shared_ptr<Font> font;
+	std::string fontPath;
 
 	QARWarpedSpaceExpanderDisplay() {
-		font = APP->window->loadFont(asset::plugin(pluginInstance, "res/fonts/DejaVuSansMono.ttf"));
+		fontPath = asset::plugin(pluginInstance, "res/fonts/DejaVuSansMono.ttf");
 	}
 
 	void drawWarp(const DrawArgs &args, Vec pos, float warp) {
@@ -366,6 +367,8 @@ struct QARWarpedSpaceExpanderDisplay : TransparentWidget {
 
 
 	void draw(const DrawArgs &args) override {
+		font = APP->window->loadFont(fontPath);
+
 		if (!module)
 			return; 		
 

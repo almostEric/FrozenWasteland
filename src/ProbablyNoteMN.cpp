@@ -2286,13 +2286,14 @@ struct ProbablyNoteMNDisplay : TransparentWidget {
 	ProbablyNoteMN *module;
 	int frame = 0;
 	std::shared_ptr<Font> font;
+	std::string fontPath;
 
 	bool noteInspectorVisible = false;
 	int64_t displayedNoteIndex;
 	
 
 	ProbablyNoteMNDisplay() {
-		font = APP->window->loadFont(asset::plugin(pluginInstance, "res/fonts/DejaVuSansMono.ttf"));
+		fontPath = asset::plugin(pluginInstance, "res/fonts/DejaVuSansMono.ttf");
 	}
 
 
@@ -2771,6 +2772,8 @@ struct ProbablyNoteMNDisplay : TransparentWidget {
 	
 
 	void draw(const DrawArgs &args) override {
+		font = APP->window->loadFont(fontPath);
+
 		if (!module)
 			return; 
 

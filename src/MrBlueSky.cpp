@@ -284,12 +284,15 @@ void MrBlueSky::process(const ProcessArgs &args) {
 struct MrBlueSkyBandDisplay : TransparentWidget {
 	MrBlueSky *module;
 	std::shared_ptr<Font> font;
-
+	std::string fontPath;
+	
 	MrBlueSkyBandDisplay() {
-		font = APP->window->loadFont(asset::plugin(pluginInstance, "res/fonts/Sudo.ttf"));
+		fontPath = asset::plugin(pluginInstance, "res/fonts/Sudo.ttf");
 	}
 
 	void draw(const DrawArgs &args) override {
+		font = APP->window->loadFont(fontPath);
+
 		if (!module)
 			return;
 		nvgFontSize(args.vg, 10);

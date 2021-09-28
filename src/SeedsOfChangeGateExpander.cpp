@@ -262,10 +262,8 @@ float SeedsOfChangeGateExpander::normal_number() {
 struct SeedsOfChangeGateExpanderSeedDisplay : TransparentWidget {
 	SeedsOfChangeGateExpander *module;
 	int frame = 0;
-	std::shared_ptr<Font> font;
 
 	SeedsOfChangeGateExpanderSeedDisplay() {
-		font = APP->window->loadFont(asset::plugin(pluginInstance, "res/fonts/01 Digit.ttf"));
 	}
 
 	void draw(const DrawArgs &args) override {

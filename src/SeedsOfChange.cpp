@@ -320,9 +320,10 @@ struct SeedsOfChangeSeedDisplay : TransparentWidget {
 	SeedsOfChange *module;
 	int frame = 0;
 	std::shared_ptr<Font> font;
+	std::string fontPath;
 
 	SeedsOfChangeSeedDisplay() {
-		font = APP->window->loadFont(asset::plugin(pluginInstance, "res/fonts/SUBWT___.ttf"));
+		fontPath = asset::plugin(pluginInstance, "res/fonts/SUBWT___.ttf");
 	}
 
 	void drawSeed(const DrawArgs &args, Vec pos, int seed) {
@@ -339,6 +340,8 @@ struct SeedsOfChangeSeedDisplay : TransparentWidget {
 	}
 
 	void draw(const DrawArgs &args) override {
+		font = APP->window->loadFont(fontPath);
+
 		if (!module)
 			return;
 

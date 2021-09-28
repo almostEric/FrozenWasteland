@@ -519,11 +519,11 @@ struct SSEGProgressDisplay : TransparentWidget {
 	SeriouslySlowEG *module;
 	int frame = 0;
 	std::shared_ptr<Font> font;
-
+	std::string fontPath;
 
 
 	SSEGProgressDisplay() {
-		font = APP->window->loadFont(asset::plugin(pluginInstance, "res/fonts/SUBWT___.ttf"));
+		fontPath = asset::plugin(pluginInstance, "res/fonts/SUBWT___.ttf");
 	}
 
 	void drawDelayProgress(const DrawArgs &args, float phase, bool active)
@@ -632,6 +632,8 @@ struct SSEGProgressDisplay : TransparentWidget {
 	}
 
 	void draw(const DrawArgs &args) override {
+		font = APP->window->loadFont(fontPath);
+
 		if (!module)
 			return;
 		int stage = (int)module->stage;

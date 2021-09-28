@@ -353,6 +353,7 @@ struct ScopeDisplay : TransparentWidget {
 	LissajousLFO *module;
 	int frame = 0;
 	std::shared_ptr<Font> font;
+	std::string fontPath;
 
 	struct Stats {
 		float vrms, vpp, vmin, vmax;
@@ -373,7 +374,7 @@ struct ScopeDisplay : TransparentWidget {
 	Stats statsX, statsY;
 
 	ScopeDisplay() {
-		font = APP->window->loadFont(asset::plugin(pluginInstance, "res/fonts/Sudo.ttf"));
+		fontPath = asset::plugin(pluginInstance, "res/fonts/Sudo.ttf");
 	}
 
 	void drawWaveform(const DrawArgs &args, float *valuesX, float *valuesY) {
@@ -407,6 +408,8 @@ struct ScopeDisplay : TransparentWidget {
 	
 
 	void draw(const DrawArgs &args) override {
+		font = APP->window->loadFont(fontPath);
+
 		if (!module)
 			return;
 

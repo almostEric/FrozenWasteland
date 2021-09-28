@@ -1119,9 +1119,10 @@ struct ProbablyNoteWidget : ModuleWidget {
 	ProbablyNote *module;
 	int frame = 0;
 	std::shared_ptr<Font> font;
+	std::string fontPath;
 
 	ProbablyNoteDisplay() {
-		font = APP->window->loadFont(asset::plugin(pluginInstance, "res/fonts/DejaVuSansMono.ttf"));
+		fontPath = asset::plugin(pluginInstance, "res/fonts/DejaVuSansMono.ttf");
 	}
 
 
@@ -1409,6 +1410,9 @@ struct ProbablyNoteWidget : ModuleWidget {
 	}
 
 	void draw(const DrawArgs &args) override {
+
+		font = APP->window->loadFont(fontPath);
+
 		if (!module)
 			return; 
 
@@ -1767,7 +1771,7 @@ struct ProbablyNoteWidget : ModuleWidget {
 
 			if((((ProbablyNote*)module)->useCircleLayout) == 0) {
 				circlePanel->visible  = false;
-				panel->visible = true;
+				getPanel()->visible = true;
 
 				weightParams[0]->box.pos.x = 119;
 				weightParams[0]->box.pos.y = 306;
@@ -1881,7 +1885,7 @@ struct ProbablyNoteWidget : ModuleWidget {
 
 			} else {
 				circlePanel->visible  = true;
-				panel->visible = false;
+				getPanel()->visible = false;
 
 				for(int i=0;i<MAX_NOTES;i++) {
 					double position = 2.0 * M_PI / MAX_NOTES * i  - M_PI / 2.0; // Rotate 90 degrees
