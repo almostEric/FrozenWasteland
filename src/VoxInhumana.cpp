@@ -301,9 +301,10 @@ struct VoxInhumanaBandDisplay : TransparentWidget {
 	VoxInhumana *module;
 	int frame = 0;
 	std::shared_ptr<Font> font;
+	std::string fontPath;
 
 	VoxInhumanaBandDisplay() {
-		font = APP->window->loadFont(asset::plugin(pluginInstance, "res/fonts/DejaVuSansMono.ttf"));
+		fontPath = asset::plugin(pluginInstance, "res/fonts/DejaVuSansMono.ttf");
 	}
 
 	void drawVowel(const DrawArgs &args, Vec pos, int vowel) {
@@ -334,6 +335,8 @@ struct VoxInhumanaBandDisplay : TransparentWidget {
 	}
 
 	void draw(const DrawArgs &args) override {
+		font = APP->window->loadFont(fontPath);
+
 		if (!module)
 			return;
 

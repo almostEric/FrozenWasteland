@@ -563,11 +563,12 @@ struct ManicCompressionDisplay : TransparentWidget {
 	ManicCompression *module;
 	int frame = 0;
 	std::shared_ptr<Font> font;
+	std::string fontPath;
 
 	
 
 	ManicCompressionDisplay() {
-		font = APP->window->loadFont(asset::plugin(pluginInstance, "res/fonts/SUBWT___.ttf"));
+		fontPath =asset::plugin(pluginInstance, "res/fonts/SUBWT___.ttf");
 	}
 
 	void drawResponse(const DrawArgs &args, double threshold, double ratio, double knee) 
@@ -629,6 +630,8 @@ struct ManicCompressionDisplay : TransparentWidget {
 	}
 
 	void draw(const DrawArgs &args) override {
+		font = APP->window->loadFont(fontPath);
+
 		if (!module)
 			return;
 

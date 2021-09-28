@@ -151,9 +151,10 @@ struct PNChordExpanderDisplay : TransparentWidget {
 	PNChordExpander *module;
 	int frame = 0;
 	std::shared_ptr<Font> font;
+	std::string fontPath;
 
 	PNChordExpanderDisplay() {
-		font = APP->window->loadFont(asset::plugin(pluginInstance, "res/fonts/DejaVuSansMono.ttf"));
+		fontPath = asset::plugin(pluginInstance, "res/fonts/DejaVuSansMono.ttf");
 	}
 
 	void drawChordRange(const DrawArgs &args, float y, float chordProbability,float selectedChord) 
@@ -217,6 +218,8 @@ struct PNChordExpanderDisplay : TransparentWidget {
 	}
 
 	void draw(const DrawArgs &args) override {
+		font = APP->window->loadFont(fontPath);
+
 		if (!module)
 			return; 
 

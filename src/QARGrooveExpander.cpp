@@ -393,9 +393,10 @@ struct QARGrooveExpanderDisplay : TransparentWidget {
 	QARGrooveExpander *module;
 	int frame = 0;
 	std::shared_ptr<Font> font;
+	std::string fontPath;
 
 	QARGrooveExpanderDisplay() {
-		font = APP->window->loadFont(asset::plugin(pluginInstance, "res/fonts/DejaVuSansMono.ttf"));
+		fontPath = asset::plugin(pluginInstance, "res/fonts/DejaVuSansMono.ttf");
 	}
 
 
@@ -422,6 +423,8 @@ struct QARGrooveExpanderDisplay : TransparentWidget {
 
 
 	void draw(const DrawArgs &args) override {
+		font = APP->window->loadFont(fontPath);
+
 		if (!module)
 			return; 
 

@@ -1270,10 +1270,10 @@ struct ProbablyNoteArabicDisplay : TransparentWidget {
 	ProbablyNoteArabic *module;
 	int frame = 0;
 	std::shared_ptr<Font> font;
+	std::string fontPath;
 
 	ProbablyNoteArabicDisplay() {
-		font = APP->window->loadFont(asset::plugin(pluginInstance, "res/fonts/DejaVuSansMono.ttf"));
-		//font = APP->window->loadFont(asset::plugin(pluginInstance, "res/fonts/ARABIAN KNIGHT.ttf"));
+		fontPath = asset::plugin(pluginInstance, "res/fonts/DejaVuSansMono.ttf");
 	}
 
 
@@ -1477,6 +1477,9 @@ struct ProbablyNoteArabicDisplay : TransparentWidget {
 
 
 	void draw(const DrawArgs &args) override {
+		font = APP->window->loadFont(fontPath);
+
+
 		if (!module)
 			return; 
 

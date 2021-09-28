@@ -354,13 +354,13 @@ struct HPStatusDisplay : TransparentWidget {
 	HairPick *module;
 	int frame = 0;
 	std::shared_ptr<Font> fontNumbers,fontText;
+	std::string numberFontPath,textFontPath;
 
 	
 
 	HPStatusDisplay() {
-		fontNumbers = APP->window->loadFont(asset::plugin(pluginInstance, "res/fonts/SUBWT___.ttf"));
-		fontText = APP->window->loadFont(asset::plugin(pluginInstance, "res/fonts/DejaVuSansMono.ttf"));
-
+		numberFontPath = asset::plugin(pluginInstance, "res/fonts/SUBWT___.ttf");
+		textFontPath = asset::plugin(pluginInstance, "res/fonts/DejaVuSansMono.ttf");
 	}
 
 	
@@ -427,6 +427,9 @@ struct HPStatusDisplay : TransparentWidget {
 	}
 
 	void draw(const DrawArgs &args) override {
+		fontNumbers = APP->window->loadFont(numberFontPath);
+		fontText = APP->window->loadFont(textFontPath);
+
 		if (!module)
 			return;
 		

@@ -852,10 +852,10 @@ struct ManicCompressionMBDisplay : FramebufferWidget {
 	ManicCompressionMB *module;
 	int band = 0;
 	std::shared_ptr<Font> font;
-
+    std::string fontPath;
 
 	ManicCompressionMBDisplay() {
-		font = APP->window->loadFont(asset::plugin(pluginInstance, "res/fonts/SUBWT___.ttf"));
+		fontPath =asset::plugin(pluginInstance, "res/fonts/SUBWT___.ttf");
 	}
 
     void drawMeterOffBox(const DrawArgs &args, Vec pos, int fadeLevel) 
@@ -896,6 +896,8 @@ struct ManicCompressionMBDisplay : FramebufferWidget {
 	}
 
 	void draw(const DrawArgs &args) override {
+        font = APP->window->loadFont(fontPath);
+        
 		if (!module)
 			return;
         if(!module->bandEnabled[band]) {

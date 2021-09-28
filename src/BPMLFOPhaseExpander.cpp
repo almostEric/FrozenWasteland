@@ -181,6 +181,14 @@ struct BPMLFOPhaseExpander : Module {
 		configParam(PHASE_DIVISION_CV_ATTENUVERTER_PARAM, -1.0, 1.0, 0.0,"Phase Division CV Attenuation","%",0,100);
 		configParam(WAVESHAPE_PARAM, 1.0, 5.0, 1.0,"Wave Shape");
 
+		configButton(FORCE_INTEGER_PARAM,"Force Integer Phase Divisions");
+
+		configInput(PHASE_DIVISION_INPUT, "Phase Division");
+
+		for(int i=0;i<MAX_OUTPUTS;i++) {
+			configOutput(LFO_1_OUTPUT+i, "Phase " + std::to_string(i+1));
+		}
+
 		leftExpander.producerMessage = producerMessage;
 		leftExpander.consumerMessage = consumerMessage;
 	}
@@ -326,13 +334,17 @@ void BPMLFOPhaseExpander::process(const ProcessArgs &args) {
 struct BPMLFOPhaseDisplay : TransparentWidget {
 	BPMLFOPhaseExpander *module;
 	std::shared_ptr<Font> font;
+	std::string fontPath;
+
 
 	BPMLFOPhaseDisplay() {
 		//font = APP->window->loadFont(asset::plugin(pluginInstance, "res/fonts/Sudo.ttf"));
-		font = APP->window->loadFont(asset::plugin(pluginInstance, "res/fonts/SUBWT___.ttf"));
+		fontPath = asset::plugin(pluginInstance, "res/fonts/SUBWT___.ttf");
 	}
 
 	void draw(const DrawArgs &args) override {
+		font = APP->window->loadFont(fontPath);
+		
 		if (!module)
 			return;
 		nvgFontSize(args.vg, 8);

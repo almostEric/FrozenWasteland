@@ -214,9 +214,10 @@ struct TheGardenerDisplay : TransparentWidget {
 	TheGardener *module;
 	int frame = 0;
 	std::shared_ptr<Font> font;
+	std::string fontPath;
 
 	TheGardenerDisplay() {
-		font = APP->window->loadFont(asset::plugin(pluginInstance, "res/fonts/SUBWT___.ttf"));
+		fontPath = asset::plugin(pluginInstance, "res/fonts/SUBWT___.ttf");
 	}
 
 
@@ -244,6 +245,8 @@ struct TheGardenerDisplay : TransparentWidget {
 
 
 	void draw(const DrawArgs &args) override {
+		font = APP->window->loadFont(fontPath);
+
 		if (!module)
 			return; 
 

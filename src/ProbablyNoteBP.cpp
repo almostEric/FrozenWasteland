@@ -860,9 +860,10 @@ struct ProbablyNoteBPDisplay : TransparentWidget {
 	ProbablyNoteBP *module;
 	int frame = 0;
 	std::shared_ptr<Font> font;
+	std::string fontPath;
 
 	ProbablyNoteBPDisplay() {
-		font = APP->window->loadFont(asset::plugin(pluginInstance, "res/fonts/DejaVuSansMono.ttf"));
+		fontPath = asset::plugin(pluginInstance, "res/fonts/DejaVuSansMono.ttf");
 	}
 
 
@@ -978,6 +979,8 @@ struct ProbablyNoteBPDisplay : TransparentWidget {
 	}
 
 	void draw(const DrawArgs &args) override {
+		font = APP->window->loadFont(fontPath);
+
 		if (!module)
 			return; 
 

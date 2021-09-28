@@ -163,10 +163,24 @@ struct BPMLFO : Module {
 		configParam(PHASE_PARAM, 0.0, 0.9999, 0.0,"Phase","°",0,360);
 		configParam(PHASE_CV_ATTENUVERTER_PARAM, -1.0, 1.0, 0.0,"Phase CV Attenuation","%",0,100);
 		configParam(QUANTIZE_PHASE_PARAM, 0.0, 1.0, 0.0,"Quantize Phase to 90°");
-		configParam(OFFSET_PARAM, 0.0, 1.0, 1.0,"5V/10V");
-		configParam(HOLD_CLOCK_BEHAVIOR_PARAM, 0.0, 1.0, 1.0,"Hold Clock Behavior");
-		configParam(HOLD_MODE_PARAM, 0.0, 1.0, 1.0,"Hold Mode");
-		configParam(CLOCK_MODE_PARAM, 0.0, 1.0, 1.0,"Clock Mode");
+
+		configButton(QUANTIZE_PHASE_PARAM,"Quantize Phase");
+		configSwitch(OFFSET_PARAM, 0.f,1.f,0.f, "Offset", {"-5v to 5v", "0v-10v"});
+		configSwitch(HOLD_CLOCK_BEHAVIOR_PARAM, 0.f,1.f,0.f, "Hold Clock Mode", {"Free running","Pause"});
+		configSwitch(HOLD_MODE_PARAM, 0.f,1.f,0.f, "Hold Mode", {"Momentary", "Gate"});
+		configSwitch(CLOCK_MODE_PARAM, 0.f,1.f,1.f, "Clock Mode", {"BPM", "Clock"});
+
+		configInput(CLOCK_INPUT, "Clock");
+		configInput(MULTIPLIER_INPUT, "Multiplier CV");
+		configInput(DIVISION_INPUT, "Division CV");
+		configInput(PHASE_INPUT, "Phase");
+		configInput(RESET_INPUT, "Reset");
+		configInput(HOLD_INPUT, "Hold");
+
+		configOutput(SIN_OUTPUT, "Sine");
+		configOutput(TRI_OUTPUT, "Triangle");
+		configOutput(SAW_OUTPUT, "Sawtooth");
+		configOutput(SQR_OUTPUT, "Square/Pulse");
 
 		leftExpander.producerMessage = producerMessage;
 		leftExpander.consumerMessage = consumerMessage;
@@ -330,11 +344,12 @@ struct BPMLFOProgressDisplay : TransparentWidget {
 	BPMLFO *module;
 	int frame = 0;
 	std::shared_ptr<Font> font;
+	std::string fontPath;
 
 	
 
 	BPMLFOProgressDisplay() {
-		font = APP->window->loadFont(asset::plugin(pluginInstance, "res/fonts/SUBWT___.ttf"));
+		fontPath=asset::plugin(pluginInstance, "res/fonts/SUBWT___.ttf");
 	}
 
 	void drawProgress(const DrawArgs &args, float phase) 
@@ -387,6 +402,8 @@ struct BPMLFOProgressDisplay : TransparentWidget {
 	}
 
 	void draw(const DrawArgs &args) override {
+		font = APP->window->loadFont(fontPath);
+
 		if (!module)
 			return;
 

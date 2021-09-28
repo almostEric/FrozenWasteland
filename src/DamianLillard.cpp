@@ -66,6 +66,22 @@ struct DamianLillard : Module {
 		configParam(FREQ_2_CV_ATTENUVERTER_PARAM, -1.0, 1.0, 0,"Cutoff Frequency 2 CV Attenuation","%",0,100);
 		configParam(FREQ_3_CV_ATTENUVERTER_PARAM, -1.0, 1.0, 0,"Cutoff Frequency 3 CV Attenuation","%",0,100);
 
+		configInput(SIGNAL_IN, "Main");
+		configInput(FREQ_1_CUTOFF_INPUT, "Cutoff Frequency 1");
+		configInput(FREQ_2_CUTOFF_INPUT, "Cutoff Frequency 2");
+		configInput(FREQ_3_CUTOFF_INPUT, "Cutoff Frequency 3");
+		configInput(BAND_1_RETURN_INPUT, "Band 1 Return");
+		configInput(BAND_2_RETURN_INPUT, "Band 2 Return");
+		configInput(BAND_3_RETURN_INPUT, "Band 3 Return");
+		configInput(BAND_4_RETURN_INPUT, "Band 4 Return");
+
+		configOutput(BAND_1_OUTPUT, "Band 1");
+		configOutput(BAND_2_OUTPUT, "Band 2");
+		configOutput(BAND_3_OUTPUT, "Band 3");
+		configOutput(BAND_4_OUTPUT, "Band 4");
+		configOutput(MIX_OUTPUT, "Mix");
+
+
 		filterParams[0].setMode(StateVariableFilterParams<T>::Mode::LowPass);
 		filterParams[1].setMode(StateVariableFilterParams<T>::Mode::LowPass);
 		filterParams[2].setMode(StateVariableFilterParams<T>::Mode::HiPass);
@@ -157,9 +173,10 @@ struct DamianLillardBandDisplay : TransparentWidget {
 	DamianLillard *module;
 	int frame = 0;
 	std::shared_ptr<Font> font;
+	std::string fontPath;
 
 	DamianLillardBandDisplay() {
-		font = APP->window->loadFont(asset::plugin(pluginInstance, "res/fonts/SUBWT___.ttf"));
+		fontPath = asset::plugin(pluginInstance, "res/fonts/SUBWT___.ttf");
 	}
 
 	void drawFrequency(const DrawArgs &args, Vec pos, float cutoffFrequency) {
@@ -176,6 +193,8 @@ struct DamianLillardBandDisplay : TransparentWidget {
 	}
 
 	void draw(const DrawArgs &args) override {
+		font = APP->window->loadFont(fontPath);
+
 		if (!module)
 			return;
 

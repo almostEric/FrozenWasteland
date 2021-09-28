@@ -358,9 +358,10 @@ struct MidiRecorder : Module {
 struct MidiRecorderDisplay : TransparentWidget {
 	MidiRecorder *module;
 	std::shared_ptr<Font> font;
+    std::string fontPath;
 
 	MidiRecorderDisplay() {
-		font = APP->window->loadFont(asset::plugin(pluginInstance, "res/fonts/DejaVuSansMono.ttf"));
+        fontPath = asset::plugin(pluginInstance, "res/fonts/DejaVuSansMono.ttf");
 	}
 
 
@@ -457,6 +458,8 @@ struct MidiRecorderDisplay : TransparentWidget {
 
 
 	void draw(const DrawArgs &args) override {
+        font = APP->window->loadFont(fontPath);
+
 		if (!module)
 			return;     
 

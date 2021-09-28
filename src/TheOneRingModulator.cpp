@@ -254,10 +254,8 @@ void TheOneRingModulator::process(const ProcessArgs &args) {
 struct DiodeResponseDisplay : TransparentWidget {
 	TheOneRingModulator *module;
 	int frame = 0;
-	std::shared_ptr<Font> font;
 
 	DiodeResponseDisplay() {
-		font = APP->window->loadFont(asset::plugin(pluginInstance, "res/fonts/Sudo.ttf"));
 	}
 
 	void drawWaveform(const DrawArgs &args, float vB, float vL, float h,float nl) {

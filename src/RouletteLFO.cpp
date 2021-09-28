@@ -250,7 +250,6 @@ struct RouletteLFO : Module {
 struct RouletteScopeDisplay : TransparentWidget {
 	RouletteLFO *module;
 	int frame = 0;
-	std::shared_ptr<Font> font;
 
 
 	RouletteScopeDisplay() {
