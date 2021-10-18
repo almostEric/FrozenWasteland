@@ -134,14 +134,30 @@ struct LowFrequencyOscillator {
 	SeriouslySlowLFO() {
 		config(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS, NUM_LIGHTS);
 
-		configParam(TIME_BASE_PARAM, 0.0, 1.0, 0.0);
 		configParam(DURATION_PARAM, 1.0, 100.0, 1.0,"Duration Multiplier");
-		configParam(FM_CV_ATTENUVERTER_PARAM, -1.0, 1.0, 0.0,"FM CV Attenuation","%",0,100);
+		configParam(FM_CV_ATTENUVERTER_PARAM, -1.0, 1.0, 0.0,"Duration CV Attenuation","%",0,100);
 		configParam(PHASE_PARAM, 0.0, 0.9999, 0.0,"Phase","°",0,360);
 		configParam(PHASE_CV_ATTENUVERTER_PARAM, -1.0, 1.0, 0.0,"Phase CV Attenuation","%",0,100);
-		configParam(QUANTIZE_PHASE_PARAM, 0.0, 1.0, 0.0);
-		configParam(OFFSET_PARAM, 0.0, 1.0, 1.0);
-		configParam(RESET_PARAM, 0.0, 1.0, 0.0);
+
+		configButton(TIME_BASE_PARAM+0,"Time Base - Minutes");
+		configButton(TIME_BASE_PARAM+1,"Time Base - Hours");
+		configButton(TIME_BASE_PARAM+2,"Time Base - Days");
+		configButton(TIME_BASE_PARAM+3,"Time Base - Weeks");
+		configButton(TIME_BASE_PARAM+4,"Time Base - Months");
+
+		configButton(QUANTIZE_PHASE_PARAM,"Quantize Phase");
+		configButton(RESET_PARAM,"Reset");
+		configSwitch(OFFSET_PARAM, 0.f,1.f,0.f, "Offset", {"-5v to 5v", "0v-10v"});
+
+		configInput(FM_INPUT, "Duration Multiplier");
+		configInput(PHASE_INPUT, "Phase");
+		configInput(RESET_INPUT, "Reset");
+
+		configOutput(SIN_OUTPUT, "Sine");
+		configOutput(TRI_OUTPUT, "Triangle");
+		configOutput(SAW_OUTPUT, "Sawtooth");
+		configOutput(SQR_OUTPUT, "Square/Pulse");
+
 	}
 
 	void process(const ProcessArgs &args) override {

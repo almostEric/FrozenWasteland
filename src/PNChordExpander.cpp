@@ -67,6 +67,14 @@ struct PNChordExpander : Module {
 		configParam(INVERSION_PROBABILITY_PARAM, 0.0f, 1.0f, 0.0f,"Inversions Probability","%",0,100);
 		configParam(INVERSION_PROBABILITY_CV_ATTENUVERTER_PARAM, -1.0, 1.0, 0.0,"Inverions Probability CV Attenuation","%",0,100);
 
+		configInput(DISSONANCE5_PROBABILITY_INPUT, "Dissonance V Probability");
+		configInput(DISSONANCE7_PROBABILITY_INPUT, "Dissonance VII Probability");
+		configInput(SUSPENSIONS_PROBABILITY_INPUT, "Suspensions Probability");
+		configInput(INVERSION_PROBABILITY_INPUT, "Inversions Probability");
+		configInput(DISSONANCE5_EXTERNAL_RANDOM_INPUT, "Dissonance V External Random");
+		configInput(DISSONANCE7_EXTERNAL_RANDOM_INPUT, "Dissonance VII External Random");
+		configInput(SUSPENSIONS_EXTERNAL_RANDOM_INPUT, "Suspensions Probability External Random");
+
 		leftExpander.producerMessage = leftMessages[0];
 		leftExpander.consumerMessage = leftMessages[1];
 
@@ -161,7 +169,6 @@ struct PNChordExpanderDisplay : TransparentWidget {
 	{		
 		// Draw indicator
 
-			//float opacity = std::max(chordProbability-0.5,0.0) * 511;
 			float opacity = std::min(chordProbability*511.0,255.0);
 			if(selectedChord == -1.0f) {
 				nvgFillColor(args.vg, nvgRGBA(0x20, 0xff, 0x20, (int)opacity));
@@ -199,21 +206,7 @@ struct PNChordExpanderDisplay : TransparentWidget {
 			nvgClosePath(args.vg);		
 			nvgFill(args.vg);
 
-			// nvgFontSize(args.vg, 8);
-			// nvgFontFaceId(args.vg, font->handle);
-			// nvgTextLetterSpacing(args.vg, -1);
-			// nvgFillColor(args.vg, nvgRGBA(0x00, 0x00, 0x00, 0xff));
-
-			// char text[128];
-			// snprintf(text, sizeof(text), "%s", module->noteNames[actualTarget]);
-			// x= notePosition[i][0];
-			// y= notePosition[i][1];
-			// int align = (int)notePosition[i][2];
-
-			// nvgTextAlign(args.vg,align);
-			// nvgText(args.vg, x, y, text, NULL);
-
-	
+			
 
 	}
 

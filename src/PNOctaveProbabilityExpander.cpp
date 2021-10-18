@@ -33,6 +33,7 @@ struct PNOctaveProbabilityExpander : Module {
 		NUM_LIGHTS = NOTE_SELECTED_LIGHT + NBR_NOTES
 	};
 
+	const std::string noteNames[NBR_NOTES] = {"C","C#/Db","D","D#/Eb","E","F","F#/Gb","G","G#/Ab","A","A#/Bb","B"};
 
     bool noteActive[NBR_NOTES] = {1};
 	float octaveProbability[NBR_OCTAVES] = {0};
@@ -57,10 +58,15 @@ struct PNOctaveProbabilityExpander : Module {
 		config(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS, NUM_LIGHTS);
 		
         for(int i=0;i<NBR_OCTAVES;i++) {
-            configParam(OCTAVE_PROBABILITY_PARAM+i, 0.0f, 1.0f, 0.0f,"Octave Probability","%",0,100);
-            configParam(OCTAVE_PROBABILITY_CV_ATTENUVERTER_PARAM+i, -1.0, 1.0, 0.0,"Octave Probability CV Attenuation","%",0,100);
+            configParam(OCTAVE_PROBABILITY_PARAM+i, 0.0f, 1.0f, 0.0f,"Octave " + std::to_string(5-i) + " Probability","%",0,100);
+            configParam(OCTAVE_PROBABILITY_CV_ATTENUVERTER_PARAM+i, -1.0, 1.0, 0.0,"Octave " + std::to_string(5-i) + " Probability CV Attenuation","%",0,100);
+			configInput(OCTAVE_PROBABILITY_INPUT+i, "Octave " + std::to_string(5-i) + " Probability");
         }
 
+        for(int i=0;i<NBR_NOTES;i++) {
+			configInput(NOTE_SELECT_INPUT+i, "Note " + noteNames[i] + " Select");
+			configButton(NOTE_SELECT_PARAM+i,"Note " + noteNames[i] + " Select");
+		}
 	
 		leftExpander.producerMessage = leftMessages[0];
 		leftExpander.consumerMessage = leftMessages[1];

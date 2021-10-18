@@ -58,10 +58,16 @@ struct SeedsOfChangeCVExpander : Module {
 		// Configure the module
 		config(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS, NUM_LIGHTS);
 		for (int i=0; i<NBOUT; i++) {
-			configParam(SeedsOfChangeCVExpander::MULTIPLY_1_PARAM + i, 0.0f, 10.0f, 10.0f, "Multiply");			
-			configParam(SeedsOfChangeCVExpander::OFFSET_1_PARAM + i, -10.0f, 10.0f, 0.0f,"Offset");		
-			configParam(SeedsOfChangeCVExpander::MULTIPLY_1_CV_ATTENUVERTER + i, -1.0, 1.0, 0.0,"Multiply CV Attenuverter","%",0,100);
-			configParam(SeedsOfChangeCVExpander::OFFSET_1_CV_ATTENUVERTER + i, -1.0, 1.0, 0.0,"Offset CV Attenuverter","%",0,100);				
+			
+			configParam(MULTIPLY_1_PARAM + i, 0.0f, 10.0f, 10.0f, "Random " + std::to_string(i+1) + " Multiply");			
+			configParam(OFFSET_1_PARAM + i, -10.0f, 10.0f, 0.0f,"Random " + std::to_string(i+1) + " Offset");			
+			configParam(MULTIPLY_1_CV_ATTENUVERTER + i, -1.0, 1.0, 0.0,"Random " + std::to_string(i+1) + " Multiply CV Attenuverter","%",0,100);
+			configParam(OFFSET_1_CV_ATTENUVERTER + i, -1.0, 1.0, 0.0,"Random " + std::to_string(i+1) + " Offset CV Attenuverter","%",0,100);
+		
+			configInput(MULTIPLY_1_INPUT+i, "Random " + std::to_string(i+1) + " Multiply");
+			configInput(OFFSET_1_INPUT+i, "Random " + std::to_string(i+1) + " Offset");
+
+			configOutput(CV_1_OUTPUT+i, "Random " + std::to_string(i+1) + " CV");
 		}
 
 		leftExpander.producerMessage = producerMessage;

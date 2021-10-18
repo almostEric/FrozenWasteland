@@ -69,12 +69,19 @@ struct VoxInhumanaExpander : Module {
 		configParam(Q_3_ATTENUVERTER_PARAM, -1.0, 1.0, 0,"Formant 3 Resonance CV Attenuation","%",0,100);
 		configParam(Q_4_ATTENUVERTER_PARAM, -1.0, 1.0, 0,"Formant 4 Resonance CV Attenuation","%",0,100);
 		configParam(Q_5_ATTENUVERTER_PARAM, -1.0, 1.0, 0,"Formant 5 Resonance CV Attenuation","%",0,100);
-        configParam(SLOPE_1_PARAM, 0, 1, 0,"Formant 1 6/12db Slope");
-        configParam(SLOPE_2_PARAM, 0, 1, 0,"Formant 2 6/12db Slope");
-        configParam(SLOPE_3_PARAM, 0, 1, 0,"Formant 3 6/12db Slope");
-        configParam(SLOPE_4_PARAM, 0, 1, 0,"Formant 4 6/12db Slope");
-        configParam(SLOPE_5_PARAM, 0, 1, 0,"Formant 5 6/12db Slope");
 
+
+		configButton(SLOPE_1_PARAM,"Formant 1 6/12db Slope");
+		configButton(SLOPE_2_PARAM,"Formant 2 6/12db Slope");
+		configButton(SLOPE_3_PARAM,"Formant 3 6/12db Slope");
+		configButton(SLOPE_4_PARAM,"Formant 4 6/12db Slope");
+		configButton(SLOPE_5_PARAM,"Formant 5 6/12db Slope");
+
+		configInput(Q_1_INPUT, "Formant 1 Resonance");
+		configInput(Q_2_INPUT, "Formant 2 Resonance");
+		configInput(Q_3_INPUT, "Formant 3 Resonance");
+		configInput(Q_4_INPUT, "Formant 4 Resonance");
+		configInput(Q_5_INPUT, "Formant 5 Resonance");
 
 		leftExpander.producerMessage = producerMessage;
 		leftExpander.consumerMessage = consumerMessage;

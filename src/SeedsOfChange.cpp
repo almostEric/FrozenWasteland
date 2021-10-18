@@ -79,15 +79,34 @@ struct SeedsOfChange : Module {
 		// Configure the module
 		config(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS, NUM_LIGHTS);
 		configParam(SeedsOfChange::SEED_PARAM, 0.0, 9999.0, 0.0,"Seed");
-		configParam(SeedsOfChange::RESEED_PARAM, 0.0, 1.0, 0.0);
-		configParam(SeedsOfChange::DISTRIBUTION_PARAM, 0.0, 1.0, 0.0,"Distribution");
+
+		configButton(RESEED_PARAM,"Reseed");
+		configButton(DISTRIBUTION_PARAM,"Distributiion Mode");
+
+
+		configInput(SEED_INPUT, "Seed");
+		configInput(RESEED_INPUT, "Reseed");
+		configInput(CLOCK_INPUT, "Clock");
+		configInput(DISTRIBUTION_INPUT, "Distribution Mode");
+		
+
 		for (int i=0; i<NBOUT; i++) {
-			configParam(SeedsOfChange::MULTIPLY_1_PARAM + i, 0.0f, 10.0f, 10.0f, "Multiply");			
-			configParam(SeedsOfChange::OFFSET_1_PARAM + i, -10.0f, 10.0f, 0.0f,"Offset");			
-			configParam(SeedsOfChange::MULTIPLY_1_CV_ATTENUVERTER + i, -1.0, 1.0, 0.0,"Multiply CV Attenuverter","%",0,100);
-			configParam(SeedsOfChange::OFFSET_1_CV_ATTENUVERTER + i, -1.0, 1.0, 0.0,"Offset CV Attenuverter","%",0,100);
-			configParam(SeedsOfChange::GATE_PROBABILITY_1_PARAM + i, 0.0, 1.0, 0.0,"Gate Probability","%",0,100);
-			configParam(SeedsOfChange::GATE_PROBABILITY_1_CV_ATTENUVERTER + i, -1.0, 1.0, 0.0,"Gate Probability CV Attenuverter","%",0,100);
+			configParam(MULTIPLY_1_PARAM + i, 0.0f, 10.0f, 10.0f, "Random " + std::to_string(i+1) + " Multiply");			
+			configParam(OFFSET_1_PARAM + i, -10.0f, 10.0f, 0.0f,"Random " + std::to_string(i+1) + " Offset");			
+			configParam(MULTIPLY_1_CV_ATTENUVERTER + i, -1.0, 1.0, 0.0,"Random " + std::to_string(i+1) + " Multiply CV Attenuverter","%",0,100);
+			configParam(OFFSET_1_CV_ATTENUVERTER + i, -1.0, 1.0, 0.0,"Random " + std::to_string(i+1) + " Offset CV Attenuverter","%",0,100);
+			configParam(GATE_PROBABILITY_1_PARAM + i, 0.0, 1.0, 0.0,"Random " + std::to_string(i+1) + " Gate Probability","%",0,100);
+			configParam(GATE_PROBABILITY_1_CV_ATTENUVERTER + i, -1.0, 1.0, 0.0,"Random " + std::to_string(i+1) + " Gate Probability CV Attenuverter","%",0,100);
+
+			configButton(GATE_MODE_PARAM+i,"Random " + std::to_string(i+1) + " Gate Mode");
+
+			configInput(MULTIPLY_1_INPUT+i, "Random " + std::to_string(i+1) + " Multiply");
+			configInput(OFFSET_1_INPUT+i, "Random " + std::to_string(i+1) + " Offset");
+			configInput(GATE_PROBABILITY_1_INPUT+i, "Random " + std::to_string(i+1) + " Gate Probability");
+
+			configOutput(CV_1_OUTPUT+i, "Random " + std::to_string(i+1) + " CV");
+			configOutput(GATE_1_OUTPUT+i, "Random " + std::to_string(i+1) + " Gate");
+
 		}
 
 		rightExpander.producerMessage = producerMessage;

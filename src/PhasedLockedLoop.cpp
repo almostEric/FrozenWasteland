@@ -255,7 +255,24 @@ struct PhasedLockedLoop : Module {
 		configParam(VCO_PW_PARAM, 0, 1, 0.5,"Pulse Width","%",0,100);
 		configParam(VCO_PWCV_PARAM, 0, 1, 0,"Pulse Width CV","%",0,100);
 		configParam(LPF_FREQ_PARAM, 0, 1, 0.5,"LPF Frequency"," Hz",540,15);
-		configParam(COMPARATOR_TYPE_PARAM, 0.0, 1.0, 0.0);
+		// configParam(COMPARATOR_TYPE_PARAM, 0.0, 1.0, 0.0);
+
+		configButton(COMPARATOR_TYPE_PARAM,"XOR Comparator");
+		configButton(COMPARATOR_TYPE_PARAM+1,"Flip-Flop Comparator");
+		configButton(COMPARATOR_TYPE_PARAM+2,"Coincidence Comparator");
+		configButton(COMPARATOR_TYPE_PARAM+3,"Fuzzy XOR Comparator");
+		configButton(COMPARATOR_TYPE_PARAM+4,"Fuzzy Hyperbolic XOR Comparator");
+		
+		configInput(VCO_CV_INPUT, "Internal VCO FM");
+		configInput(VCO_PW_INPUT, "Internal VCO PWM");
+		configInput(PHASE_COMPARATOR_INPUT, "External");
+		configInput(SIGNAL_INPUT, "Main Signal");
+		configInput(LPF_FREQ_INPUT, "LPF Fc");
+
+		configOutput(SQUARE_OUTPUT, "Main");
+		configOutput(COMPARATOR_OUTPUT, "Comparator");
+		configOutput(LPF_OUTPUT, "LPF");
+
 
 	}
 	void process(const ProcessArgs &args) override;
@@ -423,12 +440,8 @@ struct PhasedLockedLoopWidget : ModuleWidget {
 			addParam(createParam<LEDButton>(Vec(53.5, 187.5 + i*18), module, PhasedLockedLoop::COMPARATOR_TYPE_PARAM + i));
 			addChild(createLight<LargeLight<BlueLight>>(Vec(55, 189 + i*18), module, PhasedLockedLoop::XOR_COMPARATOR_LIGHT + i));
 		}
-		// addParam(createParam<LEDButton>(Vec(53.5, 192.5), module, PhasedLockedLoop::COMPARATOR_TYPE_PARAM));
-		// addChild(createLight<LargeLight<BlueLight>>(Vec(55, 194), module, PhasedLockedLoop::XOR_COMPARATOR_LIGHT));
-		// addChild(createLight<LargeLight<BlueLight>>(Vec(55, 204), module, PhasedLockedLoop::FLIP_FLOP_COMPARATOR_LIGHT));
-		// addChild(createLight<LargeLight<BlueLight>>(Vec(55, 214), module, PhasedLockedLoop::COINCIDENCE_COMPARATOR_LIGHT));
-		// addChild(createLight<LargeLight<BlueLight>>(Vec(55, 224), module, PhasedLockedLoop::FUZZY_XOR_COMPARATOR_LIGHT));
-		// addChild(createLight<LargeLight<BlueLight>>(Vec(55, 234), module, PhasedLockedLoop::FUZZY_HYPERBOLIC_XOR_COMPARATOR_LIGHT));
+
+
 	}
 };
 

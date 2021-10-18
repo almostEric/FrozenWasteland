@@ -63,6 +63,16 @@ struct EverlastingGlottalStopper : Module {
 		configParam(BREATHINESS_CV_ATTENUVERTER_PARAM, -1.0, 1.0, 0, "Breathiness CV Attenuation","%",0,100);
 		//addParam(createParam<CKSS>(Vec(123, 300), module, EverlastingGlottalStopper::DEEMPHASIS_FILTER_PARAM, 0.0, 1.0, 0));
 
+
+		configInput(PITCH_INPUT, "Pitch");
+		configInput(FM_INPUT, "FM");
+		configInput(TIME_OPEN_INPUT, "Time Open");
+		configInput(TIME_CLOSED_INPUT, "Time Closed");
+		configInput(BREATHINESS_INPUT, "Breathiness");
+
+		configOutput(VOICE_OUTPUT, "Voice");
+
+
 		float sampleRate = APP->engine->getSampleRate();
 		deemphasisFilter = new Biquad(bq_type_lowpass, 2000 / sampleRate, 1, 0);
 	}

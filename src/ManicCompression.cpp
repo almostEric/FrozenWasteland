@@ -154,6 +154,42 @@ struct ManicCompression : Module {
 		configParam(MIX_CV_ATTENUVERTER_PARAM, -1.0, 1.0, 0.0,"Mix CV Attenuation","%",0,100);	
 
 
+		configButton(RMS_MODE_PARAM,"RMS Mode");
+		configButton(LP_FILTER_MODE_PARAM,"LP Filter");
+		configButton(HP_FILTER_MODE_PARAM,"HP FIlter");
+		configButton(MS_MODE_PARAM,"Mid-Side Mode");
+		configButton(COMPRESS_M_PARAM,"Compress Mid");
+		configButton(COMPRESS_S_PARAM,"Compress Side");
+		configButton(BYPASS_PARAM,"Bypass");
+
+
+		configInput(THRESHOLD_CV_INPUT, "Threshold");
+		configInput(ATTACK_CV_INPUT, "Attacj");
+		configInput(RELEASE_CV_INPUT, "Release");
+		configInput(ATTACK_CURVE_CV_INPUT, "Attack Curve");
+		configInput(RELEASE_CURVE_CV_INPUT, "Release Curve");
+		configInput(RATIO_CV_INPUT, "Ratio");
+		configInput(KNEE_CV_INPUT, "Knee");
+		configInput(MAKEUP_GAIN_INPUT, "Makeup Gain");
+		configInput(MIX_CV_INPUT, "Mix Level");
+		configInput(RMS_MODE_INPUT, "RMS Mode");
+		configInput(RMS_WINDOW_INPUT, "RMS Window");
+		configInput(BYPASS_INPUT, "Bypass Control");
+		configInput(SOURCE_L_INPUT, "Left Source");
+		configInput(SOURCE_R_INPUT, "Right Source");
+		configInput(SIDECHAIN_INPUT, "Sidechain");
+		configInput(LP_FILTER_MODE_INPUT, "LP Filter Mode");
+		configInput(HP_FILTER_MODE_INPUT, "HP Filter Mode");
+		configInput(MS_MODE_INPUT, "Mid/Side Mode");
+		configInput(COMPRESS_M_INPUT, "Compress Mid");
+		configInput(COMPRESS_S_INPUT, "Compress Side");
+		configInput(IN_GAIN_INPUT, "Input Gain");
+
+		configOutput(OUTPUT_L, "Left");
+		configOutput(OUTPUT_R, "Right");
+		configOutput(ENVELOPE_OUT, "Envelope");
+
+
 		float sampleRate = APP->engine->getSampleRate();
 		double lpCutoff = 4000/sampleRate;
 		double hpCutoff = 240/sampleRate;

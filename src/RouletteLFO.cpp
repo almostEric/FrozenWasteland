@@ -106,8 +106,23 @@ struct RouletteLFO : Module {
 		configParam(Y_GAIN_CV_ATTENUVERTER_PARAM, -1.0, 1.0, 0.0,"Y Gain CV Attenuation","%",0,100);
 
 
-		configParam(INSIDE_OUTSIDE_PARAM, 0.0, 1.0, 0.0);		
-		configParam(OFFSET_PARAM, 0.0, 1.0, 1.0);	
+		configSwitch(OFFSET_PARAM, 0.f,1.f,0.f, "Offset", {"-5v to 5v", "0v-10v"});
+		configSwitch(INSIDE_OUTSIDE_PARAM, 0.f,1.f,0.f, "Generator Position", {"Inside","Outside"});
+
+
+		configInput(RADIUS_RATIO_INPUT, "Radius Ratio");
+		configInput(GENERATOR_ECCENTRICITY_INPUT, "Generator Eccentricity");
+		configInput(GENERATOR_PHASE_INPUT, "Generator Phase");
+		configInput(FIXED_ECCENTRICITY_INPUT, "Fixed Cycle Eccentricity");
+		configInput(FIXED_PHASE_INPUT, "Fixed Cycle Phase");
+		configInput(DISTANCE_INPUT, "Distance");
+		configInput(FREQUENCY_INPUT, "Frequency");
+		configInput(X_GAIN_INPUT, "X Gain");
+		configInput(Y_GAIN_INPUT, "Y Gain");
+
+		configOutput(OUTPUT_X, "X");
+		configOutput(OUTPUT_Y, "Y");
+
 	}
 	void process(const ProcessArgs &args) override {
 

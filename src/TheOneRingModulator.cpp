@@ -133,6 +133,20 @@ int sampleCount = 0;
 		configParam(FEEDBACK_PARAM, -1.0, 1.0, 0.0,"Feedback","%",0,100);
 		configParam(FEEDBACK_ATTENUVERTER_PARAM, -1.0, 1.0, 0.0,"Feedback CV Attenuation","%",0,100);
 
+		configButton(DROP_COMPENSATE_PARAM,"Gain Makeup");
+
+		configInput(CARRIER_INPUT, "Carrier");
+		configInput(SIGNAL_INPUT, "Signal");
+		configInput(FORWARD_BIAS_CV_INPUT, "Forward Bias");
+		configInput(LINEAR_VOLTAGE_CV_INPUT, "Linear Voltage");
+		configInput(SLOPE_CV_INPUT, "Slope");
+		configInput(NONLINEARITY_CV_INPUT, "Nonlinearity");
+		configInput(MIX_INPUT, "Mix");
+		configInput(FEEDBACK_INPUT, "Feedback");
+
+		configOutput(WET_OUTPUT, "Wet");
+		configOutput(MIX_OUTPUT, "Mix");
+
 	}
 
 	void process(const ProcessArgs &args) override;

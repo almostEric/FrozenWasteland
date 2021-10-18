@@ -116,6 +116,39 @@ struct DrunkenRampage : Module {
 		configParam(AWARENESS_A_PARAM, 0.0, 1.0, 0.0, "Ch 1 awareness");
 		configParam(AWARENESS_B_PARAM, 0.0, 1.0, 0.0, "Ch 2 awareness");
 
+
+		configInput(IN_A_INPUT, "Ch 1");
+		configInput(IN_B_INPUT, "Ch 2");
+		configInput(TRIGG_A_INPUT, "Ch 1 Trigger");
+		configInput(TRIGG_B_INPUT, "Ch 2 Trigger");
+		configInput(RISE_CV_A_INPUT, "Ch 1 Rise CV");
+		configInput(RISE_CV_B_INPUT, "Ch 2 Rise CV");
+		configInput(FALL_CV_A_INPUT, "Ch 1 Fall CV");
+		configInput(FALL_CV_B_INPUT, "Ch 2 Fall CV");
+		configInput(EXP_CV_A_INPUT, "Ch 1 Timing");
+		configInput(EXP_CV_B_INPUT, "Ch 2 Timing");
+		configInput(CYCLE_A_INPUT, "Ch 1 Cycle Mode");
+		configInput(CYCLE_B_INPUT, "Ch 2 Cycle Mode");
+		configInput(BAC_CV_A_INPUT, "Ch 1 BAC %");
+		configInput(BAC_CV_B_INPUT, "Ch 2 BAC %");
+		configInput(AWARENESS_A_CV_INPUT, "Ch 1 Awareness");
+		configInput(AWARENESS_B_CV_INPUT, "Ch 2 Awareness");
+
+		
+		configOutput(RISING_A_OUTPUT, "Ch 1 Rising");
+		configOutput(RISING_B_OUTPUT, "Ch 2 Rising");
+		configOutput(FALLING_A_OUTPUT, "Ch 1 Falling");
+		configOutput(FALLING_B_OUTPUT, "Ch 2 Falling");
+		configOutput(EOC_A_OUTPUT, "Ch 1 EOC");
+		configOutput(EOC_B_OUTPUT, "Ch 2 EOC");
+		configOutput(OUT_A_OUTPUT, "Ch 1");
+		configOutput(OUT_B_OUTPUT, "Ch 2");
+		configOutput(COMPARATOR_OUTPUT, "Comparator");
+		configOutput(MIN_OUTPUT, "Max");
+		configOutput(MAX_OUTPUT, "Min");
+
+
+
 		srand(time(NULL));
 	}
 

@@ -58,8 +58,16 @@ struct SeedsOfChangeGateExpander : Module {
 		// Configure the module
 		config(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS, NUM_LIGHTS);
 		for (int i=0; i<NBOUT; i++) {
-			configParam(SeedsOfChangeGateExpander::GATE_PROBABILITY_1_PARAM + i, 0.0, 1.0, 0.0,"Gate Probability","%",0,100);
-			configParam(SeedsOfChangeGateExpander::GATE_PROBABILITY_1_CV_ATTENUVERTER + i, -1.0, 1.0, 0.0,"Gate Probability CV Attenuverter","%",0,100);
+			
+			configParam(GATE_PROBABILITY_1_PARAM + i, 0.0, 1.0, 0.0,"Random " + std::to_string(i+1) + " Gate Probability","%",0,100);
+			configParam(GATE_PROBABILITY_1_CV_ATTENUVERTER + i, -1.0, 1.0, 0.0,"Random " + std::to_string(i+1) + " Gate Probability CV Attenuverter","%",0,100);
+
+			configButton(GATE_MODE_PARAM+i,"Random " + std::to_string(i+1) + " Gate Mode");
+
+			configInput(GATE_PROBABILITY_1_INPUT+i, "Random " + std::to_string(i+1) + " Gate Probability");
+
+			configOutput(GATE_1_OUTPUT+i, "Random " + std::to_string(i+1) + " Gate");
+
 		}
 
 		leftExpander.producerMessage = producerMessage;
@@ -305,6 +313,7 @@ struct SeedsOfChangeGateExpanderWidget : ModuleWidget {
 			addChild(createLight<LargeLight<BlueLight>>(Vec(60.5, 46.5 + i*26.5), module, SeedsOfChangeGateExpander::GATE_MODE_LIGHT+i));
 
 			addOutput(createOutput<FWPortOutSmall>(Vec(79, 45 + i*26.5),  module, SeedsOfChangeGateExpander::GATE_1_OUTPUT + i));
+
 		}
 	}
 };

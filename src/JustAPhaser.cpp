@@ -193,16 +193,42 @@ struct JustAPhaser : Module {
 	JustAPhaser() {
 		config(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS, NUM_LIGHTS);
 
-		configParam(NUMBER_STAGES_PARAM, 0, 1, 0.0,"Stages");
 		configParam(FREQUENCY_PARAM, -8.0, 3.0, 0.0,"Mod Frequency", " Hz", 2, 1);
 	
-		configParam(DEPTH_PARAM, 0, 1.0, 0.5,"Mod Depth", "%");
-		configParam(FEEDBACK_AMOUNT_PARAM, -1.0, 1.0, 0.0,"Feedback");
+		configParam(DEPTH_PARAM, 0, 1.0, 0.5,"Mod Depth", "%",0,100);
+		configParam(FEEDBACK_AMOUNT_PARAM, -1.0, 1.0, 0.0,"Feedback","%",0,100);
 		configParam(CENTER_FREQUENCY_PARAM, 4.0, 14.0, 8.0,"Center Frequency", " Hz", 2, 1);
-		configParam(FREQUENCY_SPAN_PARAM, 0.01, 1.0, 1.0,"Frequency Span", "%");
+		configParam(FREQUENCY_SPAN_PARAM, 0.01, 1.0, 1.0,"Frequency Span", "%",0,100);
 		configParam(RESONANCE_PARAM, 0.5, 5, 0.707,"Resonance");
 		configParam(STEREO_PHASE_PARAM, 0, 0.99999, 0.25,"Stereo Phase Separation","°",0,360);
-		configParam(MIX_PARAM, 0, 1, 0.5,"Mix","%");
+		configParam(MIX_PARAM, 0, 1, 0.5,"Mix","%",0,100);
+
+		configButton(NUMBER_STAGES_PARAM,"# of Stages");
+		configButton(WAVESHAPE_PARAM,"LFO Wave");
+		configButton(FREQUENCY_MOD_TYPE_PARAM,"Modulation Type");
+		configButton(FILTER_MODE_PARAM,"Filter Type");
+
+		configInput(IN_L_IN, "Left");
+		configInput(IN_R_IN, "Right");
+		configInput(FB_IN_L_IN, "Left Feedback Return");
+		configInput(FB_IN_R_IN, "Right Feedback Return");
+		configInput(FREQUENCY_INPUT, "LFO Frequency");
+		configInput(DEPTH_INPUT, "LFO Depth");
+		configInput(FEEDBACK_INPUT, "Feedback");
+		configInput(CENTER_FREQUENCY_INPUT, "Center Frequency");
+		configInput(FREQUENCY_SPAN_INPUT, "Frequency Span");
+		configInput(RESONANCE_INPUT, "Resonance");
+		configInput(STEREO_PHASE_INPUT, "Stereo Phase Separation");
+		configInput(EXTERNAL_MOD_INPUT_L, "External Modulation L");
+		configInput(EXTERNAL_MOD_INPUT_R, "External Modulation R");
+		configInput(MIX_CV_INPUT, "Mix");
+
+		configOutput(FB_OUT_L_OUTPUT, "Left Feedback Send");
+		configOutput(FB_OUT_R_OUTPUT, "Right Feedback Send");
+		configOutput(OUT_L_OUTPUT, "Left");
+		configOutput(OUT_R_OUTPUT, "Right");
+
+
 
 		for(int i=0; i<MAX_STAGES; i++) {
 			for(int c=0;c<MAX_CHANNELS;c++) {
@@ -290,11 +316,18 @@ struct JustAPhaser : Module {
 		float feedbackAmount = clamp(params[FEEDBACK_AMOUNT_PARAM].getValue() + (inputs[FEEDBACK_INPUT].getVoltage() / 10.0 ),-1.0f,1.0f);
 		feedbackAmountPercentage = feedbackAmount;
 
-		directInput[0] = inputs[IN_L_IN].getVoltage()/5.0 + (feedbackIn[0] * feedbackAmount);
+		// directInput[0] = inputs[IN_L_IN].getVoltage()/5.0 + (feedbackIn[0] * feedbackAmount);
+		// if(inputs[IN_R_IN].active) {
+		// 	directInput[1] = inputs[IN_R_IN].getVoltage()/5.0 + (feedbackIn[1] * feedbackAmount);
+		// } else {
+		// 	directInput[1] = inputs[IN_L_IN].getVoltage()/5.0 + (feedbackIn[1] * feedbackAmount);
+		// }
+
+		directInput[0] = inputs[IN_L_IN].getVoltage()/5.0;
 		if(inputs[IN_R_IN].active) {
-			directInput[1] = inputs[IN_R_IN].getVoltage()/5.0 + (feedbackIn[1] * feedbackAmount);
+			directInput[1] = inputs[IN_R_IN].getVoltage()/5.0;
 		} else {
-			directInput[1] = inputs[IN_L_IN].getVoltage()/5.0 + (feedbackIn[1] * feedbackAmount);
+			directInput[1] = inputs[IN_L_IN].getVoltage()/5.0;
 		}
 
 		float lfoFrequency = clamp(params[FREQUENCY_PARAM].getValue() + (inputs[FREQUENCY_INPUT].getVoltage()),-8.0f,3.0f); 
@@ -368,7 +401,7 @@ struct JustAPhaser : Module {
 		mixPercentage = mix;
 		
 		for(int c=0; c<MAX_CHANNELS;c++) {
-			float phaseOut = directInput[c];
+			float phaseOut = directInput[c]+ (feedbackIn[c] * feedbackAmount);			
 			for(int i=0;i<numberOfStages;i++) {
 				phaseOut = pFilter[i][c]->process(phaseOut);
 			}

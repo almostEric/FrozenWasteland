@@ -182,25 +182,37 @@ struct StringTheory : Module {
 		configParam(FEEDBACK_PARAM, -1.0f, 1.f, 0.5f, "Feedback", "%", 0, 100);
 		configParam(FEEDBACK_SHIFT_PARAM, 0.f, MAX_GRAINS, 0.0f, "Feedback Shift");
 		configParam(COLOR_PARAM, 0.f, 1.f, 0.5f, "Color", "%", 0, 100);
-		configParam(PLUCK_PARAM, 0.f, 1.f, 0.0f);
 		configParam(RING_MOD_GRAIN_PARAM, 0.f, MAX_GRAINS, 0.0f, "Ring Mod Grain");
 		configParam(RING_MOD_MIX_PARAM, 0.f, 1.f, 0.0f, "Ring Mod Mix", "%", 0, 100);
-		configParam(NOISE_TYPE_PARAM, 0.f, 1.f, 0.0f);
-		configParam(WINDOW_FUNCTION_PARAM, 0.f, 1.f, 0.0f);
-		configParam(COMPRESSION_MODE_PARAM, 0.0f, 1.0f, 0.0f);
 
-		// for(int i=0;i<MAX_GRAINS;i++) {
-		// 	src[i] = src_new(SRC_SINC_FASTEST, 1, NULL);
-		// 	assert(src[i]);
-		// }
-		//src = src_new(SRC_LINEAR, 1, NULL);
+		configButton(PLUCK_PARAM,"Pluck");
+		configButton(NOISE_TYPE_PARAM,"Noise Type");
+		configButton(WINDOW_FUNCTION_PARAM,"Window Function");
+		configButton(COMPRESSION_MODE_PARAM,"Compression Mode");
+
+		configInput(COARSE_TIME_INPUT, "Coarse Time");
+		configInput(FINE_TIME_INPUT, "Fine Time");
+		configInput(SAMPLE_TIME_INPUT, "Samples");
+		configInput(V_OCT_INPUT, "V/Oct");
+		configInput(FEEDBACK_INPUT, "Feedback");
+		configInput(FEEDBACK_SHIFT_INPUT, "Feedback Shift");
+		configInput(COLOR_INPUT, "Color");
+		configInput(IN_INPUT, "External");
+		configInput(PLUCK_INPUT, "Pluck");
+		configInput(FB_RETURN_INPUT, "Feedback Return");
+		configInput(SPREAD_INPUT, "Spread");
+		configInput(PHASE_OFFSET_INPUT, "Phase Offset");
+		configInput(RING_MOD_GRAIN_INPUT, "Ring Mod Grain");
+		configInput(RING_MOD_MIX_INPUT, "Ring Mod Mix");
+		configInput(EXTERNAL_RING_MOD_INPUT, "External Ring Mod");
+
+
+		configOutput(OUT_OUTPUT, "String");
+		configOutput(FB_SEND_OUTPUT, "Feedback Send");
+
+
 	}
 
-	// ~StringTheory() {
-	// 	// for(int i=0;i<MAX_GRAINS;i++) {
-	// 	// 	src_delete(src[i]);
-	// 	// }
-	// }
 
 	json_t *dataToJson() override {
 		json_t *rootJ = json_object();

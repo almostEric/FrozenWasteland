@@ -75,7 +75,9 @@ struct MrBlueSky : Module {
 		config(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS, NUM_LIGHTS);
 
 		for (int i = 0; i < BANDS; i++) {
-			configParam(BG_PARAM + i, 0, 2, 1);
+			configParam(BG_PARAM + i, 0, 2, 1,"Band " + std::to_string(i+1) + " Gaim");
+			configInput(CARRIER_IN+ i, "Band " + std::to_string(i+1) + " Carrier CV");
+			configOutput(MOD_OUT + i, "Band "+ std::to_string(i+1) + " Modifier");
 		}
 		configParam(ATTACK_PARAM, 0.0, 0.25, 0.0,"Attack");
 		configParam(DECAY_PARAM, 0.0, 0.25, 0.0,"Decay");
@@ -91,6 +93,20 @@ struct MrBlueSky : Module {
 		configParam(CARRIER_Q_CV_ATTENUVERTER_PARAM, -1.0, 1.0, 0,"Carrier Q CV Attentuation","%",0,100);
 		configParam(MODIFER_Q_CV_ATTENUVERTER_PARAM, -1.0, 1.0, 0,"Modulator Q CV Attentuation","%",0,100);
 		configParam(SHIFT_BAND_OFFSET_CV_ATTENUVERTER_PARAM, -1.0, 1.0, 0,"Band Offset CV Attentuation","%",0,100);
+
+		configButton(MOD_INVERT_PARAM,"Invert Modifier Outputs");
+
+		configInput(IN_MOD, "Modifier");
+		configInput(IN_CARR, "Carrier");
+		configInput(ATTACK_INPUT, "Attack");
+		configInput(DECAY_INPUT, "Decay");
+		configInput(CARRIER_Q_INPUT, "Carrier Q");
+		configInput(MOD_Q_INPUT, "Modifier Q");
+		configInput(SHIFT_BAND_OFFSET_LEFT_INPUT, "Band Shift Down");
+		configInput(SHIFT_BAND_OFFSET_RIGHT_INPUT, "Band Shift Up");
+		configInput(SHIFT_BAND_OFFSET_INPUT, "Band Offset");
+
+		configOutput(OUT, "Vocoder");
 
 		float sampleRate = APP->engine->getSampleRate();
 
@@ -409,9 +425,9 @@ struct MrBlueSkyWidget : ModuleWidget {
 		addParam(createParam<LEDButton>(Vec(250, 262), module, MrBlueSky::MOD_INVERT_PARAM));
 		addChild(createLight<LargeLight<BlueLight>>(Vec(251.5, 263.5), module, MrBlueSky::MOD_INVERT_LIGHT));
 
-		addParam(createParam<RoundFWKnob>(Vec(154, 290), module, MrBlueSky::GMOD_PARAM));
-		addParam(createParam<RoundFWKnob>(Vec(204, 290	), module, MrBlueSky::GCARR_PARAM));
-		addParam(createParam<RoundFWKnob>(Vec(254, 290), module, MrBlueSky::G_PARAM));
+		addParam(createParam<RoundFWKnob>(Vec(154, 288), module, MrBlueSky::GMOD_PARAM));
+		addParam(createParam<RoundFWKnob>(Vec(204, 288	), module, MrBlueSky::GCARR_PARAM));
+		addParam(createParam<RoundFWKnob>(Vec(254, 288), module, MrBlueSky::G_PARAM));
 		
 		addInput(createInput<PJ301MPort>(Vec(154, 335), module, MrBlueSky::IN_MOD));
 		addInput(createInput<PJ301MPort>(Vec(204, 335), module, MrBlueSky::IN_CARR));

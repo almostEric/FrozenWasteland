@@ -329,8 +329,8 @@ struct ProbablyNote : Module {
         configParam(ProbablyNote::SPREAD_CV_ATTENUVERTER_PARAM, -1.0, 1.0, 0.0,"Spread CV Attenuation" ,"%",0,100);
 		configParam(ProbablyNote::SLANT_PARAM, -1.0, 1.0, 0.0,"Slant","%",0,100);
         configParam(ProbablyNote::SLANT_CV_ATTENUVERTER_PARAM, -1.0, 1.0, 0.0,"Slant CV Attenuation" ,"%",0,100);
-		configParam(ProbablyNote::DISTRIBUTION_PARAM, 0.0, 1.0, 0.0,"Distribution","%",0,100);
-		configParam(ProbablyNote::DISTRIBUTION_CV_ATTENUVERTER_PARAM, -1.0, 1.0, 0.0,"Distribution CV Attenuation");
+		configParam(ProbablyNote::DISTRIBUTION_PARAM, 0.0, 1.0, 0.0,"Focus","%",0,100);
+		configParam(ProbablyNote::DISTRIBUTION_CV_ATTENUVERTER_PARAM, -1.0, 1.0, 0.0,"Focus CV Attenuation");
 		configParam(ProbablyNote::SHIFT_PARAM, -11.0, 11.0, 0.0,"Weight Shift");
         configParam(ProbablyNote::SHIFT_CV_ATTENUVERTER_PARAM, -1.0, 1.0, 0.0,"Weight Shift CV Attenuation" ,"%",0,100);
 		configParam(ProbablyNote::SCALE_PARAM, 0.0, MAX_SCALES-1, 0.0,"Scale");
@@ -344,8 +344,8 @@ struct ProbablyNote : Module {
 		configParam(ProbablyNote::WEIGHT_SCALING_PARAM, 0.0, 1.0, 0.0,"Weight Scaling","%",0,100);
 		configParam(ProbablyNote::PITCH_RANDOMNESS_PARAM, 0.0, 10.0, 0.0,"Randomize Pitch Amount"," Cents");
         configParam(ProbablyNote::PITCH_RANDOMNESS_CV_ATTENUVERTER_PARAM, -1.0, 1.0, 0.0,"Randomize Pitch Amount CV Attenuation","%",0,100);
-		configParam(ProbablyNote::NON_REPEATABILITY_PARAM, 0.0, 1.0, 0.0,"Non Repeat Probability"," %",0,100);
-        configParam(ProbablyNote::NON_REPEATABILITY_CV_ATTENUVERTER_PARAM, -1.0, 1.0, 0.0,"Non Repeat Probability CV Attenuation","%",0,100);
+		configParam(ProbablyNote::NON_REPEATABILITY_PARAM, 0.0, 1.0, 0.0,"Note Non-Repeat Probability"," %",0,100);
+        configParam(ProbablyNote::NON_REPEATABILITY_CV_ATTENUVERTER_PARAM, -1.0, 1.0, 0.0,"Note Non-Repeat Probability CV Attenuation","%",0,100);
 
         srand(time(NULL));
 
@@ -353,6 +353,25 @@ struct ProbablyNote : Module {
             configParam(ProbablyNote::NOTE_ACTIVE_PARAM + i, 0.0, 1.0, 0.0,"Note Active");		
             configParam(ProbablyNote::NOTE_WEIGHT_PARAM + i, 0.0, 1.0, 0.0,"Note Weight");		
         }
+
+		configInput(NOTE_INPUT, "Unquantized CV");
+		configInput(SPREAD_INPUT, "Spread");
+		configInput(SLANT_INPUT, "Slant");
+		configInput(DISTRIBUTION_INPUT, "Focus");
+		configInput(SHIFT_INPUT, "Shift");
+		configInput(SCALE_INPUT, "Scale");
+		configInput(KEY_INPUT, "Key");
+		configInput(OCTAVE_INPUT, "Ocatave");
+		configInput(TEMPERMENT_INPUT, "Tempermanet");
+		configInput(TRIGGER_INPUT, "Trigger");
+		configInput(EXTERNAL_RANDOM_INPUT, "External Random");
+		configInput(OCTAVE_WRAP_INPUT, "Octave Wrap");
+		configInput(PITCH_RANDOMNESS_INPUT, "Pitch Randomness");
+		configInput(NOTE_WEIGHT_INPUT, "Left");
+		configInput(NON_REPEATABILITY_INPUT, "Note Non-Repeat Probability");
+
+
+	
 
 		rightExpander.producerMessage = rightMessages[0];
 		rightExpander.consumerMessage = rightMessages[1];

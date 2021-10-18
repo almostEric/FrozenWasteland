@@ -98,7 +98,20 @@ struct TheGardener : Module {
 
         configParam(SEED_PROCESS_DELAY_COMPENSATION_PARAM, 0.0, 10.0, 0.0,"Seed Process Delay Compensation");
 
+		configButton(DIV_RESET_MODE_PARAM,"Division Reset Mode");
 
+		configInput(CLOCK_INPUT, "Clock");
+		configInput(RESET_INPUT, "Reset");
+		configInput(SEED_INPUT, "Seed");
+		configInput(NUMBER_STEPS_RESEED_CV_INPUT, "# Steps to Reseed");
+		configInput(NUMBER_STEPS_NEW_SEED_CV_INPUT, "# Steps to New Seed");
+
+		configOutput(CLOCK_OUTPUT, "Clock");
+		configOutput(SEED_OUTPUT, "Seed");
+		configOutput(RESEED_OUTPUT, "Reseed");
+		configOutput(NEW_SEED_TRIGGER_OUTPUT, "New Seed Trigger");
+
+        
 		reseedCount = 0;
 		newSeedCount = 0;
 

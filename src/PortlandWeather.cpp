@@ -128,7 +128,7 @@ struct PortlandWeather : Module {
 	};
 	enum TriggerModes {
 		TRIGGER_TRIGGER_MODE,
-		GATE_TRIGGE_MODE
+		GATE_TRIGGER_MODE
 	};
 	enum CompressionModes {
 		COMPRESSION_NONE,
@@ -354,37 +354,88 @@ struct PortlandWeather : Module {
 		configParam(FEEDBACK_R_DETUNE_PARAM, -99.0f, 99.0f, 0.0f,"Feedback R Detune", " cents");
 
 	
-		configParam(CLEAR_BUFFER_PARAM, 0.0f, 1.0f, 0.0f,"Clear Buffer");
+		configButton(CLEAR_BUFFER_PARAM,"Clear Buffer");
 
-		configParam(REVERSE_PARAM, 0.0f, 1.0f, 0.0f);		
-		configParam(PING_PONG_PARAM, 0.0f, 1.0f, 0.0f);
+		configButton(REVERSE_PARAM,"Reverse");
+		configButton(PING_PONG_PARAM,"Ping Pong");
+		configSwitch(REVERSE_TRIGGER_MODE_PARAM, 0.f,1.f,0.f, "Reverse Trigger Mode", {"Trigger", "Gate"});
+		configSwitch(PING_PONG_TRIGGER_MODE_PARAM, 0.f,1.f,0.f, "Ping Pong Trigger Mode", {"Trigger", "Gate"});
+		configSwitch(STACK_TRIGGER_MODE_PARAM, 0.f,1.f,0.f, "Stack Trigger Mode", {"Trigger", "Gate"});
+		configSwitch(MUTE_TRIGGER_MODE_PARAM, 0.f,1.f,0.f, "Mute Pong Trigger Mode", {"Trigger", "Gate"});
 
-		configParam(COMPRESSION_MODE_PARAM, 0.0f, 1.0f, 0.0f);
+
+		configButton(PHASE_REVERSE_L_PARAM,"Phase Reverse Left");
+		configButton(PHASE_REVERSE_R_PARAM,"Phase Reverse Right");
+
+
+		configButton(COMPRESSION_MODE_PARAM,"Compression Mode");
 
 		//last tap isn't stacked
 		for (int i = 0; i< NUM_TAPS-1; i++) {
-			configParam(TAP_STACKED_PARAM + i, 0.0f, 1.0f, 0.0f);
+			configButton(TAP_STACKED_PARAM+i,"Tap " + std::to_string(i+1) + " stack");
 		}
 
 		for (int i = 0; i < NUM_TAPS; i++) {
-			configParam(TAP_MUTE_PARAM + i, 0.0f, 1.0f, 0.0f);		
-			configParam(TAP_LEVEL_PARAM + i, 0.0f, 1.0f, 0.5f,"Tap " + std::to_string(i+1) + " mix","%",0,100);
+			// configSwitch(OFFSET_PARAM, 0.f,1.f,0.f, "Offset", {"-5v to 5v", "0v-10v"});
+
+			configButton(TAP_MUTE_PARAM+i,"Tap " + std::to_string(i+1) + " mute");
+
+			configParam(TAP_LEVEL_PARAM + i, 0.0f, 1.0f, 0.5f,"Tap " + std::to_string(i+1) + " level","%",0,100);
 			configParam(TAP_PAN_PARAM + i, -1.0f, 1.0f, 0.0f,"Tap " + std::to_string(i+1) + " pan","%",0,100);
 			configParam(TAP_FILTER_TYPE_PARAM + i, 0, 4, 0,"Tap " + std::to_string(i+1) + " filter type");
 			configParam(TAP_FC_PARAM + i, 0.0f, 1.0f, 0.5f,"Tap " + std::to_string(i+1) + " Fc"," Hz",560,15);
 			configParam(TAP_Q_PARAM + i, 0.01f, 1.0f, 0.1f,"Tap " + std::to_string(i+1) + " Q","",0,100);
 			configParam(TAP_PITCH_SHIFT_PARAM + i, -24.0f, 24.0f, 0.0f,"Tap " + std::to_string(i+1) + " pitch shift"," semitones");
 			configParam(TAP_DETUNE_PARAM + i, -99.0f, 99.0f, 0.0f,"Tap " + std::to_string(i+1) + " detune"," cents");
+		
+			configInput(TAP_MUTE_CV_INPUT + i, "Tap " + std::to_string(i+1) + " mute");
+			configInput(TAP_STACK_CV_INPUT + i, "Tap " + std::to_string(i+1) + " stack");
+			configInput(TAP_MIX_CV_INPUT + i, "Tap " + std::to_string(i+1) + " level");
+			configInput(TAP_PAN_CV_INPUT + i, "Tap " + std::to_string(i+1) + " pan");
+			configInput(TAP_FC_CV_INPUT + i, "Tap " + std::to_string(i+1) + " Fc");
+			configInput(TAP_Q_CV_INPUT + i, "Tap " + std::to_string(i+1) + " Q");
+			configInput(TAP_PITCH_SHIFT_CV_INPUT + i, "Tap " + std::to_string(i+1) + " pitch shift");
+			configInput(TAP_DETUNE_CV_INPUT + i, "Tap " + std::to_string(i+1) + " detune");
 
 		}
 
 		configParam(MIX_PARAM, 0.0f, 1.0f, 0.5f,"Mix","%",0,100);
 		configParam(DUCKING_AMOUNT_PARAM, 0.0f, 1.0f, 0.0f,"Ducking","%",0,100);
 
-		configParam(REVERSE_TRIGGER_MODE_PARAM, 0.0f, 1.0f, 0.0f);
-		configParam(PING_PONG_TRIGGER_MODE_PARAM, 0.0f, 1.0f, 0.0f);
-		configParam(STACK_TRIGGER_MODE_PARAM, 0.0f, 1.0f, 0.0f);
-		configParam(MUTE_TRIGGER_MODE_PARAM, 0.0f, 1.0f, 0.0f);
+		configInput(CLOCK_INPUT, "Clock");
+		configInput(CLOCK_DIVISION_CV_INPUT, "Clock Division");
+		configInput(TIME_CV_INPUT, "Time");
+		configInput(EXTERNAL_DELAY_TIME_INPUT, "External Delay");
+		configInput(GRID_CV_INPUT, "Grid");
+		configInput(GROOVE_TYPE_CV_INPUT, "Groove Type");
+		configInput(GROOVE_AMOUNT_CV_INPUT, "Groove Amount");
+		configInput(FEEDBACK_INPUT, "Feedback Amount");
+		configInput(FEEDBACK_TAP_L_INPUT, "Feedback Left");
+		configInput(FEEDBACK_TAP_R_INPUT, "Feedback Right");
+		configInput(FEEDBACK_TONE_INPUT, "Feedback Tone");
+		configInput(FEEDBACK_L_SLIP_CV_INPUT, "Feedback Left Slip");
+		configInput(FEEDBACK_R_SLIP_CV_INPUT, "Feedback Right Slip");
+		configInput(FEEDBACK_L_PITCH_SHIFT_CV_INPUT, "Feedback Left Pitch Shift");
+		configInput(FEEDBACK_R_PITCH_SHIFT_CV_INPUT, "Feedback Right Pitch Shift");
+		configInput(FEEDBACK_L_DETUNE_CV_INPUT, "Feedback Left Detune");
+		configInput(FEEDBACK_R_DETUNE_CV_INPUT, "Feedback Right Detune");
+		configInput(FEEDBACK_L_RETURN, "Feedback Left Return");
+		configInput(FEEDBACK_R_RETURN, "Feedback Right Return");
+		configInput(PING_PONG_INPUT, "Ping Pong");
+		configInput(REVERSE_INPUT, "Reverse");
+		configInput(MIX_INPUT, "Mix");
+		configInput(IN_L_INPUT, "Left");
+		configInput(IN_R_INPUT, "Right");
+		configInput(CLOCK_MULT_CV_INPUT, "Clock Multiply");
+		configInput(DUCKING_AMOUNT_CV_INPUT, "Ducking Amount");
+		configInput(DUCKING_FB_AMOUNT_CV_INPUT, "Feedback Ducking Amount");
+		configInput(PHASE_REVERSE_L_INPUT, "Phase Reverse Left");
+		configInput(PHASE_REVERSE_R_INPUT, "Phase Reverse Right");
+
+		configOutput(OUT_L_OUTPUT, "Left");
+		configOutput(OUT_R_OUTPUT, "Right");
+		configOutput(FEEDBACK_L_OUTPUT, "Feedback Left");
+		configOutput(FEEDBACK_R_OUTPUT, "Feedback Right");
 
 
 		rightExpander.producerMessage = rightMessages[0];
@@ -646,7 +697,7 @@ struct PortlandWeather : Module {
 
 
 		// Ping Pong
-		if(params[PING_PONG_TRIGGER_MODE_PARAM].getValue() == GATE_TRIGGE_MODE && inputs[PING_PONG_INPUT].isConnected()) {
+		if(params[PING_PONG_TRIGGER_MODE_PARAM].getValue() == GATE_TRIGGER_MODE && inputs[PING_PONG_INPUT].isConnected()) {
 			pingPong = inputs[PING_PONG_INPUT].getVoltage() > 0.0f;
 		}
 		//Button (or trigger) can override input	
@@ -657,7 +708,7 @@ struct PortlandWeather : Module {
 
 		// Reverse
 		bool reversePrevious = reverse;
-		if(params[REVERSE_TRIGGER_MODE_PARAM].getValue() == GATE_TRIGGE_MODE && inputs[REVERSE_INPUT].isConnected()) {
+		if(params[REVERSE_TRIGGER_MODE_PARAM].getValue() == GATE_TRIGGER_MODE && inputs[REVERSE_INPUT].isConnected()) {
 			reverse = inputs[REVERSE_INPUT].getVoltage() > 0.0f;
 		}		
 		if (reverseTrigger.process(params[REVERSE_PARAM].getValue() + (inputs[REVERSE_INPUT].isConnected() && params[REVERSE_TRIGGER_MODE_PARAM].getValue() == TRIGGER_TRIGGER_MODE ? inputs[REVERSE_INPUT].getVoltage() : 0))) {
@@ -767,7 +818,7 @@ struct PortlandWeather : Module {
 		for(int tap = 0; tap < NUM_TAPS;tap++) { 
 
 			// Stacking
-			if(params[STACK_TRIGGER_MODE_PARAM].getValue() == GATE_TRIGGE_MODE && inputs[TAP_STACK_CV_INPUT+tap].isConnected()) {
+			if(params[STACK_TRIGGER_MODE_PARAM].getValue() == GATE_TRIGGER_MODE && inputs[TAP_STACK_CV_INPUT+tap].isConnected()) {
 				tapStacked[tap] = inputs[TAP_STACK_CV_INPUT+tap].getVoltage() > 0.0f;
 			}
 			//Button (or trigger) can override input
@@ -822,7 +873,7 @@ struct PortlandWeather : Module {
 			wetTap.r +=pitchShiftOut.r;
 					
 			// Muting			
-			if(params[MUTE_TRIGGER_MODE_PARAM].getValue() == GATE_TRIGGE_MODE && inputs[TAP_MUTE_CV_INPUT+tap].isConnected()) {
+			if(params[MUTE_TRIGGER_MODE_PARAM].getValue() == GATE_TRIGGER_MODE && inputs[TAP_MUTE_CV_INPUT+tap].isConnected()) {
 				tapMuted[tap] = inputs[TAP_MUTE_CV_INPUT+tap].getVoltage() > 0.0f;
 			}
 			//Button (or trigger) can override input
@@ -1457,10 +1508,10 @@ struct PortlandWeatherWidget : ModuleWidget {
 		addParam(createParam<LEDButton>(Vec(332, 330), module, PortlandWeather::COMPRESSION_MODE_PARAM));
 		addChild(createLight<LargeLight<RedGreenBlueLight>>(Vec(333.5, 331.5), module, PortlandWeather::COMPRESSION_MODE_LIGHT));
 
-		addParam( createParam<LEDButton>(Vec(127, 340), module, PortlandWeather::PHASE_REVERSE_L_PARAM));
-		addChild(createLight<LargeLight<BlueLight>>(Vec(128.5, 341.5), module, PortlandWeather::PHASE_REVERSE_L_LIGHT));
-		addParam( createParam<LEDButton>(Vec(200, 340), module, PortlandWeather::PHASE_REVERSE_R_PARAM));
-		addChild(createLight<LargeLight<BlueLight>>(Vec(201.5, 341.5), module, PortlandWeather::PHASE_REVERSE_R_LIGHT));
+		addParam( createParam<LEDButton>(Vec(123, 340), module, PortlandWeather::PHASE_REVERSE_L_PARAM));
+		addChild(createLight<LargeLight<BlueLight>>(Vec(124.5, 341.5), module, PortlandWeather::PHASE_REVERSE_L_LIGHT));
+		addParam( createParam<LEDButton>(Vec(205, 340), module, PortlandWeather::PHASE_REVERSE_R_PARAM));
+		addChild(createLight<LargeLight<BlueLight>>(Vec(206.5, 341.5), module, PortlandWeather::PHASE_REVERSE_R_LIGHT));
 
 
 		//last tap isn't stacked
@@ -1558,14 +1609,14 @@ struct PortlandWeatherWidget : ModuleWidget {
 			dynamic_cast<RoundLargeFWKnob*>(mixParam)->percentage = &module->mixPercentage;
 		}
 		addParam(mixParam);							
-		addInput(createInput<FWPortInSmall>(Vec(120, 280), module, PortlandWeather::MIX_INPUT));
+		addInput(createInput<FWPortInSmall>(Vec(116, 280), module, PortlandWeather::MIX_INPUT));
 
 		ParamWidget* duckingParam = createParam<RoundLargeFWKnob>(Vec(140, 273), module, PortlandWeather::DUCKING_AMOUNT_PARAM);
 		if (module) {
 			dynamic_cast<RoundLargeFWKnob*>(duckingParam)->percentage = &module->duckingPercentage;
 		}
 		addParam(duckingParam);
-		addInput(createInput<FWPortInSmall>(Vec(185, 280), module, PortlandWeather::DUCKING_AMOUNT_CV_INPUT));
+		addInput(createInput<FWPortInSmall>(Vec(181, 280), module, PortlandWeather::DUCKING_AMOUNT_CV_INPUT));
 
 
 		addInput(createInput<PJ301MPort>(Vec(15, 330), module, PortlandWeather::CLOCK_INPUT));

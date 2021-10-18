@@ -412,6 +412,57 @@ struct SliceOfLife : Module {
 		configParam(MIX_PARAM, -1.f, 1.f, 0.f, "Mix", "%", 0.f, 100.f);
 		configParam(VCA_CV_DEPTH_PARAM, 0.f, 1.f, 0.f, "VCA CV Attenuation", "%", 0.f, 100.f);
 
+		configButton(POS_VCO_FM_MODE_PARAM,"+ VCO FM Mode");
+		configButton(NEG_VCO_FM_MODE_PARAM,"- VCO FM Mode");
+		configButton(SIS_VCO_FM_1_MODE_PARAM,"Scissor VCO FM 1 Mode");
+		configButton(SIS_VCO_FM_2_MODE_PARAM,"Scissor VCO FM 2 Mode");
+
+		configButton(PW_SKEW_PARAM,"PW Skew");
+		configButton(CV_LOCK_PARAM,"CV Lock");
+		configButton(SYNC_LOCK_PARAM,"Sync Lock");
+
+
+		configInput(POS_VCO_PITCH_INPUT, "+ VCO v/Oct");
+		configInput(POS_VCO_FM_INPUT, "+ VCO FM");
+		configInput(POS_VCO_SYNC_INPUT, "+ VCO Sync");
+		configInput(POS_VCO_SIN_VCA_INPUT, "+ VCO Sin Level");
+		configInput(POS_VCO_TRI_VCA_INPUT, "+ VCO Tri Level");
+		configInput(POS_VCO_SAW_VCA_INPUT, "+ VCO Saw Level");
+
+		configInput(NEG_VCO_PITCH_INPUT, "+ VCO v/Oct");
+		configInput(NEG_VCO_FM_INPUT, "- VCO FM");
+		configInput(NEG_VCO_SYNC_INPUT, "- VCO Sync");
+		configInput(NEG_VCO_SIN_VCA_INPUT, "- VCO Sin Level");
+		configInput(NEG_VCO_TRI_VCA_INPUT, "- VCO Tri Level");
+		configInput(NEG_VCO_SAW_VCA_INPUT, "- VCO Saw Level");
+
+
+		configInput(SIS_VCO_PITCH_INPUT, "Scisssor VCO v/Oct");
+		configInput(SIS_VCO_FM_1_INPUT, "Scisssor VCO FM 1");
+		configInput(SIS_VCO_FM_2_INPUT, "Scisssor VCO FM 2");
+		configInput(SIS_VCO_PW_INPUT, "Scisssor VCO Pulse Width");
+		configInput(SIS_VCO_SYNC_INPUT, "Scisssor VCO Sync");
+		configInput(SIS_SKEW_AMOUNT_INPUT, "Scisssor VCO Skew");
+
+		configInput(VCA_CV_INPUT, "VCA CV");
+		configInput(MIX_INPUT, "Mix");
+
+	
+		configOutput(POS_SIN_OUTPUT, "+ Sin");
+		configOutput(POS_TRI_OUTPUT, "+ Tri");
+		configOutput(POS_SAW_OUTPUT, "+ Saw");
+		configOutput(POS_MIX_OUTPUT, "+ Mix");
+
+		configOutput(NEG_SIN_OUTPUT, "- Sin");
+		configOutput(NEG_TRI_OUTPUT, "- Tri");
+		configOutput(NEG_SAW_OUTPUT, "- Saw");
+		configOutput(NEG_MIX_OUTPUT, "- Mix");
+
+		configOutput(SIS_TRI_OUTPUT, "Scissor Triangle");
+		configOutput(SIS_SAW_OUTPUT, "Scissor Sawtooth");
+		configOutput(SIS_SQR_OUTPUT, "Scissor Square/Pulse");
+
+		configOutput(GLU_OUTPUT, "Glue");
 
 		lightDivider.setDivision(16);
 	}

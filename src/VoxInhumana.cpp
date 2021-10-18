@@ -188,6 +188,24 @@ struct VoxInhumana : Module {
 		configParam(AMP_4_CV_ATTENUVERTER_PARAM, -1.0, 1.0, 0,"Formant 4 Amplitude CV Attenuation","%",0,100);
 		configParam(AMP_5_CV_ATTENUVERTER_PARAM, -1.0, 1.0, 0,"Formant 5 Amplitude CV Attenuation","%",0,100);
 			
+		configInput(SIGNAL_IN, "Signal");
+		configInput(VOWEL_1_CV_IN, "Vowel 1 CV");
+		configInput(VOWEL_2_CV_IN, "Vowel 2 CV");
+		configInput(VOWEL_BALANCE_CV_IN, "Vowel Balance");
+		configInput(VOICE_TYPE_CV_IN, "Voice Type");
+		configInput(FC_MAIN_CV_IN, "Main Freqency Cutoff Shift");
+		configInput(FREQ_1_CUTOFF_INPUT, "Formant 1 Freqency Shift");
+		configInput(FREQ_2_CUTOFF_INPUT, "Formant 2 Freqency Shift");
+		configInput(FREQ_3_CUTOFF_INPUT, "Formant 3 Freqency Shift");
+		configInput(FREQ_4_CUTOFF_INPUT, "Formant 4 Freqency Shift");
+		configInput(FREQ_5_CUTOFF_INPUT, "Formant 5 Freqency Shift");
+		configInput(AMP_1_INPUT, "Formant 1 Amplitude");
+		configInput(AMP_2_INPUT, "Formant 2 Amplitude");
+		configInput(AMP_3_INPUT, "Formant 3 Amplitude");
+		configInput(AMP_4_INPUT, "Formant 4 Amplitude");
+		configInput(AMP_5_INPUT, "Formant 5 Amplitude");
+
+		configOutput(VOX_OUTPUT, "Vox");
 
 		for (int i = 0; i < BANDS * 2; ++i) {
 			filterParams[i].setMode(StateVariableFilterParams<T>::Mode::BandPass);

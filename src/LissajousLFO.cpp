@@ -223,6 +223,35 @@ struct LissajousLFO : Module {
 		configParam(WAVESHAPEY2_CV_ATTENUVERTER_PARAM, -1.0, 1.0, 0.0,"Y 2 Wave Shape CV Attenuation","%",0,100);
 		configParam(SKEWX2_CV_ATTENUVERTER_PARAM, -1.0, 1.0, 0.0,"X 2 Skew CV Attenuation","%",0,100);
 		configParam(SKEWY2_CV_ATTENUVERTER_PARAM, -1.0, 1.0, 0.0,"Y 2 Skew CV Attenuation","%",0,100);		
+
+
+		configInput(AMPLITUDE1_INPUT, "Amplitude 1");
+		configInput(AMPLITUDE2_INPUT, "Amplitude 2");
+		configInput(FREQX1_INPUT, "X 1 Frequency");
+		configInput(FREQY1_INPUT, "Y 1 Frequency");
+		configInput(PHASEX1_INPUT, "X 1 Phase1");
+		configInput(WAVESHAPEX1_INPUT, "X 1 Wave Shape");
+		configInput(WAVESHAPEY1_INPUT, "Y 1 Wave Shape");
+		configInput(SKEWX1_INPUT, "X 1 Skew");
+		configInput(SKEWY1_INPUT, "Y 1 Skew");
+		configInput(FREQX2_INPUT, "X 2 Frequency");
+		configInput(FREQY2_INPUT, "Y 2 Frequency");
+		configInput(PHASEX2_INPUT, "X 2 Phase");
+		configInput(WAVESHAPEX2_INPUT, "X 2 Wave Shape");
+		configInput(WAVESHAPEY2_INPUT, "Y 2 Wave Shape");
+		configInput(SKEWX2_INPUT, "X 2 Skew");
+		configInput(SKEWY2_INPUT, "Y 2 Skew");
+
+
+		configOutput(OUTPUT_1, "X Average");
+		configOutput(OUTPUT_2, "Y Average");
+		configOutput(OUTPUT_3, "X+Y Average");
+		configOutput(OUTPUT_4, "X1 / X2");
+		configOutput(OUTPUT_5, "Y1 / Y2");
+		configOutput(OUTPUT_6, "X1 * X2");
+		configOutput(OUTPUT_7, "Y1 * Y2");
+		configOutput(OUTPUT_8, "Ave X * Ave Y");
+		
 	}
 	void process(const ProcessArgs &args) override;
 

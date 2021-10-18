@@ -117,6 +117,19 @@ struct QuantussyCell : Module {
 		configParam(LOW_LIMIT_PARAM, -10.0, 10.0, -10.0,"Low Lmit", " Hz", 2, 1);
 		configParam(HI_LIMIT_PARAM, -10.0, 10.0, 10.0,"High Limit", " Hz", 2, 1);
 
+		configInput(CASTLE_INPUT, "Castle");
+		configInput(CV_INPUT, "CV");
+		configInput(CV_AMOUNT_INPUT, "CV Amount");
+		configInput(LOW_LIMIT_CV_INPUT, "Lower Hz Limit");
+		configInput(HI_LIMIT_CV_INPUT, "Upper Hz Limit");
+
+	
+		configOutput(CASTLE_OUTPUT, "Castle");
+		configOutput(SIN_OUTPUT, "Sin");
+		configOutput(TRI_OUTPUT, "Triangle");
+		configOutput(SAW_OUTPUT, "Sawtooth");
+		configOutput(SQR_OUTPUT, "Square");
+
 	}
 	void process(const ProcessArgs &args) override;
 

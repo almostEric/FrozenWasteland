@@ -172,6 +172,23 @@ struct HairPick : Module {
 		configParam(FEEDBACK_AMOUNT_PARAM, 0.0f, 1.0f, 0.0f);
 		
 
+		configInput(CLOCK_INPUT, "Clock");
+		configInput(CLOCK_DIVISION_CV_INPUT, "Clock Division");
+		configInput(VOLT_OCTAVE_INPUT, "v/O");
+		configInput(SIZE_CV_INPUT, "Size CV");
+		configInput(PATTERN_TYPE_CV_INPUT, "Pattern CV");
+		configInput(NUMBER_TAPS_CV_INPUT, "# Taps CV");
+		configInput(TENT_LEVEL_CV_INPUT, "Tent Level");
+		configInput(TENT_TAP_CV_INPUT, "Tent Tap");
+		configInput(FEEDBACK_TYPE_CV_INPUT, "Feedback Type");
+		configInput(FEEDBACK_CV_INPUT, "Feedback CV");
+		configInput(IN_L_INPUT, "Left");
+		configInput(IN_R_INPUT, "Right");
+
+		configOutput(OUT_L_OUTPUT, "Left");
+		configOutput(OUT_R_OUTPUT, "Right");
+		configOutput(DELAY_LENGTH_OUTPUT, "Delay Length");
+
 		srand(time(NULL));
 	}
 

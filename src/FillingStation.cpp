@@ -68,6 +68,31 @@ struct FillingStation : Module {
 
 		configParam(SCENE_PARAM, 0.0, NBR_SCENES-1, 0.0,"Scene #");
 		
+        configButton(REPEAT_MODE_SELECT_PARAM,"No Repeat");
+        configButton(REPEAT_MODE_SELECT_PARAM + 1,"Repeat on Highest Step #");
+        configButton(REPEAT_MODE_SELECT_PARAM + 2,"Repeat on Last Step");
+        configButton(REPEAT_MODE_SELECT_PARAM + 3,"Indpenedent Repeat");
+
+
+        configInput(SCENE_INPUT, "Main");
+        configInput(RESET_INPUT, "Reset");
+		configInput(SHIFT_UP_INPUT, "Shift Up");
+		configInput(SHIFT_DOWN_INPUT, "Shift Down");
+		configInput(FLIP_TRACKS_INPUT, "Flip Tracks");
+		configInput(FLIP_STEPS_INPUT, "Flip Steps");
+
+        for(int i=0;i<NBR_INPUTS;i++) {
+    		configInput(TRACK_INPUT + i, "Track " + std::to_string(i+1));
+        }
+
+
+        configOutput(EOC_OUTPUT, "EOC");
+
+
+        for(int i=0;i<NBR_OUTPUTS;i++) {
+            configOutput(TRACK_OUTPUT + i, std::to_string(i+1));
+        }
+
         currentStepCount = 0;
 
         onReset();

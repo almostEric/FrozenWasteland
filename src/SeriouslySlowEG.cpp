@@ -164,9 +164,73 @@ struct SeriouslySlowEG : Module {
 		configParam(HOLD_TIME_BASE_PARAM, 0.0, 1.0, 0.0);
 		configParam(HOLD_TIME_PARAM, 0.0, 100.0, 1.0,"Hold Time");
 
-		configParam(GATE_MODE_PARAM, 0.0, 1.0, 0.0, "Gate Mode");
-		configParam(CYCLE_MODE_PARAM, 0.0, 1.0, 0.0, "Cycle Mode");
-		configParam(RETRIGGER_MODE_PARAM, 0.0, 1.0, 0.0, "Retrigger Mode");
+		configButton(TRIGGER_PARAM,"Trigger");
+
+		configButton(ATTACK_CURVE_PARAM,"Attack Curve - Linear");
+		configButton(ATTACK_CURVE_PARAM+1,"Attack Curve - Exponential");
+		configButton(ATTACK_CURVE_PARAM+2,"Attack Curve - Logarithmic");
+
+		configButton(DECAY_CURVE_PARAM,"Decay Curve - Linear");
+		configButton(DECAY_CURVE_PARAM+1,"Decay Curve - Exponential");
+		configButton(DECAY_CURVE_PARAM+2,"Decay Curve - Logarithmic");
+
+		configButton(RELEASE_CURVE_PARAM,"Release Curve - Linear");
+		configButton(RELEASE_CURVE_PARAM+1,"Release Curve - Exponential");
+		configButton(RELEASE_CURVE_PARAM+2,"Release Curve - Logarithmic");
+
+
+		configButton(DELAY_TIME_BASE_PARAM+0,"Delay Time Base - Seconds");
+		configButton(DELAY_TIME_BASE_PARAM+1,"Delay Time Base - Minutes");
+		configButton(DELAY_TIME_BASE_PARAM+2,"Delay Time Base - Hours");
+		configButton(DELAY_TIME_BASE_PARAM+3,"Delay Time Base - Days");
+		configButton(DELAY_TIME_BASE_PARAM+4,"Delay Time Base - Weeks");
+		configButton(DELAY_TIME_BASE_PARAM+5,"Delay Time Base - Months");
+
+		configButton(ATTACK_TIME_BASE_PARAM+0,"Attack Time Base - Seconds");
+		configButton(ATTACK_TIME_BASE_PARAM+1,"Attack Time Base - Minutes");
+		configButton(ATTACK_TIME_BASE_PARAM+2,"Attack Time Base - Hours");
+		configButton(ATTACK_TIME_BASE_PARAM+3,"Attack Time Base - Days");
+		configButton(ATTACK_TIME_BASE_PARAM+4,"Attack Time Base - Weeks");
+		configButton(ATTACK_TIME_BASE_PARAM+5,"Attack Time Base - Months");
+
+		configButton(DECAY_TIME_BASE_PARAM+0,"Decay Time Base - Seconds");
+		configButton(DECAY_TIME_BASE_PARAM+1,"Decay Time Base - Minutes");
+		configButton(DECAY_TIME_BASE_PARAM+2,"Decay Time Base - Hours");
+		configButton(DECAY_TIME_BASE_PARAM+3,"Decay Time Base - Days");
+		configButton(DECAY_TIME_BASE_PARAM+4,"Decay Time Base - Weeks");
+		configButton(DECAY_TIME_BASE_PARAM+5,"Decay Time Base - Months");
+
+		configButton(RELEASE_TIME_BASE_PARAM+0,"Release Time Base - Seconds");
+		configButton(RELEASE_TIME_BASE_PARAM+1,"Release Time Base - Minutes");
+		configButton(RELEASE_TIME_BASE_PARAM+2,"Release Time Base - Hours");
+		configButton(RELEASE_TIME_BASE_PARAM+3,"Release Time Base - Days");
+		configButton(RELEASE_TIME_BASE_PARAM+4,"Release Time Base - Weeks");
+		configButton(RELEASE_TIME_BASE_PARAM+5,"Release Time Base - Months");
+
+		configButton(HOLD_TIME_BASE_PARAM+0,"Hold Time Base - Seconds");
+		configButton(HOLD_TIME_BASE_PARAM+1,"Hold Time Base - Minutes");
+		configButton(HOLD_TIME_BASE_PARAM+2,"Hold Time Base - Hours");
+		configButton(HOLD_TIME_BASE_PARAM+3,"Hold Time Base - Days");
+		configButton(HOLD_TIME_BASE_PARAM+4,"Hold Time Base - Weeks");
+		configButton(HOLD_TIME_BASE_PARAM+5,"Hold Time Base - Months");
+
+
+
+		configSwitch(GATE_MODE_PARAM, 0.f,1.f,0.f, "Gate Mode", {"Trigger", "Gate"});
+		configSwitch(CYCLE_MODE_PARAM, 0.f,1.f,0.f, "Cycle Mode", {"Stop", "Loop"});
+		configSwitch(RETRIGGER_MODE_PARAM, 0.f,1.f,0.f, "Retrigger Mode", {"Reset", "Go to Attack"});
+
+		configInput(TRIGGER_INPUT, "Trigger");
+		configInput(DELAY_TIME_INPUT, "Delay Time");
+		configInput(ATTACK_TIME_INPUT, "Attack Time");
+		configInput(DECAY_TIME_INPUT, "Decay Time");
+		configInput(SUSTAIN_LEVEL_INPUT, "Sustain Level");
+		configInput(RELEASE_TIME_INPUT, "Release Time");
+		configInput(HOLD_TIME_INPUT, "Hold Time");
+
+
+		configOutput(ENVELOPE_OUT, "Envelope");
+		configOutput(EOC_OUTPUT, "End of Cycle");
 	}
 
 	double timeBase(uint8_t timeBase) {
@@ -717,7 +781,7 @@ struct SeriouslySlowEGWidget : ModuleWidget {
 			dynamic_cast<RoundFWKnob*>(sustainLevelParam)->percentage = &module->sustainLevelPercentage;
 		}
 		addParam(sustainLevelParam);							
-		addInput(createInput<FWPortInSmall>(Vec(345, 54), module, SeriouslySlowEG::SUSTAIN_LEVEL_INPUT));
+		addInput(createInput<FWPortInSmall>(Vec(348, 54), module, SeriouslySlowEG::SUSTAIN_LEVEL_INPUT));
 
 		
 		addParam(createParam<CKSS>(Vec(12, 329.5), module, SeriouslySlowEG::GATE_MODE_PARAM));
