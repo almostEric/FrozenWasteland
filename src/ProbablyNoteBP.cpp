@@ -230,7 +230,6 @@ struct ProbablyNoteBP : Module {
         configParam(ProbablyNoteBP::KEY_CV_ATTENUVERTER_PARAM, -1.0, 1.0, 0.0,"Key CV Attenuation","%",0,100); 
 		configParam(ProbablyNoteBP::TRITAVE_PARAM, -4.0, 4.0, 0.0,"Tritave");
         configParam(ProbablyNoteBP::TRITAVE_CV_ATTENUVERTER_PARAM, -1.0, 1.0, 0.0,"Tritave CV Attenuation","%",0,100);
-		configParam(ProbablyNoteBP::TRITAVE_WRAPAROUND_PARAM, 0.0, 1.0, 0.0,"Tritave Wraparound");
 		configParam(ProbablyNoteBP::TEMPERMENT_PARAM, 0.0, 1.0, 0.0,"Just Intonation");
 		configParam(ProbablyNoteBP::WEIGHT_SCALING_PARAM, 0.0, 1.0, 0.0,"Weight Scaling","%",0,100);
 		configParam(ProbablyNoteBP::PITCH_RANDOMNESS_PARAM, 0.0, 10.0, 0.0,"Randomize Pitch Amount"," Cents");
@@ -239,13 +238,48 @@ struct ProbablyNoteBP : Module {
         configParam(ProbablyNoteBP::NON_REPEATABILITY_CV_ATTENUVERTER_PARAM, -1.0, 1.0, 0.0,"Non Repeat Probability CV Attenuation","%",0,100);
 
 
+		configButton(OCTAVE_TO_TRITAVE_PARAM,"Map Octave to Tritave");
+		configButton(TRITAVE_WRAPAROUND_PARAM,"Tritave Wraparound");
+		configButton(TEMPERMENT_PARAM,"Just Intonation");
+		configButton(RESET_SCALE_PARAM,"Reset Scale Weights");
+		configButton(TRIGGER_MODE_PARAM,"Trigger Mode");
+		configButton(KEY_SCALING_PARAM,"Key Scaling Mode");
+		configButton(SHIFT_SCALING_PARAM,"Weight Scaling Mode");
+		configButton(PITCH_RANDOMNESS_GAUSSIAN_PARAM,"Gaussian Randomness");
+
+
+
         srand(time(NULL));
 
+
         for(int i=0;i<MAX_NOTES;i++) {
-            configParam(ProbablyNoteBP::NOTE_ACTIVE_PARAM + i, 0.0, 1.0, 0.0,"Note Active");		
-            configParam(ProbablyNoteBP::NOTE_WEIGHT_PARAM + i, 0.0, 1.0, 0.0,"Note Weight");		
+            // configParam(NOTE_ACTIVE_PARAM + i, 0.0, 1.0, 0.0,"Note Active");		
+			std::string noteName( noteNames[i] );
+            configParam(NOTE_WEIGHT_PARAM + i, 0.0, 1.0, 0.0,"Note Weight: " + noteName);					
+			configButton(NOTE_ACTIVE_PARAM + i,"Note Active: " + noteName);
+			configInput(NOTE_WEIGHT_INPUT+i, "Note Weight: " + noteName);
         }
 
+		configInput(NOTE_INPUT, "Unquantized CV");
+		configInput(SPREAD_INPUT, "Spread");
+		configInput(SLANT_INPUT, "Slant");
+		configInput(DISTRIBUTION_INPUT, "Focus");
+		configInput(SHIFT_INPUT, "Shift");
+		configInput(SCALE_INPUT, "Scale");
+		configInput(KEY_INPUT, "Key");
+		configInput(TRITAVE_INPUT, "Tritave");
+		configInput(TEMPERMENT_INPUT, "Tempermanet");
+		configInput(TRIGGER_INPUT, "Trigger");
+		configInput(EXTERNAL_RANDOM_INPUT, "External Random");
+		configInput(TRITAVE_WRAP_INPUT, "Tritave Wrap");
+		configInput(PITCH_RANDOMNESS_INPUT, "Pitch Randomness");
+		configInput(NOTE_WEIGHT_INPUT, "Left");
+		configInput(NON_REPEATABILITY_INPUT, "Note Non-Repeat Probability");
+
+		configOutput(QUANT_OUTPUT, "Quantized CV");
+		configOutput(WEIGHT_OUTPUT, "Note Weight");
+		configOutput(NOTE_CHANGE_OUTPUT, "Note Changed");
+		
 		onReset();
 	}
 

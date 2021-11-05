@@ -99,14 +99,27 @@ struct QARIrrationalityExpander : Module {
 	QARIrrationalityExpander() {
 		config(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS, NUM_LIGHTS);
 		        
-        configParam(IR_START_POS_PARAM, 1.0f, ACTUAL_MAX_STEPS-2, 0.0,"Start Position");
-        configParam(IR_START_POS_CV_ATTENUVETER_PARAM, -1.0, 1.0, 0.0,"Start Position CV Attenuation","%",0,100);
+        configParam(IR_START_POS_PARAM, 1.0f, ACTUAL_MAX_STEPS-2, 0.0,"Starting Step");
+        configParam(IR_START_POS_CV_ATTENUVETER_PARAM, -1.0, 1.0, 0.0,"Starting Step CV Attenuation","%",0,100);
+		configInput(IR_START_POS_INPUT, "Starting Step");
 
         configParam(IR_NUM_STEPS_PARAM, 2.0, ACTUAL_MAX_STEPS-1, 2,"# Steps");
         configParam(IR_NUM_STEPS_CV_ATTENUVETER_PARAM, -1.0, 1.0, 0.0,"# Steps CV Attenuation","%",0,100);		
+		configInput(IR_NUM_STEPS_INPUT, "# Steps");
 
         configParam(IR_RATIO_PARAM, 1.0-NBR_IRRATIONAL_CONSTANTS, ACTUAL_MAX_STEPS-2, 1,"Ratio");
         configParam(IR_RATIO_CV_ATTENUVETER_PARAM, -1.0, 1.0, 0.0,"Ratio CV Attenuation","%",0,100);		
+		configInput(IR_RATIO_INPUT, "Ratio");
+
+		for(int i =0;i<TRACK_COUNT;i++) {
+			configButton(TRACK_1_IR_ENABLED_PARAM + i ,"Enable Track " + std::to_string(i+1));
+		}
+
+		configButton(STEP_OR_DIV_PARAM ,"Step/Beat Mode");
+		configButton(IR_ON_OFF_PARAM ,"Enable IR");
+		configInput(IR_ON_OFF_INPUT, "Enable IR");
+
+
         
 		leftExpander.producerMessage = leftMessages[0];
 		leftExpander.consumerMessage = leftMessages[1];

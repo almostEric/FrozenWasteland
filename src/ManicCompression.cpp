@@ -153,7 +153,7 @@ struct ManicCompression : Module {
 		configParam(MAKEUP_GAIN_CV_ATTENUVERTER_PARAM, -1.0, 1.0, 0.0,"Makeup Gain CV Attenuation","%",0,100);
 		configParam(MIX_CV_ATTENUVERTER_PARAM, -1.0, 1.0, 0.0,"Mix CV Attenuation","%",0,100);	
 
-
+	
 		configButton(RMS_MODE_PARAM,"RMS Mode");
 		configButton(LP_FILTER_MODE_PARAM,"LP Filter");
 		configButton(HP_FILTER_MODE_PARAM,"HP FIlter");
@@ -164,7 +164,7 @@ struct ManicCompression : Module {
 
 
 		configInput(THRESHOLD_CV_INPUT, "Threshold");
-		configInput(ATTACK_CV_INPUT, "Attacj");
+		configInput(ATTACK_CV_INPUT, "Attack");
 		configInput(RELEASE_CV_INPUT, "Release");
 		configInput(ATTACK_CURVE_CV_INPUT, "Attack Curve");
 		configInput(RELEASE_CURVE_CV_INPUT, "Release Curve");

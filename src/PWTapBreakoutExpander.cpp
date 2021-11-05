@@ -40,6 +40,14 @@ struct PWTapBreakoutExpander : Module {
 
 		config(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS, NUM_LIGHTS);
 
+		for(int i=0;i<NUM_TAPS;i++) {
+			configInput(TAP_PRE_FB_INPUT_L+i, "Tap " + std::to_string(i+1) + " Left Return");
+			configInput(TAP_PRE_FB_INPUT_R+i, "Tap "+ std::to_string(i+1) + " Right Return");
+
+			configOutput(TAP_OUTPUT_L+i, "Tap " + std::to_string(i+1) + " Left Send");
+			configOutput(TAP_OUTPUT_R+i, "Tap "+ std::to_string(i+1) + " Right Send");
+		}
+
 		leftExpander.producerMessage = leftMessages[0];
 		leftExpander.consumerMessage = leftMessages[1];
 

@@ -96,12 +96,21 @@ struct QARWarpedSpaceExpander : Module {
 		        
         configParam(WARP_AMOUNT_PARAM, 1.0f, 6.0, 1.0,"Warp Amount");
         configParam(WARP_AMOUNT_CV_ATTENUVETER_PARAM, -1.0, 1.0, 0.0,"Warp Amount CV Attenuation","%",0,100);
+		configInput(WARP_AMOUNT_INPUT, "Warp Amount");
 
         configParam(WARP_POSITION_PARAM, 0.0, MAX_STEPS-1, 0,"Warp Position");
         configParam(WARP_POSITION_CV_ATTENUVETER_PARAM, -1.0, 1.0, 0.0,"Warp Position CV Attenuation","%",0,100);		
+		configInput(WARP_POSITION_INPUT, "Warp Position");
 
         configParam(WARP_LENGTH_PARAM, 1.0, MAX_STEPS, 1,"Warp Length");
         configParam(WARP_LENGTH_CV_ATTENUVETER_PARAM, -1.0, 1.0, 0.0,"Warp Length CV Attenuation","%",0,100);		
+		configInput(WARP_LENGTH_INPUT, "Warp Length");
+
+		configButton(WS_ON_OFF_PARAM ,"Enable Warping");
+
+		for(int i =0;i<TRACK_COUNT;i++) {
+			configButton(TRACK_1_WARP_ENABLED_PARAM + i ,"Enable Track " + std::to_string(i+1));
+		}
 
         
 		leftExpander.producerMessage = leftMessages[0];

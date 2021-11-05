@@ -49,8 +49,8 @@ struct ManicCompressionMB : Module {
 	enum InputIds {
         BAND_ACTIVE_INPUT,
         BAND_CUTOFF_INPUT = BAND_ACTIVE_INPUT + BANDS,
-        BAND_WITDH_INPUT = BAND_CUTOFF_INPUT + BANDS,
-		THRESHOLD_CV_INPUT = BAND_WITDH_INPUT + BANDS,
+        BAND_WIDTH_INPUT = BAND_CUTOFF_INPUT + BANDS,
+		THRESHOLD_CV_INPUT = BAND_WIDTH_INPUT + BANDS,
 		ATTACK_CV_INPUT = THRESHOLD_CV_INPUT + BANDS,
 		RELEASE_CV_INPUT = ATTACK_CV_INPUT + BANDS,
 		ATTACK_CURVE_CV_INPUT = RELEASE_CV_INPUT + BANDS,
@@ -160,33 +160,64 @@ struct ManicCompressionMB : Module {
         sampleRate = APP->engine->getSampleRate();
 
         for(int i=0;i<BANDS;i++) {
-    		configParam(BAND_CUTOFF_PARAM + i, 0.f, 1.1f, 0.5f, "Band" + std::to_string(i+1) + " Frequency", " Hz", std::pow(2, 10.f), dsp::FREQ_C4 / std::pow(2, 5.f));
-    		configParam(BAND_WIDTH_PARAM + i, 0.0f, 1.f, 0.0f, "Band" + std::to_string(i+1) + " Bandwidth"," %",0,100);
+    		configParam(BAND_CUTOFF_PARAM + i, 0.f, 1.1f, 0.5f, "Band " + std::to_string(i+1) + " Frequency", " Hz", std::pow(2, 10.f), dsp::FREQ_C4 / std::pow(2, 5.f));
+    		configParam(BAND_WIDTH_PARAM + i, 0.0f, 1.f, 0.0f, "Band " + std::to_string(i+1) + " Bandwidth"," %",0,100);
 
-            configParam(THRESHOLD_PARAM + i, -50.0, 0.0, -30.0,"Band" + std::to_string(i+1) + " Threshold", " db");
-            configParam(RATIO_PARAM + i, -0.2, 1.0, 0.1,"Band" + std::to_string(i+1) + " Ratio","",20,1.0);	
-            configParam(ATTACK_PARAM + i, 0.0, 1.0, 0.1,"Band" + std::to_string(i+1) + " Attack", " ms",13.4975,8.0,-7.98);
-            configParam(RELEASE_PARAM + i, 0.0, 1.0, 0.1,"Band" + std::to_string(i+1) + " Release"," ms",629.0,8.0,32.0);	
-            configParam(ATTACK_CURVE_PARAM + i, -1.0, 1.0, 0.0,"Band" + std::to_string(i+1) + " Attack Curve");
-            configParam(RELEASE_CURVE_PARAM + i, -1.0, 1.0, 0.0,"Band" + std::to_string(i+1) + " Release Curve");	
-            configParam(KNEE_PARAM + i, 0.0, 10.0, 0.0,"Band" + std::to_string(i+1) + " Knee", " db");	
-            configParam(RMS_WINDOW_PARAM + i, 0.02, 50.0, 5.0,"Band" + std::to_string(i+1) + " RMS Window", " ms");
-            configParam(IN_GAIN_PARAM + i, 0.0, 30.0, 0.0,"Band" + std::to_string(i+1) + " Input Gain", " db");
-            configParam(MAKEUP_GAIN_PARAM + i, 0.0, 30.0, 0.0,"Band" + std::to_string(i+1) + " Makeup Gain", " db");
+            configParam(THRESHOLD_PARAM + i, -50.0, 0.0, -30.0,"Band " + std::to_string(i+1) + " Threshold", " db");
+            configParam(RATIO_PARAM + i, -0.2, 1.0, 0.1,"Band " + std::to_string(i+1) + " Ratio","",20,1.0);	
+            configParam(ATTACK_PARAM + i, 0.0, 1.0, 0.1,"Band " + std::to_string(i+1) + " Attack", " ms",13.4975,8.0,-7.98);
+            configParam(RELEASE_PARAM + i, 0.0, 1.0, 0.1,"Band " + std::to_string(i+1) + " Release"," ms",629.0,8.0,32.0);	
+            configParam(ATTACK_CURVE_PARAM + i, -1.0, 1.0, 0.0,"Band " + std::to_string(i+1) + " Attack Curve");
+            configParam(RELEASE_CURVE_PARAM + i, -1.0, 1.0, 0.0,"Band " + std::to_string(i+1) + " Release Curve");	
+            configParam(KNEE_PARAM + i, 0.0, 10.0, 0.0,"Band "  + std::to_string(i+1) + " Knee", " db");	
+            configParam(RMS_WINDOW_PARAM + i, 0.02, 50.0, 5.0,"Band " + std::to_string(i+1) + " RMS Window", " ms");
+            configParam(IN_GAIN_PARAM + i, 0.0, 30.0, 0.0,"Band " + std::to_string(i+1) + " Input Gain", " db");
+            configParam(MAKEUP_GAIN_PARAM + i, 0.0, 30.0, 0.0,"Band " + std::to_string(i+1) + " Makeup Gain", " db");
             
 
-            configParam(BAND_CUTOFF_CV_ATTENUVERTER_PARAM + i, -1.0, 1.0, 0.0,"Band" + std::to_string(i+1) + " Frequency CV Attenuation","%",0,100);
-            configParam(BAND_WIDTH_CV_ATTENUVERTER_PARAM + i, -1.0, 1.0, 0.0,"Band" + std::to_string(i+1) + " Bandwidth CV Attenuation","%",0,100);
-            configParam(THRESHOLD_CV_ATTENUVERTER_PARAM + i, -1.0, 1.0, 0.0,"Band" + std::to_string(i+1) + " Threshold CV Attenuation","%",0,100);
-            configParam(RATIO_CV_ATTENUVERTER_PARAM + i, -1.0, 1.0, 0.0,"Band" + std::to_string(i+1) + " Ratio CV Attenuation","%",0,100);	
-            configParam(ATTACK_CV_ATTENUVERTER_PARAM + i, -1.0, 1.0, 0.0,"Band" + std::to_string(i+1) + " Attack CV Attenuation","%",0,100);
-            configParam(RELEASE_CV_ATTENUVERTER_PARAM + i, -1.0, 1.0, 0.0,"Band" + std::to_string(i+1) + " Release CV Attenuation","%",0,100);	
-            configParam(ATTACK_CURVE_CV_ATTENUVERTER_PARAM + i, -1.0, 1.0, 0.0,"Band" + std::to_string(i+1) + " Attack Curve CV Attenuation","%",0,100);
-            configParam(RELEASE_CURVE_CV_ATTENUVERTER_PARAM + i, -1.0, 1.0, 0.0,"Band" + std::to_string(i+1) + " Release Curve CV Attenuation","%",0,100);	
-            configParam(KNEE_CV_ATTENUVERTER_PARAM + i, -1.0, 1.0, 0.0,"Band" + std::to_string(i+1) + " Knee CV Attenuation","%",0,100);	
-            configParam(RMS_WINDOW_CV_ATTENUVERTER_PARAM + i, -1.0, 1.0, 0.0,"Band" + std::to_string(i+1) + " RMS Windows CV Attenuation","%",0,100);	
-            configParam(IN_GAIN_CV_ATTENUVERTER_PARAM + i, -1.0, 1.0, 0.0,"Band" + std::to_string(i+1) + " Input Gain CV Attenuation","%",0,100);
-            configParam(MAKEUP_GAIN_CV_ATTENUVERTER_PARAM + i, -1.0, 1.0, 0.0,"Band" + std::to_string(i+1) + " Makeup Gain CV Attenuation","%",0,100);
+            configParam(BAND_CUTOFF_CV_ATTENUVERTER_PARAM + i, -1.0, 1.0, 0.0,"Band " + std::to_string(i+1) + " Frequency CV Attenuation","%",0,100);
+            configParam(BAND_WIDTH_CV_ATTENUVERTER_PARAM + i, -1.0, 1.0, 0.0,"Band " + std::to_string(i+1) + " Bandwidth CV Attenuation","%",0,100);
+            configParam(THRESHOLD_CV_ATTENUVERTER_PARAM + i, -1.0, 1.0, 0.0,"Band " + std::to_string(i+1) + " Threshold CV Attenuation","%",0,100);
+            configParam(RATIO_CV_ATTENUVERTER_PARAM + i, -1.0, 1.0, 0.0,"Band " + std::to_string(i+1) + " Ratio CV Attenuation","%",0,100);	
+            configParam(ATTACK_CV_ATTENUVERTER_PARAM + i, -1.0, 1.0, 0.0,"Band " + std::to_string(i+1) + " Attack CV Attenuation","%",0,100);
+            configParam(RELEASE_CV_ATTENUVERTER_PARAM + i, -1.0, 1.0, 0.0,"Band " + std::to_string(i+1) + " Release CV Attenuation","%",0,100);	
+            configParam(ATTACK_CURVE_CV_ATTENUVERTER_PARAM + i, -1.0, 1.0, 0.0,"Band " + std::to_string(i+1) + " Attack Curve CV Attenuation","%",0,100);
+            configParam(RELEASE_CURVE_CV_ATTENUVERTER_PARAM + i, -1.0, 1.0, 0.0,"Band " + std::to_string(i+1) + " Release Curve CV Attenuation","%",0,100);	
+            configParam(KNEE_CV_ATTENUVERTER_PARAM + i, -1.0, 1.0, 0.0,"Band " + std::to_string(i+1) + " Knee CV Attenuation","%",0,100);	
+            configParam(RMS_WINDOW_CV_ATTENUVERTER_PARAM + i, -1.0, 1.0, 0.0,"Band " + std::to_string(i+1) + " RMS Windows CV Attenuation","%",0,100);	
+            configParam(IN_GAIN_CV_ATTENUVERTER_PARAM + i, -1.0, 1.0, 0.0,"Band " + std::to_string(i+1) + " Input Gain CV Attenuation","%",0,100);
+            configParam(MAKEUP_GAIN_CV_ATTENUVERTER_PARAM + i, -1.0, 1.0, 0.0,"Band " + std::to_string(i+1) + " Makeup Gain CV Attenuation","%",0,100);
+
+    		configButton(BAND_ACTIVE_PARAM + i ,"Band " + std::to_string(i+1) + " Active");
+    		configButton(RMS_MODE_PARAM + i ,"Band " + std::to_string(i+1) + " RMS Mode");
+
+            configInput(BAND_CUTOFF_INPUT + i,"Band " + std::to_string(i+1) + " Frequency");
+            configInput(BAND_WIDTH_INPUT + i,"Band " + std::to_string(i+1) + " Bandwidth");
+            configInput(THRESHOLD_CV_INPUT + i, "Band " + std::to_string(i+1) + " Threshold");
+            configInput(ATTACK_CV_INPUT + i, "Band " + std::to_string(i+1) + " Attack");
+            configInput(RELEASE_CV_INPUT + i, "Band " + std::to_string(i+1) + " Release");
+            configInput(ATTACK_CURVE_CV_INPUT + i, "Band " + std::to_string(i+1) + " Attack Curve");
+            configInput(RELEASE_CURVE_CV_INPUT + i, "Band " + std::to_string(i+1) + " Release Curve");
+            configInput(RATIO_CV_INPUT + i, "Band " + std::to_string(i+1) + " Ratio");
+            configInput(KNEE_CV_INPUT + i, "Band " + std::to_string(i+1) + " Knee");
+            configInput(IN_GAIN_INPUT + i, "Band " + std::to_string(i+1) + " Input Gain");
+            configInput(MAKEUP_GAIN_INPUT + i, "Band " + std::to_string(i+1) + " Makeup Gain");
+            configInput(RMS_MODE_INPUT + i, "Band " + std::to_string(i+1) + " RMS Mode");
+            configInput(RMS_WINDOW_INPUT + i, "Band " + std::to_string(i+1) + " RMS Window");
+
+    		configInput(BAND_ACTIVE_INPUT + i ,"Band " + std::to_string(i+1) + " Active");
+            configInput(BAND_SIDECHAIN_INPUT + i, "Band " + std::to_string(i+1) + " Sidechain");
+            configInput(ENVELOPE_INPUT + i, "Band " + std::to_string(i+1) + " Envelope");
+
+    		// configOutput(OUTPUT_L, "Left");
+    		configOutput(ENVELOPE_OUT + i, "Band " + std::to_string(i+1) + " Envelope");
+    		configOutput(DETECTOR_OUTPUT + i, "Band " + std::to_string(i+1) + " Sidechain");
+    		configOutput(BAND_OUTPUT_L + i, "Band " + std::to_string(i+1) + " Left");
+    		configOutput(BAND_OUTPUT_R + i, "Band " + std::to_string(i+1) + " Right");
+
+        // BAND_OUTPUT_L = ENVELOPE_OUT + BANDS,
+        // BAND_OUTPUT_R = BAND_OUTPUT_L + BANDS,
+        // DETECTOR_OUTPUT = BAND_OUTPUT_R + BANDS,
 
             double defaultCutoff = 0.25;
             for(int c = 0;c<3;c++) {
@@ -203,6 +234,27 @@ struct ManicCompressionMB : Module {
 		
         configParam(MIX_PARAM, 0.0, 1.0, 1.0,"Mix","%",0,100);	
         configParam(MIX_CV_ATTENUVERTER_PARAM, -1.0, 1.0, 0.0,"Mix CV Attenuation","%",0,100);	
+
+		// configButton(LP_FILTER_MODE_PARAM,"LP Filter");
+		// configButton(HP_FILTER_MODE_PARAM,"HP FIlter");
+		configButton(MS_MODE_PARAM,"Mid-Side Mode");
+		configButton(COMPRESS_M_PARAM,"Compress Mid");
+		configButton(COMPRESS_S_PARAM,"Compress Side");
+		configButton(BYPASS_PARAM,"Bypass");
+
+		configInput(BYPASS_INPUT, "Bypass Control");
+		configInput(SOURCE_L_INPUT, "Left Source");
+		configInput(SOURCE_R_INPUT, "Right Source");
+		configInput(SIDECHAIN_INPUT, "Sidechain");
+		configInput(MS_MODE_INPUT, "Mid/Side Mode");
+		configInput(COMPRESS_M_INPUT, "Compress Mid");
+		configInput(COMPRESS_S_INPUT, "Compress Side");
+		configInput(MIX_CV_INPUT, "Mix Level");
+
+
+		configOutput(OUTPUT_L, "Left");
+		configOutput(OUTPUT_R, "Right");
+
 
 
 		double lpCutoff = 4000/sampleRate;
@@ -363,7 +415,7 @@ void ManicCompressionMB::process(const ProcessArgs &args) {
         bandFcPercentage[b] = freqParam / 1.1;
 		freqParam = freqParam * 10.f - 5.f;
 
-        double bandwidthParam = clamp(params[BAND_WIDTH_PARAM + b].getValue() + (inputs[BAND_WITDH_INPUT + b].getVoltage() * 0.1 * params[BAND_WIDTH_CV_ATTENUVERTER_PARAM + b].getValue()),0.0f,1.f);
+        double bandwidthParam = clamp(params[BAND_WIDTH_PARAM + b].getValue() + (inputs[BAND_WIDTH_INPUT + b].getVoltage() * 0.1 * params[BAND_WIDTH_CV_ATTENUVERTER_PARAM + b].getValue()),0.0f,1.f);
         bandWidthPercentage[b] = bandwidthParam;
 		
         if(freqParam != lastCutoff[b] || bandwidthParam != lastBandWidth[b] ) {
@@ -970,7 +1022,7 @@ struct ManicCompressionMBWidget : ModuleWidget {
                 }
                 addParam(bandWidthParam);							
                 addParam(createParam<RoundReallySmallFWKnob>(Vec(34 + b*50, 243), module, ManicCompressionMB::BAND_WIDTH_CV_ATTENUVERTER_PARAM + b));
-                addInput(createInput<FWPortInReallySmall>(Vec(38 + b*50, 228), module, ManicCompressionMB::BAND_WITDH_INPUT + b));
+                addInput(createInput<FWPortInReallySmall>(Vec(38 + b*50, 228), module, ManicCompressionMB::BAND_WIDTH_INPUT + b));
             }
 
             ParamWidget* thresholdParam = createParam<RoundSmallFWKnob>(Vec(15 + 255 + (b * 140), 135), module, ManicCompressionMB::THRESHOLD_PARAM + b);

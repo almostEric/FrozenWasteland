@@ -521,21 +521,58 @@ struct ProbablyNoteArabic : Module {
         configParam(ProbablyNoteArabic::PITCH_RANDOMNESS_CV_ATTENUVERTER_PARAM, -1.0, 1.0, 0.0,"Randomize Pitch Amount CV Attenuation","%",0,100);
 		
 
-		configParam(ProbablyNoteArabic::NOTE_WEIGHT_SCALING_PARAM, 0.0, 1.0, 0.0,"Note Weight Scaling");
-		configParam(ProbablyNoteArabic::JINS_WEIGHT_SCALING_PARAM, 0.0, 1.0, 0.0,"Jins Weight Scaling");
 
 
         srand(time(NULL));
 
         for(int i=0;i<MAX_AJNAS_IN_SAYR+1;i++) { //Should probably be max + 1
-			configParam(ProbablyNoteArabic::AJNAS_ACTIVE_PARAM + i, 0.0, 1.0, 0.0,"Jins Active");
-			configParam(ProbablyNoteArabic::AJNAS_WEIGHT_PARAM + i, 0.0, 1.0, 0.0,"Jins Weight");
+			configButton(AJNAS_ACTIVE_PARAM + i,"Jins " + std::to_string(i+1) + " Active");
+			configParam(AJNAS_WEIGHT_PARAM + i, 0.0, 1.0, 0.0,"Jins " + std::to_string(i+1) + " Weight");
+			configInput(AJNAS_WEIGHT_INPUT+i, "Jins " + std::to_string(i+1) + " Weight");			
 		}
 
         for(int i=0;i<MAX_JINS_NOTES;i++) {
-            configParam(ProbablyNoteArabic::NOTE_ACTIVE_PARAM + i, 0.0, 1.0, 0.0,"Note Active");		
-            configParam(ProbablyNoteArabic::NOTE_WEIGHT_PARAM + i, 0.0, 1.0, 0.0,"Note Weight");		
+		// 	std::string noteName( noteNames[i] );
+            configParam(NOTE_WEIGHT_PARAM + i, 0.0, 1.0, 0.0,"Note " + std::to_string(i+1) + " Weight");		
+			configButton(NOTE_ACTIVE_PARAM + i,"Note " + std::to_string(i+1) + " Active");
+			configInput(NOTE_WEIGHT_INPUT+i, "Note " + std::to_string(i+1) + " Weight");
         }
+
+		configButton(MAQAM_SCALE_MODE_PARAM,"Maqam Scale Mode");
+		configButton(RESET_MAQAM_PARAM,"Reset Maqam");
+		configButton(RESET_JINS_PARAM,"Reset Jins");
+		configButton(NOTE_WEIGHT_SCALING_PARAM,"Note Weight Scaling");
+		configButton(JINS_WEIGHT_SCALING_PARAM,"Jins Weight Scaling");
+		configButton(PITCH_RANDOMNESS_GAUSSIAN_PARAM,"Gaussian Randomness");
+
+        
+        srand(time(NULL));
+
+		configInput(NOTE_INPUT, "Unquantized CV");
+		configInput(SPREAD_INPUT, "Spread");
+		configInput(SLANT_INPUT, "Slant");
+		configInput(FOCUS_INPUT, "Focus");
+		configInput(MAQAM_INPUT, "Maqam");
+		configInput(FAMILY_INPUT, "Family");
+		configInput(MODULATION_CHANCE_INPUT, "Modulation Chance");
+		configInput(OCTAVE_INPUT, "Octave");
+		configInput(TONIC_INPUT, "Tonic");
+		configInput(TRIGGER_INPUT, "Trigger");
+		configInput(EXTERNAL_RANDOM_INPUT, "External Random");
+		configInput(RESET_SCALE_INPUT, "Reset Scale");
+		configInput(PITCH_RANDOMNESS_INPUT, "Pitch Randomness");
+		// configInput(NOTE_WEIGHT_INPUT, "Left");
+		configInput(NON_REPEATABILITY_INPUT, "Note Non-Repeat Probability");
+		configInput(EXTERNAL_RANDOM_INPUT, "External Random (Note)");
+		configInput(EXTERNAL_RANDOM_JINS_INPUT, "External Random (Jins)");
+		configInput(EXTERNAL_RANDOM_OCTAVE_JINS_INPUT, "External Random (Jins Octave)");
+		configInput(MODULATE_JINS_TRIGGER_INPUT, "Moduluate Jins Trigger");
+		configInput(JINS_SELECT_INPUT, "Jins Select");
+
+		configOutput(QUANT_OUTPUT, "Quantized CV");
+		configOutput(WEIGHT_OUTPUT, "Note Weight");
+		configOutput(NOTE_CHANGE_OUTPUT, "Note Changed");
+		configOutput(CURRENT_JINS_OUTPUT, "Current Jins");
 
 		onReset();
 	}

@@ -726,6 +726,9 @@ struct ProbablyNoteMN : Module {
 		configParam(ProbablyNoteMN::PITCH_RANDOMNESS_PARAM, 0.0, 10.0, 0.0,"Randomize Pitch Amount"," Cents");
         configParam(ProbablyNoteMN::PITCH_RANDOMNESS_CV_ATTENUVERTER_PARAM, -1.0, 1.0, 0.0,"Randomize Pitch Amount CV Attenuation","%",0,100);
 
+		configInput(NUMBER_OF_NOTES_INPUT, "Max # of Notes in Scale");
+		configInput(NOTE_REDUCTION_ALGORITHM_INPUT, "Note Reduction Algorithm");
+
 
 		configParam(ProbablyNoteMN::EQUAL_DIVISION_PARAM, 0.0, 300.0, 0.0,"# of Equal Divisions");
 		configParam(ProbablyNoteMN::EQUAL_STEP_SIZE_PARAM, 1.0, 300.0, 50.0,"Equal Step Size"," cents");
@@ -734,6 +737,15 @@ struct ProbablyNoteMN : Module {
         configParam(ProbablyNoteMN::EDO_STEPS_CV_ATTENUVERTER_PARAM, -1.0, 1.0, 0.0,"Equal Division Steps CV Attenuation","%",0,100);
 		configParam(ProbablyNoteMN::EDO_WRAPS_PARAM, 1.0, 100.0, 1.0,"# of Equal Division Octave Wraps");
         configParam(ProbablyNoteMN::EDO_WRAPS_CV_ATTENUVERTER_PARAM, -1.0, 1.0, 0.0,"Equal Division Octave Wraps CV Attenuation","%",0,100);
+		configButton(ProbablyNoteMN::EQUAL_DIVISION_MODE_PARAM, "EDO/Equal Interval Mode");
+
+
+
+		configInput(EQUAL_DIVISION_INPUT, "# of Equal Divisions");
+		// configInput(EQUAL_STEP_SIZE_INPUT, "Unquantized CV");
+		configInput(EDO_STEPS_INPUT, "# of Equal Division Steps");
+		configInput(EDO_WRAPS_INPUT, "# of Equal Division Octave Wraps");
+
 
 		configParam(ProbablyNoteMN::MOS_LARGE_STEPS_PARAM, 0.0, 20.0, 0.0,"# of MOS Large Steps");
         configParam(ProbablyNoteMN::MOS_LARGE_STEPS_CV_ATTENUVERTER_PARAM, -1.0, 1.0, 0.0,"MOS Large Steps CV Attenuation","%",0,100);
@@ -744,39 +756,96 @@ struct ProbablyNoteMN : Module {
 		configParam(ProbablyNoteMN::MOS_LEVELS_PARAM, 1.0, 3.0, 1.0,"MOS Levels Steps");
         configParam(ProbablyNoteMN::MOS_LEVELS_CV_ATTENUVERTER_PARAM, -1.0, 1.0, 0.0,"MOS Levels CV Attenuation","%",0,100);
 
+		configInput(MOS_LARGE_STEPS_INPUT, "# of MOS Large Steps");
+		configInput(MOS_SMALL_STEPS_INPUT, "# of MOS Small Steps");
+		configInput(MOS_RATIO_INPUT, "MOS L/s Ratio");
+		configInput(MOS_LEVELS_INPUT, "MOS Levels Steps");
 
-		configParam(ProbablyNoteMN::EDO_TEMPERING_PARAM, 0.0, 1.0, 0.0,"EOD Tempering");
-		configParam(ProbablyNoteMN::EDO_TEMPERING_THRESHOLD_PARAM, 0.0, 1.0, 1.0,"Temperming Threshold","%",0,100);
+
+		configButton(ProbablyNoteMN::EDO_TEMPERING_PARAM, "EDO Tempering Mode");
+		configParam(ProbablyNoteMN::EDO_TEMPERING_THRESHOLD_PARAM, 0.0, 1.0, 1.0,"Tempering Threshold","%",0,100);
         configParam(ProbablyNoteMN::EDO_TEMPERING_THRESHOLD_CV_ATTENUVERTER_PARAM, -1.0, 1.0, 0.0,"Tempering Threshold CV Attenuation","%",0,100);
 		configParam(ProbablyNoteMN::EDO_TEMPERING_STRENGTH_PARAM, 0.0, 1.0, 1.0,"Tempering Strength","%",0,100);
         configParam(ProbablyNoteMN::EDO_TEMPERING_STRENGTH_CV_ATTENUVERTER_PARAM, -1.0, 1.0, 0.0,"Tempering Strength CV Attenuation","%",0,100);
 
+		configInput(EDO_TEMPERING_INPUT, "EDO Tempering Mode");
+		configInput(EDO_TEMPERING_THRESHOLD_INPUT, "Tempering Threshold");
+		configInput(EDO_TEMPERING_STRENGTH_INPUT, "Tempering Strength");
 
         srand(time(NULL));
 
         for(int i=0;i<MAX_FACTORS;i++) {
-            configParam(ProbablyNoteMN::FACTOR_1_PARAM + i, i, MAX_PRIME_NUMBERS-MAX_FACTORS+i, i+3,"Factor");		
-            configParam(ProbablyNoteMN::FACTOR_1_CV_ATTENUVERTER_PARAM + i, -1.0, 1.0, 0.0,"Factor CV Attenuverter","%",0,100);		
-            configParam(ProbablyNoteMN::FACTOR_NUMERATOR_1_STEP_PARAM + i, 0.0, 10.0, 0.0,"Numerator Step Count");		
-            configParam(ProbablyNoteMN::FACTOR_NUMERATOR_1_STEP_CV_ATTENUVERTER_PARAM + i, -1.0, 1.0, 0.0,"Numerator Step Count CV Attenuverter","%",0,100);		
-            configParam(ProbablyNoteMN::FACTOR_DENOMINATOR_1_STEP_PARAM + i, 0.0, 5.0, 0.0,"Denominator Step Count");		
-            configParam(ProbablyNoteMN::FACTOR_DENOMINATOR_1_STEP_CV_ATTENUVERTER_PARAM + i, -1.0, 1.0, 0.0,"Denominator Step Count CV Attenuverter","%",0,100);		
-            configParam(ProbablyNoteMN::FACTOR_TEMPER_1_STEP_PARAM + i, -50.0, 50.0, 0.0,"Factor Tempering"," Cents");		
-            configParam(ProbablyNoteMN::FACTOR_TEMPER_1_STEP_CV_ATTENUVERTER_PARAM + i, -1.0, 1.0, 0.0,"Factor Tempering CV Attenuverter","%",0,100);		
+            configParam(ProbablyNoteMN::FACTOR_1_PARAM + i, i, MAX_PRIME_NUMBERS-MAX_FACTORS+i, i+3,"Factor " + std::to_string(i+1));		
+            configParam(ProbablyNoteMN::FACTOR_1_CV_ATTENUVERTER_PARAM + i, -1.0, 1.0, 0.0,"Factor " + std::to_string(i+1) +" CV Attenuverter","%",0,100);		
+            configParam(ProbablyNoteMN::FACTOR_NUMERATOR_1_STEP_PARAM + i, 0.0, 10.0, 0.0,"Factor " + std::to_string(i+1) + " Numerator Step Count");		
+            configParam(ProbablyNoteMN::FACTOR_NUMERATOR_1_STEP_CV_ATTENUVERTER_PARAM + i, -1.0, 1.0, 0.0,"Factor " + std::to_string(i+1) + " Numerator Step Count","%",0,100);		
+            configParam(ProbablyNoteMN::FACTOR_DENOMINATOR_1_STEP_PARAM + i, 0.0, 5.0, 0.0,"Factor " + std::to_string(i+1) + " Denominator Step Count");		
+            configParam(ProbablyNoteMN::FACTOR_DENOMINATOR_1_STEP_CV_ATTENUVERTER_PARAM + i, -1.0, 1.0, 0.0,"Factor " + std::to_string(i+1) + " Denominator Step Count CV Attenuverter","%",0,100);		
+            configParam(ProbablyNoteMN::FACTOR_TEMPER_1_STEP_PARAM + i, -50.0, 50.0, 0.0,"Factor " + std::to_string(i+1) + " Tempering"," Cents");		
+            configParam(ProbablyNoteMN::FACTOR_TEMPER_1_STEP_CV_ATTENUVERTER_PARAM + i, -1.0, 1.0, 0.0,"Factor " + std::to_string(i+1) + " Tempering CV Attenuverter","%",0,100);	
+
+			configInput(FACTOR_1_INPUT+i, "Factor " + std::to_string(i+1));
+			configInput(FACTOR_NUMERATOR_STEP_1_INPUT+i, "Factor " + std::to_string(i+1) + " Numerator Step Count");
+			configInput(FACTOR_DENOMINATOR_STEP_1_INPUT+i, "Factor " + std::to_string(i+1) + " Denominator Step Count");
+			configInput(FACTOR_TEMPER_STEP_1_INPUT+i, "Factor " + std::to_string(i+1) + " Tempering");
+
         }
 
         configParam(ProbablyNoteMN::OCTAVE_SIZE_PARAM, 2.0, 5.0, 2.0,"Octave Size");
 		configParam(ProbablyNoteMN::OCTAVE_SIZE_CV_ATTENUVERTER_PARAM, -1.0, 1.0, 0.0,"Octave Size CV Attenuation");
 
 
-		configParam(ProbablyNoteMN::SPREAD_MODE_PARAM, 0.0, 1.0, 0.0,"Spread by %");
-		configParam(ProbablyNoteMN::OCTAVE_WRAPAROUND_PARAM, 0.0, 1.0, 0.0,"Wrap generated notes beyond octave");
-		configParam(ProbablyNoteMN::OCTAVE_SCALE_SIZE_MAPPING_PARAM, 0.0, 1.0, 0.0,"Map v/O to Scale's Octave Size");
-		configParam(ProbablyNoteMN::QUANTIZE_OCTAVE_PARAM, 0.0, 1.0, 0.0,"Quantitize Octave Size");
-		configParam(ProbablyNoteMN::QUANTIZE_MOS_RATIO_PARAM, 0.0, 1.0, 0.0,"Quantitize MOS Ratio");
-		configParam(ProbablyNoteMN::NOTE_REDUCTION_ALGORITHM_PARAM, 0.0, 1.0, 0.0,"Note Reduction Algorithm");
-		configParam(ProbablyNoteMN::SCALE_MAPPING_PARAM, 0.0, 1.0, 0.0,"Map Generated Scale to Traditional Scale");
-		configParam(ProbablyNoteMN::USE_SCALE_WEIGHTING_PARAM, 0.0, 1.0, 0.0,"Use Mapped Scale's Probability");
+
+
+		configButton(OCTAVE_WRAPAROUND_PARAM,"Octave Wraparound");
+		configButton(RESET_SCALE_PARAM,"Reset Scale Weights");
+		configButton(TRIGGER_MODE_PARAM,"Trigger Mode");
+		configButton(KEY_SCALING_PARAM,"Key Scaling Mode");
+		configButton(SHIFT_SCALING_PARAM,"Weight Scaling Mode");
+		configButton(PITCH_RANDOMNESS_GAUSSIAN_PARAM,"Gaussian Randomness");
+		configButton(NOTE_REDUCTION_ALGORITHM_PARAM, "Note Reduction Algorithm");
+		configButton(SPREAD_MODE_PARAM, "Spread by %");
+		configButton(OCTAVE_SCALE_SIZE_MAPPING_PARAM, "Map v/O to Scale's Octave Size");
+		configButton(QUANTIZE_OCTAVE_PARAM, "Quantitize Octave Size");
+		configButton(QUANTIZE_MOS_RATIO_PARAM, "Quantitize MOS Ratio");
+		configButton(SCALE_MAPPING_PARAM, "Map Generated Scale to Traditional Scale Mode");
+		configButton(USE_SCALE_WEIGHTING_PARAM, "Use Mapped Scale's Probability");
+		configButton(SET_ROOT_NOTE_PARAM, "Set Root Note");
+
+
+		configInput(SCALE_MAPPING_INPUT, "Map Generated Scale to Traditional Scale Mode Trigger");
+		configInput(SET_ROOT_NOTE_INPUT, "Set Root Note Trigger");
+		configInput(USE_SCALE_WEIGHTING_INPUT, "Use Mapped Scale's Probability Trigger");
+
+
+        srand(time(NULL));
+
+        for(int i=0;i<MAX_NOTES;i++) {
+            // configParam(NOTE_ACTIVE_PARAM + i, 0.0, 1.0, 0.0,"Note Active");		
+			std::string noteName( noteNames[i] );
+            configParam(NOTE_WEIGHT_PARAM + i, 0.0, 1.0, 0.0,"Note Weight: " + noteName);					
+			configInput(NOTE_WEIGHT_INPUT+i, "Note Weight: " + noteName);
+        }
+
+		configInput(NOTE_INPUT, "Unquantized CV");
+		configInput(SPREAD_INPUT, "Spread");
+		configInput(SLANT_INPUT, "Slant");
+		configInput(DISTRIBUTION_INPUT, "Focus");
+		configInput(SHIFT_INPUT, "Shift");
+		configInput(DISSONANCE_INPUT, "Consonance/Dissonance Balance");
+		configInput(SCALE_INPUT, "Mapped Scale");
+		configInput(KEY_INPUT, "Key");
+		configInput(OCTAVE_INPUT, "Octave");
+		configInput(TRIGGER_INPUT, "Trigger");
+		configInput(EXTERNAL_RANDOM_INPUT, "External Random");
+		configInput(OCTAVE_WRAP_INPUT, "Octave Wrap Trigger");
+		configInput(PITCH_RANDOMNESS_INPUT, "Pitch Randomness");
+		configInput(NOTE_WEIGHT_INPUT, "Left");
+		configInput(NON_REPEATABILITY_INPUT, "Note Non-Repeat Probability");
+
+		configOutput(QUANT_OUTPUT, "Quantized CV");
+		configOutput(WEIGHT_OUTPUT, "Note Weight");
+		configOutput(NOTE_CHANGE_OUTPUT, "Note Changed Trigger");
 
 		onReset();
 	}

@@ -9,9 +9,9 @@
 struct PWGridControlExpander : Module {
 
     enum ParamIds {
-        PIN_X_AXIS_MODE_PARAM,
-        X_AXIS_PIN_POS_PARAM,
-        X_AXIS_ROTATION_PARAM,
+        PIN_Y_AXIS_MODE_PARAM,
+        Y_AXIS_PIN_POS_PARAM,
+        Y_AXIS_ROTATION_PARAM,
         DESTINATION_LEVEL_PARAM,
         DESTINATION_PAN_PARAM,
         DESTINATION_FC_PARAM,
@@ -24,8 +24,8 @@ struct PWGridControlExpander : Module {
 	enum InputIds {
         GRID_X_CV_INPUT,
         GRID_Y_CV_INPUT,
-        GRID_X_AXIS_PIN_POS_CV_INPUT,
-        GRID_X_AXIS_ROTATION_CV_INPUT,
+        GRID_Y_AXIS_PIN_POS_CV_INPUT,
+        GRID_Y_AXIS_ROTATION_CV_INPUT,
         NUM_INPUTS
 	};
 
@@ -34,8 +34,8 @@ struct PWGridControlExpander : Module {
 	};
 
 	enum LightIds {
-        PIN_X_AXIS_MODE_LIGHT,
-        DESTINATION_LEVEL_LIGHT = PIN_X_AXIS_MODE_LIGHT + 3,
+        PIN_Y_AXIS_MODE_LIGHT,
+        DESTINATION_LEVEL_LIGHT = PIN_Y_AXIS_MODE_LIGHT + 3,
         DESTINATION_PAN_LIGHT = DESTINATION_LEVEL_LIGHT + 3,
         DESTINATION_FC_LIGHT = DESTINATION_PAN_LIGHT + 3,
         DESTINATION_Q_LIGHT = DESTINATION_FC_LIGHT + 3,
@@ -53,8 +53,8 @@ struct PWGridControlExpander : Module {
 
     OneDimensionalCells *gridCells;
 
-    dsp::SchmittTrigger pinXAxisModeTrigger,destinationTrigger[6];
-    uint8_t pinXAxisMode = 0;
+    dsp::SchmittTrigger pinYAxisModeTrigger,destinationTrigger[6];
+    uint8_t pinYAxisMode = 0;
     uint8_t destination = 1;
 
     //percentages
@@ -67,8 +67,22 @@ struct PWGridControlExpander : Module {
 
 		config(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS, NUM_LIGHTS);
 
-        configParam(X_AXIS_PIN_POS_PARAM, 0.0f, 1.0f, 0.0f, "Grid X Axis Pin Position","%",0,100);
-        configParam(X_AXIS_ROTATION_PARAM, -1.0f, 1.0f, 0.0f, "Grid X Axis Rotation","°",0,100);
+        configParam(Y_AXIS_PIN_POS_PARAM, 0.0f, 1.0f, 0.0f, "Grid Y Axis Pin Position","%",0,100);
+        configParam(Y_AXIS_ROTATION_PARAM, -1.0f, 1.0f, 0.0f, "Grid Y Axis Rotation","°",0,100);
+
+        configButton(PIN_Y_AXIS_MODE_PARAM,"Pin Y Axis");
+
+        configButton(DESTINATION_LEVEL_PARAM,"Grid Controls: Level");
+        configButton(DESTINATION_PAN_PARAM,"Grid Controls: Panning");
+        configButton(DESTINATION_FC_PARAM,"Grid Controls: Filter Cutoff");
+        configButton(DESTINATION_Q_PARAM,"Grid Controls: Filter Q");
+        configButton(DESTINATION_PITCH_PARAM,"Grid Controls: Pitch Shift");
+        configButton(DESTINATION_DETUNE_PARAM,"Grid Controls: Pitch Detune");
+
+		configInput(GRID_X_CV_INPUT, "Grid X Shift");
+		configInput(GRID_Y_CV_INPUT, "Grid Y Shift");
+		configInput(GRID_Y_AXIS_PIN_POS_CV_INPUT, "Grid X Axis Pin Position");
+		configInput(GRID_Y_AXIS_ROTATION_CV_INPUT, "Grid Y Axis Rotation");
 
 		leftExpander.producerMessage = leftMessages[0];
 		leftExpander.consumerMessage = leftMessages[1];
@@ -81,9 +95,9 @@ struct PWGridControlExpander : Module {
 
 
     void dataFromJson(json_t *root) override {
-        json_t *pxmJ = json_object_get(root, "pinXAxisMode");
+        json_t *pxmJ = json_object_get(root, "pinYAxisMode");
         if (json_is_integer(pxmJ)) {
-            pinXAxisMode = (uint8_t) json_integer_value(pxmJ);
+            pinYAxisMode = (uint8_t) json_integer_value(pxmJ);
         }
 
         json_t *dJ = json_object_get(root, "destination");
@@ -104,7 +118,7 @@ struct PWGridControlExpander : Module {
     json_t *dataToJson() override {
     json_t *root = json_object();
 
-    json_object_set(root, "pinXAxisMode", json_integer(pinXAxisMode));
+    json_object_set(root, "pinYAxisMode", json_integer(pinYAxisMode));
     json_object_set(root, "destination", json_integer(destination));
     
     for(int i=0;i<NUM_TAPS;i++) {
@@ -118,7 +132,7 @@ struct PWGridControlExpander : Module {
     void onReset() override {
         
         destination = 1;
-        pinXAxisMode = 0;
+        pinYAxisMode = 0;
 
         // reset the cells
         gridCells->reset();
@@ -140,41 +154,41 @@ struct PWGridControlExpander : Module {
 
 	void process(const ProcessArgs &args) override {
 
-        float pinXAxisPos = paramValue(X_AXIS_PIN_POS_PARAM, GRID_X_AXIS_PIN_POS_CV_INPUT, 0, 1);
-        pinPosPercentage = pinXAxisPos;
-        float xAxisRotation = paramValue(X_AXIS_ROTATION_PARAM, GRID_X_AXIS_ROTATION_CV_INPUT, -1, 1);
-        rotationPercentage = xAxisRotation;
-        if (pinXAxisModeTrigger.process(params[PIN_X_AXIS_MODE_PARAM].getValue())) {
-            pinXAxisMode = (pinXAxisMode + 1) % 5;
+        float pinYAxisPos = paramValue(Y_AXIS_PIN_POS_PARAM, GRID_Y_AXIS_PIN_POS_CV_INPUT, 0, 1);
+        pinPosPercentage = pinYAxisPos;
+        float yAxisRotation = paramValue(Y_AXIS_ROTATION_PARAM, GRID_Y_AXIS_ROTATION_CV_INPUT, -1, 1);
+        rotationPercentage = yAxisRotation;
+        if (pinYAxisModeTrigger.process(params[PIN_Y_AXIS_MODE_PARAM].getValue())) {
+            pinYAxisMode = (pinYAxisMode + 1) % 5;
         }
-        gridCells->pinXAxisValues = pinXAxisMode;
-        gridCells->pinXAxisPosition = pinXAxisPos;
-        gridCells->rotateX = xAxisRotation;
-        switch (pinXAxisMode) {
+        gridCells->pinXAxisValues = pinYAxisMode;
+        gridCells->pinXAxisPosition = pinYAxisPos;
+        gridCells->rotateX = yAxisRotation;
+        switch (pinYAxisMode) {
             case 0 :
-            lights[PIN_X_AXIS_MODE_LIGHT+0].value = 0;
-            lights[PIN_X_AXIS_MODE_LIGHT+1].value = 0;
-            lights[PIN_X_AXIS_MODE_LIGHT+2].value = 0;
+            lights[PIN_Y_AXIS_MODE_LIGHT+0].value = 0;
+            lights[PIN_Y_AXIS_MODE_LIGHT+1].value = 0;
+            lights[PIN_Y_AXIS_MODE_LIGHT+2].value = 0;
             break;
             case 1 :
-            lights[PIN_X_AXIS_MODE_LIGHT].value = .15;
-            lights[PIN_X_AXIS_MODE_LIGHT+1].value = 1;
-            lights[PIN_X_AXIS_MODE_LIGHT+2].value = .15;
+            lights[PIN_Y_AXIS_MODE_LIGHT].value = .15;
+            lights[PIN_Y_AXIS_MODE_LIGHT+1].value = 1;
+            lights[PIN_Y_AXIS_MODE_LIGHT+2].value = .15;
             break;
             case 2 :
-            lights[PIN_X_AXIS_MODE_LIGHT].value = 0;
-            lights[PIN_X_AXIS_MODE_LIGHT+1].value = 1;
-            lights[PIN_X_AXIS_MODE_LIGHT+2].value = 0;
+            lights[PIN_Y_AXIS_MODE_LIGHT].value = 0;
+            lights[PIN_Y_AXIS_MODE_LIGHT+1].value = 1;
+            lights[PIN_Y_AXIS_MODE_LIGHT+2].value = 0;
             break;
             case 3 :
-            lights[PIN_X_AXIS_MODE_LIGHT].value = 1;
-            lights[PIN_X_AXIS_MODE_LIGHT+1].value = .15;
-            lights[PIN_X_AXIS_MODE_LIGHT+2].value = .15;
+            lights[PIN_Y_AXIS_MODE_LIGHT].value = 1;
+            lights[PIN_Y_AXIS_MODE_LIGHT+1].value = .15;
+            lights[PIN_Y_AXIS_MODE_LIGHT+2].value = .15;
             break;
             case 4 :
-            lights[PIN_X_AXIS_MODE_LIGHT].value = 1;
-            lights[PIN_X_AXIS_MODE_LIGHT+1].value = 0;
-            lights[PIN_X_AXIS_MODE_LIGHT+2].value = 0;
+            lights[PIN_Y_AXIS_MODE_LIGHT].value = 1;
+            lights[PIN_Y_AXIS_MODE_LIGHT+1].value = 0;
+            lights[PIN_Y_AXIS_MODE_LIGHT+2].value = 0;
             break;
         }
 
@@ -333,23 +347,23 @@ struct PWGridControlExpanderWidget : ModuleWidget {
             addInput(createInput<FWPortInSmall>(Vec(8, 34), module, PWGridControlExpander::GRID_X_CV_INPUT));
             addInput(createInput<FWPortInSmall>(Vec(33, 34), module, PWGridControlExpander::GRID_Y_CV_INPUT));
 
-            ParamWidget* xAxisRotationParam = createParam<RoundSmallFWKnob>(Vec(5, 69), module, PWGridControlExpander::X_AXIS_ROTATION_PARAM);
+            ParamWidget* yAxisRotationParam = createParam<RoundSmallFWKnob>(Vec(5, 69), module, PWGridControlExpander::Y_AXIS_ROTATION_PARAM);
             if (module) {
-                dynamic_cast<RoundSmallFWKnob*>(xAxisRotationParam)->percentage = &module->rotationPercentage;
-                dynamic_cast<RoundSmallFWKnob*>(xAxisRotationParam)->biDirectional = true;
+                dynamic_cast<RoundSmallFWKnob*>(yAxisRotationParam)->percentage = &module->rotationPercentage;
+                dynamic_cast<RoundSmallFWKnob*>(yAxisRotationParam)->biDirectional = true;
             }
-            addParam(xAxisRotationParam);							
-            addInput(createInput<FWPortInSmall>(Vec(33, 72), module, PWGridControlExpander::GRID_X_AXIS_ROTATION_CV_INPUT));
+            addParam(yAxisRotationParam);							
+            addInput(createInput<FWPortInSmall>(Vec(33, 72), module, PWGridControlExpander::GRID_Y_AXIS_ROTATION_CV_INPUT));
 
-            addParam(createParam<LEDButton>(Vec(8,110), module, PWGridControlExpander::PIN_X_AXIS_MODE_PARAM));
-            addChild(createLight<LargeLight<RedGreenBlueLight>>(Vec(9.5, 111.5), module, PWGridControlExpander::PIN_X_AXIS_MODE_LIGHT));
+            addParam(createParam<LEDButton>(Vec(8,110), module, PWGridControlExpander::PIN_Y_AXIS_MODE_PARAM));
+            addChild(createLight<LargeLight<RedGreenBlueLight>>(Vec(9.5, 111.5), module, PWGridControlExpander::PIN_Y_AXIS_MODE_LIGHT));
 
-            ParamWidget* xAxisPinPosParam = createParam<RoundSmallFWKnob>(Vec(5, 130), module, PWGridControlExpander::X_AXIS_PIN_POS_PARAM);
+            ParamWidget* xAxisPinPosParam = createParam<RoundSmallFWKnob>(Vec(5, 130), module, PWGridControlExpander::Y_AXIS_PIN_POS_PARAM);
             if (module) {
                 dynamic_cast<RoundSmallFWKnob*>(xAxisPinPosParam)->percentage = &module->pinPosPercentage;
             }
             addParam(xAxisPinPosParam);							
-            addInput(createInput<FWPortInSmall>(Vec(33, 133), module, PWGridControlExpander::GRID_X_AXIS_PIN_POS_CV_INPUT));
+            addInput(createInput<FWPortInSmall>(Vec(33, 133), module, PWGridControlExpander::GRID_Y_AXIS_PIN_POS_CV_INPUT));
 
 
         }

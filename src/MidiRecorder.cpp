@@ -107,9 +107,21 @@ struct MidiRecorder : Module {
             configParam(MidiRecorder::NOTE_VELOCITY_RANGE_PARAM + c, 0.0, 127.0, 0.0,"Velocity Random Range");		
             configParam(MidiRecorder::ACCENT_NOTE_VALUE_PARAM + c, 0.0, 127.0, 36.0+c,"Accent Note");		
             configParam(MidiRecorder::ACCENT_VELOCITY_PARAM + c, 0.0, 127.0, 110.0,"Accent Velocity");		
-            configParam(MidiRecorder::ACCENT_VELOCITY_RANGE_PARAM + c, 0, 127.0, 0.0,"Accent Velocity Random Range");		
+            configParam(MidiRecorder::ACCENT_VELOCITY_RANGE_PARAM + c, 0, 127.0, 0.0,"Accent Velocity Random Range");	
+
+            configInput(NOTE_VALUE_INPUT+c, "Note " + std::to_string(c+1) +" Value");
+            configInput(NOTE_VELOCITY_INPUT+c, "Note " + std::to_string(c+1) +" Velocity");
+            configInput(NOTE_VELOCITY_RANGE_INPUT+c, "Note " + std::to_string(c+1) +" Velocity Range");
+            configInput(ACCENT_NOTE_VALUE_INPUT+c, "Note " + std::to_string(c+1) +" Accent Value");
+            configInput(ACCENT_VELOCITY_INPUT+c, "Note " + std::to_string(c+1) +" Accent Velocity");
+            configInput(ACCENT_VELOCITY_RANGE_INPUT+c, "Note " + std::to_string(c+1) +" Accent Velocity Range");
         }
-        
+
+        configInput(BPM_INPUT, "BPM");
+        configInput(RUN_INPUT, "Run");
+        configInput(GATE_INPUT, "Gate");
+        configInput(ACCENT_INPUT, "Accent");
+
         onReset();
 	}
 

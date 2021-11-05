@@ -104,10 +104,18 @@ struct QARGrooveExpander : Module {
 	
 	QARGrooveExpander() {
 		config(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS, NUM_LIGHTS);
-		
+
+		for(int i =0;i<TRACK_COUNT;i++) {
+			configButton(TRACK_1_GROOVE_ENABLED_PARAM + i ,"Enable Track " + std::to_string(i+1));
+			trackGrooveSelected[i] = true;
+		}
+	
         for (int i = 0; i < MAX_STEPS; i++) {
             configParam(STEP_1_SWING_AMOUNT_PARAM + i, -0.5f, 0.5f, 0.0f,"Step "  + std::to_string(i+1) + " Swing","%",0,100);
 			configParam(STEP_1_SWING_CV_ATTEN_PARAM + i, -1.0, 1.0, 0.0,"Step "  + std::to_string(i+1) + " Swing CV Attenuation","%",0,100);
+
+			configInput(STEP_1_SWING_AMOUNT_INPUT+i, "Step "  + std::to_string(i+1) + " Swing");
+			
 		}	
         
         configParam(GROOVE_LENGTH_PARAM, 1.0f, MAX_STEPS, MAX_STEPS,"Groove Length");
@@ -119,9 +127,14 @@ struct QARGrooveExpander : Module {
         configParam(SWING_RANDOMNESS_PARAM, 0.0, 1.0, 0.0,"Groove Randomness","%",0,100);
         configParam(SWING_RANDOMNESS_CV_PARAM, -1.0, 1.0, 0.0,"Groove Randomness CV Attenuation","%",0,100);		
 
-        configParam(STEP_OR_DIV_PARAM, 0.0, 1.0, 0.0);
-		configParam(GROOVE_LENGTH_SAME_AS_TRACK_PARAM, 0.0, 1.0, 0.0);
-		configParam(RANDOM_DISTRIBUTION_PATTERN_PARAM, 0.0, 1.0, 0.0);
+		configButton(STEP_OR_DIV_PARAM ,"Step/Beat Mode");
+		configButton(GROOVE_LENGTH_SAME_AS_TRACK_PARAM ,"Set Groove Length to Track Length");
+		configButton(RANDOM_DISTRIBUTION_PATTERN_PARAM ,"Random Distribution Pattern");
+
+		configInput(GROOVE_LENGTH_INPUT, "Groove Length");
+		configInput(GROOVE_AMOUNT_INPUT, "Groove Amount");
+		configInput(SWING_RANDOMNESS_INPUT, "Swing Randomness");
+
 
 		leftExpander.producerMessage = leftMessages[0];
 		leftExpander.consumerMessage = leftMessages[1];

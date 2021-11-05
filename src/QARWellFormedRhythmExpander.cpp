@@ -92,15 +92,20 @@ struct QARWellFormedRhythmExpander : Module {
         configParam(TRACK_3_EXTRA_VALUE_PARAM, 0.0f, 1.0, 0.5,"Track 3 - Ratio");
         configParam(TRACK_4_EXTRA_VALUE_PARAM, 0.0f, 1.0, 0.5,"Track 4 - Ratio");
 
-        configParam(TRACK_1_HIERARCHICAL_PARAM, 0.0f, 1.0, 0.0,"Track 1 - Hierarchical");
-        configParam(TRACK_2_HIERARCHICAL_PARAM, 0.0f, 1.0, 0.0,"Track 2 - Hierarchical");
-        configParam(TRACK_3_HIERARCHICAL_PARAM, 0.0f, 1.0, 0.0,"Track 3 - Hierarchical");
-        configParam(TRACK_4_HIERARCHICAL_PARAM, 0.0f, 1.0, 0.0,"Track 4 - Hierarchical");
+		configButton(TRACK_1_HIERARCHICAL_PARAM ,"Track 1 - Hierarchical");
+		configButton(TRACK_2_HIERARCHICAL_PARAM ,"Track 2 - Hierarchical");
+		configButton(TRACK_3_HIERARCHICAL_PARAM ,"Track 3 - Hierarchical");
+		configButton(TRACK_4_HIERARCHICAL_PARAM ,"Track 4 - Hierarchical");
 
-        configParam(TRACK_1_COMPLEMENT_PARAM, 0.0f, 1.0, 0.0,"Track 1 - Complimentary");
-        configParam(TRACK_2_COMPLEMENT_PARAM, 0.0f, 1.0, 0.0,"Track 2 - Complimentary");
-        configParam(TRACK_3_COMPLEMENT_PARAM, 0.0f, 1.0, 0.0,"Track 3 - Complimentary");
-        configParam(TRACK_4_COMPLEMENT_PARAM, 0.0f, 1.0, 0.0,"Track 4 - Complimentary");
+		configButton(TRACK_1_COMPLEMENT_PARAM ,"Track 1 - Complimentary");
+		configButton(TRACK_2_COMPLEMENT_PARAM ,"Track 2 - Complimentary");
+		configButton(TRACK_3_COMPLEMENT_PARAM ,"Track 3 - Complimentary");
+		configButton(TRACK_4_COMPLEMENT_PARAM ,"Track 4 - Complimentary");
+
+		configInput(TRACK_1_EXTRA_VALUE_INPUT, "Track 1 - Ratio");
+		configInput(TRACK_2_EXTRA_VALUE_INPUT, "Track 2 - Ratio");
+		configInput(TRACK_3_EXTRA_VALUE_INPUT, "Track 3 - Ratio");
+		configInput(TRACK_4_EXTRA_VALUE_INPUT, "Track 4 - Ratio");
 
 		leftExpander.producerMessage = leftMessages[0];
 		leftExpander.consumerMessage = leftMessages[1];

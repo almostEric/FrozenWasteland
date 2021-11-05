@@ -81,19 +81,24 @@ struct QARProbabilityExpander : Module {
 
 		
 		for(int i =0;i<TRACK_COUNT;i++) {
-			configParam(TRACK_1_PROBABILITY_ENABLED_PARAM + i, 0.0, 1.0, 0.0);
+			configButton(TRACK_1_PROBABILITY_ENABLED_PARAM + i ,"Enable Track " + std::to_string(i+1));
 			trackProbabilitySelected[i] = true;
 		}
+
+
 
         for (int i = 0; i < MAX_STEPS; i++) {
             configParam(PROBABILITY_1_PARAM + i, -0.0f, 1.0f, 1.0f,"Step "  + std::to_string(i+1) + " Probability","%",0,100);
 			configParam(PROBABILITY_ATTEN_1_PARAM + i, -1.0, 1.0, 0.0,"Step "  + std::to_string(i+1) + " Probability CV Attenuation","%",0,100);
-			configParam(PROBABILITY_GROUP_MODE_1_PARAM + i, 0, 1.0, 0.0);
+			
+			configButton(PROBABILITY_GROUP_MODE_1_PARAM + i ,"Step "  + std::to_string(i+1) + " Probability Group Mode");
+			
+			configInput(PROBABILITY_1_INPUT+i, "Step "  + std::to_string(i+1) + " Probability");
 		}
 
 
-		configParam(STEP_OR_DIV_PARAM, 0.0, 1.0, 0.0);
-		
+		configButton(STEP_OR_DIV_PARAM ,"Step/Beat Mode");
+
         onReset();
 	}
 

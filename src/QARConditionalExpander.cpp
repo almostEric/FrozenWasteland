@@ -79,18 +79,22 @@ struct QARConditionalExpander : Module {
 
 		
 		for(int i =0;i<TRACK_COUNT;i++) {
-			configParam(TRACK_1_CONDITIONAL_ENABLED_PARAM + i, 0.0, 1.0, 0.0,"Enable Track " + std::to_string(i+1));
+			configButton(TRACK_1_CONDITIONAL_ENABLED_PARAM + i ,"Enable Track " + std::to_string(i+1));
 			trackConditionalSelected[i] = true;
 		}
 
         for (int i = 0; i < MAX_STEPS; i++) {
             configParam(DIVIDE_COUNT_1_PARAM + i, 1.0f, 16.0f, 1.0f,"Step "  + std::to_string(i+1) + " Divide Count");
 			configParam(DIVIDE_COUNT_ATTEN_1_PARAM + i, -1.0, 1.0, 0.0,"Step "  + std::to_string(i+1) + " Divide Count CV Attenuation","%",0,100);
-			configParam(CONDITIONAL_MODE_PARAM + i, 0.0, 1.0, 0.0,"Step "  + std::to_string(i+1) + " Conditional Mode");
+
+			configButton(CONDITIONAL_MODE_PARAM + i ,"Step "  + std::to_string(i+1) + " Conditional Mode");
+
+			configInput(DIVIDE_COUNT_1_INPUT+i, "Step "  + std::to_string(i+1) + " Divide Count");
+			configInput(CONDITIONAL_MODE_1_INPUT+i, "Step "  + std::to_string(i+1) + " Conditional Mode");
 		}
 
 
-		configParam(STEP_OR_DIV_PARAM, 0.0, 1.0, 0.0,"Step/Beat Mode");
+		configButton(STEP_OR_DIV_PARAM ,"Step/Beat Mode");
 		
         onReset();
 	}

@@ -71,10 +71,12 @@ struct QARBeatRotatorExpander : Module {
 		config(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS, NUM_LIGHTS);
 		        
         configParam(ROTATE_AMOUNT_PARAM, 0.0f, 1.0, 0.0,"Beat Rotation","%",0,100);
-        configParam(ROTATE_AMOUNT_CV_ATTENUVETER_PARAM, -1.0, 1.0, 0.0,"Warp Amount CV Attenuation","%",0,100);
+        configParam(ROTATE_AMOUNT_CV_ATTENUVETER_PARAM, -1.0, 1.0, 0.0,"Beat Rotation CV Attenuation","%",0,100);
 
         // configParam(WARP_POSITION_PARAM, 0.0, MAX_STEPS-1, 0,"Warp Position");
         // configParam(WARP_POSITION_CV_ATTENUVETER_PARAM, -1.0, 1.0, 0.0,"Warp Position CV Attenuation","%",0,100);		
+
+		configInput(ROTATE_AMOUNT_INPUT, "Beat Rotation");
 
         
 		leftExpander.producerMessage = leftMessages[0];

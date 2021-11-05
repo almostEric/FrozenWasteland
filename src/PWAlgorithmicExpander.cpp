@@ -198,6 +198,17 @@ struct PWAlgorithmicExpander : Module {
         configParam(ALGORITHM_1_PARAM, 0.0, 1.0, 0.0);
         configParam(RATIO_1_PARAM, 0.0, 1.0, 0.5,"Well Formed Ratio");
 
+		configButton(ALGORITHM_1_PARAM,"Algorithm");
+
+		configInput(ALGORITHM_1_INPUT, "Algorithm");
+		configInput(STEPS_1_INPUT, "# Steps");
+		configInput(DIVISIONS_1_INPUT, "# Beats");
+		configInput(OFFSET_1_INPUT, "Step Offset");
+		configInput(PAD_1_INPUT, "Step Padding");
+		configInput(RATIO_1_INPUT, "Well Formed Ratio");
+
+
+
 		leftExpander.producerMessage = leftMessages[0];
 		leftExpander.consumerMessage = leftMessages[1];
 		

@@ -339,19 +339,28 @@ struct ProbablyNote : Module {
         configParam(ProbablyNote::KEY_CV_ATTENUVERTER_PARAM, -1.0, 1.0, 0.0,"Key CV Attenuation","%",0,100); 
 		configParam(ProbablyNote::OCTAVE_PARAM, -4.0, 4.0, 0.0,"Octave");
         configParam(ProbablyNote::OCTAVE_CV_ATTENUVERTER_PARAM, -1.0, 1.0, 0.0,"Octave CV Attenuation","%",0,100);
-		configParam(ProbablyNote::OCTAVE_WRAPAROUND_PARAM, 0.0, 1.0, 0.0,"Octave Wraparound");
-		configParam(ProbablyNote::TEMPERMENT_PARAM, 0.0, 1.0, 0.0,"Just Intonation");
 		configParam(ProbablyNote::WEIGHT_SCALING_PARAM, 0.0, 1.0, 0.0,"Weight Scaling","%",0,100);
 		configParam(ProbablyNote::PITCH_RANDOMNESS_PARAM, 0.0, 10.0, 0.0,"Randomize Pitch Amount"," Cents");
         configParam(ProbablyNote::PITCH_RANDOMNESS_CV_ATTENUVERTER_PARAM, -1.0, 1.0, 0.0,"Randomize Pitch Amount CV Attenuation","%",0,100);
 		configParam(ProbablyNote::NON_REPEATABILITY_PARAM, 0.0, 1.0, 0.0,"Note Non-Repeat Probability"," %",0,100);
         configParam(ProbablyNote::NON_REPEATABILITY_CV_ATTENUVERTER_PARAM, -1.0, 1.0, 0.0,"Note Non-Repeat Probability CV Attenuation","%",0,100);
 
+		configButton(OCTAVE_WRAPAROUND_PARAM,"Octave Wraparound");
+		configButton(TEMPERMENT_PARAM,"Just Intonation");
+		configButton(RESET_SCALE_PARAM,"Reset Scale Weights");
+		configButton(TRIGGER_MODE_PARAM,"Trigger Mode");
+		configButton(KEY_SCALING_PARAM,"Key Scaling Mode");
+		configButton(SHIFT_SCALING_PARAM,"Weight Scaling Mode");
+		configButton(PITCH_RANDOMNESS_GAUSSIAN_PARAM,"Gaussian Randomness");
+
         srand(time(NULL));
 
         for(int i=0;i<MAX_NOTES;i++) {
-            configParam(ProbablyNote::NOTE_ACTIVE_PARAM + i, 0.0, 1.0, 0.0,"Note Active");		
-            configParam(ProbablyNote::NOTE_WEIGHT_PARAM + i, 0.0, 1.0, 0.0,"Note Weight");		
+            // configParam(NOTE_ACTIVE_PARAM + i, 0.0, 1.0, 0.0,"Note Active");		
+			std::string noteName( noteNames[i] );
+            configParam(NOTE_WEIGHT_PARAM + i, 0.0, 1.0, 0.0,"Note Weight: " + noteName);					
+			configButton(NOTE_ACTIVE_PARAM + i,"Note Active: " + noteName);
+			configInput(NOTE_WEIGHT_INPUT+i, "Note Weight: " + noteName);
         }
 
 		configInput(NOTE_INPUT, "Unquantized CV");
@@ -361,7 +370,7 @@ struct ProbablyNote : Module {
 		configInput(SHIFT_INPUT, "Shift");
 		configInput(SCALE_INPUT, "Scale");
 		configInput(KEY_INPUT, "Key");
-		configInput(OCTAVE_INPUT, "Ocatave");
+		configInput(OCTAVE_INPUT, "Octave");
 		configInput(TEMPERMENT_INPUT, "Tempermanet");
 		configInput(TRIGGER_INPUT, "Trigger");
 		configInput(EXTERNAL_RANDOM_INPUT, "External Random");
@@ -370,8 +379,10 @@ struct ProbablyNote : Module {
 		configInput(NOTE_WEIGHT_INPUT, "Left");
 		configInput(NON_REPEATABILITY_INPUT, "Note Non-Repeat Probability");
 
+		configOutput(QUANT_OUTPUT, "Quantized CV");
+		configOutput(WEIGHT_OUTPUT, "Note Weight");
+		configOutput(NOTE_CHANGE_OUTPUT, "Note Changed");
 
-	
 
 		rightExpander.producerMessage = rightMessages[0];
 		rightExpander.consumerMessage = rightMessages[1];

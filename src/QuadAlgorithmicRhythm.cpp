@@ -551,6 +551,95 @@ struct QuadAlgorithmicRhythm : Module {
 		configParam(RESET_PARAM, 0.0, 1.0, 0.0);
 		configParam(MUTE_PARAM, 0.0, 1.0, 0.0);
 
+
+		configButton(META_STEP_PARAM,"Meta Track Step Count");
+		configButton(CHAIN_MODE_PARAM,"Chain Mode - None");
+		configButton(CHAIN_MODE_PARAM+1,"Chain Mode - Boss");
+		configButton(CHAIN_MODE_PARAM+2,"Chain Mode - Employee");
+		configButton(CONSTANT_TIME_MODE_PARAM,"Time Sync Tracks");
+		configButton(RESET_PARAM,"Reset");
+		configButton(MUTE_PARAM,"Mute");
+		for(int i=0;i<NBR_SCENES;i++) {
+			configButton(CHOOSE_SCENE_PARAM+i,"Select Scene " + std::to_string(i+1));
+		}
+		for(int i=0;i<TRACK_COUNT;i++) {
+			configButton(ALGORITHM_1_PARAM+(i*8),"Track " + std::to_string(i+1) + " Algorithm");
+			configButton(ACCENT_ALGORITHM_1_PARAM+i,"Track " + std::to_string(i+1) + " Accent Algorithm");
+			configButton(TRACK_1_INDEPENDENT_PARAM+(i*8),"Track " + std::to_string(i+1) + " Free Running");
+		}
+
+		configButton(SAVE_SCENE_PARAM,"Save Scene");
+		configButton(RUN_PARAM,"Run");
+
+
+
+		configInput(CLOCK_INPUT, "Clock");
+		configInput(RESET_INPUT, "Reset");
+		configInput(MUTE_INPUT, "Mute");
+		configInput(META_STEP_INPUT, "Meta Track # of Steps");
+		configInput(CHOOSE_SCENE_INPUT, "Scene #");
+		configInput(BPM_INPUT, "BPM");
+		configInput(RUN_INPUT, "Run");
+
+		configInput(STEPS_1_INPUT, "Track 1 # of Steps");
+		configInput(DIVISIONS_1_INPUT, "Track 1 # of Beats");
+		configInput(OFFSET_1_INPUT, "Track 1 Offset");
+		configInput(PAD_1_INPUT, "Track 1 Padding");
+		configInput(ACCENTS_1_INPUT, "Track 1 Accents");
+		configInput(ACCENT_ROTATE_1_INPUT, "Track 1 Accent Rotate");
+		configInput(ALGORITHM_1_INPUT, "Track 1 Algorithm");
+		configInput(ACCENT_ALGORITHM_1_INPUT, "Track 1 Accent Algorithm");
+
+		configOutput(OUTPUT_1, "Track 1 Beat");
+		configOutput(ACCENT_OUTPUT_1, "Track 1 Accent");
+		configOutput(EOC_OUTPUT_1, "Track 1 EOC");
+		configOutput(GROOVE_EOC_OUTPUT_1, "Track 1 Groove EOC");
+
+		configInput(STEPS_2_INPUT, "Track 2 # of Steps");
+		configInput(DIVISIONS_2_INPUT, "Track 2 # of Beats");
+		configInput(OFFSET_2_INPUT, "Track 2 Offset");
+		configInput(PAD_2_INPUT, "Track 2 Padding");
+		configInput(ACCENTS_2_INPUT, "Track 2 Accents");
+		configInput(ACCENT_ROTATE_2_INPUT, "Track 2 Accent Rotate");
+		configInput(ALGORITHM_2_INPUT, "Track 2 Algorithm");
+		configInput(ACCENT_ALGORITHM_1_INPUT+1, "Track 2 Accent Algorithm");
+
+		configOutput(OUTPUT_2, "Track 2 Beat");
+		configOutput(ACCENT_OUTPUT_2, "Track 2 Accent");
+		configOutput(EOC_OUTPUT_2, "Track 2 EOC");
+		configOutput(GROOVE_EOC_OUTPUT_1+1, "Track 2 Groove EOC");
+
+		configInput(STEPS_3_INPUT, "Track 3 # of Steps");
+		configInput(DIVISIONS_3_INPUT, "Track 3 # of Beats");
+		configInput(OFFSET_3_INPUT, "Track 3 Offset");
+		configInput(PAD_3_INPUT, "Track 3 Padding");
+		configInput(ACCENTS_3_INPUT, "Track 3 Accents");
+		configInput(ACCENT_ROTATE_3_INPUT, "Track 3 Accent Rotate");
+		configInput(ALGORITHM_3_INPUT, "Track 3 Algorithm");
+		configInput(ACCENT_ALGORITHM_1_INPUT+2, "Track 3 Accent Algorithm");
+
+		configOutput(OUTPUT_3, "Track 3 Beat");
+		configOutput(ACCENT_OUTPUT_3, "Track 3 Accent");
+		configOutput(EOC_OUTPUT_3, "Track 3 EOC");
+		configOutput(GROOVE_EOC_OUTPUT_1+2, "Track 3 Groove EOC");
+
+		configInput(STEPS_4_INPUT, "Track 4 # of Steps");
+		configInput(DIVISIONS_4_INPUT, "Track 4 # of Beats");
+		configInput(OFFSET_4_INPUT, "Track 4 Offset");
+		configInput(PAD_4_INPUT, "Track 4 Padding");
+		configInput(ACCENTS_4_INPUT, "Track 4 Accents");
+		configInput(ACCENT_ROTATE_4_INPUT, "Track 4 Accent Rotate");
+		configInput(ALGORITHM_4_INPUT, "Track 4 Algorithm");
+		configInput(ACCENT_ALGORITHM_1_INPUT+3, "Track 4 Accent Algorithm");
+
+		configOutput(OUTPUT_4, "Track 4 Beat");
+		configOutput(ACCENT_OUTPUT_4, "Track 4 Accent");
+		configOutput(EOC_OUTPUT_4, "Track 4 EOC");
+		configOutput(GROOVE_EOC_OUTPUT_1+3, "Track 4 Groove EOC");
+
+
+
+		
 		leftExpander.producerMessage = leftMessages[0];
 		leftExpander.consumerMessage = leftMessages[1];
 
