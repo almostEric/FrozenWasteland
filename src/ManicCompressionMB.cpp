@@ -846,10 +846,10 @@ struct ManicCompressionMBCompressionCurve : FramebufferWidget {
 	ManicCompressionMB *module;
 	int band = 0;
 	std::shared_ptr<Font> font;
-
+    std::string fontPath;
 
 	ManicCompressionMBCompressionCurve() {
-		font = APP->window->loadFont(asset::plugin(pluginInstance, "res/fonts/SUBWT___.ttf"));
+        fontPath =asset::plugin(pluginInstance, "res/fonts/SUBWT___.ttf");
 	}
 
 
@@ -890,8 +890,11 @@ struct ManicCompressionMBCompressionCurve : FramebufferWidget {
 	
 
 	void draw(const DrawArgs &args) override {
+        font = APP->window->loadFont(fontPath);
+        
 		if (!module)
 			return;
+
         for(int band=0;band<BANDS;band++) {
             if(module->bandEnabled[band]) {
                 drawResponse(args,band,module->threshold[band],module->ratio[band],module->knee[band]);

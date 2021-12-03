@@ -75,7 +75,7 @@ struct MrBlueSky : Module {
 		config(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS, NUM_LIGHTS);
 
 		for (int i = 0; i < BANDS; i++) {
-			configParam(BG_PARAM + i, 0, 2, 1,"Band " + std::to_string(i+1) + " Gaim");
+			configParam(BG_PARAM + i, 0, 2, 1,"Band " + std::to_string(i+1) + " Gain");
 			configInput(CARRIER_IN+ i, "Band " + std::to_string(i+1) + " Carrier CV");
 			configOutput(MOD_OUT + i, "Band "+ std::to_string(i+1) + " Modifier");
 		}
@@ -83,7 +83,7 @@ struct MrBlueSky : Module {
 		configParam(DECAY_PARAM, 0.0, 0.25, 0.0,"Decay");
 		configParam(CARRIER_Q_PARAM, 1.0, 15.0, 5.0,"Carrier Q");
 		configParam(MOD_Q_PARAM, 1.0, 15.0, 5.0,"Modulator Q");
-		configParam(BAND_OFFSET_PARAM, -15.5, 15.5, 0.0,"Band Offset");
+		configParam(BAND_OFFSET_PARAM, -15, 15, 0.0,"Band Offset");
 		configParam(GMOD_PARAM, 1, 10, 5,"Modulator Gain");
 		configParam(GCARR_PARAM, 1, 10, 5,"Carrier Gain");
 		configParam(G_PARAM, 1, 10, 5,"Overall Gain");
