@@ -330,9 +330,10 @@ struct BandOffsetDisplay : TransparentWidget {
 	MrBlueSky *module;
 	int frame = 0;
 	std::shared_ptr<Font> font;
+	std::string fontPath;
 
 	BandOffsetDisplay() {
-		font = APP->window->loadFont(asset::plugin(pluginInstance, "res/fonts/01 Digit.ttf"));
+		fontPath = asset::plugin(pluginInstance, "res/fonts/01 Digit.ttf");
 	}
 
 	void drawOffset(const DrawArgs &args, Vec pos, float bandOffset) {
@@ -347,6 +348,7 @@ struct BandOffsetDisplay : TransparentWidget {
 	}
 
 	void draw(const DrawArgs &args) override {
+		font = APP->window->loadFont(fontPath);
 		if (!module)
 			return;
 		drawOffset(args, Vec(0, box.size.y - 150), module->bandOffset);
