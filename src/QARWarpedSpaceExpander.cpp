@@ -264,7 +264,7 @@ struct QARWarpedSpaceExpander : Module {
 				rightExpander.module->leftExpander.messageFlipRequested = true;
 			} else {
 				std::fill(trackDirty,trackDirty+TRACK_COUNT,0);
-				isDirty = QARExpanderDisconnectReset;
+				isDirty = isDirty || QARExpanderDisconnectReset;
 				QARExpanderDisconnectReset = false;
 			}
 

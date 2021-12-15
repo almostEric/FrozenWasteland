@@ -252,6 +252,7 @@ struct QARGrooveExpander : Module {
 		for(int i=0; i< TRACK_COUNT; i++) {
 			if (trackGrooveTrigger[i].process(params[TRACK_1_GROOVE_ENABLED_PARAM+i].getValue())) {
 				trackGrooveSelected[i] = !trackGrooveSelected[i];
+				isDirty = true;
 			}
 			lights[TRACK_1_GROOVE_ENABELED_LIGHT+i].value = trackGrooveSelected[i];
 		}
@@ -329,7 +330,7 @@ struct QARGrooveExpander : Module {
 				rightExpander.module->leftExpander.messageFlipRequested = true;
 			} else {
 				std::fill(trackDirty,trackDirty+TRACK_COUNT,0);
-				isDirty = QARExpanderDisconnectReset;
+				isDirty = isDirty || QARExpanderDisconnectReset;
 				QARExpanderDisconnectReset = false;
 			}
 
