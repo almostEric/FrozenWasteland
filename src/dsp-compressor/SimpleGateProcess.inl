@@ -8,7 +8,7 @@
  *				  void SimpleGate::process( double &in1, double &in2, double keyLinked )
  *				  void SimpleGateRms::process( double &in1, double &in2 )
  *
- *	© 2006, ChunkWare Music Software, OPEN-SOURCE
+ *	ï¿½ 2006, ChunkWare Music Software, OPEN-SOURCE
  *
  *	Permission is hereby granted, free of charge, to any person obtaining a
  *	copy of this software and associated documentation files (the "Software"),
@@ -63,7 +63,7 @@ namespace chunkware_simple
 
 		// attack/release
 		over += DC_OFFSET;					// add DC offset to avoid denormal
-		AttRelEnvelope::run( over, env_ );	// run attack/release
+		AttRelEnvelope::run( over, env_);	// run attack/release
 		over = env_ - DC_OFFSET;			// subtract DC offset
 
 		/* REGARDING THE DC OFFSET: In this case, since the offset is added before 

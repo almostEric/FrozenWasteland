@@ -70,7 +70,7 @@ namespace chunkware_simple
 		virtual double getLinearity( void ) const { return linearity_; }
 
 		// runtime function
-		INLINE void run( double in, double &state ) {
+		INLINE void run( double in, double &state) {
 			double delta = std::abs(in-state);
 
 			coef_ = getCoef(delta);
@@ -122,18 +122,27 @@ namespace chunkware_simple
 		virtual double getSampleRate( void ) const { return att_.getSampleRate(); }
 
 		// runtime function
-		INLINE void run( double in, double &state ) {
+		INLINE void run( double in, double &state) {
 
 			/* assumes that:
 			* positive delta = attack
 			* negative delta = release
 			* good for linear & log values
 			*/
-
-			if ( in > state )
-				att_.run( in, state );	// attack
-			else
-				rel_.run( in, state );	// release
+			
+			// if(!direction) //downward
+			// {
+				if ( in > state )
+					att_.run( in, state );	// attack
+				else
+					rel_.run( in, state );	// release
+			// } else // upward 
+			// {
+			// 	if ( in < state )
+			// 		att_.run( in, state );	// attack
+			// 	else
+			// 		rel_.run( in, state );	// release
+			// }
 		}
 
 	private:

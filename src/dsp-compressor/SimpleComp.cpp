@@ -63,6 +63,7 @@ namespace chunkware_simple
 		kneedB_ = dB;
 	}
 
+
 	//-------------------------------------------------------------
 	void SimpleComp::initRuntime( void )
 	{

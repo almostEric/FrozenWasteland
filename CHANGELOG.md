@@ -1,3 +1,21 @@
+### 2.0.5 (2022-01-03)
+-- Added Upwards compression to Manic Compression and Megalomanic Compression
+
+### 2.0.4 (2021-12-15)
+-- Fixed bug with QAR Expanders
+
+### 2.0.3 (2021-12-12)
+-- Release to work with latest VCV release (no changes)
+
+### 2.0.2 (2021-12-05)
+-- More Big fixes with fonts
+
+### 2.0.1 (2021-12-03)
+-- Bug fixes with fonts
+
+### 2.0.0 (2021-11-17)
+-- Initial v2 Release
+
 ### 1.21.3 (2021-09-11)
 -- Fixed negative scaling bug in SOL
 

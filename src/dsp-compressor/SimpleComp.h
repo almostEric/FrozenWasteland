@@ -64,6 +64,7 @@ namespace chunkware_simple
 		//void process( double &in1, double &in2 );	// compressor runtime process
 		//void process( double &in1, double &in2, double keyLinked );	// with stereo-linked key in
 		void process( double keyLinked );	// only use analysis
+		void processUpward( double keyLinked );	// only use analysis
 
 	private:
 
@@ -71,7 +72,7 @@ namespace chunkware_simple
 		double threshdB_;		// threshold (dB)
 		double kneedB_;			// knee (db)
 		double ratio_;			// ratio (compression: < 1 ; expansion: > 1)
-		
+
 		double gainReduction_;
 
 		// runtime variables
@@ -100,6 +101,7 @@ namespace chunkware_simple
 		// void process( double &in1, double &in2 );	// compressor runtime process
 		// void process( double &in1, double &in2, double &sidechain );	// with stereo-linked key in
 		void process( double sidechain );	// only use analysis
+		void processUpward( double keyLinked );	// only use analysis
 
 	private:
 

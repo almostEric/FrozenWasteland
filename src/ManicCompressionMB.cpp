@@ -36,9 +36,10 @@ struct ManicCompressionMB : Module {
 		RMS_MODE_PARAM = IN_GAIN_CV_ATTENUVERTER_PARAM + BANDS,
 		RMS_WINDOW_PARAM = RMS_MODE_PARAM + BANDS,
 		RMS_WINDOW_CV_ATTENUVERTER_PARAM = RMS_WINDOW_PARAM + BANDS,
-		// LP_FILTER_MODE_PARAM,
+        COMPRESS_DIRECTION_PARAM = RMS_WINDOW_CV_ATTENUVERTER_PARAM + BANDS,
+        // LP_FILTER_MODE_PARAM,
 		// HP_FILTER_MODE_PARAM,
-		MIX_PARAM = RMS_WINDOW_CV_ATTENUVERTER_PARAM + BANDS,
+		MIX_PARAM = COMPRESS_DIRECTION_PARAM + BANDS,
 		MIX_CV_ATTENUVERTER_PARAM,
 		BYPASS_PARAM,
 		MS_MODE_PARAM,
@@ -59,7 +60,8 @@ struct ManicCompressionMB : Module {
 		KNEE_CV_INPUT = RATIO_CV_INPUT + BANDS,
 		MAKEUP_GAIN_INPUT = KNEE_CV_INPUT + BANDS,
 		IN_GAIN_INPUT = MAKEUP_GAIN_INPUT + BANDS,
-		RMS_MODE_INPUT = IN_GAIN_INPUT + BANDS,
+        COMPRESS_DIRECTION_INPUT = IN_GAIN_INPUT + BANDS,
+		RMS_MODE_INPUT = COMPRESS_DIRECTION_INPUT + BANDS,
 		RMS_WINDOW_INPUT = RMS_MODE_INPUT + BANDS,
         BAND_SIDECHAIN_INPUT = RMS_WINDOW_INPUT + BANDS,
 		ENVELOPE_INPUT = BAND_SIDECHAIN_INPUT + BANDS,
@@ -73,7 +75,9 @@ struct ManicCompressionMB : Module {
 		MS_MODE_INPUT,
 		COMPRESS_M_INPUT,
 		COMPRESS_S_INPUT,
-		NUM_INPUTS
+        BAND_INPUT_L,
+        BAND_INPUT_R = BAND_INPUT_L + BANDS,
+		NUM_INPUTS = BAND_INPUT_R + BANDS
 	};
 	enum OutputIds {
 		OUTPUT_L,
@@ -87,9 +91,10 @@ struct ManicCompressionMB : Module {
 	enum LightIds {
         BAND_ACTIVE_LIGHT,
 		RMS_MODE_LIGHT = BAND_ACTIVE_LIGHT + BANDS,
+        COMPRESS_DIRECTION_LIGHT = RMS_MODE_LIGHT + BANDS,
 		// LP_FILTER_LIGHT,
 		// HP_FILTER_LIGHT,
-		BYPASS_LIGHT = RMS_MODE_LIGHT + BANDS,
+		BYPASS_LIGHT = COMPRESS_DIRECTION_LIGHT + BANDS, 
 		MS_MODE_LIGHT,
 		COMPRESS_MID_LIGHT,
 		COMPRESS_SIDE_LIGHT,
@@ -99,7 +104,7 @@ struct ManicCompressionMB : Module {
 
 	//Stuff for S&Hs
 	dsp::SchmittTrigger bypassTrigger,	bypassInputTrigger,midSideModeTrigger,midSideModeInputTrigger,compressMidTrigger,compressMidInputTrigger,compressSideTrigger,compressSideInputTrigger, 
-						rmsTrigger[BANDS], rmsInputTrigger[BANDS],bandEnabledTrigger[BANDS],bandEnabledInputTrigger[BANDS];
+						rmsTrigger[BANDS], rmsInputTrigger[BANDS],compressDirectionTrigger[BANDS],compressDirectionInputTrigger[BANDS],bandEnabledTrigger[BANDS],bandEnabledInputTrigger[BANDS];
 	
 
     double sampleRate;
@@ -116,9 +121,13 @@ struct ManicCompressionMB : Module {
 	bool gateFlippedBypassed =  false;
 
     bool bandEnabled[BANDS] = {true};
+    bool bandFilterBypassed[BANDS] = {false};
     bool gateFlippedBandEnabled[BANDS]= {false};
 	bool rmsMode[BANDS] = {false};
 	bool gateFlippedRMS[BANDS] =  {false};
+    bool compressDirection[BANDS] = {false};
+	bool gateFlippedCompressDirection[BANDS] = {false};
+
 
 	bool midSideMode = false;
 	bool gateFlippedMidSideMode =  false;
@@ -190,6 +199,7 @@ struct ManicCompressionMB : Module {
 
     		configButton(BAND_ACTIVE_PARAM + i ,"Band " + std::to_string(i+1) + " Active");
     		configButton(RMS_MODE_PARAM + i ,"Band " + std::to_string(i+1) + " RMS Mode");
+            configButton(COMPRESS_DIRECTION_PARAM + i,"Band " + std::to_string(i+1) + " Compression Direction");
 
             configInput(BAND_CUTOFF_INPUT + i,"Band " + std::to_string(i+1) + " Frequency");
             configInput(BAND_WIDTH_INPUT + i,"Band " + std::to_string(i+1) + " Bandwidth");
@@ -204,10 +214,13 @@ struct ManicCompressionMB : Module {
             configInput(MAKEUP_GAIN_INPUT + i, "Band " + std::to_string(i+1) + " Makeup Gain");
             configInput(RMS_MODE_INPUT + i, "Band " + std::to_string(i+1) + " RMS Mode");
             configInput(RMS_WINDOW_INPUT + i, "Band " + std::to_string(i+1) + " RMS Window");
+            configInput(COMPRESS_DIRECTION_INPUT + i, "Band " + std::to_string(i+1) + " Compression Direction");
 
     		configInput(BAND_ACTIVE_INPUT + i ,"Band " + std::to_string(i+1) + " Active");
             configInput(BAND_SIDECHAIN_INPUT + i, "Band " + std::to_string(i+1) + " Sidechain");
             configInput(ENVELOPE_INPUT + i, "Band " + std::to_string(i+1) + " Envelope");
+            configInput(BAND_INPUT_L + i, "Band " + std::to_string(i+1) + " Left");
+            configInput(BAND_INPUT_R + i, "Band " + std::to_string(i+1) + " Right");
 
     		// configOutput(OUTPUT_L, "Left");
     		configOutput(ENVELOPE_OUT + i, "Band " + std::to_string(i+1) + " Envelope");
@@ -305,12 +318,13 @@ json_t *ManicCompressionMB::dataToJson() {
     for(int i=0;i<BANDS;i++) {
         std::string buf = "bandEnabled-" + std::to_string(i) ;
     	json_object_set_new(rootJ, buf.c_str(), json_boolean(bandEnabled[i]));
-    
+
+        buf = "compressDirection-" + std::to_string(i) ;
+    	json_object_set_new(rootJ, buf.c_str(), json_boolean(compressDirection[i]));
+
         buf = "rmsMode-" + std::to_string(i) ;
     	json_object_set_new(rootJ, buf.c_str(), json_boolean(rmsMode[i]));
     }
-
-
 
 	return rootJ;
 }
@@ -347,6 +361,12 @@ void ManicCompressionMB::dataFromJson(json_t *rootJ) {
         json_t *beJ = json_object_get(rootJ, buf.c_str());
         if (beJ) {
         	bandEnabled[i] = json_boolean_value(beJ);
+        }
+
+        buf = "compressDirection-" + std::to_string(i) ;
+        json_t *cdJ = json_object_get(rootJ, buf.c_str());
+        if (cdJ) {
+        	compressDirection[i] = json_boolean_value(cdJ);
         }
 
         buf = "rmsMode-" + std::to_string(i) ;
@@ -491,6 +511,27 @@ void ManicCompressionMB::process(const ProcessArgs &args) {
             gateFlippedRMS[b]= false;
         }
         lights[RMS_MODE_LIGHT + b].value = rmsMode[b] ? 1.0 : 0.0;
+
+        float compressDirectionInput = inputs[COMPRESS_DIRECTION_INPUT + b].getVoltage();
+        if(gateMode) {
+            if(compressDirection[b] != (compressDirection[b] !=0) && gateFlippedCompressDirection[b] ) {
+                compressDirection[b] = compressDirectionInput != 0;
+                gateFlippedCompressDirection[b] = true;
+            } else if (compressDirection[b] == (compressDirection[b] !=0)) {
+                gateFlippedCompressDirection[b] = true;
+            }
+        } else {
+            if(compressDirectionInputTrigger[b].process(compressDirectionInput)) {
+                compressDirection[b] = !compressDirection[b];
+                gateFlippedCompressDirection[b] = false;
+            }
+        }
+        if(compressDirectionTrigger[b].process(params[COMPRESS_DIRECTION_PARAM + b].getValue())) {
+            compressDirection[b] = !compressDirection[b];
+            gateFlippedCompressDirection[b] = false;
+        }
+        lights[COMPRESS_DIRECTION_LIGHT + b].value = compressDirection[b] ? 1.0 : 0.0;
+
     }
 
 	float msModeInput = inputs[MS_MODE_INPUT].getVoltage();
@@ -588,12 +629,18 @@ void ManicCompressionMB::process(const ProcessArgs &args) {
     double bandTotalR = 0; 
     for(int b=0;b<BANDS;b++) {        
         if(bandEnabled[b]) {
-            double processedBandL = bandFilterBank[b*2][1][0]->process(bandFilterBank[b*2+1][1][0]->process(bandFilterBank[b*2][0][0]->process(bandFilterBank[b*2+1][0][0]->process(processedL))));
-            double processedBandR = bandFilterBank[b*2][1][1]->process(bandFilterBank[b*2+1][1][1]->process(bandFilterBank[b*2][0][1]->process(bandFilterBank[b*2+1][0][1]->process(processedR))));
+            double processedBandL = inputs[BAND_INPUT_L+b].isConnected() ?
+                inputs[BAND_INPUT_L+b].getVoltage() :
+                bandFilterBank[b*2][1][0]->process(bandFilterBank[b*2+1][1][0]->process(bandFilterBank[b*2][0][0]->process(bandFilterBank[b*2+1][0][0]->process(processedL))));
+
+            double processedBandR = inputs[BAND_INPUT_R+b].isConnected() ?
+                inputs[BAND_INPUT_R+b].getVoltage() :
+                bandFilterBank[b*2][1][1]->process(bandFilterBank[b*2+1][1][1]->process(bandFilterBank[b*2][0][1]->process(bandFilterBank[b*2+1][0][1]->process(processedR))));
             double sidechainBand = 0;
             if(usingSidechain) {
                 sidechainBand = bandFilterBank[b*2][1][2]->process(bandFilterBank[b*2+1][1][2]->process(bandFilterBank[b*2][0][2]->process(bandFilterBank[b*2+1][0][2]->process(sidechain))));
             }
+            bandFilterBypassed[b] = inputs[BAND_INPUT_L+b].isConnected() || inputs[BAND_INPUT_R+b].isConnected();
 
             float paramRatio = clamp(params[RATIO_PARAM + b].getValue() + (inputs[RATIO_CV_INPUT + b].getVoltage() * 0.1 * params[RATIO_CV_ATTENUVERTER_PARAM + b].getValue()),-0.2f,1.0f);
             ratioPercentage[b] = (paramRatio+0.2) / 1.2f;
@@ -645,7 +692,10 @@ void ManicCompressionMB::process(const ProcessArgs &args) {
                     detectorInput = sum * inputGain;
                 }
                 outputs[DETECTOR_OUTPUT + b].setVoltage(detectorInput);
-                compressorRms[b].process(inputs[BAND_SIDECHAIN_INPUT + b].isConnected() ? inputs[BAND_SIDECHAIN_INPUT + b].getVoltage() : detectorInput);
+                if(!compressDirection[b])
+                    compressorRms[b].process(inputs[BAND_SIDECHAIN_INPUT + b].isConnected() ? inputs[BAND_SIDECHAIN_INPUT + b].getVoltage() : detectorInput);
+                else
+                    compressorRms[b].processUpward(inputs[BAND_SIDECHAIN_INPUT + b].isConnected() ? inputs[BAND_SIDECHAIN_INPUT + b].getVoltage() : detectorInput);
                 calculatedGainReduction = compressorRms[b].getGainReduction();
             } else {
                 compressor[b].setRatio(ratio[b]);
@@ -665,7 +715,10 @@ void ManicCompressionMB::process(const ProcessArgs &args) {
                     detectorInput =  link * inputGain;
                 }
                 outputs[DETECTOR_OUTPUT + b].setVoltage(detectorInput);
-                compressor[b].process(inputs[BAND_SIDECHAIN_INPUT + b].isConnected() ? inputs[BAND_SIDECHAIN_INPUT + b].getVoltage() : detectorInput);
+                if(!compressDirection[b])
+                    compressor[b].process(inputs[BAND_SIDECHAIN_INPUT + b].isConnected() ? inputs[BAND_SIDECHAIN_INPUT + b].getVoltage() : detectorInput);
+                else
+                    compressor[b].processUpward(inputs[BAND_SIDECHAIN_INPUT + b].isConnected() ? inputs[BAND_SIDECHAIN_INPUT + b].getVoltage() : detectorInput);
                 calculatedGainReduction = compressor[b].getGainReduction();
             }		
             switch(envelopeMode) {
@@ -695,7 +748,8 @@ void ManicCompressionMB::process(const ProcessArgs &args) {
                         break;
                 }                
             }
-            
+            if(compressDirection[b])
+                makeupGain = -makeupGain;
             double finalGainLin = chunkware_simple::dB2lin(makeupGain-gainReduction[b]);
 
             double bandOutputL, bandOutputR;
@@ -801,7 +855,7 @@ struct MCDisplayFiltersResponse : FramebufferWidget {
 
     for(int b=0;b<BANDS;b++) {
 
-      if(module->bandEnabled[b]) {
+      if(module->bandEnabled[b] && !module->bandFilterBypassed[b]) {
         float r = 136 + b * 38;
         float g = 176 + b * 19;
         float bl = 255 - b * 19;
@@ -853,7 +907,7 @@ struct ManicCompressionMBCompressionCurve : FramebufferWidget {
 	}
 
 
-	void drawResponse(const DrawArgs &args, int b, double threshold, double ratio, double knee) 
+	void drawResponse(const DrawArgs &args, int b, double threshold, double ratio, double knee, bool direction) 
 	{
 		nvgStrokeColor(args.vg, module->inputs[module->ENVELOPE_INPUT+b].isConnected() ? nvgRGBA(0xe0, 0x80, 0x10, 0xcf) : nvgRGBA(0xe0, 0xe0, 0x10, 0xff));
 		nvgStrokeWidth(args.vg, 2.0);
@@ -861,29 +915,54 @@ struct ManicCompressionMBCompressionCurve : FramebufferWidget {
 
 		threshold = 50.0 + threshold; // reverse it
 
-		double kneeThreshold = threshold - (knee / 2.0);
+        nvgMoveTo(args.vg,1+ (b*30),99);
+        if (!direction) { //downward compression
+            float kneeThreshold = threshold - (knee / 2.0f);
 
-		double lx = 1+(kneeThreshold*1.8);
-		double ly = 99-(kneeThreshold*1.8);
+            float lx = 1+(kneeThreshold*1.8f);
+            float ly = 99-(kneeThreshold*1.8f);
 
-		nvgMoveTo(args.vg,1+ (b*30),99);
-		nvgLineTo(args.vg,lx+(b*30),ly);
-		for(int kx=0;kx<knee*1.8;kx++) {
-			double kxdB = kx/1.8 - knee/2.0;	
-			double a = kxdB + knee/2.0;
-			double gain = (((1/ratio)-1.0) * a * a) / (2 * knee) + kxdB + threshold ; 
+            nvgLineTo(args.vg,lx+(b*30),ly);
+            for(int kx=0;kx<knee*1.8f;kx++) {
+                float kxdB = kx/1.8f - knee/2.0f;	
+                float a = kxdB + knee/2.0f;
+                float gain = (((1/ratio)-1.0f) * a * a) / (2 * knee) + kxdB + threshold ; 
 
-			// fprintf(stderr, "ratio: %f  knee: %f   db: %f  a: %f, ar: %f\n", ratio,knee,kx/3.0,a,gain);
-			double ky = gain*1.8;
-			// ly = oly-ky;
-			nvgLineTo(args.vg,kx+lx+(b*30),99.0-ky);
-		}
-        double endPoint = lx+(knee*1.8);
-		double finalGain = threshold + (50.0-threshold) / ratio;
-		double ey = std::min(finalGain * 1.8,99.0);
-        double ex = std::min((99.0-endPoint) * ratio,99-endPoint) + endPoint + (b*30);
-			// fprintf(stderr, "ratio: %f  fg: %f   ey: %f \n", ratio,finalGain,ey);
-		nvgLineTo(args.vg,ex,99.0-ey);
+                // fprintf(stderr, "ratio: %f  knee: %f   db: %f  a: %f, ar: %f\n", ratio,knee,kx/3.0,a,gain);
+                float ky = gain*1.8;
+                // ly = oly-ky;
+                nvgLineTo(args.vg,kx+lx+(b*30),99.0-ky);
+            }
+            float endPoint = lx+(knee*1.8f);
+            float finalGain = threshold + (50.0f-threshold) / ratio;
+            float ey = std::min(finalGain * 1.8f,99.0f);
+            float ex = std::min((99.0f-endPoint) * ratio,99.0-endPoint) + endPoint + (b*30);
+                // fprintf(stderr, "ratio: %f  fg: %f   ey: %f \n", ratio,finalGain,ey);
+            nvgLineTo(args.vg,ex,99.0-ey);
+        } else {
+            float ey = threshold * 1.8f;
+			float ex = 8 + (threshold / ratio * 1.8f);
+			nvgLineTo(args.vg,ex+(b*30),99.0-ey);
+
+			// double kneeThreshold = threshold - (knee / 2.0);
+			// double lx = 8+(kneeThreshold*1.8);
+			// double ly = 119-(kneeThreshold*1.8);
+
+			// nvgLineTo(args.vg,lx,ly);
+
+			// for(int kx=0;kx<knee*1.8;kx++) {
+			// 	double kxdB = kx/1.8 - knee/2.0;	
+			// 	double a = kxdB + knee/2.0;
+                // float gain = ((1.0f - (1/ratio)) * a * a) / (2 * knee) + kxdB + threshold ; 
+
+			// 	fprintf(stderr, "threshold: %f  ratio: %f  knee: %f kx:%i  db: %f  a: %f, gain: %f\n", threshold,ratio,knee,kx,kxdB,a,gain);
+			// 	double ky = gain*1.8;
+			// 	// ly = oly-ky;
+			// 	nvgLineTo(args.vg,kx+ex,119.0-(ey+ky));
+			// }
+
+			 nvgLineTo(args.vg,ex+(90.0-ey)+(b*30),29.0);
+        }
 		nvgStroke(args.vg);
 	}
 
@@ -897,7 +976,7 @@ struct ManicCompressionMBCompressionCurve : FramebufferWidget {
 
         for(int band=0;band<BANDS;band++) {
             if(module->bandEnabled[band]) {
-                drawResponse(args,band,module->threshold[band],module->ratio[band],module->knee[band]);
+                drawResponse(args,band,module->threshold[band],module->ratio[band],module->knee[band],module->compressDirection[band]);
             }
         }		
 	}
@@ -971,7 +1050,7 @@ struct ManicCompressionMBWidget : ModuleWidget {
 		setPanel(APP->window->loadSvg(asset::plugin(pluginInstance, "res/ManicCompressionMB.svg")));
 		
 		addChild(createWidget<ScrewSilver>(Vec(RACK_GRID_WIDTH - 14, 0)));	
-		addChild(createWidget<ScrewSilver>(Vec(box.size.x - 2 * RACK_GRID_WIDTH + 14, 0)));
+		// addChild(createWidget<ScrewSilver>(Vec(box.size.x - 2 * RACK_GRID_WIDTH + 14, 0)));
 		addChild(createWidget<ScrewSilver>(Vec(RACK_GRID_WIDTH - 14, RACK_GRID_HEIGHT - RACK_GRID_WIDTH)));
 		addChild(createWidget<ScrewSilver>(Vec(box.size.x - 2 * RACK_GRID_WIDTH + 14, RACK_GRID_HEIGHT - RACK_GRID_WIDTH)));
 
@@ -1044,6 +1123,10 @@ struct ManicCompressionMBWidget : ModuleWidget {
             addParam(ratioParam);							
             addParam(createParam<RoundReallySmallFWKnob>(Vec(100 + 255 + (b * 140), 153), module, ManicCompressionMB::RATIO_CV_ATTENUVERTER_PARAM + b));
             addInput(createInput<FWPortInReallySmall>(Vec(104 + 255 + (b * 140), 138), module, ManicCompressionMB::RATIO_CV_INPUT + b));
+
+            addParam(createParam<LEDButton>(Vec(378 + (b * 140), 138), module, ManicCompressionMB::COMPRESS_DIRECTION_PARAM + b));
+            addChild(createLight<LargeLight<BlueLight>>(Vec(379.5 + (b * 140), 139.5), module, ManicCompressionMB::COMPRESS_DIRECTION_LIGHT + b));
+            addInput(createInput<FWPortInReallySmall>(Vec(381 + (b * 140), 158), module, ManicCompressionMB::COMPRESS_DIRECTION_INPUT + b));
 
 
             addParam(createParam<LEDButton>(Vec(10 + 255 + (b * 140), 185), module, ManicCompressionMB::RMS_MODE_PARAM + b));
@@ -1120,11 +1203,15 @@ struct ManicCompressionMBWidget : ModuleWidget {
             addInput(createInput<FWPortInReallySmall>(Vec(104 + 255 + (b * 140), 344), module, ManicCompressionMB::MAKEUP_GAIN_INPUT + b));
 
 
-            addOutput(createOutput<PJ301MPort>(Vec(955 , 25 + b*32), module, ManicCompressionMB::ENVELOPE_OUT + b));
-    		addInput(createInput<PJ301MPort>(Vec(995, 25 + b*32), module, ManicCompressionMB::ENVELOPE_INPUT + b));
+    		addInput(createInput<PJ301MPort>(Vec(965, 25 + b*32), module, ManicCompressionMB::BAND_SIDECHAIN_INPUT + b));
+    		addOutput(createOutput<PJ301MPort>(Vec(1000, 25 + b*32), module, ManicCompressionMB::DETECTOR_OUTPUT + b));
 
-    		addOutput(createOutput<PJ301MPort>(Vec(955, 210 + b*32), module, ManicCompressionMB::DETECTOR_OUTPUT + b));
-    		addInput(createInput<PJ301MPort>(Vec(995, 210 + b*32), module, ManicCompressionMB::BAND_SIDECHAIN_INPUT + b));
+    		addInput(createInput<PJ301MPort>(Vec(1035, 25 + b*32), module, ManicCompressionMB::ENVELOPE_INPUT + b));
+            addOutput(createOutput<PJ301MPort>(Vec(1070 , 25 + b*32), module, ManicCompressionMB::ENVELOPE_OUT + b));
+
+    		addInput(createInput<PJ301MPort>(Vec(965, 210 + b*32), module, ManicCompressionMB::BAND_INPUT_L + b));
+    		addInput(createInput<PJ301MPort>(Vec(995, 210 + b*32), module, ManicCompressionMB::BAND_INPUT_R + b));
+
             addOutput(createOutput<PJ301MPort>(Vec(1035 , 210 + b*32), module, ManicCompressionMB::BAND_OUTPUT_L + b));
             addOutput(createOutput<PJ301MPort>(Vec(1065 , 210 + b*32), module, ManicCompressionMB::BAND_OUTPUT_R + b));
 
