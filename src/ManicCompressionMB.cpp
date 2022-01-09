@@ -643,6 +643,8 @@ void ManicCompressionMB::process(const ProcessArgs &args) {
             bandFilterBypassed[b] = inputs[BAND_INPUT_L+b].isConnected() || inputs[BAND_INPUT_R+b].isConnected();
 
             float paramRatio = clamp(params[RATIO_PARAM + b].getValue() + (inputs[RATIO_CV_INPUT + b].getVoltage() * 0.1 * params[RATIO_CV_ATTENUVERTER_PARAM + b].getValue()),-0.2f,1.0f);
+            if(compressDirection[b] && paramRatio < 0.0)
+                paramRatio = 0.0;                
             ratioPercentage[b] = (paramRatio+0.2) / 1.2f;
             ratio[b] = pow(20.0,paramRatio);
             threshold[b] = clamp(params[THRESHOLD_PARAM + b].getValue() + (inputs[THRESHOLD_CV_INPUT + b].getVoltage() * 3.0 * params[THRESHOLD_CV_ATTENUVERTER_PARAM + b].getValue()),-50.0f,0.0f);
@@ -915,7 +917,7 @@ struct ManicCompressionMBCompressionCurve : FramebufferWidget {
 
 		threshold = 50.0 + threshold; // reverse it
 
-        nvgMoveTo(args.vg,1+ (b*30),99);
+        nvgMoveTo(args.vg,1+(b*30),99);
         if (!direction) { //downward compression
             float kneeThreshold = threshold - (knee / 2.0f);
 
@@ -929,19 +931,18 @@ struct ManicCompressionMBCompressionCurve : FramebufferWidget {
                 float gain = (((1/ratio)-1.0f) * a * a) / (2 * knee) + kxdB + threshold ; 
 
                 // fprintf(stderr, "ratio: %f  knee: %f   db: %f  a: %f, ar: %f\n", ratio,knee,kx/3.0,a,gain);
-                float ky = gain*1.8;
-                // ly = oly-ky;
+                float ky = std::max(std::min(gain*1.8f,90.0f),0.0f);
+
                 nvgLineTo(args.vg,kx+lx+(b*30),99.0-ky);
             }
-            float endPoint = lx+(knee*1.8f);
             float finalGain = threshold + (50.0f-threshold) / ratio;
             float ey = std::min(finalGain * 1.8f,99.0f);
-            float ex = std::min((99.0f-endPoint) * ratio,99.0-endPoint) + endPoint + (b*30);
+            float ex = 99 + (b*30);
                 // fprintf(stderr, "ratio: %f  fg: %f   ey: %f \n", ratio,finalGain,ey);
             nvgLineTo(args.vg,ex,99.0-ey);
         } else {
             float ey = threshold * 1.8f;
-			float ex = 8 + (threshold / ratio * 1.8f);
+			float ex = 1+(threshold / ratio * 1.8f);
 			nvgLineTo(args.vg,ex+(b*30),99.0-ey);
 
 			// double kneeThreshold = threshold - (knee / 2.0);
@@ -961,7 +962,7 @@ struct ManicCompressionMBCompressionCurve : FramebufferWidget {
 			// 	nvgLineTo(args.vg,kx+ex,119.0-(ey+ky));
 			// }
 
-			 nvgLineTo(args.vg,ex+(90.0-ey)+(b*30),29.0);
+			 nvgLineTo(args.vg,ex+(90.0-ey)+(b*30),9.0);
         }
 		nvgStroke(args.vg);
 	}
@@ -1002,15 +1003,26 @@ struct ManicCompressionMBDisplay : FramebufferWidget {
         nvgFill(args.vg);
     }
 
-	void drawGainReduction(const DrawArgs &args, Vec pos, float gainReduction) {
+	void drawGainReduction(const DrawArgs &args, Vec pos, float gainReduction, bool compressDirection) {
 
 		double gainDirection = sgn(gainReduction);
+		double gainReductionDegree;
 		float scaling = 0.88;
-		if (gainReduction >=10) 
-			scaling =0.76;
-		gainReduction = 63.25-std::pow(std::min(std::abs(gainReduction),20.0f),scaling) * gainDirection; //scale meter
-		
-		double position = 2.0 * M_PI / 60.0 * gainReduction - M_PI / 2.0; // Rotate 90 degrees
+		if(!compressDirection) { //False is normal, downward compression
+			if (gainReduction >=10) 
+				scaling =0.76;
+			gainReductionDegree = 63.25-std::pow(std::min(std::abs(gainReduction),20.0f),scaling) * gainDirection; //scale meter
+		} else {
+			float adjustedGR = 0;
+			gainReduction = std::max(gainReduction,-30.0f); // limit of meter
+			scaling = 1.26 - ((gainReduction / -15.0) * 0.32);
+			if (gainReduction <-10.0) {
+				adjustedGR = std::abs(gainReduction+10.0f);
+				scaling = 1.037 - (std::max(std::log(adjustedGR),0.0f) * 0.076);
+			}
+			gainReductionDegree = 53.15-std::pow(std::abs(gainReduction),scaling) * gainDirection; //scale meter			
+		}
+		double position = 2.0 * M_PI / 60.0 * gainReductionDegree - M_PI / 2.0; // Rotate 90 degrees
 		double cx= cos(position);
 		double cy= sin(position);
 
@@ -1037,13 +1049,15 @@ struct ManicCompressionMBDisplay : FramebufferWidget {
         if(!module->bandEnabled[band]) {
             drawMeterOffBox(args, Vec(118, 37), module->vuDisplayFadeTimer[band]);
         }
-		drawGainReduction(args, Vec(118, 37), module->bandEnabled[band] ? module->gainReduction[band] : 0.0);
+		drawGainReduction(args, Vec(125, 37), module->bandEnabled[band] ? module->gainReduction[band] : 0.0,module->compressDirection[band]);
 		
 	}
 };
 
 
 struct ManicCompressionMBWidget : ModuleWidget {
+    SvgWidget* gainAdditionMeter[BANDS];
+
 	ManicCompressionMBWidget(ManicCompressionMB *module) {
 		setModule(module);
 
@@ -1076,6 +1090,15 @@ struct ManicCompressionMBWidget : ModuleWidget {
 
 
         for(int b=0;b<BANDS;b++) {
+
+            {
+    			gainAdditionMeter[b] = new SvgWidget();
+	    		gainAdditionMeter[b]->setSvg(APP->window->loadSvg(asset::plugin(pluginInstance, "res/ComponentLibrary/GainAdditionMeter.svg")));
+                gainAdditionMeter[b]->box.pos = Vec(263.5 + (b*140), 15.5);
+                gainAdditionMeter[b]->visible = false;
+                addChild(gainAdditionMeter[b]);
+            }
+
             {
                 ManicCompressionMBDisplay *display = new ManicCompressionMBDisplay();
                 display->module = module;
@@ -1283,9 +1306,16 @@ struct ManicCompressionMBWidget : ModuleWidget {
 			mi->addItem(OptionMenuItem("Exponential", [module]() { return module->envelopeMode == 2; }, [module]() { module->envelopeMode = 2; }));
 			//OptionsMenuItem::addToMenu(mi, menu);
 			menu->addChild(mi);
-		}
+		}		
+	}
 
-			
+    void step() override {
+		if (module) {
+            for(int b=0;b<BANDS;b++) {
+			    gainAdditionMeter[b]->visible  = ((ManicCompressionMB*)module)->compressDirection[b];
+            }
+		}
+		Widget::step();
 	}
 };
 

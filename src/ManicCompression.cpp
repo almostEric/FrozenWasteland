@@ -712,15 +712,29 @@ struct ManicCompressionDisplay : TransparentWidget {
 		nvgStroke(args.vg);
 	}
 
-	void drawGainReduction(const DrawArgs &args, Vec pos, float gainReduction) {
+	void drawGainReduction(const DrawArgs &args, Vec pos, float gainReduction, bool compressDirection) {
 
 		double gainDirection = sgn(gainReduction);
+		double gainReductionDegree;
 		float scaling = 0.88;
-		if (gainReduction >=10) 
-			scaling =0.76;
-		gainReduction = 63.25-std::pow(std::min(std::abs(gainReduction),20.0f),scaling) * gainDirection; //scale meter
-		
-		double position = 2.0 * M_PI / 60.0 * gainReduction - M_PI / 2.0; // Rotate 90 degrees
+		if(!compressDirection) { //False is normal, downward compression
+			if (gainReduction >=10) 
+				scaling =0.76;
+			gainReductionDegree = 63.25-std::pow(std::min(std::abs(gainReduction),20.0f),scaling) * gainDirection; //scale meter
+		} else {
+			float adjustedGR = 0;
+			gainReduction = std::max(gainReduction,-30.0f); // limit of meter
+			scaling = 1.26 - ((gainReduction / -15.0) * 0.32);
+			if (gainReduction <-10.0) {
+				adjustedGR = std::abs(gainReduction+10.0f);
+				scaling = 1.037 - (std::max(std::log(adjustedGR),0.0f) * 0.076);
+			}
+				
+			gainReductionDegree = 52.15-std::pow(std::abs(gainReduction),scaling) * gainDirection; //scale meter
+			// fprintf(stderr, "gain: %f  ag: %f  log:%f scaling:%f\n", gainReduction,adjustedGR,std::log(adjustedGR),scaling);
+
+		}
+		double position = 2.0 * M_PI / 60.0 * gainReductionDegree - M_PI / 2.0; // Rotate 90 degrees
 		double cx= cos(position);
 		double cy= sin(position);
 
@@ -746,13 +760,15 @@ struct ManicCompressionDisplay : TransparentWidget {
 			return;
 
 		drawResponse(args,module->threshold,module->ratio,module->knee,module->compressDirection);
-		drawGainReduction(args, Vec(118, 37), module->gainReduction);
+		drawGainReduction(args, Vec(118, 37), module->gainReduction,module->compressDirection);
 		// drawDivision(args, Vec(104, 47), module->division);
 	}
 };
 
 
 struct ManicCompressionWidget : ModuleWidget {
+	SvgWidget* gainAdditionMeter;
+
 	ManicCompressionWidget(ManicCompression *module) {
 		setModule(module);
 
@@ -763,6 +779,14 @@ struct ManicCompressionWidget : ModuleWidget {
 		addChild(createWidget<ScrewSilver>(Vec(RACK_GRID_WIDTH - 14, RACK_GRID_HEIGHT - RACK_GRID_WIDTH)));
 		addChild(createWidget<ScrewSilver>(Vec(box.size.x - 2 * RACK_GRID_WIDTH + 14, RACK_GRID_HEIGHT - RACK_GRID_WIDTH)));
 
+		{
+			gainAdditionMeter = new SvgWidget();
+			gainAdditionMeter->setSvg(APP->window->loadSvg(asset::plugin(pluginInstance, "res/ComponentLibrary/GainAdditionMeter.svg")));
+			gainAdditionMeter->box.pos = Vec(119, 23.5);
+			gainAdditionMeter->visible = false;
+			addChild(gainAdditionMeter);
+		}
+
 
 		{
 			ManicCompressionDisplay *display = new ManicCompressionDisplay();
@@ -771,6 +795,7 @@ struct ManicCompressionWidget : ModuleWidget {
 			display->box.size = Vec(box.size.x, box.size.y);
 			addChild(display);
 		}
+
 
 
 		ParamWidget* thresholdParam = createParam<RoundSmallFWKnob>(Vec(15, 140), module, ManicCompression::THRESHOLD_PARAM);
@@ -948,6 +973,13 @@ struct ManicCompressionWidget : ModuleWidget {
 			//OptionsMenuItem::addToMenu(mi, menu);
 			menu->addChild(mi);
 		}
+	}
+
+	void step() override {
+		if (module) {
+			gainAdditionMeter->visible  = ((ManicCompression*)module)->compressDirection;
+		}
+		Widget::step();
 	}
 };
 

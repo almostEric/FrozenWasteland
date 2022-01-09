@@ -1,3 +1,6 @@
+### 2.0.6 (2022-01-10)
+-- Fixed metering issues with Manic Compression and Megalomanic Compression
+
 ### 2.0.5 (2022-01-03)
 -- Added Upwards compression to Manic Compression and Megalomanic Compression
 
