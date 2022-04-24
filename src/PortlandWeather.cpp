@@ -342,6 +342,7 @@ struct PortlandWeather : Module {
 		configParam(GROOVE_AMOUNT_PARAM, 0.0f, 1.0f, 1.0f,"Groove Amount","%",0,100);
 
 		configParam(FEEDBACK_PARAM, 0.0f, 1.0f, 0.0f,"Feedback","%",0,100);
+		configParam(DUCKING_FB_AMOUNT_PARAM, 0.0f, 1.0f, 0.0f,"Feedback Ducking","%",0,100);
 		configParam(FEEDBACK_TONE_PARAM, 0.0f, 1.0f, 0.5f,"Feedback Tone","%",0,100);
 
 		configParam(FEEDBACK_TAP_L_PARAM, 0.0f, 17.0f, 15.0f,"Feedback L Tap");

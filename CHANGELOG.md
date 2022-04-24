@@ -1,3 +1,7 @@
+### 2.0.7 (2022-04-25)
+-- Fixed issue with QAR running as a VST
+-- Fixed minor label issue on PW
+
 ### 2.0.6 (2022-01-10)
 -- Fixed metering issues with Manic Compression and Megalomanic Compression
 

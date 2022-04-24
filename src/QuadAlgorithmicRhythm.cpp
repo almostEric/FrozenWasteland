@@ -314,6 +314,7 @@ struct QuadAlgorithmicRhythm : Module {
 
 	bool hardReset = false;
 	bool resetTriggerisHardReset = false;
+	int modsKeys = 0;
 
 	//percentages
 	float stepsPercentage[TRACK_COUNT] = {0};
@@ -889,8 +890,8 @@ struct QuadAlgorithmicRhythm : Module {
 		bool resetKey = resetKeyTrigger.process(params[RESET_PARAM].getValue());
 		if( resetInput || resetKey) {
 
-			int mods = APP->window->getMods();
-			hardReset = (resetKey &&  (mods & GLFW_MOD_SHIFT)) || (resetInput && resetTriggerisHardReset);
+			
+			hardReset = (resetKey &&  (modsKeys & GLFW_MOD_SHIFT)) || (resetInput && resetTriggerisHardReset);
 
 			if(hardReset) { // With shift key down, do a full reset
 				for(int trackNumber=0;trackNumber<TRACK_COUNT;trackNumber++)
@@ -2802,6 +2803,11 @@ struct QuadAlgorithmicRhythmWidget : ModuleWidget {
 		addParam(createParam<LEDButton>(Vec(121, 292.5), module, QuadAlgorithmicRhythm::SAVE_SCENE_PARAM));
 		addChild(createLight<LargeLight<BlueLight>>(Vec(122.5, 294), module, QuadAlgorithmicRhythm::SAVE_MODE_LIGHT));
 	}	
+
+	void step() override {
+		modsKeys = APP->window->getMods();
+		step();
+	}
 
 	struct BPMX4Item : MenuItem {
 		QuadAlgorithmicRhythm *module;

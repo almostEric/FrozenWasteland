@@ -679,7 +679,6 @@ struct ManicCompressionDisplay : TransparentWidget {
 
 				// fprintf(stderr, "threshold: %f  ratio: %f  knee: %f kx:%i  db: %f  a: %f, gain: %f\n", threshold,ratio,knee,kx,kxdB,a,gain);
 				float ky = std::max(std::min(gain*1.8f,90.0f),0.0f);
-				// ly = oly-ky;
 				nvgLineTo(args.vg,std::min(kx+lx,99.f),119.0-ky);
 			}
 			double finalGain = threshold + (50.0-threshold) / ratio;
