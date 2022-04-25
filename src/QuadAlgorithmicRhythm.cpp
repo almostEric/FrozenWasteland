@@ -2805,7 +2805,9 @@ struct QuadAlgorithmicRhythmWidget : ModuleWidget {
 	}	
 
 	void step() override {
-		modsKeys = APP->window->getMods();
+		if(module_) {
+			module_->modsKeys = APP->window->getMods();
+		}
 		step();
 	}
 
