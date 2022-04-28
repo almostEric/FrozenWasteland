@@ -2808,7 +2808,6 @@ struct QuadAlgorithmicRhythmWidget : ModuleWidget {
 		if(module_) {
 			module_->modsKeys = APP->window->getMods();
 		}
-		step();
 	}
 
 	struct BPMX4Item : MenuItem {
