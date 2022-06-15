@@ -431,7 +431,7 @@ When they are connected this way, the Clock, Mute and Reset signals, and Eoc out
 
 ## QAR Conditional Expander
 
-![QAR Conditional Expander](./doc/QARC.png)
+![QAR Conditional Expander](./doc/qarc.png)
 
 - Expander Module for Quad Algorithmic Rhythm
 - Basically a CV controllable per-step/beat clock divider
