@@ -602,10 +602,10 @@ void ManicCompression::process(const ProcessArgs &args) {
 			outputs[ENVELOPE_OUT].setVoltage(clamp(chunkware_simple::dB2lin(gainReduction) / 3.0f,-10.0f,10.0f));
 			break;
 		case 1 : // linear
-			outputs[ENVELOPE_OUT].setVoltage(chunkware_simple::dB2lin(gainReduction));
+			outputs[ENVELOPE_OUT].setVoltage(clamp(chunkware_simple::dB2lin(gainReduction),-10.0f,10.0f));
 			break;
 		case 2 : // exponential
-			outputs[ENVELOPE_OUT].setVoltage(gainReduction);
+			outputs[ENVELOPE_OUT].setVoltage(clamp(gainReduction,-10.0f,10.0f));
 			break;
 	}
 	if(compressDirection)
@@ -631,8 +631,8 @@ void ManicCompression::process(const ProcessArgs &args) {
 			
 		}
 
-		outputL = lerp(originalInputL,processedOutputL,mix);
-		outputR = lerp(originalInputR,processedOutputR,mix);
+		outputL = lerp(originalInputL,clamp(processedOutputL,-10.0f,10.0f),mix);
+		outputR = lerp(originalInputR,clamp(processedOutputR,-10.0f,10.0f),mix);
 	} else {
 		outputL = originalInputL;
 		outputR = originalInputR;

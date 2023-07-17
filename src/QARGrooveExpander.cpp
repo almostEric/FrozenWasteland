@@ -12,7 +12,8 @@
 #define PASSTHROUGH_RIGHT_VARIABLE_COUNT 9
 #define STEP_LEVEL_PARAM_COUNT 6
 #define TRACK_LEVEL_PARAM_COUNT TRACK_COUNT * 17
-#define PASSTHROUGH_OFFSET MAX_STEPS * TRACK_COUNT * STEP_LEVEL_PARAM_COUNT + TRACK_LEVEL_PARAM_COUNT
+#define QAR_GRID_VALUES MAX_STEPS
+#define PASSTHROUGH_OFFSET MAX_STEPS * TRACK_COUNT * STEP_LEVEL_PARAM_COUNT + TRACK_LEVEL_PARAM_COUNT + QAR_GRID_VALUES
 
 
 struct QARGrooveExpander : Module {
@@ -71,10 +72,12 @@ struct QARGrooveExpander : Module {
 	bool trackDirty[TRACK_COUNT] = {0};
 
 	float grooveLength;
+	float gridValues[QAR_GRID_VALUES];
 
 	float sceneData[NBR_SCENES][49] = {{0}};
 	int sceneChangeMessage = 0;
 
+	int someOffset = 0; //TOTAL HACK!!!
 
     float lerp(float v0, float v1, float t) {
 	  return (1 - t) * v0 + t * v1;
@@ -281,8 +284,8 @@ struct QARGrooveExpander : Module {
 		bool motherPresent = (leftExpander.module && (leftExpander.module->model == modelQuadAlgorithmicRhythm || leftExpander.module->model == modelQARWellFormedRhythmExpander || 
 								leftExpander.module->model == modelQARProbabilityExpander || leftExpander.module->model == modelQARGrooveExpander || 
 								leftExpander.module->model == modelQARWarpedSpaceExpander || leftExpander.module->model == modelQARIrrationalityExpander || 
-								leftExpander.module->model == modelQARConditionalExpander ||
-								leftExpander.module->model == modelPWAlgorithmicExpander));
+								leftExpander.module->model == modelQARConditionalExpander || leftExpander.module->model == modelQARGridControlExpander ||
+								leftExpander.module->model == modelQARGridControlExpander));
 		//lights[CONNECTED_LIGHT].value = motherPresent;
 		if (motherPresent) {
 			// To Mother
@@ -301,13 +304,18 @@ struct QARGrooveExpander : Module {
 			std::fill(messagesToMother, messagesToMother+PASSTHROUGH_OFFSET + PASSTHROUGH_LEFT_VARIABLE_COUNT + PASSTHROUGH_RIGHT_VARIABLE_COUNT, 0.0);
 
 			//If another expander is present, get its values (we can overwrite them)
-			bool anotherExpanderPresent = (rightExpander.module && (rightExpander.module->model == modelQARWellFormedRhythmExpander || rightExpander.module->model == modelQARGrooveExpander || 
+			bool anotherExpanderPresent = (rightExpander.module && (rightExpander.module->model == modelQARWellFormedRhythmExpander || 
+											rightExpander.module->model == modelQARGrooveExpander || 
 											rightExpander.module->model == modelQARProbabilityExpander || rightExpander.module->model == modelQARIrrationalityExpander || 
 											rightExpander.module->model == modelQARWarpedSpaceExpander || 
 											rightExpander.module->model == modelQARConditionalExpander || 
-											rightExpander.module->model == modelQuadAlgorithmicRhythm));
+											rightExpander.module->model == modelQuadAlgorithmicRhythm ||
+											rightExpander.module->model == modelQARGridControlExpander));
+			bool gridExpanderPresent = false;
 			if(anotherExpanderPresent)
 			{			
+				gridExpanderPresent = rightExpander.module->model == modelQARGridControlExpander;
+
 				float *messagesFromExpander = (float*)rightExpander.consumerMessage;
 				float *messageToExpander = (float*)(rightExpander.module->leftExpander.producerMessage);
 
@@ -316,6 +324,14 @@ struct QARGrooveExpander : Module {
 				}
 				for(int i=0;i<TRACK_COUNT;i++) {
 					trackDirty[i] = messagesFromExpander[i] || (!QARExpanderDisconnectReset);
+				}
+
+				if(gridExpanderPresent) {
+					int gridOffset = PASSTHROUGH_OFFSET - MAX_STEPS;
+					// fprintf(stderr, "into Groove Expanded: %hu \n", gridOffset);
+					std::copy(messagesFromExpander + gridOffset,messagesFromExpander+gridOffset+QAR_GRID_VALUES,gridValues);
+				} else {
+					std::fill(gridValues,gridValues+QAR_GRID_VALUES,0);
 				}
 
 				QARExpanderDisconnectReset = true;
@@ -364,7 +380,9 @@ struct QARGrooveExpander : Module {
                     messagesToMother[TRACK_COUNT * 9 + i] = gaussianDistribution;
                     
     				for (int j = 0; j < MAX_STEPS; j++) {
-                        float initialSwingAmount = clamp(params[STEP_1_SWING_AMOUNT_PARAM+j].getValue() + (inputs[STEP_1_SWING_AMOUNT_INPUT + j].isConnected() ? inputs[STEP_1_SWING_AMOUNT_INPUT + j].getVoltage() / 10 * params[STEP_1_SWING_CV_ATTEN_PARAM + j].getValue() : 0.0f),-0.5,0.5f);
+                        float initialSwingAmount = clamp((gridExpanderPresent ? (gridValues[j] * 2.f -1.f) : params[STEP_1_SWING_AMOUNT_PARAM+j].getValue()) + 
+													(inputs[STEP_1_SWING_AMOUNT_INPUT + j].isConnected() ? inputs[STEP_1_SWING_AMOUNT_INPUT + j].getVoltage() / 10 * params[STEP_1_SWING_CV_ATTEN_PARAM + j].getValue() : 0.0f)													
+													,-0.5,0.5f);
 						if(initialSwingAmount != lastStepSwing[j]) {
 							isDirty = true;
 							lastStepSwing[j] = initialSwingAmount;

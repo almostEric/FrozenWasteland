@@ -10,7 +10,8 @@
 #define PASSTHROUGH_RIGHT_VARIABLE_COUNT 9
 #define STEP_LEVEL_PARAM_COUNT 6
 #define TRACK_LEVEL_PARAM_COUNT TRACK_COUNT * 17
-#define PASSTHROUGH_OFFSET MAX_STEPS * TRACK_COUNT * STEP_LEVEL_PARAM_COUNT + TRACK_LEVEL_PARAM_COUNT
+#define QAR_GRID_VALUES MAX_STEPS
+#define PASSTHROUGH_OFFSET MAX_STEPS * TRACK_COUNT * STEP_LEVEL_PARAM_COUNT + TRACK_LEVEL_PARAM_COUNT + QAR_GRID_VALUES
 
 
 struct QARWellFormedRhythmExpander : Module {
@@ -202,9 +203,9 @@ struct QARWellFormedRhythmExpander : Module {
 
 		bool motherPresent = (leftExpander.module && (leftExpander.module->model == modelQuadAlgorithmicRhythm || leftExpander.module->model == modelQARWellFormedRhythmExpander || 
 								leftExpander.module->model == modelQARProbabilityExpander || leftExpander.module->model == modelQARGrooveExpander || 
-								leftExpander.module->model == modelQARWarpedSpaceExpander || leftExpander.module->model == modelQARIrrationalityExpander ||
-								leftExpander.module->model == modelQARConditionalExpander || 
-								leftExpander.module->model == modelPWAlgorithmicExpander));
+								leftExpander.module->model == modelQARWarpedSpaceExpander || leftExpander.module->model == modelQARIrrationalityExpander || 
+								leftExpander.module->model == modelQARConditionalExpander || leftExpander.module->model == modelQARGridControlExpander ||
+								leftExpander.module->model == modelQARGridControlExpander));
 		//lights[CONNECTED_LIGHT].value = motherPresent;
 		if (motherPresent) {
 			// To Mother
@@ -223,10 +224,13 @@ struct QARWellFormedRhythmExpander : Module {
 			std::fill(messagesToMother, messagesToMother+PASSTHROUGH_OFFSET + PASSTHROUGH_LEFT_VARIABLE_COUNT + PASSTHROUGH_RIGHT_VARIABLE_COUNT, 0.0);
 
 			//If another expander is present, get its values (we can overwrite them)
-			bool anotherExpanderPresent = (rightExpander.module && (rightExpander.module->model == modelQARWellFormedRhythmExpander || rightExpander.module->model == modelQARGrooveExpander || 
+			bool anotherExpanderPresent = (rightExpander.module && (rightExpander.module->model == modelQARWellFormedRhythmExpander || 
+											rightExpander.module->model == modelQARGrooveExpander || 
 											rightExpander.module->model == modelQARProbabilityExpander || rightExpander.module->model == modelQARIrrationalityExpander || 
-											rightExpander.module->model == modelQARWarpedSpaceExpander || rightExpander.module->model == modelQuadAlgorithmicRhythm ||
-											rightExpander.module->model == modelQARConditionalExpander));
+											rightExpander.module->model == modelQARWarpedSpaceExpander || 
+											rightExpander.module->model == modelQARConditionalExpander || 
+											rightExpander.module->model == modelQuadAlgorithmicRhythm ||
+											rightExpander.module->model == modelQARGridControlExpander));
 			if(anotherExpanderPresent)
 			{			
 				float *messagesFromExpander = (float*)rightExpander.consumerMessage;

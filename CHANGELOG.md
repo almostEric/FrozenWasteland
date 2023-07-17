@@ -1,3 +1,8 @@
+### 2.1.0 (2023-07-18)
+-- Added Formal Dinner
+-- Added QAR - Grid Control
+-- Fixed issue where upward compression could cause crazy voltage spikes
+
 ### 2.0.7 (2022-04-25)
 -- Fixed issue with QAR running as a VST
 -- Fixed minor label issue on PW
@@ -15,7 +20,7 @@
 -- Release to work with latest VCV release (no changes)
 
 ### 2.0.2 (2021-12-05)
--- More Big fixes with fonts
+-- More Bug fixes with fonts
 
 ### 2.0.1 (2021-12-03)
 -- Bug fixes with fonts

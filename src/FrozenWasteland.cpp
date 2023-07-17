@@ -21,6 +21,7 @@ void init(rack::Plugin *p) {
 	p->addModel(modelDrunkenRampage);
 	p->addModel(modelEverlastingGlottalStopper);
 	p->addModel(modelFillingStation);
+	p->addModel(modelFormalDinner);
 	p->addModel(modelTheGardener);
 	p->addModel(modelHairPick);
 	p->addModel(modelJustAPhaser);
@@ -44,6 +45,7 @@ void init(rack::Plugin *p) {
 	p->addModel(modelPWTapBreakoutExpander);
 	p->addModel(modelQuadAlgorithmicRhythm);
 	p->addModel(modelQARConditionalExpander);
+	p->addModel(modelQARGridControlExpander);
 	p->addModel(modelQARGrooveExpander);
 	p->addModel(modelQARIrrationalityExpander);
 	p->addModel(modelQARProbabilityExpander);

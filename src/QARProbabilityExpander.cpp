@@ -9,7 +9,8 @@
 #define PASSTHROUGH_RIGHT_VARIABLE_COUNT 9
 #define STEP_LEVEL_PARAM_COUNT 6
 #define TRACK_LEVEL_PARAM_COUNT TRACK_COUNT * 17
-#define PASSTHROUGH_OFFSET MAX_STEPS * TRACK_COUNT * STEP_LEVEL_PARAM_COUNT + TRACK_LEVEL_PARAM_COUNT
+#define QAR_GRID_VALUES MAX_STEPS
+#define PASSTHROUGH_OFFSET MAX_STEPS * TRACK_COUNT * STEP_LEVEL_PARAM_COUNT + TRACK_LEVEL_PARAM_COUNT + QAR_GRID_VALUES
 
 struct QARProbabilityExpander : Module {
 	enum ParamIds {
@@ -53,6 +54,8 @@ struct QARProbabilityExpander : Module {
 	float rightMessages[2][PASSTHROUGH_OFFSET + PASSTHROUGH_LEFT_VARIABLE_COUNT + PASSTHROUGH_RIGHT_VARIABLE_COUNT] = {};
 
 	bool trackDirty[TRACK_COUNT] = {0};
+
+	float gridValues[QAR_GRID_VALUES];
 
 	
 	dsp::SchmittTrigger stepDivTrigger,trackProbabilityTrigger[TRACK_COUNT],probabiltyGroupModeTrigger[MAX_STEPS];
@@ -222,9 +225,9 @@ struct QARProbabilityExpander : Module {
 
 		bool motherPresent = (leftExpander.module && (leftExpander.module->model == modelQuadAlgorithmicRhythm || leftExpander.module->model == modelQARWellFormedRhythmExpander || 
 								leftExpander.module->model == modelQARProbabilityExpander || leftExpander.module->model == modelQARGrooveExpander || 
-								leftExpander.module->model == modelQARWarpedSpaceExpander || leftExpander.module->model == modelQARIrrationalityExpander ||
-								leftExpander.module->model == modelQARConditionalExpander || 
-								leftExpander.module->model == modelPWAlgorithmicExpander));
+								leftExpander.module->model == modelQARWarpedSpaceExpander || leftExpander.module->model == modelQARIrrationalityExpander || 
+								leftExpander.module->model == modelQARConditionalExpander || leftExpander.module->model == modelQARGridControlExpander ||
+								leftExpander.module->model == modelQARGridControlExpander));
 		if (motherPresent) {
 			// To Mother
 			float *messagesFromMother = (float*)leftExpander.consumerMessage;
@@ -242,12 +245,18 @@ struct QARProbabilityExpander : Module {
 			std::fill(messagesToMother, messagesToMother+PASSTHROUGH_OFFSET + PASSTHROUGH_LEFT_VARIABLE_COUNT + PASSTHROUGH_RIGHT_VARIABLE_COUNT, 0.0);
 
 			//If another expander is present, get its values (we can overwrite them)
-			bool anotherExpanderPresent = (rightExpander.module && (rightExpander.module->model == modelQARWellFormedRhythmExpander || rightExpander.module->model == modelQARGrooveExpander || 
+			bool anotherExpanderPresent = (rightExpander.module && (rightExpander.module->model == modelQARWellFormedRhythmExpander || 
+											rightExpander.module->model == modelQARGrooveExpander || 
 											rightExpander.module->model == modelQARProbabilityExpander || rightExpander.module->model == modelQARIrrationalityExpander || 
-											rightExpander.module->model == modelQARWarpedSpaceExpander || rightExpander.module->model == modelQuadAlgorithmicRhythm ||
-											rightExpander.module->model == modelQARConditionalExpander));
+											rightExpander.module->model == modelQARWarpedSpaceExpander || 
+											rightExpander.module->model == modelQARConditionalExpander || 
+											rightExpander.module->model == modelQuadAlgorithmicRhythm ||
+											rightExpander.module->model == modelQARGridControlExpander));
+			bool gridExpanderPresent = false;
 			if(anotherExpanderPresent)
 			{			
+				gridExpanderPresent = rightExpander.module->model == modelQARGridControlExpander;
+
 				float *messagesFromExpander = (float*)rightExpander.consumerMessage;
 				float *messageToExpander = (float*)(rightExpander.module->leftExpander.producerMessage);
 
@@ -256,6 +265,14 @@ struct QARProbabilityExpander : Module {
 				}
 				for(int i=0;i<TRACK_COUNT;i++) {
 					trackDirty[i] = messagesFromExpander[i] || (!QARExpanderDisconnectReset);
+				}
+
+				if(gridExpanderPresent) {
+					int gridOffset = PASSTHROUGH_OFFSET - MAX_STEPS;
+					// fprintf(stderr, "into Groove Expanded: %hu \n", gridOffset);
+					std::copy(messagesFromExpander + gridOffset,messagesFromExpander+gridOffset+QAR_GRID_VALUES,gridValues);
+				} else {
+					std::fill(gridValues,gridValues+QAR_GRID_VALUES,0);
 				}
 
 				QARExpanderDisconnectReset = true;
@@ -278,7 +295,8 @@ struct QARProbabilityExpander : Module {
                 if(trackProbabilitySelected[i]) {
                     messagesToMother[TRACK_COUNT * 4 + i] = stepsOrDivs ? 2 : 1;
     				for (int j = 0; j < MAX_STEPS; j++) {
-						float probability = clamp(params[PROBABILITY_1_PARAM+j].getValue() + (inputs[PROBABILITY_1_INPUT + j].isConnected() ? inputs[PROBABILITY_1_INPUT + j].getVoltage() / 10 * params[PROBABILITY_ATTEN_1_PARAM + j].getValue() : 0.0f),0.0,1.0f);
+						float probability = clamp((gridExpanderPresent ? gridValues[j] : params[PROBABILITY_1_PARAM+j].getValue()) + (inputs[PROBABILITY_1_INPUT + j].isConnected() ? inputs[PROBABILITY_1_INPUT + j].getVoltage() / 10 * params[PROBABILITY_ATTEN_1_PARAM + j].getValue()
+													 : 0.0f),0.0,1.0f);
 						if(probability != lastProbability[j]) {
 							isDirty = true;
 						}

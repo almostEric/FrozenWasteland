@@ -728,10 +728,10 @@ void ManicCompressionMB::process(const ProcessArgs &args) {
                     outputs[ENVELOPE_OUT+b].setVoltage(clamp(chunkware_simple::dB2lin(calculatedGainReduction) / 3.0f,-10.0f,10.0f));
                     break;
                 case 1 : // linear
-                    outputs[ENVELOPE_OUT+b].setVoltage(chunkware_simple::dB2lin(calculatedGainReduction));
+                    outputs[ENVELOPE_OUT+b].setVoltage(clamp(chunkware_simple::dB2lin(calculatedGainReduction),-10.0f,10.0f));
                     break;
                 case 2 : // exponential
-                    outputs[ENVELOPE_OUT+b].setVoltage(calculatedGainReduction);
+                    outputs[ENVELOPE_OUT+b].setVoltage(clamp(calculatedGainReduction,-10.0f,10.0f));
                     break;
             }
 
@@ -740,13 +740,13 @@ void ManicCompressionMB::process(const ProcessArgs &args) {
             } else {
                 switch(envelopeMode) {
                     case 0 : // original gain reduced linear
-                        gainReduction[b] = chunkware_simple::lin2dB(inputs[ENVELOPE_INPUT+b].getVoltage() * 3.0);
+                        gainReduction[b] = clamp(chunkware_simple::lin2dB(inputs[ENVELOPE_INPUT+b].getVoltage() * 3.0),-10.0f,10.0f);
                         break;
                     case 1 : // linear
-                        gainReduction[b] = chunkware_simple::lin2dB(inputs[ENVELOPE_INPUT+b].getVoltage());
+                        gainReduction[b] = clamp(chunkware_simple::lin2dB(inputs[ENVELOPE_INPUT+b].getVoltage()),-10.0f,10.0f);
                         break;
                     case 2 : // exponential
-                        gainReduction[b] = inputs[ENVELOPE_INPUT+b].getVoltage();
+                        gainReduction[b] = clamp(inputs[ENVELOPE_INPUT+b].getVoltage(),-10.0f,10.0f);
                         break;
                 }                
             }
@@ -762,8 +762,8 @@ void ManicCompressionMB::process(const ProcessArgs &args) {
                 bandOutputL =  compressMid ? processedBandL * finalGainLin : processedBandL;
                 bandOutputR =  compressSide ? processedBandR * finalGainLin : processedBandR;			
             }
-            outputs[BAND_OUTPUT_L + b].setVoltage(bandOutputL); 
-            outputs[BAND_OUTPUT_R + b].setVoltage(bandOutputR); 
+            outputs[BAND_OUTPUT_L + b].setVoltage(clamp(bandOutputL,-10.0f,10.0f)); 
+            outputs[BAND_OUTPUT_R + b].setVoltage(clamp(bandOutputR,-10.0f,10.0f)); 
             bandTotalL += bandOutputL; 
             bandTotalR += bandOutputR;
 
@@ -796,8 +796,8 @@ void ManicCompressionMB::process(const ProcessArgs &args) {
 			processedOutputR = bandTotalL - bandTotalR;			
 		}
 
-		outputL = lerp(originalInputL,processedOutputL,mix);
-		outputR = lerp(originalInputR,processedOutputR,mix);
+		outputL = lerp(originalInputL,clamp(processedOutputL,-10.0f,10.0f),mix);
+		outputR = lerp(originalInputR,clamp(processedOutputR,-10.0f,10.0f),mix);
 	} else {
 		outputL = originalInputL;
 		outputR = originalInputR;

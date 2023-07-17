@@ -440,6 +440,13 @@ When they are connected this way, the Clock, Mute and Reset signals, and Eoc out
 - Conditional expanders can be chained so different tracks can have different counts
 - Can also be chained with QAR Probability
 
+## QAR Grid Control
+
+![QAR Grid Control](./doc/QARGC.png)
+
+- Expander Module for Quad Algorithmic Rhythm
+- Allows using a grid to control multiple parameters on other QAR Expanders (Groove, Probability and Conditional)
+
 ## QAR Groove Expander
 
 ![QAR Groove Expander](./doc/QARG.png)
