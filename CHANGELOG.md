@@ -1,3 +1,6 @@
+### 2.1.1 (2024-06-10)
+-- Fixed Bugs With QAR and QAR Warped Space expander
+
 ### 2.1.0 (2023-07-18)
 -- Added Formal Dinner
 -- Added QAR - Grid Control

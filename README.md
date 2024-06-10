@@ -65,6 +65,18 @@ A collection of unusual plugins that will add a certain coolness to your patches
 - In "Last Step" repeat mode, the pattern will auto-reset when all tracks have completed
 - In "Independent" repeat mode, each track will reset when it reaches its end.
 
+## Formal Dinner
+![Formal Dinner](./doc/fd.png)
+- Inspired by XOAC Devices Sophia Eurorack module (which is itself inspired by IRCAM's )
+- This is ideal for creating complex sounding drum fills using multiple sound sources (but not limited to that)
+- Click on a box and then drag up/down to set the output - you need to start with the left most box and then work right
+- Each time an input is triggered, the matched output on that step is triggered, then the step for that input advances
+- If repeat mode is "None", once the pattern is finished, nothing will trigger until it is reset (with the RESET button or input)
+- In "Highest Step" repeat mode, the pattern will auto-reset when the track with the most steps reaches its end
+- In "Last Step" repeat mode, the pattern will auto-reset when all tracks have completed
+- In "Independent" repeat mode, each track will reset when it reaches its end.
+
+
 ## The Gardener
 ![The Gardener](./doc/tg.png)
 - Master controller for Seeds of Change (and other sequencers)

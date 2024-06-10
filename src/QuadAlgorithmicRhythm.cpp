@@ -554,7 +554,7 @@ struct QuadAlgorithmicRhythm : Module {
 		configParam(MUTE_PARAM, 0.0, 1.0, 0.0);
 
 
-		configButton(META_STEP_PARAM,"Meta Track Step Count");
+		//configButton(META_STEP_PARAM,"Meta Track Step Count");
 		configButton(CHAIN_MODE_PARAM,"Chain Mode - None");
 		configButton(CHAIN_MODE_PARAM+1,"Chain Mode - Boss");
 		configButton(CHAIN_MODE_PARAM+2,"Chain Mode - Employee");
