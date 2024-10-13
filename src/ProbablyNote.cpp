@@ -56,6 +56,7 @@ struct ProbablyNote : Module {
         NOTE_WEIGHT_PARAM = NOTE_ACTIVE_PARAM + MAX_NOTES,
 		NON_REPEATABILITY_PARAM = NOTE_WEIGHT_PARAM + MAX_NOTES,
 		NON_REPEATABILITY_CV_ATTENUVERTER_PARAM,
+		URN_NON_REPEAT_MODE,
 		NUM_PARAMS
 	};
 	enum InputIds {
@@ -88,6 +89,7 @@ struct ProbablyNote : Module {
 		INTONATION_LIGHT,
 		SHIFT_MODE_LIGHT = INTONATION_LIGHT+3,
         KEY_LOGARITHMIC_SCALE_LIGHT = SHIFT_MODE_LIGHT + 3,
+		URN_NON_REPEAT_MODE_LIGHT,
 		PITCH_RANDOMNESS_GAUSSIAN_LIGHT,
 		TRIGGER_POLYPHONIC_LIGHT,
         NOTE_ACTIVE_LIGHT,
@@ -239,7 +241,7 @@ struct ProbablyNote : Module {
 	
 	dsp::SchmittTrigger clockTrigger[POLYPHONY],clockModeTrigger,resetScaleTrigger,octaveWrapAroundTrigger,
 						tempermentActiveTrigger,tempermentTrigger,shiftScalingTrigger,keyScalingTrigger,
-						pitchRandomnessGaussianTrigger,noteActiveTrigger[MAX_NOTES]; 
+						pitchRandomnessGaussianTrigger,urnNonRandomModeTrigger,noteActiveTrigger[MAX_NOTES]; 
 	dsp::PulseGenerator noteChangePulse[POLYPHONY];
     GaussianNoiseGenerator _gauss;
  
@@ -274,7 +276,7 @@ struct ProbablyNote : Module {
 	float slant = 0;
 	float focus = 0; 
 	float nonRepeat = 0;
-	int lastRandomNote[POLYPHONY] = {-1}; 
+	int lastRandomNote[POLYPHONY][MAX_NOTES] = {{-1}}; 
 	int currentNote[POLYPHONY] = {0};   
 	int probabilityNote[POLYPHONY] = {0}; 
 	double lastQuantizedCV[POLYPHONY] = {0.0}; 
@@ -289,6 +291,7 @@ struct ProbablyNote : Module {
 	int shiftMode = 0;
 	bool keyLogarithmic = false;
 	bool pitchRandomGaussian = false;
+	bool urnNonRandomMode = false;
 
 	bool useCircleLayout = false;
 	int quantizeMode = QUANTIZE_CLOSEST;
@@ -352,6 +355,7 @@ struct ProbablyNote : Module {
 		configButton(KEY_SCALING_PARAM,"Key Scaling Mode");
 		configButton(SHIFT_SCALING_PARAM,"Weight Scaling Mode");
 		configButton(PITCH_RANDOMNESS_GAUSSIAN_PARAM,"Gaussian Randomness");
+		configButton(URN_NON_REPEAT_MODE,"Urn Mode");
 
         srand(time(NULL));
 
@@ -464,6 +468,7 @@ struct ProbablyNote : Module {
 		json_object_set_new(rootJ, "keyLogarithmic", json_boolean(keyLogarithmic));
 		json_object_set_new(rootJ, "useCircleLayout", json_boolean(useCircleLayout));
 		json_object_set_new(rootJ, "pitchRandomGaussian", json_boolean(pitchRandomGaussian)); 
+		json_object_set_new(rootJ, "urnNonRandomMode", json_boolean(urnNonRandomMode)); 
 		json_object_set_new(rootJ, "triggerPolyphonic", json_boolean(triggerPolyphonic)); 
 		json_object_set_new(rootJ, "quantizeMode", json_integer((int) quantizeMode)); 
 
@@ -530,6 +535,11 @@ struct ProbablyNote : Module {
 		json_t *sumPg = json_object_get(rootJ, "pitchRandomGaussian");
 		if (sumPg) {
 			pitchRandomGaussian = json_boolean_value(sumPg);			
+		}
+
+		json_t *sumUnr = json_object_get(rootJ, "urnNonRandomMode");
+		if (sumUnr) {
+			urnNonRandomMode = json_boolean_value(sumUnr);			
 		}
 
 		json_t *sumCl = json_object_get(rootJ, "useCircleLayout");
@@ -678,6 +688,17 @@ struct ProbablyNote : Module {
 			pitchRandomGaussian = !pitchRandomGaussian;
 		}		
 		lights[PITCH_RANDOMNESS_GAUSSIAN_LIGHT].value = pitchRandomGaussian;
+
+		if (urnNonRandomModeTrigger.process(params[URN_NON_REPEAT_MODE].getValue())) {
+			urnNonRandomMode = !urnNonRandomMode;
+			//Reset all random notes
+			for(int i=0;i<POLYPHONY;i++) {
+				for(int j=0;j<MAX_NOTES;j++) {
+					lastRandomNote[i][j] = -1;
+				}
+			}
+		}		
+		lights[URN_NON_REPEAT_MODE_LIGHT].value = urnNonRandomMode;
 
 
         spread = clamp(params[SPREAD_PARAM].getValue() + (inputs[SPREAD_INPUT].getVoltage() * params[SPREAD_CV_ATTENUVERTER_PARAM].getValue()),0.0f,6.0f);
@@ -950,9 +971,20 @@ struct ProbablyNote : Module {
 					}
 
 					float repeatProbability = ((double) rand()/RAND_MAX);
-					if (spread > 0 && nonRepeat > 0.0 && repeatProbability < nonRepeat && lastRandomNote[channel] >= 0 ) {
-						actualProbability[channel][lastRandomNote[channel]] = 0; //Last note has no chance of repeating 						
-					}
+					if (spread > 0 && nonRepeat > 0.0 && repeatProbability < nonRepeat) {
+						if(!urnNonRandomMode) {
+							if(lastRandomNote[channel][0] >= 0) {
+								actualProbability[channel][lastRandomNote[channel][0]] = 0.0; //Last note has no chance of repeating 	
+							}
+						}	
+					} else {
+						for(int j=0;j<MAX_NOTES;j++) {
+							if(lastRandomNote[channel][j] == 0) {
+								actualProbability[channel][j] = 0.0;
+							}
+						}
+					}				
+				
 			
 					int randomNote = weightedProbability(actualProbability[channel],MAX_NOTES,params[WEIGHT_SCALING_PARAM].getValue(), rnd);
 					if(randomNote == -1) { //Couldn't find a note, so find first active
@@ -965,8 +997,23 @@ struct ProbablyNote : Module {
 							noteOk = noteActive[randomNote] || notesSearched >= MAX_NOTES;
 						} while(!noteOk);
 					}
-						// fprintf(stderr, "newnote %i probabillty:%f value:%f lastNote:%i rNote:%i\n",newNote,nonRepeat,repeatProbability,lastRandomNote[channel],randomNote);
-					lastRandomNote[channel] = randomNote; // for repeatability
+						fprintf(stderr, "probabillty:%f value:%f lastNote:%i rNote:%i\n",nonRepeat,repeatProbability,lastRandomNote[channel],randomNote);
+					if(!urnNonRandomMode) {
+						lastRandomNote[channel][0] = randomNote; // for repeatability
+					} else {
+						lastRandomNote[channel][randomNote] = 0;
+						//If all notes have been used, reset
+						float totalProbability = 0.0;
+						for(int j=0;j<MAX_NOTES;j++) {
+							totalProbability += actualProbability[channel][j];
+						};
+						if(totalProbability == 0.0) {
+							fprintf(stderr, "resetting last used array\n");
+							for(int j=0;j<MAX_NOTES;j++) {
+								lastRandomNote[channel][j] = -1;
+							};	
+						}
+					}
 					probabilityNote[channel] = randomNote; // for triggers
 
 					float octaveAdjust = 0.0;
@@ -1518,6 +1565,10 @@ struct ProbablyNoteWidget : ModuleWidget {
 		addParam(nonRepeatParam);							
         addParam(createParam<RoundReallySmallFWKnob>(Vec(207,51), module, ProbablyNote::NON_REPEATABILITY_CV_ATTENUVERTER_PARAM));			
 		addInput(createInput<FWPortInSmall>(Vec(209, 29), module, ProbablyNote::NON_REPEATABILITY_INPUT));
+
+		addParam(createParam<LEDButton>(Vec(181, 50), module, ProbablyNote::URN_NON_REPEAT_MODE));
+		addChild(createLight<LargeLight<BlueLight>>(Vec(182.5, 51.5), module, ProbablyNote::URN_NON_REPEAT_MODE_LIGHT));
+
 
 		ParamWidget* scaleParam = createParam<RoundSmallFWSnapKnob>(Vec(8,86), module, ProbablyNote::SCALE_PARAM);
 		if (module) {

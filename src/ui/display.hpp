@@ -51,6 +51,11 @@ struct CellGrid : FramebufferWidget {
   void onDragMove(const event::DragMove &e) override {
     float newDragX = APP->scene->rack->getMousePos().x;
     float newDragY = APP->scene->rack->getMousePos().y;
+    int mods = APP->window->getMods();
+
+		if ((mods & RACK_MOD_MASK) == GLFW_MOD_SHIFT) {
+      newDragX = dragX;
+    }
 
     cells->setCell((initX+(newDragX-dragX)) / 2.0, (initY+(newDragY-dragY)) / 2.0);
   }
@@ -225,6 +230,11 @@ struct CellBarGrid : FramebufferWidget {
   void onDragMove(const event::DragMove &e) override {
     float newDragX = APP->scene->rack->getMousePos().x;
     float newDragY = APP->scene->rack->getMousePos().y;
+    int mods = APP->window->getMods();
+
+		if ((mods & RACK_MOD_MASK) == GLFW_MOD_SHIFT) {
+      newDragX = dragX;
+    }
 
     cells->setCell((initX+(newDragX-dragX)) / 1.0, (initY+(newDragY-dragY)) / 8.0);
   }
