@@ -1,3 +1,6 @@
+### 2.1.2 (2024-10-13)
+-- Holding Shift Key now locks grid drawing
+
 ### 2.1.1 (2024-06-10)
 -- Fixed Bugs With QAR and QAR Warped Space expander
 
