@@ -2174,7 +2174,7 @@ struct QuadAlgorithmicRhythm : Module {
 		if (bpmx4J)
 			bpmX4 = json_integer_value(bpmx4J);
 
-		json_t *rtmJ = json_object_get(rootJ, "bpmX4");
+		json_t *rtmJ = json_object_get(rootJ, "resetTriggerisHardReset");
 		if (rtmJ)
 			resetTriggerisHardReset = json_integer_value(rtmJ);
 

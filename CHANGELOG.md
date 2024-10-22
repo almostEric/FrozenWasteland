@@ -1,3 +1,6 @@
+### 2.1.3 (2024-10-22)
+-- Fixed QAR bug with reset 0
+
 ### 2.1.2 (2024-10-13)
 -- Holding Shift Key now locks grid drawing
 
