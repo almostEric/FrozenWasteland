@@ -3232,7 +3232,7 @@ struct ProbablyNoteMNWidget : ModuleWidget {
 		menu->addChild(new MenuLabel());
 		{
       		OptionsMenuItem* qmi = new OptionsMenuItem("Quantize Mode");
-			qmi->addItem(OptionMenuItem("Closet", [module]() { return module->quantizeMode == 0; }, [module]() { module->quantizeMode = 0; }));
+			qmi->addItem(OptionMenuItem("Closest", [module]() { return module->quantizeMode == 0; }, [module]() { module->quantizeMode = 0; }));
 			qmi->addItem(OptionMenuItem("Round Lower", [module]() { return module->quantizeMode == 1; }, [module]() { module->quantizeMode = 1; }));
 			qmi->addItem(OptionMenuItem("Round Upper", [module]() { return module->quantizeMode == 2; }, [module]() { module->quantizeMode = 2; }));
 			menu->addChild(qmi);			

@@ -1216,7 +1216,7 @@ struct ProbablyNoteBPWidget : ModuleWidget {
 		menu->addChild(new MenuLabel());
 		{
       		OptionsMenuItem* mi = new OptionsMenuItem("Quantize Mode");
-			mi->addItem(OptionMenuItem("Closet", [module]() { return module->quantizeMode == 0; }, [module]() { module->quantizeMode = 0; }));
+			mi->addItem(OptionMenuItem("Closest", [module]() { return module->quantizeMode == 0; }, [module]() { module->quantizeMode = 0; }));
 			mi->addItem(OptionMenuItem("Round Lower", [module]() { return module->quantizeMode == 1; }, [module]() { module->quantizeMode = 1; }));
 			mi->addItem(OptionMenuItem("Round Upper", [module]() { return module->quantizeMode == 2; }, [module]() { module->quantizeMode = 2; }));
 			menu->addChild(mi);
